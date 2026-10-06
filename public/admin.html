@@ -54,6 +54,17 @@ dialog::backdrop{background:rgba(12,42,35,.45)}
 .dlg h2{margin:0;font-size:18px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .acts{display:flex;justify-content:space-between;gap:10px;margin-top:6px}
+.tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.tab{font:inherit;font-weight:700;background:none;border:0;padding:10px 16px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--accent);border-color:var(--accent)}
+.tab .c{display:inline-block;min-width:20px;padding:1px 7px;border-radius:20px;background:var(--soft);color:var(--accent);font-size:12px;margin-left:6px}
+.kpis.k5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.m-new{background:#e6f0ff;color:#1d4fa8}.m-short{background:#fff1d6;color:#8a5a00}.m-demo{background:#f1e6ff;color:#6a2fb0}.m-approved{background:#dff4ea;color:#0f6b56}.m-rejected{background:#fde6e3;color:#a32d1d}
+.tags{display:flex;flex-wrap:wrap;gap:4px}.tags span{font-size:12px;background:var(--soft);color:var(--accent);padding:2px 8px;border-radius:20px}
+#mdlg{max-width:620px}
+.mdet{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;font-size:14px;margin:0}
+.mdet dt{color:var(--muted);font-weight:600}.mdet dd{margin:0;word-break:break-word}
+.pitch{background:var(--soft);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.5;white-space:pre-wrap}
 </style>
 </head>
 <body>
@@ -68,6 +79,11 @@ dialog::backdrop{background:rgba(12,42,35,.45)}
   </form>
 
   <div id="denied" class="note" hidden></div>
+
+  <div class="tabs" id="tabs" hidden>
+    <button class="tab" data-tab="app" aria-selected="true">Students <span class="c" id="cStu">0</span></button>
+    <button class="tab" data-tab="mapp" aria-selected="false">Mentors <span class="c" id="cMen">0</span></button>
+  </div>
 
   <section id="app" hidden>
     <div class="kpis">
@@ -90,7 +106,39 @@ dialog::backdrop{background:rgba(12,42,35,.45)}
     </table></div>
     <p class="small" style="margin-top:12px">Always confirm a payment in the Razorpay dashboard before marking it Paid. Fees: Early bird ₹3,499 · Regular ₹4,999 · Booking ₹2,500 (+ balance).</p>
   </section>
+
+  <section id="mapp" hidden>
+    <div class="kpis k5">
+      <div class="kpi"><span>Applications</span><b id="mkTotal">0</b></div>
+      <div class="kpi"><span>New</span><b id="mkNew">0</b></div>
+      <div class="kpi"><span>Shortlisted</span><b id="mkShort">0</b></div>
+      <div class="kpi"><span>Demo scheduled</span><b id="mkDemo">0</b></div>
+      <div class="kpi money"><span>Approved</span><b id="mkOk">0</b></div>
+    </div>
+    <div class="tools">
+      <label>Search<input id="mq" placeholder="Name, company, skill, email, phone"></label>
+      <label>Status<select id="mfStatus"><option value="">All</option><option value="new">New</option><option value="shortlisted">Shortlisted</option><option value="demo">Demo scheduled</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
+      <button class="btn ghost" id="mbReload" type="button">Refresh</button>
+      <button class="btn" id="mbCsv" type="button">Export CSV</button>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Applied</th><th>Mentor</th><th>Work</th><th>Skills</th><th>Wants to teach</th><th>Contact</th><th>Status</th><th></th></tr></thead>
+      <tbody id="mrows"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+    </table></div>
+    <p class="small" style="margin-top:12px">Process: New → Shortlisted (after LinkedIn check) → Demo scheduled (after 15-min call) → Approved / Rejected.</p>
+  </section>
 </main>
+
+<dialog id="mdlg"><form class="dlg" id="mfEdit" method="dialog">
+  <h2 id="mdName">Mentor</h2>
+  <p class="small" id="mdSub"></p>
+  <dl class="mdet" id="mdDet"></dl>
+  <div><div class="small" style="font-weight:600;margin-bottom:6px">Why they want to mentor</div><div class="pitch" id="mdPitch"></div></div>
+  <label>Status<select id="meStatus"><option value="new">New</option><option value="shortlisted">Shortlisted</option><option value="demo">Demo scheduled</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
+  <label>Notes<textarea id="meNotes" rows="3" placeholder="e.g. Call done 12 Oct. Demo on Saturday 4 PM: topic = Stateful widgets"></textarea></label>
+  <p class="err" id="meErr" hidden></p>
+  <div class="acts"><button class="btn ghost" value="cancel" formnovalidate>Close</button><button class="btn" id="mbSave" value="save">Save</button></div>
+</form></dialog>
 
 <dialog id="dlg"><form class="dlg" id="fEdit" method="dialog">
   <h2 id="dName">Edit payment</h2>
@@ -128,10 +176,13 @@ function due(r) { const st = r.payStatus || "unpaid"; if (["refunded", "cancelle
 function fmtDate(ts) { const d = ts?.toDate ? ts.toDate() : null; return d ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"; }
 
 onAuthStateChanged(auth, async u => {
-  $("fLogin").hidden = !!u; $("who").hidden = !u; $("denied").hidden = true; $("app").hidden = true;
+  $("fLogin").hidden = !!u; $("who").hidden = !u; $("denied").hidden = true; $("app").hidden = true; $("mapp").hidden = true; $("tabs").hidden = true;
   if (!u) return;
   $("whoEmail").textContent = u.email || "";
   await load(u);
+  if (!$("denied").hidden) return;
+  $("tabs").hidden = false; showTab(curTab);
+  await loadMentors();
 });
 
 $("fLogin").addEventListener("submit", async e => {
@@ -147,7 +198,7 @@ async function load(u) {
   try {
     const snap = await getDocs(collection(db, "registrations"));
     all = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-    $("app").hidden = false; render();
+    render();
   } catch (x) {
     const d = $("denied"); d.hidden = false;
     d.innerHTML = x.code === "permission-denied"
@@ -160,7 +211,7 @@ function render() {
   const q = $("q").value.trim().toLowerCase(), fs = $("fStatus").value;
   const list = all.filter(r => (!fs || (r.payStatus || "unpaid") === fs) && (!q || [r.name, r.phone, r.email, r.paymentId, r.level].join(" ").toLowerCase().includes(q)));
   const cnt = s => all.filter(r => (r.payStatus || "unpaid") === s).length;
-  $("kTotal").textContent = all.length; $("kPaid").textContent = cnt("paid"); $("kPart").textContent = cnt("part-paid"); $("kUnpaid").textContent = cnt("unpaid");
+  $("cStu").textContent = all.length; $("kTotal").textContent = all.length; $("kPaid").textContent = cnt("paid"); $("kPart").textContent = cnt("part-paid"); $("kUnpaid").textContent = cnt("unpaid");
   $("kRev").textContent = inr(all.filter(r => !["refunded", "cancelled"].includes(r.payStatus)).reduce((a, r) => a + (r.amountPaid || 0), 0));
   $("kDue").textContent = inr(all.reduce((a, r) => a + due(r), 0));
   if (!list.length) { $("rows").innerHTML = '<tr><td colspan="10" class="empty">' + (all.length ? "No matches." : "No registrations yet.") + "</td></tr>"; return; }
@@ -207,6 +258,91 @@ $("bCsv").onclick = () => {
   }).join(",")));
   const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "widgetry-registrations-" + new Date().toISOString().slice(0, 10) + ".csv"; a.click();
+};
+
+/* ---------- Tabs ---------- */
+let curTab = "app";
+function showTab(t) {
+  curTab = t;
+  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
+  $("app").hidden = t !== "app"; $("mapp").hidden = t !== "mapp";
+}
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+
+/* ---------- Mentors ---------- */
+const MSL = { new: "New", shortlisted: "Shortlisted", demo: "Demo scheduled", approved: "Approved", rejected: "Rejected" };
+const MSC = { new: "m-new", shortlisted: "m-short", demo: "m-demo", approved: "m-approved", rejected: "m-rejected" };
+let mall = [], mediting = null;
+const link = (u, t) => u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t || u)}</a>` : "—";
+
+async function loadMentors() {
+  try {
+    const snap = await getDocs(collection(db, "mentorApplications"));
+    mall = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    renderM();
+  } catch (x) {
+    $("mrows").innerHTML = '<tr><td colspan="8" class="empty">Couldn\'t load mentor applications: ' + esc(x.code === "permission-denied" ? "deploy the latest firestore.rules (firebase deploy --only firestore:rules)." : (x.message || x.code)) + "</td></tr>";
+  }
+}
+$("mbReload").onclick = loadMentors;
+
+function renderM() {
+  const q = $("mq").value.trim().toLowerCase(), fs = $("mfStatus").value;
+  const cnt = s => mall.filter(r => (r.status || "new") === s).length;
+  $("cMen").textContent = mall.length; $("mkTotal").textContent = mall.length;
+  $("mkNew").textContent = cnt("new"); $("mkShort").textContent = cnt("shortlisted"); $("mkDemo").textContent = cnt("demo"); $("mkOk").textContent = cnt("approved");
+  const list = mall.filter(r => (!fs || (r.status || "new") === fs) && (!q || [r.name, r.company, r.role, r.email, r.phone, r.course, r.city, (r.skills || []).join(" ")].join(" ").toLowerCase().includes(q)));
+  if (!list.length) { $("mrows").innerHTML = '<tr><td colspan="8" class="empty">' + (mall.length ? "No matches." : "No mentor applications yet.") + "</td></tr>"; return; }
+  $("mrows").innerHTML = list.map(r => {
+    const st = r.status || "new", wa = (r.phone || "").replace(/\D/g, "");
+    return `<tr>
+      <td class="small">${fmtDate(r.createdAt)}</td>
+      <td><b>${esc(r.name)}</b><div class="small">${esc(r.city || "")}</div>${r.notes ? `<div class="small">📝 ${esc(r.notes)}</div>` : ""}</td>
+      <td>${esc(r.role)}<div class="small">${esc(r.company)} · ${esc(r.experience)}</div></td>
+      <td><div class="tags">${(r.skills || []).map(k => `<span>${esc(k)}</span>`).join("")}</div></td>
+      <td class="small">${esc(r.course)}</td>
+      <td><a href="https://wa.me/${wa}" target="_blank" rel="noopener">${esc(r.phone)}</a><div class="small">${esc(r.email)}</div><div class="small">${link(r.linkedin, "LinkedIn")}</div></td>
+      <td><span class="pill ${MSC[st]}">${MSL[st]}</span></td>
+      <td><button class="btn ghost" data-mid="${r.id}" style="padding:6px 12px">View</button></td></tr>`;
+  }).join("");
+  $("mrows").querySelectorAll("button[data-mid]").forEach(b => b.onclick = () => openM(b.dataset.mid));
+}
+$("mq").oninput = renderM; $("mfStatus").onchange = renderM;
+
+function openM(id) {
+  mediting = mall.find(r => r.id === id); if (!mediting) return;
+  const r = mediting;
+  $("mdName").textContent = r.name; $("mdSub").textContent = "Applied " + fmtDate(r.createdAt);
+  const rows = [
+    ["Role", esc(r.role) + " at " + esc(r.company)], ["Experience", esc(r.experience)], ["City", esc(r.city || "—")],
+    ["WhatsApp", `<a href="https://wa.me/${(r.phone || "").replace(/\D/g, "")}" target="_blank" rel="noopener">${esc(r.phone)}</a>`],
+    ["Email", `<a href="mailto:${esc(r.email)}">${esc(r.email)}</a>`],
+    ["LinkedIn", link(r.linkedin)], ["GitHub / portfolio", link(r.portfolio)], ["Demo video", link(r.video)],
+    ["Skills", esc((r.skills || []).join(", "))], ["Wants to teach", esc(r.course)],
+    ["Availability", esc((r.availability || []).join(", "))], ["Mode", esc(r.mode)], ["Teaching exp.", esc(r.teaching)]
+  ];
+  $("mdDet").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+  $("mdPitch").textContent = r.pitch || "";
+  $("meStatus").value = r.status || "new"; $("meNotes").value = r.notes || "";
+  $("meErr").hidden = true; $("mdlg").showModal();
+}
+$("mfEdit").addEventListener("submit", async e => {
+  if (e.submitter?.value !== "save") return;
+  e.preventDefault(); $("mbSave").disabled = true; $("meErr").hidden = true;
+  const upd = { status: $("meStatus").value, notes: $("meNotes").value.trim().slice(0, 500), adminUpdatedAt: serverTimestamp() };
+  try { await updateDoc(doc(db, "mentorApplications", mediting.id), upd); Object.assign(mediting, upd); $("mdlg").close(); renderM(); }
+  catch (x) { $("meErr").textContent = "Couldn't save: " + (x.code === "permission-denied" ? "deploy the latest firestore.rules." : x.message); $("meErr").hidden = false; }
+  finally { $("mbSave").disabled = false; }
+});
+
+$("mbCsv").onclick = () => {
+  const cols = ["createdAt", "name", "email", "phone", "city", "company", "role", "experience", "linkedin", "portfolio", "skills", "course", "availability", "mode", "teaching", "video", "pitch", "status", "notes"];
+  const lines = [cols.join(",")].concat(mall.map(r => cols.map(c => {
+    let v = c === "createdAt" ? fmtDate(r.createdAt) : Array.isArray(r[c]) ? r[c].join("; ") : c === "status" ? (r.status || "new") : r[c];
+    v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }).join(",")));
+  const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "widgetry-mentors-" + new Date().toISOString().slice(0, 10) + ".csv"; a.click();
 };
 </script>
 </body>
