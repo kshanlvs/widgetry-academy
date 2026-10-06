@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact Us | Widgetry Academy</title><meta name="description" content="Contact Widgetry Academy.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=DM+Sans:wght@400;600;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="legal.css"></head><body>
+<header><div class="w"><a href="./">Widgetry Academy</a><nav><a href="./#fees">Fees</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refund.html">Refunds</a><a href="contact.html">Contact</a></nav></div></header>
+<main>
+<h1>Contact Us</h1><p class="upd">Last updated: 6 October 2026</p>
+<p>Questions about the course, fees, payments or refunds? Reach us here. We usually reply within 24 hours.</p>
+<div class="card"><b>Business</b><span>Widgetry Academy (operated by <span class="owner">Kishan Kumar Sharma</span>)</span></div>
+<div class="card"><b>Email</b><span class="cemail fill">Email will be added soon</span></div>
+<div class="card" data-opt><b>Phone</b><span class="cphone fill"></span></div>
+<div class="card" data-wa hidden><b>WhatsApp</b><span class="cwa"></span></div>
+<div class="card"><b>Instagram</b><span class="cig">@widgetry.academy</span></div>
+<div class="card" data-opt><b>Address</b><span class="caddr fill"></span></div>
+<div class="card"><b>Hours</b><span>Monday to Saturday, 10 AM – 7 PM IST</span></div>
+<p>For payment issues, please include your Razorpay payment ID from your receipt.</p>
+</main>
+<footer><div class="w">© 2026 Widgetry Academy · Operated by <span class="owner">Kishan Kumar Sharma</span> · Contact: <span class="cemail fill">see Contact page</span></div></footer>
+<script src="site-config.js"></script>
+<script>
+(function(){var c=window.WIDGETRY||{};
+ document.querySelectorAll('.owner').forEach(function(e){if(c.ownerName)e.textContent=c.ownerName;});
+ document.querySelectorAll('.cemail').forEach(function(e){if(c.contactEmail){e.innerHTML='<a href="mailto:'+c.contactEmail+'">'+c.contactEmail+'</a>';e.classList.remove('fill');}});
+ document.querySelectorAll('.cphone').forEach(function(e){if(c.contactPhone){e.textContent=c.contactPhone;e.classList.remove('fill');}else{var r=e.closest('[data-opt]');if(r)r.remove();}});
+ document.querySelectorAll('.caddr').forEach(function(e){if(c.address){e.textContent=c.address;e.classList.remove('fill');}else{var r=e.closest('[data-opt]');if(r)r.remove();}});
+ var w=(c.whatsapp||'').replace(/\D/g,'');if(w){document.querySelectorAll('[data-wa]').forEach(function(r){r.hidden=false;});document.querySelectorAll('.cwa').forEach(function(e){e.innerHTML='<a href="https://wa.me/'+w+'" target="_blank" rel="noopener">Chat on WhatsApp (+'+w+')</a>';});}
+ document.querySelectorAll('.cig').forEach(function(e){if(c.instagram){e.innerHTML='<a href="https://instagram.com/'+c.instagram+'" target="_blank" rel="noopener">@'+c.instagram+'</a>';}});
+})();
+</script><script>
+(function(){var C=window.WIDGETRY||{};if(!/^\d+$/.test(C.metaPixelId||''))return;
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init',C.metaPixelId);fbq('track','PageView');})();
+</script>
+</body></html>

@@ -1,0 +1,1088 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<title>Flutter App Development Course in Kolkata for Students | Widgetry Academy</title>
+<meta name="description" content="Learn Flutter app development in 10 weekend sessions. Hands-on course for Class 10 to graduation students in Kolkata. Build your own Android app, get a certificate. Taught by a senior engineer with 5+ years of experience.">
+<meta name="keywords" content="Flutter course Kolkata, app development course for students, Flutter training, mobile app development course, Dart course, weekend coding class Kolkata">
+<link rel="canonical" href="https://widgetry-academy.web.app/">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="robots" content="index, follow">
+<meta name="google-site-verification" content="VXnAwuiOFQUo0aJDZA9HQUt7-3d097NtR2GDmkqvQlE" />
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Widgetry Academy">
+<meta property="og:title" content="Mobile App Development with Flutter | Widgetry Academy">
+<meta property="og:description" content="10 weekend sessions. Build your own Android app. For Class 10 to graduation students.">
+<meta property="og:url" content="https://widgetry-academy.web.app/">
+<meta property="og:image" content="https://widgetry-academy.web.app/og-image.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Course",
+  "name": "Mobile App Development with Flutter",
+  "description": "A hands-on, 10-session weekend course in Flutter app development for students from Class 10 to graduation. Students build and present their own Android app.",
+  "provider": { "@type": "EducationalOrganization", "name": "Widgetry Academy", "url": "https://widgetry-academy.web.app/" },
+  "educationalLevel": "Beginner",
+  "inLanguage": "en",
+  "teaches": ["Flutter", "Dart", "Mobile app development", "Firebase", "REST APIs"],
+  "hasCourseInstance": {
+    "@type": "CourseInstance",
+    "courseMode": "Blended",
+    "courseSchedule": { "@type": "Schedule", "repeatFrequency": "P1W", "byDay": ["https://schema.org/Saturday", "https://schema.org/Sunday"], "duration": "PT2H", "repeatCount": 10 },
+    "instructor": { "@type": "Person", "name": "Kishan Kumar Sharma", "jobTitle": "Senior Software Engineer" },
+    "location": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Kolkata", "addressCountry": "IN" } }
+  }
+}
+</script>
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: dark forest-green hero band with marigold highlights, then proof (downloads), showcase, mentor, syllabus, offer — marketing story — proof-first hero with live app phones, shipped-apps strip, current work showcase, mentor timeline, 5-weekend plan, offer + register */
+:root{
+  --bg:#f3f6f4; --surface:#ffffff; --ink:#0e1f1a; --muted:#56695f; --line:#d8e2dc;
+  --accent:#0f6b56; --accent-2:#f2a900; --accent-ink:#ffffff; --deep:#0c2a23; --deep-2:#123a30; --deep-line:#245446; --deep-fg:#eaf3ee; --deep-muted:#a8c2b6; --soft:#e3efe9;
+  --ok:#1f9d55; --warn:#d98200; --bad:#d64545;
+  --display:"Unbounded","Segoe UI",system-ui,sans-serif;
+  --body:"DM Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a1512; --surface:#10201b; --ink:#e9f1ec; --muted:#93a99e; --line:#1f3a31;
+  --accent:#3fc79f; --accent-2:#f5b82e; --accent-ink:#04130e; --deep:#061411; --deep-2:#0e241e; --deep-line:#1f4a3d; --deep-fg:#eaf3ee; --deep-muted:#9fb9ad; --soft:#12302a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a1512; --surface:#10201b; --ink:#e9f1ec; --muted:#93a99e; --line:#1f3a31;
+  --accent:#3fc79f; --accent-2:#f5b82e; --accent-ink:#04130e; --deep:#061411; --deep-2:#0e241e; --deep-line:#1f4a3d; --deep-fg:#eaf3ee; --deep-muted:#9fb9ad; --soft:#12302a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px}
+h1,h2,h3{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+h2{font-size:clamp(24px,3.4vw,36px);font-weight:700;letter-spacing:-.02em}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+section{padding-block:80px}
+.head{display:grid;gap:12px;margin-bottom:40px}
+.lede{color:var(--muted);max-width:62ch}
+
+/* nav */
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:13px}
+.brand{font-family:var(--display);font-weight:800;font-size:19px;color:var(--ink);text-decoration:none}
+.brand span{color:var(--accent)}
+.navlinks{display:flex;gap:22px;align-items:center}
+.navlinks a{color:var(--muted);text-decoration:none;font-weight:500;font-size:15px}
+.navlinks a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--accent-ink);padding:13px 24px;border-radius:12px;text-decoration:none;border:0;font:inherit;font-weight:700;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.navlinks .btn{color:var(--accent-ink);padding:9px 18px;font-size:15px}
+@media (max-width:760px){.navlinks a:not(.btn){display:none}}
+
+/* announcement */
+.announce{background:var(--deep);color:var(--deep-fg);font-size:14px;text-align:center;padding:9px 16px}
+.announce{background:var(--accent-2);color:#1d1400;font-weight:500}.announce b{color:#1d1400}
+
+/* hero */
+.hero{padding-block:64px 48px;overflow:hidden;background:var(--deep);color:var(--deep-fg);background-image:radial-gradient(circle at 85% 20%,rgba(242,169,0,.18),transparent 45%),radial-gradient(circle at 10% 90%,rgba(63,199,159,.16),transparent 40%)}
+.hero .eyebrow{color:var(--accent-2)}
+.hero .lede{color:var(--deep-muted)}
+.hero .chip{background:var(--deep-2);color:var(--deep-fg);border-color:var(--deep-line)}
+.hero .btn{background:var(--accent-2);color:#1d1400}
+.hero .btn.ghost{background:transparent;color:#fff;border-color:var(--deep-line)}
+.hero .proof{color:var(--deep-muted)}
+.hero .proof b{color:#fff!important}
+.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
+.hero h1{font-size:clamp(32px,5vw,56px);font-weight:800;letter-spacing:-.03em;margin-block:14px 20px;color:#fff}
+.hero h1 em{font-style:normal;color:var(--accent-2)}
+.hero .lede{font-size:19px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-block:26px}
+.chip{font-size:14px;font-weight:600;padding:7px 14px;border-radius:999px;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.ctas{display:flex;flex-wrap:wrap;gap:12px}
+.proof{margin-top:28px;display:flex;align-items:center;gap:14px;font-size:14px;color:var(--muted)}
+.proof .dots{display:flex}
+.proof .dots i{width:30px;height:30px;border-radius:50%;border:2px solid var(--deep);margin-left:-8px;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700;color:#fff}
+.proof .dots i:first-child{margin-left:0}
+.stage{position:relative;height:540px;min-width:0}
+.stage .phone{position:absolute}
+.stage .p1{left:50%;top:0;transform:translateX(-62%) rotate(-4deg);z-index:2}
+.stage .p2{left:50%;top:50px;transform:translateX(-2%) rotate(5deg);z-index:1;opacity:.96}
+@media (max-width:900px){.hero .wrap{grid-template-columns:1fr}.stage{height:530px}}
+@media (max-width:420px){.stage .p2{display:none}.stage .p1{transform:translateX(-50%)}}
+
+/* phone mockups */
+.phone{width:236px;max-width:100%;background:#0b0f14;border-radius:36px;padding:9px;box-shadow:0 40px 70px -30px rgba(2,50,90,.55),0 0 0 1px rgba(255,255,255,.06) inset}
+.screen{background:#f4f6f9;border-radius:28px;overflow:hidden;height:470px;display:flex;flex-direction:column;font-family:var(--body);color:#14212e}
+.notch{height:24px;display:flex;justify-content:center;align-items:center;background:inherit}
+.notch i{width:72px;height:18px;background:#0b0f14;border-radius:0 0 12px 12px;margin-top:-6px}
+.appbar{padding:8px 16px 14px;color:#fff}
+.appbar small{display:block;font-size:10.5px;opacity:.8;letter-spacing:.04em;text-transform:uppercase}
+.appbar b{font-family:var(--display);font-size:18px}
+.sbody{padding:12px;display:grid;gap:9px;flex:1;align-content:start}
+.card{background:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 1px 2px rgba(10,30,50,.08);font-size:12px}
+.card .t{font-weight:700;font-size:12.5px}
+.card .m{color:#6a7889;font-size:11px}
+.rowx{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pill{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:#e3f6ea;color:#1a7f45}.pill.warn{background:#fff1dc;color:#a86300}.pill.bad{background:#fde6e6;color:#b33434}.pill.info{background:#e2f1fb;color:#0a5f93}
+.check{display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 0;border-bottom:1px solid #eef1f5}
+.check:last-child{border:0}
+.box{width:16px;height:16px;border-radius:5px;display:grid;place-items:center;font-size:10px;color:#fff;flex:none}
+.box.y{background:#1f9d55}.box.n{background:#d64545}.box.e{border:1.5px solid #b9c4d0}
+.bar{height:6px;border-radius:9px;background:#e6ebf1;overflow:hidden}
+.bar i{display:block;height:100%;background:#1f9d55;border-radius:9px}
+.sync{display:flex;align-items:center;gap:8px;background:#fff7e6;border:1px solid #f4d9a6;color:#8a5a00;border-radius:10px;padding:8px 10px;font-size:11px;font-weight:600}
+.fab{margin:0 12px 14px;background:#0277bd;color:#fff;border-radius:12px;text-align:center;font-weight:700;font-size:13px;padding:11px}
+.tabs{display:flex;justify-content:space-around;border-top:1px solid #e3e8ee;background:#fff;padding:9px 0 12px;font-size:10px;color:#7d8a99}
+.tabs span.on{color:#0277bd;font-weight:700}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:#fff;border-radius:12px;padding:10px;box-shadow:0 1px 2px rgba(10,30,50,.08)}
+.kpi b{font-family:var(--display);font-size:20px;display:block;font-variant-numeric:tabular-nums}
+.kpi span{font-size:10.5px;color:#6a7889}
+.gauge{height:44px;display:flex;align-items:flex-end;gap:5px}
+.gauge i{flex:1;border-radius:4px 4px 0 0;background:#9fd3ef}
+.gauge i.hi{background:#0277bd}
+
+/* downloads */
+.dl-top{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;margin-bottom:40px}
+.mega{font-family:var(--display);font-weight:800;font-size:clamp(56px,10vw,120px);line-height:.9;letter-spacing:-.04em;color:var(--accent);font-variant-numeric:tabular-nums}
+.mega small{display:block;font-family:var(--body);font-size:15px;font-weight:600;letter-spacing:0;color:var(--muted);margin-top:10px}
+.dl-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.dl{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px 14px 20px;display:grid;justify-items:center;gap:14px;text-align:center;min-width:0}
+.dl .phone{width:150px;border-radius:26px;padding:6px}
+.dl .screen{height:290px;border-radius:21px}
+.dl .notch{height:16px}.dl .notch i{width:48px;height:12px}
+.dl .appbar{padding:6px 11px 10px}.dl .appbar b{font-size:13px}.dl .appbar small{font-size:8.5px}
+.dl .sbody{padding:8px;gap:6px}
+.dl .card{padding:7px 8px;font-size:10px;border-radius:9px}
+.dl .card .t{font-size:10.5px}.dl .card .m{font-size:9px}
+.dl .pill{font-size:8.5px;padding:2px 6px}
+.dl .tabs{font-size:8.5px;padding:7px 0 9px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.tiles i{aspect-ratio:1;border-radius:8px;display:grid;place-items:center;font-style:normal;font-size:8.5px;font-weight:700;color:#fff}
+.num{font-family:var(--display);font-weight:800;font-size:28px;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+.num.ent{font-size:17px;color:var(--accent)}
+.dl h3{font-family:var(--body);font-size:16px;font-weight:700}
+.dl .sub{font-size:12.5px;color:var(--muted);line-height:1.4}
+.star{font-size:12.5px;color:var(--muted)}.star b{color:var(--accent-2)}
+.dl.link{color:inherit;text-decoration:none;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.dl.link:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 18px 40px -24px rgba(12,42,35,.45)}
+.gp{font-size:13px;font-weight:700;color:var(--accent-ink);background:var(--accent);padding:8px 12px;border-radius:10px;width:100%;margin-top:auto}
+.gp.off{background:var(--soft);color:var(--muted)}
+.dl{grid-template-rows:auto auto auto auto auto 1fr}
+.shot{width:150px;max-width:100%;aspect-ratio:9/19;object-fit:cover;border-radius:22px;border:6px solid #0b0f14}
+.src{font-size:13px;color:var(--muted);margin-top:18px}
+@media (max-width:1040px){.dl-grid{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:680px){.dl-grid{grid-template-columns:1fr 1fr}.dl-top{grid-template-columns:1fr}}
+@media (max-width:380px){.dl-grid{grid-template-columns:1fr}}
+
+.rimg{display:block;width:100%;border-radius:28px;background:#fff}
+.stage .phone{width:236px}
+.dl .rimg{border-radius:21px;height:290px;object-fit:cover;object-position:top}
+.pair{display:flex;gap:16px;justify-content:center}
+.pair .phone{width:210px}
+.pair .phone:last-child{margin-top:48px}
+@media (max-width:520px){.pair .phone{width:46%}.pair .phone:last-child{margin-top:28px}}
+.gallery{display:flex;gap:22px;overflow-x:auto;scroll-snap-type:x mandatory;padding:8px max(20px,calc((100vw - 1080px)/2)) 24px;scrollbar-width:thin}
+.gallery figure{margin:0;flex:none;width:210px;scroll-snap-align:start;display:grid;gap:12px}
+.gallery .phone{width:100%}
+.gallery figcaption{font-size:14px;color:var(--muted);line-height:1.4}
+.gallery figcaption b{display:block;color:var(--ink);font-size:15px}
+.gallery:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.stackbadge{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 14px;margin-bottom:16px;border-radius:12px;background:var(--deep-2);border:1px solid var(--deep-line)}
+.stackbadge .sb-main{font-family:var(--display);font-weight:700;font-size:15px;color:#fff;letter-spacing:-.01em}
+.stackbadge .sb-plus{color:var(--accent-2);font-weight:700}
+.stackbadge .sb-sub{font-size:13px;color:var(--deep-muted);padding-left:10px;border-left:1px solid var(--deep-line)}
+@media (max-width:520px){.stackbadge .sb-sub{border-left:0;padding-left:0;flex-basis:100%}}
+/* certificate */
+.cert-wrap{display:grid;grid-template-columns:1fr;gap:32px;justify-items:center}
+.cert-wrap > div:first-child{justify-self:stretch}
+
+.cert-scroll{width:100%;max-width:880px;min-width:0;container-type:inline-size}
+.cert{position:relative;width:100%;aspect-ratio:1.414/1;background:#fffdf7;color:#14231d;border-radius:calc(6/760*100cqw);padding:calc(26/760*100cqw);box-shadow:0 calc(30/760*100cqw) calc(60/760*100cqw) -30px rgba(12,42,35,.45);font-family:var(--body);overflow:hidden}
+.cert-in{position:relative;height:100%;border:calc(2/760*100cqw) solid #0f6b56;outline:calc(1/760*100cqw) solid #c98a00;outline-offset:calc(-8/760*100cqw);padding:calc(30/760*100cqw) calc(44/760*100cqw);display:grid;grid-template-rows:auto 1fr auto;text-align:center}
+.cert-in::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(15,107,86,.035) 0 calc(2/760*100cqw),transparent calc(2/760*100cqw) calc(14/760*100cqw));pointer-events:none}
+.c-top{display:flex;justify-content:space-between;align-items:center;position:relative}
+.c-brand{display:flex;align-items:center;gap:calc(10/760*100cqw);text-align:left}
+.c-mark{width:calc(38/760*100cqw);height:calc(38/760*100cqw);border-radius:calc(9/760*100cqw);background:#0c2a23;display:grid;place-items:center}
+.c-mark svg{width:calc(24/760*100cqw);height:calc(24/760*100cqw)}
+.c-bname{font-family:var(--display);font-weight:800;font-size:calc(17/760*100cqw);line-height:1;color:#0c2a23}
+.c-bname small{display:block;font-family:var(--mono);font-weight:400;font-size:calc(9.5/760*100cqw);letter-spacing:.14em;text-transform:uppercase;color:#56695f;margin-top:calc(4/760*100cqw)}
+.c-id{font-family:var(--mono);font-size:calc(10.5/760*100cqw);color:#56695f;text-align:right;line-height:1.5}
+.c-mid{display:grid;align-content:center;gap:calc(8/760*100cqw);position:relative}
+.c-kicker{font-family:var(--mono);font-size:calc(11/760*100cqw);letter-spacing:.24em;text-transform:uppercase;color:#c98a00;font-weight:600}
+.c-title{font-family:var(--display);font-weight:800;font-size:calc(27/760*100cqw);letter-spacing:-.02em;color:#0c2a23}
+.c-pres{font-size:calc(13/760*100cqw);color:#56695f;margin-top:calc(6/760*100cqw)}
+.c-name{font-family:var(--display);font-weight:700;font-size:calc(34/760*100cqw);color:#0f6b56;border-bottom:calc(1.5/760*100cqw) solid #d8e2dc;padding-bottom:calc(6/760*100cqw);margin:calc(2/760*100cqw) auto 0;min-width:60%}
+.c-body{font-size:calc(13.5/760*100cqw);color:#2b3d35;max-width:52ch;margin:calc(6/760*100cqw) auto 0;line-height:1.55}
+.c-body b{color:#0c2a23}
+.c-skills{display:flex;flex-wrap:wrap;justify-content:center;gap:calc(6/760*100cqw);margin-top:calc(8/760*100cqw)}
+.c-skills span{font-family:var(--mono);font-size:calc(10/760*100cqw);padding:calc(3/760*100cqw) calc(8/760*100cqw);border:calc(1/760*100cqw) solid #d8e2dc;border-radius:calc(5/760*100cqw);color:#3b5249;background:#fff}
+.c-foot{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:calc(20/760*100cqw);position:relative}
+.c-sig{text-align:left}.c-sig.r{text-align:right}
+.c-sig .line{font-family:"Brush Script MT","Segoe Script",cursive;font-size:calc(24/760*100cqw);color:#0c2a23;border-bottom:calc(1/760*100cqw) solid #9fb2a8;padding-bottom:calc(2/760*100cqw);min-height:calc(34/760*100cqw)}
+.c-sig b{display:block;font-size:calc(12/760*100cqw);margin-top:calc(6/760*100cqw);color:#0c2a23}
+.c-sig span{font-size:calc(10.5/760*100cqw);color:#56695f}
+.c-seal{width:calc(84/760*100cqw);height:calc(84/760*100cqw);border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffcf4d,#c98a00 70%);display:grid;place-items:center;box-shadow:0 0 0 calc(4/760*100cqw) #fffdf7,0 0 0 calc(6/760*100cqw) #c98a00}
+.c-seal div{font-family:var(--display);font-weight:800;color:#3a2800;font-size:calc(10/760*100cqw);line-height:1.15;text-align:center;letter-spacing:.04em}
+.c-seal b{display:block;font-size:calc(20/760*100cqw)}
+.c-sample{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.c-sample span{font-family:var(--display);font-weight:800;font-size:calc(120/760*100cqw);letter-spacing:.1em;color:rgba(214,69,69,.10);transform:rotate(-18deg)}
+@container (max-width:560px){.cert{aspect-ratio:auto}.cert-in{gap:calc(14/760*100cqw)}}
+.cert-points{list-style:none;padding:0;margin:20px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.cert-points li{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:16px}
+.cert-points li::before{content:"✓";color:var(--accent);font-weight:800}
+.nextstep{margin-top:20px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;border:1.5px dashed var(--accent);border-radius:16px;padding:20px 24px;background:var(--surface)}
+.nextstep > div{flex:1 1 420px;min-width:0}
+.nextstep h3{font-size:19px;margin-block:6px 6px}
+.nextstep p:not(.eyebrow){color:var(--muted);font-size:15px;max-width:70ch}
+.ns-tag{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:var(--accent-2);color:#1d1400}
+/* fees */
+.fees{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch}
+.fee{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:30px 26px;display:flex;flex-direction:column;gap:6px}
+.fee.hot{background:linear-gradient(160deg,#f2a900,#ffbe2e);border-color:#f2a900;color:#1d1400}
+.fee .flag{position:absolute;top:-14px;left:22px;background:var(--deep);color:#f2a900;border:2px solid #f2a900;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:20px}
+.fee .fn{font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--accent)}
+.fee.hot .fn{color:#3a2800}
+.fee .fp{font-family:var(--display);font-weight:800;font-size:44px;line-height:1.1}
+.fee .fs{font-size:15px;color:var(--muted);margin-bottom:14px}
+.fee.hot .fs{color:#3a2800}
+.paybox{margin-top:auto;min-height:48px}
+.paybox form{margin:0}
+.paysoon{display:inline-block;font-size:14px;font-weight:600;padding:12px 16px;border-radius:12px;background:var(--soft);color:var(--muted)}
+.fee.hot .paysoon{background:rgba(0,0,0,.08);color:#3a2800}
+.feeinc{list-style:none;padding:0;margin:26px 0 0;display:flex;flex-wrap:wrap;gap:10px 26px;font-weight:600}
+.feeinc li::before{content:"✓ ";color:var(--accent);font-weight:800}
+.feenote{margin-top:14px;font-size:14px;color:var(--muted)}
+@media (max-width:820px){.fees{grid-template-columns:1fr}}
+.flinks{display:flex;gap:18px;flex-wrap:wrap}.flinks a{color:var(--muted);text-decoration:none}.flinks a:hover{color:var(--ink)}
+/* mentor photo + trust + batch + whatsapp */
+.mphoto{margin:0 0 24px;max-width:320px;position:relative}
+.mphoto img{display:block;width:100%;height:auto;border-radius:24px;box-shadow:0 30px 60px -30px rgba(12,42,35,.55)}
+.mphoto figcaption{position:absolute;left:14px;right:14px;bottom:14px;background:rgba(12,42,35,.82);backdrop-filter:blur(6px);color:#fff;border-radius:14px;padding:10px 14px}
+.mphoto figcaption b{display:block;font-size:15px}.mphoto figcaption span{font-size:12.5px;color:#cfe3da}
+.trust{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.tcard{display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px}
+.tcard b{display:block;font-size:17px;margin-bottom:4px}.tcard p{font-size:14.5px;color:var(--muted);margin:0}
+.tface{width:52px;height:52px;border-radius:14px;object-fit:cover;flex:none}
+.ti{width:52px;height:52px;border-radius:14px;background:var(--soft);display:grid;place-items:center;font-size:26px;flex:none}
+@media (max-width:900px){.trust{grid-template-columns:1fr 1fr}}@media (max-width:560px){.trust{grid-template-columns:1fr}}
+.batchstrip{margin-top:22px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;background:var(--deep-2);border:1px solid var(--deep-line);border-radius:14px;padding:12px 16px;color:var(--deep-fg);font-size:15px}
+.batchstrip b{color:#f2a900;font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.batchstrip span{white-space:nowrap}
+.nextbatch{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;background:var(--deep);color:#eaf3ee;border-radius:20px;padding:22px 26px;margin-bottom:26px}
+.nextbatch .nb-k{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#f2a900}
+.nextbatch .nb-t{font-family:var(--display);font-weight:700;font-size:22px;color:#fff}
+.nextbatch ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 22px;font-size:15px;color:#cfe3da}
+.nextbatch .btn{white-space:nowrap}
+@media (max-width:820px){.nextbatch{grid-template-columns:1fr}}
+.wafloat{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:50;display:flex;align-items:center;gap:8px;background:#25d366;color:#fff;text-decoration:none;font-weight:700;padding:12px 18px 12px 14px;border-radius:40px;box-shadow:0 12px 30px -10px rgba(0,0,0,.45)}
+.wafloat:hover{filter:brightness(1.05)}
+@media (max-width:560px){.wafloat span{display:none}.wafloat{padding:12px}}
+/* animated mentor frame */
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+.mframe-wrap{position:relative;max-width:340px;margin:10px 26px 34px 0}
+.mframe-wrap::before{content:"";position:absolute;inset:8% -6% -4% 6%;background:radial-gradient(circle at 30% 30%,rgba(242,169,0,.45),transparent 60%),radial-gradient(circle at 70% 80%,rgba(63,199,159,.45),transparent 60%);filter:blur(30px);z-index:0}
+.mframe{position:relative;z-index:1;padding:4px;border-radius:30px;background:conic-gradient(from var(--ang),#f2a900,#3fc79f,#0c2a23,#3fc79f,#f2a900);animation:spin 6s linear infinite;box-shadow:0 30px 70px -30px rgba(12,42,35,.6)}
+.mframe img{display:block;width:100%;height:auto;border-radius:26px}
+@keyframes spin{to{--ang:360deg}}
+.mlive{position:absolute;top:18px;left:18px;display:flex;align-items:center;gap:8px;background:rgba(12,42,35,.82);backdrop-filter:blur(6px);color:#eaf3ee;font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:30px}
+.mlive i{width:8px;height:8px;border-radius:50%;background:#3fc79f;box-shadow:0 0 0 0 rgba(63,199,159,.7);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 9px rgba(63,199,159,0)}100%{box-shadow:0 0 0 0 rgba(63,199,159,0)}}
+.mcap{position:absolute;left:16px;right:16px;bottom:16px;background:rgba(12,42,35,.85);backdrop-filter:blur(6px);color:#fff;border-radius:16px;padding:12px 16px}
+.mcap b{display:block;font-size:16px}.mcap span{font-size:13px;color:#cfe3da}
+.mbadge{position:absolute;z-index:2;display:flex;align-items:center;gap:10px;background:var(--surface);color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:16px;padding:9px 14px 9px 9px;box-shadow:0 14px 30px -14px rgba(12,42,35,.45);font-size:12.5px;line-height:1.25;animation:float 5s ease-in-out infinite}
+.mbadge b{display:block;font-size:14.5px}
+.mbadge .bi{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:15px;background:var(--soft);color:var(--accent);flex:none}
+.mbadge.b1 .bi{background:#0a66c2;color:#fff;font-family:Arial,sans-serif}
+.b1{top:-16px;right:-34px}.b2{top:46%;left:-30px;animation-delay:-1.6s}.b3{bottom:96px;right:-26px;animation-delay:-3.2s}
+.b2 .bi{background:#f2a900;color:#1d1400}
+a.mbadge:hover{border-color:var(--accent)}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@media (max-width:560px){.mframe-wrap{margin:10px auto 30px;display:flex;flex-wrap:wrap;gap:8px}.mframe{width:100%}.mbadge{position:static;animation:none;flex:1 1 140px;box-shadow:none}}
+@media (prefers-reduced-motion:reduce){.mframe,.mbadge,.mlive i{animation:none}}
+/* logos strip */
+.strip{border-block:1px solid var(--line);background:var(--surface);padding-block:26px}
+.strip .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:14px 34px}
+.strip p{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.strip b{font-family:var(--display);font-size:20px;font-weight:700;color:var(--ink);opacity:.82}
+
+/* why */
+.why{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--surface)}
+.why > div{padding:28px clamp(18px,3vw,36px)}
+.why .them{background:var(--bg)}
+.why h3{font-size:20px;margin-bottom:16px}
+.why ul{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.why li{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:16px}
+.why .them li{color:var(--muted)}
+.why .them li::before{content:"✕";color:var(--bad);font-weight:700}
+.why .us li::before{content:"✓";color:var(--ok);font-weight:800}
+@media (max-width:760px){.why{grid-template-columns:1fr}}
+
+/* showcase */
+.show{display:grid;gap:28px}
+.proj{display:grid;grid-template-columns:auto 1fr;gap:clamp(28px,5vw,64px);align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:clamp(22px,4vw,48px)}
+.proj.flip{grid-template-columns:1fr auto}
+.proj.flip .phone{order:2}
+.proj .tag{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:6px;background:var(--soft);color:var(--accent)}
+.proj h3{font-size:clamp(26px,3.4vw,34px);margin-block:12px 10px}
+.proj .lede{margin-bottom:18px}
+.feat{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:10px}
+.feat li{display:grid;grid-template-columns:18px 1fr;gap:10px;font-size:16px}
+.feat li::before{content:"";width:8px;height:8px;margin-top:9px;background:var(--accent);border-radius:2px;transform:rotate(45deg)}
+.stack{display:flex;flex-wrap:wrap;gap:8px}
+.stack span{font-family:var(--mono);font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:6px;color:var(--muted)}
+.note{font-size:13px;color:var(--muted);margin-top:14px;font-style:italic}
+@media (max-width:820px){.proj,.proj.flip{grid-template-columns:1fr;justify-items:center}.proj.flip .phone{order:0}.proj > div{justify-self:stretch}}
+
+/* apps grid */
+.apps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.app{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:8px;align-content:start;min-width:0}
+.app .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:800;color:#fff;font-size:18px}
+.app h3{font-size:19px;margin-top:6px}
+.app p{font-size:15px;color:var(--muted)}
+.glink{font-size:14px;font-weight:700;text-decoration:none;margin-top:4px}
+.app .k{font-family:var(--mono);font-size:11.5px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+@media (max-width:900px){.apps{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.apps{grid-template-columns:1fr}}
+
+/* mentor */
+.mentor{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:start}
+.avatar{width:96px;height:96px;border-radius:24px;background:linear-gradient(135deg,#0f6b56,#f2a900);display:grid;place-items:center;font-family:var(--display);font-size:40px;font-weight:800;color:#fff;margin-bottom:20px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
+.stat b{display:block;font-family:var(--display);font-size:32px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:13.5px;color:var(--muted)}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.timeline{list-style:none;margin:0;padding:0;border-left:2px solid var(--line)}
+.timeline li{position:relative;padding:0 0 26px 24px}
+.timeline li::before{content:"";position:absolute;left:-7px;top:8px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--accent)}
+.timeline li:first-child::before{background:var(--accent-2);border-color:var(--accent-2)}
+.timeline .when{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.timeline h3{font-size:19px;margin-block:2px 2px}
+.timeline .co{font-weight:600;color:var(--accent);font-size:15px}
+.timeline p{font-size:15px;color:var(--muted);margin-top:4px}
+@media (max-width:860px){.mentor{grid-template-columns:1fr}}
+
+/* schedule */
+.weeks{display:grid;gap:14px}
+.week{display:grid;grid-template-columns:110px 1fr 1fr;gap:14px}
+.wk{font-family:var(--mono);font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding-top:18px}
+.wk b{display:block;font-family:var(--display);font-size:22px;color:var(--ink);letter-spacing:0;text-transform:none}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;min-width:0}
+.day .d{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.day h3{font-size:19px;margin-block:6px}
+.day p{font-size:15px;color:var(--muted)}
+.day.final{background:var(--deep);border-color:var(--deep);color:var(--deep-fg)}.day.final p{color:var(--deep-muted)}.day.final .d{color:var(--accent-2)}
+@media (max-width:760px){.week{grid-template-columns:1fr}.wk{padding-top:8px}}
+
+/* takeaway */
+.take{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.tk{border-top:3px solid var(--accent-2);padding-top:16px}
+.tk b{display:block;font-family:var(--display);font-size:20px;margin-bottom:6px}
+.tk p{font-size:15px;color:var(--muted)}
+@media (max-width:900px){.take{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.take{grid-template-columns:1fr}}
+
+.parents{margin-top:48px;background:var(--soft);border-radius:20px;padding:clamp(22px,4vw,40px);display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start}
+.parents .big{font-family:var(--display);font-size:22px;font-weight:700}
+.parents p{color:var(--muted);max-width:70ch}
+@media (max-width:640px){.parents{grid-template-columns:1fr}}
+
+/* details */
+.details{border-top:1px solid var(--line);margin:0}
+.row{display:grid;grid-template-columns:200px 1fr;gap:16px;padding-block:16px;border-bottom:1px solid var(--line)}
+.row dt{font-family:var(--mono);font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:3px}
+.row dd{margin:0;font-weight:500}
+@media (max-width:560px){.row{grid-template-columns:1fr;gap:4px}}
+
+/* faq */
+details{border-bottom:1px solid var(--line);padding-block:18px}
+summary{cursor:pointer;font-weight:600;font-size:18px;list-style:none;display:flex;justify-content:space-between;gap:16px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--mono);color:var(--accent);font-size:22px;line-height:1}
+details[open] summary::after{content:"−"}
+details p{color:var(--muted);margin-top:10px;max-width:65ch}
+
+/* register */
+.register{background:var(--deep);color:var(--deep-fg);border-radius:26px;padding:clamp(26px,5vw,56px);display:grid;grid-template-columns:1fr 1fr;gap:44px}
+.register h2{color:#fff}
+.register .lede{color:var(--deep-muted)}
+.register .eyebrow{color:var(--accent-2)}
+.contact{display:grid;gap:12px;margin-top:24px}
+.ct{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--deep-2);border:1px solid var(--deep-line);border-radius:12px;padding:12px 14px;min-width:0}
+.ct small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--deep-muted);font-family:var(--mono)}
+.ct b{color:#fff;font-weight:600;user-select:all;word-break:break-all}
+.ct button{background:transparent;border:1px solid var(--deep-line);color:var(--deep-fg);border-radius:8px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;flex:none}
+.reg{display:grid;gap:16px;min-width:0;align-content:start}
+.steps{list-style:none;margin:0;padding:0;display:flex;gap:8px;flex-wrap:wrap}
+.steps li{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--deep-muted);padding:6px 12px 6px 6px;border:1px solid var(--deep-line);border-radius:999px}
+.steps li span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--deep-2);font-size:12px}
+.steps li.on{color:#fff;border-color:var(--accent-2)}.steps li.on span{background:var(--accent-2);color:#1d1400}
+.steps li.ok span{background:#3fc79f;color:#04130e}
+.tel{display:flex;align-items:stretch;border:1px solid var(--deep-line);border-radius:10px;overflow:hidden;background:var(--deep-2)}
+.tel span{padding:12px;color:var(--deep-muted);border-right:1px solid var(--deep-line);font-weight:600}
+.tel input{border:0;border-radius:0}
+.panel{background:var(--deep-2);border:1px solid var(--deep-line);border-radius:14px;padding:20px;display:grid;gap:12px}
+.panel h3{font-size:18px;color:#fff}
+.panel p{color:var(--deep-fg);font-size:15px}
+.panel.done{border-color:#3fc79f}
+.ghostd{background:transparent;color:#fff;border:1px solid var(--deep-line)}
+.err{background:#3a1414;border:1px solid #7a2a2a;color:#ffd6d6;border-radius:10px;padding:10px 14px;font-size:14px;margin:0}
+.btn[disabled]{opacity:.6;cursor:wait}
+.tip{font-size:13.5px!important;color:var(--deep-muted)!important}
+.vbox{display:grid;gap:10px;border-top:1px solid var(--deep-line);padding-top:12px}
+.row2{display:flex;gap:10px;flex-wrap:wrap}.row2 .btn{flex:1}
+#otpBox{display:grid;gap:12px}
+#otpBox[hidden]{display:none}
+form{display:grid;gap:14px;min-width:0}
+label{font-size:14px;font-weight:600;color:var(--deep-fg);display:grid;gap:6px}
+input,select{font:inherit;font-size:16px;padding:12px 14px;border-radius:10px;border:1px solid var(--deep-line);background:var(--deep-2);color:#fff;width:100%}
+input::placeholder{color:var(--deep-muted)}
+.reg-btn{background:var(--accent-2);color:#1d1400}
+.msg{font-size:15px;background:var(--deep-2);border:1px solid var(--deep-line);border-radius:12px;padding:14px 16px;color:var(--deep-fg)}
+.copybox{font-family:var(--mono);font-size:13px;white-space:pre-wrap;background:var(--deep);border-radius:8px;padding:12px;margin-top:10px;user-select:all}
+@media (max-width:860px){.register{grid-template-columns:1fr}}
+
+footer{padding-block:40px;color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:80px}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+@media (prefers-reduced-motion:no-preference){
+  .hero h1,.hero .lede,.chips{animation:rise .6s ease both}
+  .stage .p1{animation:float1 6s ease-in-out infinite}
+  .stage .p2{animation:float2 7s ease-in-out infinite}
+  @keyframes rise{from{transform:translateY(12px);opacity:.5}to{transform:none;opacity:1}}
+  @keyframes float1{0%,100%{transform:translateX(-62%) rotate(-4deg) translateY(0)}50%{transform:translateX(-62%) rotate(-4deg) translateY(-10px)}}
+  @keyframes float2{0%,100%{transform:translateX(-2%) rotate(5deg) translateY(0)}50%{transform:translateX(-2%) rotate(5deg) translateY(8px)}}
+}
+</style>
+
+</head>
+<body>
+<div class="announce">New weekend batch · Saturdays & Sundays · <b>Limited seats</b> — <a href="#register" style="color:inherit">reserve yours →</a></div>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top">Flutter<span>/</span>10</a>
+    <div class="navlinks">
+      <a href="#downloads">Apps</a>
+      <a href="#screens">Screens</a>
+      <a href="#work">Live projects</a>
+      <a href="#mentor">Mentor</a>
+      <a href="#schedule">Syllabus</a>
+      <a href="#fees">Fees</a>
+      <a href="#certificate">Certificate</a>
+      <a href="#faq">FAQ</a>
+      <a class="btn" href="#register">Reserve seat</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <div class="stackbadge" aria-label="Course technology: Flutter and Dart, Google's open-source UI toolkit">
+        <span class="sb-main">Flutter</span><span class="sb-plus">+</span><span class="sb-main">Dart</span>
+        <span class="sb-sub">Google's open-source toolkit for Android, iOS &amp; web apps</span>
+      </div>
+      <p class="eyebrow">10-day weekend Flutter app development workshop</p>
+      <h1>Learn Flutter from an engineer who <em>ships real apps.</em></h1>
+      <p class="lede">I build production apps for enterprise clients like Linde and have worked on the Tata Neu super app. In 10 weekend sessions, I'll teach you how to build your own app the way the industry does it, from Class 10 all the way to graduation.</p>
+      <div class="chips">
+        <span class="chip">10 live sessions</span>
+        <span class="chip">Saturdays & Sundays</span>
+        <span class="chip">Class 10 – Graduation</span>
+        <span class="chip">Zero coding needed</span>
+        <span class="chip">Certificate</span>
+      </div>
+      <div class="ctas">
+        <a class="btn" href="#register">Reserve my seat</a>
+        <a class="btn ghost" href="#work">See apps I've built</a>
+        <a class="btn ghost" href="Widgetry-Academy-Flutter-Brochure.pdf" download>Download brochure (PDF)</a>
+      </div>
+      <div class="batchstrip" id="batchStrip" hidden></div>
+      <div class="proof">
+        <div class="dots" aria-hidden="true"><i style="background:#0f6b56">5+</i><i style="background:#c98a00">50M</i><i style="background:#2f8f74">10</i></div>
+        <span><b>5+ years</b> in Flutter · <b>50M+</b> downloads on apps I've worked on</span>
+      </div>
+    </div>
+
+    <div class="stage" aria-label="Screens from apps Kishan builds">
+      <div class="phone p1"><img class="rimg" src="shots/i360-pretrip.jpg" alt="I360 Vehicle Safety pre-trip check screen"></div>
+      <div class="phone p2"><img class="rimg" src="shots/jie-employee.jpg" alt="Jobs in Education app home screen"></div>
+    </div>
+  </div>
+</header>
+
+<div class="strip">
+  <div class="wrap">
+    <p>Apps & teams I've built for</p>
+    <b>Tata Neu</b><b>Linde · OxyReach</b><b>I360 Vehicle Safety</b><b>Relevance Lab</b><b>Ascendion</b><b>Aseztak</b>
+  </div>
+</div>
+
+
+<section id="downloads">
+  <div class="wrap">
+    <div class="dl-top">
+      <div class="head" style="margin:0">
+        <p class="eyebrow">Apps used by millions</p>
+        <h2>Learn from code that runs on millions of phones</h2>
+        <p class="lede">Download numbers from Google Play for apps I've built or worked on. Enterprise apps run privately inside client companies.</p>
+      </div>
+      <div class="mega">50M+<small>Play Store downloads across apps I've worked on</small></div>
+    </div>
+    <div class="dl-grid">
+      <a class="dl link" href="https://play.google.com/store/apps/details?id=com.tatadigital.tcp" target="_blank" rel="noopener" aria-label="Tata Neu on Google Play"><div class="phone"><img class="rimg" src="shots/tataneu-home.jpg" alt="Tata Neu home screen" loading="lazy"></div><div class="num">50M+</div><h3>Tata Neu</h3><p class="star"><b>★ 4.1</b> · 333K reviews</p><p class="sub">Super app · Flutter contributor</p><span class="gp">View on Google Play →</span></a>
+      <a class="dl link" href="https://play.google.com/store/apps/details?id=com.jie.ajpl" target="_blank" rel="noopener" aria-label="Jobs in Education on Google Play"><div class="phone"><img class="rimg" src="shots/jie-employee.jpg" alt="Jobs in Education job seeker home screen" loading="lazy"></div><div class="num">100K+</div><h3>Jobs in Education</h3><p class="star"><b>★ 3.1</b> · Google Play</p><p class="sub">Job portal · built at Anandpushp</p><span class="gp">View on Google Play →</span></a>
+      <a class="dl link" href="https://play.google.com/store/apps/details?id=com.AseZtakWholesaleOnlinePrivateLimited.buyer" target="_blank" rel="noopener" aria-label="Aseztak Wholesale on Google Play"><div class="phone"><img class="rimg" src="shots/aseztak-welcome.jpg" alt="Aseztak Wholesale app home screen" loading="lazy"></div><div class="num">100K+</div><h3>Aseztak Wholesale</h3><p class="star"><b>★ 3.8</b> · 952 reviews</p><p class="sub">B2B commerce · built at Aseztak</p><span class="gp">View on Google Play →</span></a>
+      <div class="dl"><div class="phone"><img class="rimg" src="shots/i360-pretrip.jpg" alt="I360 pre-trip details screen" loading="lazy"></div><div class="num ent">Launching soon</div><h3>I360 Vehicle Safety</h3><p class="star">In final development</p><p class="sub">Current work · Relevance Lab</p><span class="gp off">Coming to Play Store</span></div>
+      <div class="dl"><div class="phone" aria-hidden="true"><div class="screen"><div class="notch" style="background:#00527a"><i></i></div><div class="appbar" style="background:#00527a"><small>OxyReach</small><b>Overview</b></div><div class="sbody"><div class="kpis"><div class="kpi"><b>128</b><span>Requests</span></div><div class="kpi"><b>96%</b><span>On-time</span></div></div><div class="card"><div class="rowx"><span class="t">Site 07</span><span class="pill warn">En route</span></div></div><div class="card"><div class="rowx"><span class="t">Site 14</span><span class="pill ok">Delivered</span></div></div></div><div class="tabs"><span class="on">Home</span><span>Track</span><span>Me</span></div></div></div><div class="num ent">Enterprise</div><h3>OxyReach</h3><p class="star">Built for Linde</p><p class="sub">Current work · Relevance Lab</p><span class="gp off">Private enterprise app</span></div>
+    </div>
+    <p class="src">Download counts and ratings from Google Play, October 2026. Tap a card to open the app on Google Play. OxyReach screen is an illustrative preview.</p>
+  </div>
+</section>
+
+<section id="screens" style="padding-top:0">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">Real screens</p>
+      <h2>Straight from the apps</h2>
+      <p class="lede">Actual screens from apps I've built and worked on. Swipe to see more.</p>
+    </div>
+  </div>
+  <div class="gallery" tabindex="0" aria-label="App screenshots"><figure><div class="phone"><img class="rimg" src="shots/tataneu-home.jpg" alt="Tata Neu — Home & payments" loading="lazy"></div><figcaption><b>Tata Neu</b>Home & payments</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/tataneu-neupass.jpg" alt="Tata Neu — NeuPass rewards" loading="lazy"></div><figcaption><b>Tata Neu</b>NeuPass rewards</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/jie-employee.jpg" alt="Jobs in Education — Job seeker home" loading="lazy"></div><figcaption><b>Jobs in Education</b>Job seeker home</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/jie-employer.jpg" alt="Jobs in Education — Employer: find candidates" loading="lazy"></div><figcaption><b>Jobs in Education</b>Employer: find candidates</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/aseztak-welcome.jpg" alt="Aseztak Wholesale — Shop home" loading="lazy"></div><figcaption><b>Aseztak Wholesale</b>Shop home</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/aseztak-location.jpg" alt="Aseztak Wholesale — Shop by city" loading="lazy"></div><figcaption><b>Aseztak Wholesale</b>Shop by city</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/aseztak-signup.jpg" alt="Aseztak Wholesale — Business sign-up" loading="lazy"></div><figcaption><b>Aseztak Wholesale</b>Business sign-up</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/i360-pretrip.jpg" alt="I360 Vehicle Safety — Pre-trip checklist" loading="lazy"></div><figcaption><b>I360 Vehicle Safety</b>Pre-trip checklist</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/i360-language.jpg" alt="I360 Vehicle Safety — Language selection" loading="lazy"></div><figcaption><b>I360 Vehicle Safety</b>Language selection</figcaption></figure></div>
+</section>
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">Why this workshop</p>
+      <h2>Tutorials teach syntax. This teaches you to ship.</h2>
+    </div>
+    <div class="why">
+      <div class="them">
+        <h3>Learning alone from videos</h3>
+        <ul>
+          <li>Copy-paste code you don't fully understand</li>
+          <li>Stuck on setup errors with no one to ask</li>
+          <li>Half-finished projects, nothing to show</li>
+          <li>Outdated patterns no company uses</li>
+        </ul>
+      </div>
+      <div class="us">
+        <h3>Flutter in 10 Days</h3>
+        <ul>
+          <li>Live coding with a working senior engineer</li>
+          <li>Doubts solved in class, every weekend</li>
+          <li>A finished app on your phone by Day 10</li>
+          <li>Tips and habits from real production apps</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="work" style="padding-top:0">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">What I'm building right now</p>
+      <h2>Real apps, real users, real problems</h2>
+      <p class="lede">You'll learn from the same decisions I make every day on these production apps: offline support, field workflows, dashboards, and clean, testable code.</p>
+    </div>
+
+    <div class="show">
+      <article class="proj">
+        <div class="pair"><div class="phone"><img class="rimg" src="shots/i360-pretrip.jpg" alt="I360 pre-trip checklist with answers"></div><div class="phone"><img class="rimg" src="shots/i360-language.jpg" alt="I360 language selection screen"></div></div>
+        <div>
+          <span class="tag">Current work · Launching soon</span>
+          <h3>I360 Vehicle Safety</h3>
+          <p class="lede">A fleet safety app where drivers complete pre-trip vehicle checks and supervisors assign drivers to vehicles, so no unsafe vehicle leaves the yard.</p>
+          <ul class="feat">
+            <li>Step-by-step vehicle precheck with defect photos</li>
+            <li>Supervisor dashboard to assign drivers and spot defects</li>
+            <li>Offline-first: checks save without network and sync later</li>
+            <li>Multi-language: Hindi, Tamil, Thai, Bahasa Indonesia and English</li>
+          </ul>
+          <div class="stack"><span>Flutter</span><span>Bloc</span><span>go_router</span><span>Clean Architecture</span><span>Offline sync</span><span>Localization</span></div>
+        </div>
+      </article>
+
+      <article class="proj flip">
+        <div>
+          <span class="tag">Current work · Client: Linde</span>
+          <h3>OxyReach</h3>
+          <p class="lede">An enterprise mobile app built for Linde, one of the world's largest industrial gas companies. Built to enterprise standards for reliability, security and scale.</p>
+          <ul class="feat">
+            <li>Enterprise-grade architecture with Bloc and clean layers</li>
+            <li>Dashboards and live status tracking</li>
+            <li>Automated CI/CD releases with high crash-free rates</li>
+          </ul>
+          <div class="stack"><span>Flutter</span><span>Bloc</span><span>REST APIs</span><span>CI/CD</span></div>
+        </div>
+        <div class="phone" aria-hidden="true">
+          <div class="screen">
+            <div class="notch" style="background:#00527a"><i></i></div>
+            <div class="appbar" style="background:#00527a"><small>OxyReach</small><b>Track</b></div>
+            <div class="sbody">
+              <div class="card"><div class="rowx"><span class="t">Request #A-2291</span><span class="pill warn">En route</span></div><div class="m" style="margin-top:4px">ETA 42 min · Site 07</div></div>
+              <div class="card">
+                <div class="check"><span class="box y">✓</span>Request received</div>
+                <div class="check"><span class="box y">✓</span>Approved</div>
+                <div class="check"><span class="box y">✓</span>Dispatched</div>
+                <div class="check"><span class="box e"></span>Delivered</div>
+              </div>
+              <div class="kpis"><div class="kpi"><b>12</b><span>Today</span></div><div class="kpi"><b>3</b><span>Pending</span></div></div>
+            </div>
+            <div class="tabs"><span>Home</span><span>Requests</span><span class="on">Track</span><span>Profile</span></div>
+          </div>
+        </div>
+      </article>
+    </div>
+    <p class="note">App screens shown are illustrative previews. Client data is not shown.</p>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">More apps I've built</p>
+      <h2>From super apps to AI side projects</h2>
+    </div>
+    <div class="apps">
+      <div class="app"><div class="ic" style="background:#4b2a86">T</div><p class="k">Super app</p><h3>Tata Neu</h3><p>Shopping, payments, rewards and travel booking under one Tata brand app.</p><a class="glink" href="https://play.google.com/store/apps/details?id=com.tatadigital.tcp" target="_blank" rel="noopener">Google Play →</a></div>
+      <div class="app"><div class="ic" style="background:#0f7b6c">J</div><p class="k">Job portal</p><h3>Jobs in Education</h3><p>AI job matching, video resumes, real-time chat and application tracking.</p><a class="glink" href="https://play.google.com/store/apps/details?id=com.jie.ajpl" target="_blank" rel="noopener">Google Play →</a></div>
+      <div class="app"><div class="ic" style="background:#c0571b">A</div><p class="k">B2B commerce</p><h3>Aseztak Wholesale</h3><p>Wholesaler-to-retailer platform with live inventory sync and secure payments.</p><a class="glink" href="https://play.google.com/store/apps/details?id=com.AseZtakWholesaleOnlinePrivateLimited.buyer" target="_blank" rel="noopener">Google Play →</a></div>
+      <div class="app"><div class="ic" style="background:#1d1d1d">✦</div><p class="k">AI · OpenAI</p><h3>ArtBox</h3><p>AI tattoo concept generator showing LLM integration in a mobile app.</p></div>
+      <div class="app"><div class="ic" style="background:#0277bd">C</div><p class="k">Realtime</p><h3>Realtime Chat</h3><p>Secure one-to-one messaging with Firebase authentication and live sync.</p></div>
+      <div class="app"><div class="ic" style="background:#2e8b3a">Q</div><p class="k">Quick commerce</p><h3>Quick Commerce</h3><p>Buyer and seller apps with live inventory and order tracking.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="mentor" style="padding-top:0">
+  <div class="wrap mentor">
+    <div>
+      <div class="mframe-wrap">
+        <div class="mframe">
+          <img src="shots/mentor.jpg" width="720" height="900" alt="Kishan Kumar Sharma working at his desk" loading="lazy">
+          <div class="mlive"><i></i>Building enterprise Flutter apps</div>
+          <div class="mcap"><b>Kishan Kumar Sharma</b><span>Senior Software Engineer · MCA</span></div>
+        </div>
+        <a class="mbadge b1" href="https://www.linkedin.com/in/kishan-kr-sharma-8a24b5b7" target="_blank" rel="noopener"><span class="bi">in</span><span><b>LinkedIn</b>View profile ✓</span></a>
+        <div class="mbadge b2"><span class="bi">5+</span><span><b>Years</b>in Flutter</span></div>
+        <div class="mbadge b3"><span class="bi">📱</span><span><b>50M+</b>app downloads</span></div>
+      </div>
+      <p class="eyebrow">Your mentor</p>
+      <h2 style="margin-block:8px 14px">Kishan Kumar Sharma</h2>
+      <p class="lede">Senior Software Engineer at Relevance Lab, Kolkata. MCA from Siliguri Institute of Technology. I lead Flutter architecture for enterprise apps and mentor engineers on my team. This workshop brings that same mentoring to students.</p>
+      <div class="stats">
+        <div class="stat"><b>5+</b><span>years building Flutter apps</span></div>
+        <div class="stat"><b>99%+</b><span>crash-free sessions on releases</span></div>
+        <div class="stat"><b>4</b><span>companies, Kolkata to Mumbai</span></div>
+      </div>
+      <div class="links">
+        <a class="btn ghost" href="https://www.linkedin.com/in/kishan-kr-sharma-8a24b5b7" target="_blank" rel="noopener">LinkedIn</a>
+        <a class="btn ghost" href="https://github.com/kshanlvs" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+    <ol class="timeline">
+      <li><span class="when">Feb 2026 – Present</span><h3>Senior Software Engineer</h3><span class="co">Relevance Lab</span><p>Own Flutter architecture for enterprise apps including I360 and OxyReach for Linde. Built CI/CD that cut deployment effort by ~40%.</p></li>
+      <li><span class="when">Aug 2024 – Oct 2025</span><h3>Software Developer</h3><span class="co">Ascendion Digital Solutions · Mumbai</span><p>Scalable Flutter apps for Android and iOS. 90%+ test coverage, 25% faster app responsiveness.</p></li>
+      <li><span class="when">Nov 2021 – Jul 2024</span><h3>Flutter Developer</h3><span class="co">Anandpushp Technologies · Kolkata</span><p>Cross-platform apps for Android and iOS with 99% crash-free releases.</p></li>
+      <li><span class="when">Feb 2021 – Nov 2021</span><h3>Flutter Developer</h3><span class="co">Aseztak Wholesale Online · Siliguri</span><p>Built the B2B wholesale app and its FastAPI backend.</p></li>
+      <li style="padding-bottom:0"><span class="when">2018 · 2020</span><h3>BCA & MCA</h3><span class="co">University of North Bengal · SIT Siliguri</span></li>
+    </ol>
+  </div>
+</section>
+
+<section id="schedule" style="padding-top:0">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">The syllabus</p>
+      <h2>Five weekends, one finished app</h2>
+      <p class="lede">Built for beginners. One app, built step by step, with something new running on your phone after every session.</p>
+      <p style="margin-top:6px"><a class="btn ghost" href="Widgetry-Academy-Flutter-Brochure.pdf" download style="padding:9px 16px;font-size:15px">Download full syllabus &amp; brochure (PDF)</a></p>
+    </div>
+    <div class="weeks">
+      <div class="week"><div class="wk">Weekend<b>1</b></div>
+        <div class="day"><p class="d">Day 1 · Saturday</p><h3>Setup & your first app</h3><p>Install Flutter and VS Code, create a project, and run it on your own phone.</p></div>
+        <div class="day"><p class="d">Day 2 · Sunday</p><h3>Dart basics for Flutter</h3><p>Variables, functions, lists and classes: just what you need to build apps.</p></div></div>
+      <div class="week"><div class="wk">Weekend<b>2</b></div>
+        <div class="day"><p class="d">Day 3 · Saturday</p><h3>Widgets & layouts</h3><p>Row, Column, Container and images. Build your app's home screen.</p></div>
+        <div class="day"><p class="d">Day 4 · Sunday</p><h3>Buttons, input & state</h3><p>Make the screen respond to taps and typing with setState.</p></div></div>
+      <div class="week"><div class="wk">Weekend<b>3</b></div>
+        <div class="day"><p class="d">Day 5 · Saturday</p><h3>Lists & navigation</h3><p>Scrolling lists and moving between screens with a detail page.</p></div>
+        <div class="day"><p class="d">Day 6 · Sunday</p><h3>Getting data from the internet</h3><p>Call a real API and show live data in your app.</p></div></div>
+      <div class="week"><div class="wk">Weekend<b>4</b></div>
+        <div class="day"><p class="d">Day 7 · Saturday</p><h3>Forms & saving data</h3><p>Build a form and save favourites so they stay after restart.</p></div>
+        <div class="day"><p class="d">Day 8 · Sunday</p><h3>Firebase login & database</h3><p>Add sign-in and save user data to the cloud.</p></div></div>
+      <div class="week"><div class="wk">Weekend<b>5</b></div>
+        <div class="day"><p class="d">Day 9 · Saturday</p><h3>Polish your app</h3><p>Theme, app icon, splash screen and fixing bugs together.</p></div>
+        <div class="day final"><p class="d">Day 10 · Sunday</p><h3>Build, share & demo day</h3><p>Build your APK, upload code to GitHub and present your app.</p></div></div>
+    </div>
+    <div class="nextstep">
+      <div><p class="eyebrow">After this workshop</p><h3>Want to go further? Professional Flutter Program</h3>
+      <p>For students who finish this workshop and want to become job-ready: Bloc state management, clean architecture, offline-first apps, testing, CI/CD and publishing on the Play Store.</p></div>
+      <span class="ns-tag">Coming soon</span>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">What you take home</p>
+      <h2>Proof you can build, not just a certificate</h2>
+    </div>
+    <div class="take">
+      <div class="tk"><b>Your own app</b><p>An installable Android APK you can share with friends and family.</p></div>
+      <div class="tk"><b>GitHub portfolio</b><p>Clean, structured code to show in internship and job interviews.</p></div>
+      <div class="tk"><b>Certificate</b><p>A Widgetry Academy certificate, awarded after demo day. <a href="#certificate">See sample</a></p></div>
+      <div class="tk"><b>Career guidance</b><p>How to build a resume, portfolio and LinkedIn as an app developer.</p></div>
+    </div>
+    <div class="parents">
+      <div class="big">For parents</div>
+      <p>Your child learns from a working senior engineer with an MCA, in small weekend batches that don't clash with school or college. They finish with a real app they built themselves, and a skill companies across India hire for.</p>
+    </div>
+  </div>
+</section>
+
+
+<section id="certificate" style="padding-top:0">
+  <div class="wrap cert-wrap">
+    <div>
+      <p class="eyebrow">Your certificate</p>
+      <h2 style="margin-block:8px 14px">Finish the workshop, earn your certificate</h2>
+      <p class="lede">Every student who completes all 10 sessions and presents their app on demo day receives a Widgetry Academy certificate of completion.</p>
+      <ul class="cert-points">
+        <li>Unique certificate ID you can add to your resume</li>
+        <li>Lists the Flutter skills you practised</li>
+        <li>Signed by your mentor, Kishan Kumar Sharma</li>
+        <li>Share it on LinkedIn with your project link</li>
+      </ul>
+    </div>
+    <div class="cert-scroll" tabindex="0" aria-label="Sample certificate of completion">
+      <div class="cert">
+        <div class="cert-in">
+          <div class="c-top">
+            <div class="c-brand"><div class="c-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2" fill="#f2a900"/><rect x="13" y="3" width="8" height="8" rx="2" fill="#3fc79f"/><rect x="3" y="13" width="8" height="8" rx="2" fill="#3fc79f"/><rect x="13" y="13" width="8" height="8" rx="2" fill="#ffffff"/></svg></div><div class="c-bname">Widgetry Academy<small>Learn · Build · Ship</small></div></div>
+            <div class="c-id">Certificate ID<br>WA-MAD-2026-0001</div>
+          </div>
+          <div class="c-mid">
+            <p class="c-kicker">Certificate of Completion</p>
+            <p class="c-title">Mobile App Development with Flutter</p>
+            <p class="c-pres">This certificate is proudly presented to</p>
+            <p class="c-name">Student Name</p>
+            <p class="c-body">for completing <b>20 hours of hands-on, instructor-led training</b> in cross-platform mobile app development and delivering a working app as a capstone project.</p>
+            <div class="c-skills"><span>Dart</span><span>UI Widgets</span><span>REST APIs</span><span>Navigation</span><span>Firebase</span><span>App Release</span></div>
+          </div>
+          <div class="c-foot">
+            <div class="c-sig"><div class="line">Kishan Sharma</div><b>Kishan Kumar Sharma, MCA</b><span>Mentor · Senior Software Engineer</span></div>
+            <div class="c-seal"><div><b>20</b>HOURS<br>HANDS-ON</div></div>
+            <div class="c-sig r"><div class="line" style="font-family:var(--mono);font-size:calc(14/760*100cqw);padding-top:calc(12/760*100cqw)">DD Month 2026</div><b>Date of completion</b><span>Kolkata, India</span></div>
+          </div>
+        </div>
+        <div class="c-sample" aria-hidden="true"><span>SAMPLE</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="head"><p class="eyebrow">Batch details</p><h2>Everything you need to know</h2></div>
+    <dl class="details">
+      <div class="row"><dt>Duration</dt><dd>10 sessions over 5 weekends</dd></div>
+      <div class="row"><dt>Days</dt><dd>Saturdays and Sundays only</dd></div>
+      <div class="row"><dt>Session length</dt><dd>2 hours each, live coding plus Q&A</dd></div>
+      <div class="row"><dt>Eligibility</dt><dd>Class 10 students through graduates, any stream</dd></div>
+      <div class="row"><dt>You'll need</dt><dd>A laptop (Windows, macOS or Linux, 8 GB RAM recommended) and an Android phone if you have one</dd></div>
+      <div class="row"><dt>Fee</dt><dd>₹3,499 early bird (first 10 seats) · ₹4,999 regular · or ₹2,500 to book and pay the rest by Weekend 2. <a href="#fees">See fees</a></dd></div>
+    </dl>
+  </div>
+</section>
+
+<section id="trust" style="padding-top:0">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">Why you can trust us</p>
+      <h2>A real mentor. Clear policies. Safe payments.</h2>
+    </div>
+    <div class="trust">
+      <div class="tcard"><img src="shots/mentor-square.jpg" alt="" class="tface"><div><b>A real, verifiable mentor</b><p>Kishan Kumar Sharma, Senior Software Engineer. Check his <a href="https://www.linkedin.com/in/kishan-kr-sharma-8a24b5b7" target="_blank" rel="noopener">LinkedIn</a> and <a href="https://github.com/kshanlvs" target="_blank" rel="noopener">GitHub</a>.</p></div></div>
+      <div class="tcard"><span class="ti">🔒</span><div><b>Secure payments by Razorpay</b><p>Pay with UPI, card or net banking. We never see your card or UPI details.</p></div></div>
+      <div class="tcard"><span class="ti">↩️</span><div><b>Clear refund policy</b><p>Full refund before Session 2, 50% before Session 3. <a href="refund.html">Read the policy</a>.</p></div></div>
+      <div class="tcard"><span class="ti">🎓</span><div><b>Try before you pay</b><p>Join a free demo class first. No commitment.</p></div></div>
+      <div class="tcard"><span class="ti">📱</span><div><b>Apps used by millions</b><p>Built and worked on apps with 50M+ downloads on Google Play.</p></div></div>
+      <div class="tcard"><span class="ti">💬</span><div><b>Talk to us anytime</b><p>Questions? <a href="contact.html">Contact us</a> or message us on WhatsApp.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="fees" style="padding-top:0">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">Fees</p>
+      <h2>Simple, one-time fee</h2>
+      <p class="lede">Pay securely with UPI, cards or net banking through Razorpay. Fill in the registration form first, then pay to confirm your seat.</p>
+    </div>
+    <div class="nextbatch" id="nextBatch" hidden></div>
+    <div class="fees">
+      <div class="fee hot">
+        <span class="flag" id="ebFlag">First 10 seats</span>
+        <p class="fn">Early bird</p>
+        <p class="fp">₹3,499</p>
+        <p class="fs"><s>₹4,999</s> · Save ₹1,500</p>
+        <div class="paybox" data-pay="earlyBird"></div>
+      </div>
+      <div class="fee">
+        <p class="fn">Regular</p>
+        <p class="fp">₹4,999</p>
+        <p class="fs">Full program, all inclusive</p>
+        <div class="paybox" data-pay="regular"></div>
+      </div>
+      <div class="fee">
+        <p class="fn">Pay in 2 parts</p>
+        <p class="fp">₹2,500</p>
+        <p class="fs">Book now, pay the rest by Weekend 2</p>
+        <div class="paybox" data-pay="booking"></div>
+      </div>
+    </div>
+    <ul class="feeinc">
+      <li>10 live sessions · 20 hours</li><li>Build your own app</li><li>Certificate of completion</li><li>Doubt-solving every class</li>
+    </ul>
+    <p class="feenote">Free demo class available. See our <a href="refund.html">refund policy</a>: full refund before Session 2, 50% before Session 3.</p>
+  </div>
+</section>
+
+<section id="faq" style="padding-top:0">
+  <div class="wrap">
+    <div class="head"><p class="eyebrow">Questions</p><h2>Frequently asked</h2></div>
+    <details><summary>I've never written code. Can I join?</summary><p>Yes. Days 1 and 2 cover setup and Dart from the beginning. If you can use a computer comfortably, you can follow along.</p></details>
+    <details><summary>Do I need a Mac or an iPhone?</summary><p>No. Any Windows, macOS or Linux laptop works. We build and test on Android; the same code runs on iOS.</p></details>
+    <details><summary>What if I miss a session?</summary><p>Message me and I'll help you catch up before the next class.</p></details>
+    <details><summary>Will I get a certificate?</summary><p>Yes, after you complete and present your project on Day 10.</p></details>
+    <details><summary>How do I pay? Is it safe?</summary><p>Payments are handled by Razorpay, India's widely used payment gateway. You can pay with UPI, debit or credit card, or net banking, and you get a receipt by email.</p></details>
+    <details><summary>What if I can't continue?</summary><p>You get a full refund if you cancel before Session 2, and 50% before Session 3. See the <a href="refund.html">refund policy</a>.</p></details>
+    <details><summary>Why Flutter?</summary><p>One codebase gives you Android, iOS and web apps. Big products like Tata Neu use it, and it's one of the fastest ways for a beginner to get a real app onto a phone.</p></details>
+  </div>
+</section>
+
+<section id="register" style="padding-top:0">
+  <div class="wrap">
+    <div class="register">
+      <div>
+        <p class="eyebrow">Seats are limited per batch</p>
+        <h2 style="margin-block:8px 14px">Reserve your seat</h2>
+        <p class="lede">Fill in your details to reserve your seat. I'll contact you on WhatsApp with batch dates, timings and fee.</p>
+      </div>
+      <div id="reg" class="reg">
+        <form id="fDetails" novalidate>
+          <label for="name">Full name<input id="name" autocomplete="name" required placeholder="e.g. Ananya Das"></label>
+          <label for="level">Current class / course
+            <select id="level" required>
+              <option value="">Select…</option>
+              <option>Class 10</option><option>Class 11</option><option>Class 12</option>
+              <option>Undergraduate (1st–2nd year)</option><option>Undergraduate (3rd–4th year)</option><option>Graduate</option>
+            </select>
+          </label>
+          <label for="email">Email<input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+          <label for="phone">WhatsApp / mobile number
+            <div class="tel"><span>+91</span><input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="10" required placeholder="10-digit mobile number"></div>
+          </label>
+          <label for="exp">Any coding experience?
+            <select id="exp"><option>None, complete beginner</option><option>A little (school/college)</option><option>Comfortable with one language</option></select>
+          </label>
+          <button class="btn reg-btn" id="bSubmit" type="submit">Reserve my seat</button>
+        </form>
+
+        <div id="pDone" class="panel done" hidden>
+          <h3>Seat reserved 🎉</h3>
+          <p>Thanks, <b id="doneName"></b>. I'll contact you on WhatsApp at <b id="donePhone"></b> with batch dates and timings.</p>
+          <a class="btn reg-btn" href="#fees" style="text-decoration:none">Pay now to confirm your seat →</a>
+          <div id="verifyBox" class="vbox">
+            <p class="tip">Optional: verify <b id="doneEmail"></b> so you also get batch details by email.</p>
+            <div class="row2">
+              <button class="btn ghostd" id="bVerify" type="button">Send verification email</button>
+              <button class="btn ghostd" id="bChange" type="button">Edit my details</button>
+            </div>
+          </div>
+          <p id="verifiedNote" class="tip" hidden>✓ Email verified</p>
+          <p id="info" class="tip" hidden></p>
+        </div>
+
+        <p id="err" class="err" role="alert" hidden></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<a id="waFloat" class="wafloat" href="#" target="_blank" rel="noopener" aria-label="Chat on WhatsApp" hidden><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><path fill="#fff" d="M16 3C9 3 3.3 8.6 3.3 15.6c0 2.3.6 4.5 1.8 6.4L3 29l7.2-1.9c1.8 1 3.8 1.5 5.8 1.5 7 0 12.7-5.6 12.7-12.6S23 3 16 3zm0 23.1c-1.8 0-3.6-.5-5.2-1.4l-.4-.2-4.3 1.1 1.2-4.2-.3-.4c-1-1.6-1.5-3.5-1.5-5.4C5.5 10 10.2 5.3 16 5.3S26.5 10 26.5 15.6 21.8 26.1 16 26.1zm5.8-7.8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-1 1.2-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.5-1.6-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.6.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.5c.2.2 2.3 3.6 5.7 5 .8.3 1.4.5 1.9.7.8.3 1.5.2 2.1.1.6-.1 1.9-.8 2.2-1.5.3-.7.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z"/></svg><span>Chat with us</span></a>
+<footer>
+  <div class="wrap">
+    <span>© 2026 Widgetry Academy · Mobile App Development with Flutter</span>
+    <nav class="flinks"><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refund.html">Refund policy</a><a href="contact.html">Contact</a></nav>
+  </div>
+</footer>
+
+<script src="site-config.js"></script>
+<script>
+(function(){
+  var cfg=(window.WIDGETRY&&window.WIDGETRY.razorpay)||{};
+  document.querySelectorAll('.paybox').forEach(function(box){
+    var id=cfg[box.getAttribute('data-pay')];
+    if(!id){box.innerHTML='<span class="paysoon">Online payment opening soon</span>';return;}
+    var f=document.createElement('form'); var sc=document.createElement('script');
+    sc.src='https://checkout.razorpay.com/v1/payment-button.js'; sc.async=true; sc.setAttribute('data-payment_button_id',id);
+    f.appendChild(sc); box.appendChild(f);
+  });
+})();
+</script>
+<script>
+(function(){
+  var C=window.WIDGETRY||{}, B=C.batch||{};
+  var esc=function(t){var d=document.createElement('div');d.textContent=t;return d.innerHTML;};
+  // WhatsApp
+  var waNum=(C.whatsapp||'').replace(/\D/g,'');
+  window.waLink=function(msg){return waNum?'https://wa.me/'+waNum+'?text='+encodeURIComponent(msg):null;};
+  var wf=document.getElementById('waFloat');
+  if(waNum&&wf){wf.href=waLink('Hi! I have a question about the Widgetry Academy Flutter workshop.');wf.hidden=false;
+    wf.addEventListener('click',function(){window.fbq&&fbq('track','Contact');});}
+  // Batch strip (hero) + next batch card (fees)
+  var parts=[];
+  if(B.startDate)parts.push('Starts '+B.startDate); if(B.days)parts.push(B.days); if(B.time)parts.push(B.time); if(B.mode)parts.push(B.mode);
+  var strip=document.getElementById('batchStrip');
+  if(strip){strip.innerHTML='<b>'+esc(B.name||'Next batch')+'</b>'+(B.startDate?parts.map(function(p){return '<span>'+esc(p)+'</span>';}).join(''):'<span>Dates announced soon · Reserve now to get first access</span>')+(B.seatsLeft!=null?'<span>🔥 '+esc(String(B.seatsLeft))+' early-bird seats left</span>':'');strip.hidden=false;}
+  var nb=document.getElementById('nextBatch');
+  if(nb){var demoUrl=waLink('Hi! I would like to book the free demo class for the Widgetry Academy Flutter workshop.')||'#register';
+    nb.innerHTML='<div><p class="nb-k">'+esc(B.name||'Next batch')+'</p><p class="nb-t">'+(B.startDate?'Starts '+esc(B.startDate):'Dates announced soon')+'</p></div>'+
+      '<ul>'+(B.days?'<li>🗓 '+esc(B.days)+'</li>':'')+(B.time?'<li>⏰ '+esc(B.time)+'</li>':'')+(B.mode?'<li>📍 '+esc(B.mode)+'</li>':'')+(B.demo?'<li>🎓 '+esc(B.demo)+'</li>':'<li>🎓 Free demo class available</li>')+'</ul>'+
+      '<a class="btn" href="'+demoUrl+'"'+(demoUrl.charAt(0)==='#'?'':' target="_blank" rel="noopener"')+'>Book free demo</a>';nb.hidden=false;}
+  var fl=document.getElementById('ebFlag'); if(fl&&B.seatsLeft!=null){fl.textContent=B.seatsLeft>0?(B.seatsLeft+' of 10 seats left'):'Early bird full';}
+  // Meta Pixel
+  if(/^\d+$/.test(C.metaPixelId||'')){
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init',C.metaPixelId); fbq('track','PageView');
+    document.querySelectorAll('.paybox').forEach(function(b){b.addEventListener('pointerdown',function(){fbq('track','InitiateCheckout',{currency:'INR',value:{earlyBird:3499,regular:4999,booking:2500}[b.getAttribute('data-pay')]||0});},{once:true});});
+  }
+})();
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, onAuthStateChanged, reload, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+auth.languageCode = "en";
+const db = getFirestore(app);
+const $ = (id) => document.getElementById(id);
+const returnUrl = location.origin + location.pathname + "#register";
+
+function err(msg){ const e=$("err"); e.textContent = msg || ""; e.hidden = !msg; }
+function info(msg){ const e=$("info"); e.textContent = msg || ""; e.hidden = !msg; }
+function busy(b,on,label){ b.disabled = on; if(label) b.textContent = label; }
+const friendly = (e) => ({
+  "auth/email-already-in-use":"This email has already reserved a seat. Please use a different email.",
+  "auth/invalid-email":"Please enter a valid email address.",
+  "auth/too-many-requests":"Too many attempts. Please wait a few minutes and try again.",
+  "auth/network-request-failed":"Network problem. Check your internet connection and try again.",
+  "auth/operation-not-allowed":"Registration is temporarily unavailable. Please try again later.",
+  "permission-denied":"Couldn't save your reservation. Please refresh and try again."
+}[e?.code] || (e?.message || "Something went wrong. Please try again."));
+
+function readForm(){
+  const d = { name:$("name").value.trim(), level:$("level").value, email:$("email").value.trim().toLowerCase(),
+              phone:$("phone").value.replace(/\D/g,""), exp:$("exp").value };
+  if(!d.name || !d.level) throw new Error("Please enter your name and class/course.");
+  if(!/^\S+@\S+\.\S+$/.test(d.email)) throw new Error("Please enter a valid email address.");
+  if(!/^[6-9]\d{9}$/.test(d.phone)) throw new Error("Please enter a valid 10-digit Indian mobile number.");
+  return d;
+}
+function randomPassword(){
+  const a = new Uint8Array(24); crypto.getRandomValues(a);
+  return Array.from(a, b => b.toString(16).padStart(2,"0")).join("") + "Aa1!";
+}
+function prefill(d){
+  $("name").value = d.name || ""; $("level").value = d.level || ""; if(d.experience) $("exp").value = d.experience;
+  $("email").value = d.email || ""; $("phone").value = (d.phone || "").replace(/^\+91/,"");
+}
+function showForm(){ $("fDetails").hidden = false; $("pDone").hidden = true; }
+function showDone(d, verified){
+  $("fDetails").hidden = true; $("pDone").hidden = false;
+  $("doneName").textContent = d.name; $("donePhone").textContent = d.phone; $("doneEmail").textContent = d.email;
+  $("verifyBox").hidden = verified; $("verifiedNote").hidden = !verified;
+}
+
+// Reserve: create account + save reservation. Email verification is optional.
+$("fDetails").addEventListener("submit", async (e)=>{
+  e.preventDefault(); err();
+  let d; try{ d = readForm(); }catch(x){ return err(x.message); }
+  const b=$("bSubmit"); busy(b,true,"Reserving…");
+  try{
+    const { user } = await createUserWithEmailAndPassword(auth, d.email, randomPassword());
+    const rec = { name:d.name, level:d.level, experience:d.exp, email:user.email, phone:"+91"+d.phone,
+                  emailVerified:false, phoneVerified:false, batch:"Weekend batch", status:"reserved", createdAt: serverTimestamp() };
+    await setDoc(doc(db,"registrations",user.uid), rec);
+    showDone(rec, false);
+    window.fbq && fbq('track','Lead',{content_name:'Flutter workshop seat'});
+  }catch(x){ err(friendly(x)); }
+  finally{ busy(b,false,"Reserve my seat"); }
+});
+
+// Optional email verification
+let poll;
+async function checkVerified(){
+  const u = auth.currentUser; if(!u) return false;
+  try{ await reload(u); }catch(_){ return false; }
+  if(!u.emailVerified) return false;
+  try{
+    await u.getIdToken(true);
+    await updateDoc(doc(db,"registrations",u.uid), { emailVerified:true, status:"verified", verifiedAt: serverTimestamp() });
+  }catch(_){}
+  clearInterval(poll); info(); $("verifyBox").hidden = true; $("verifiedNote").hidden = false;
+  return true;
+}
+$("bVerify").addEventListener("click", async ()=>{
+  err(); const u = auth.currentUser; if(!u) return;
+  const b=$("bVerify"); busy(b,true,"Sending…");
+  try{
+    await sendEmailVerification(u, { url: returnUrl });
+    info("Sent to " + u.email + ". If it's not in your inbox, check Spam.");
+    clearInterval(poll); poll = setInterval(checkVerified, 5000);
+    let t=60; const iv=setInterval(()=>{ t--; b.textContent="Resend in "+t+"s"; if(t<=0){ clearInterval(iv); busy(b,false,"Resend email"); } },1000);
+  }catch(x){ err(friendly(x)); busy(b,false,"Send verification email"); }
+});
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible" && !$("pDone").hidden) checkVerified(); });
+
+// Edit details: cancel the unverified reservation and go back to the form
+$("bChange").addEventListener("click", async ()=>{
+  err(); info(); clearInterval(poll);
+  const u = auth.currentUser; const b=$("bChange"); busy(b,true,"One moment…");
+  try{
+    if(u){
+      try{ const snap = await getDoc(doc(db,"registrations",u.uid)); if(snap.exists()) prefill(snap.data()); await deleteDoc(doc(db,"registrations",u.uid)); }catch(_){}
+      try{ await deleteUser(u); }catch(_){ await signOut(auth); }
+    }
+  }finally{ busy(b,false,"Edit my details"); showForm(); $("name").focus(); }
+});
+
+// Returning visitor in the same browser
+onAuthStateChanged(auth, async (u)=>{
+  if(!u) return showForm();
+  try{
+    const snap = await getDoc(doc(db,"registrations",u.uid));
+    if(!snap.exists()) return showForm();
+    const d = snap.data(); prefill(d); showDone(d, !!d.emailVerified);
+    if(!d.emailVerified) checkVerified();
+  }catch(_){ showForm(); }
+});
+</script>
+
+
+</body>
+</html>

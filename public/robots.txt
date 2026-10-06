@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /thank-you.html
+Sitemap: https://widgetry-academy.web.app/sitemap.xml

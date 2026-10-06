@@ -1,0 +1,34 @@
+// ===== Widgetry Academy: site settings =====
+// Edit only the values in quotes, then redeploy (firebase deploy --only hosting).
+
+window.WIDGETRY = {
+  // Razorpay Payment Button IDs (start with "pl_"). Leave "" to show "Online payment opening soon".
+  // Use TEST IDs only on a preview channel; on the live site use LIVE IDs or leave empty.
+  razorpay: {
+    earlyBird: "",   // ₹3,499 – first 10 seats
+    regular:   "",   // ₹4,999
+    booking:   ""    // ₹2,500 – pay in 2 parts
+  },
+
+  // ---- Next batch (shown in the hero, fees section and WhatsApp messages) ----
+  batch: {
+    name:      "Batch 1",
+    startDate: "",                       // e.g. "Saturday, 1 November 2026"
+    days:      "Saturdays & Sundays",
+    time:      "",                       // e.g. "10:00 AM – 12:00 PM IST"
+    mode:      "",                       // e.g. "Live online (Google Meet)" or "In-person, Salt Lake"
+    demo:      "",                       // e.g. "Free demo: Sunday, 26 October, 11 AM"
+    seatsLeft: null                      // early-bird seats left, e.g. 7 (null = hide). Keep it honest.
+  },
+
+  // ---- Contact (Contact page, policy pages, WhatsApp button) ----
+  whatsapp:     "",                   // WhatsApp number with country code, digits only, e.g. "919876543210". Empty = no WhatsApp button.
+  contactEmail: "",                   // e.g. "widgetry.academy@gmail.com"
+  contactPhone: "",                   // e.g. "+91 98765 43210" (optional)
+  instagram:    "widgetry.academy",   // Instagram handle without @
+  address:      "",                   // e.g. "Kolkata, West Bengal, India" (Razorpay may ask for this)
+  ownerName:    "Kishan Kumar Sharma",// Legal name used for Razorpay KYC
+
+  // ---- Tracking ----
+  metaPixelId:  ""                    // Meta (Facebook/Instagram) Pixel ID, digits only. Empty = off.
+};

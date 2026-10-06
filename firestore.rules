@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ADMIN: paste your admin account's UID here (Firebase console → Authentication → Users → User UID).
+    function isAdmin() {
+      return request.auth != null && request.auth.uid in ['PASTE_ADMIN_UID_HERE'];
+    }
+
+    // One reservation per student. Document ID = the student's Firebase UID.
+    match /registrations/{uid} {
+
+      // Students can read only their own reservation. The admin can read all.
+      allow read: if (request.auth != null && request.auth.uid == uid) || isAdmin();
+
+      // Create: seat is "reserved" immediately; email verification is optional and comes later.
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name','level','experience','email','phone','emailVerified','phoneVerified','batch','status','createdAt'])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() < 100
+        && request.resource.data.level is string
+        && request.resource.data.experience is string
+        && request.resource.data.phone is string
+        && request.resource.data.phone.matches('^\\+91[6-9][0-9]{9}$')
+        && request.resource.data.emailVerified == false
+        && request.resource.data.phoneVerified == false
+        && request.resource.data.status == 'reserved'
+        && request.resource.data.createdAt == request.time;
+
+      // Admin: may update payment and notes fields only.
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['plan','amountPaid','paymentId','payStatus','notes','adminUpdatedAt']);
+
+      // Student: may only mark the email verified, once Firebase confirms it.
+      allow update: if request.auth != null
+        && request.auth.uid == uid
+        && request.auth.token.email_verified == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['emailVerified','status','verifiedAt'])
+        && request.resource.data.emailVerified == true
+        && request.resource.data.status == 'verified'
+        && request.resource.data.verifiedAt == request.time;
+
+      // Delete: a student may cancel their own reservation only while it is still unverified ("Change email").
+      allow delete: if (request.auth != null
+        && request.auth.uid == uid
+        && resource.data.emailVerified == false) || isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin | Widgetry Academy</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{--bg:#f3f6f4;--surface:#fff;--ink:#0e1f1a;--muted:#56695f;--line:#d8e2dc;--accent:#0f6b56;--deep:#0c2a23;--gold:#f2a900;--soft:#e8f1ec;--bad:#c0392b;--warn:#b26a00;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans","Segoe UI",system-ui,sans-serif;font-size:15px}
+header{background:var(--deep);color:#fff}
+header .w{max-width:1280px;margin:0 auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+header b{font-family:"Unbounded",sans-serif;font-size:17px}
+header small{color:#a8c2b6;margin-left:10px;font-size:13px}
+main{max-width:1280px;margin:0 auto;padding:24px 20px 60px}
+.btn{font:inherit;font-weight:700;border:0;border-radius:10px;padding:10px 16px;cursor:pointer;background:var(--accent);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+header .btn.ghost{color:#fff;border-color:#245446}
+.btn:disabled{opacity:.6;cursor:wait}
+input,select,textarea{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);width:100%}
+label{display:grid;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.login{max-width:380px;margin:60px auto;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:28px;display:grid;gap:14px}
+.login h1{font-family:"Unbounded",sans-serif;font-size:22px;margin:0}
+.err{background:#fdecea;border:1px solid #f3c1bb;color:#8a1f13;border-radius:10px;padding:10px 12px;font-size:14px}
+.note{background:#fff8e6;border:1px solid #f1d79a;color:#6b4a00;border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.5}
+.note code{background:#fff;border:1px solid #f1d79a;border-radius:6px;padding:2px 6px;font-family:"JetBrains Mono",monospace;font-size:13px;user-select:all;word-break:break-all}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.kpi span{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.kpi b{display:block;font-family:"Unbounded",sans-serif;font-size:22px;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi.money b{color:var(--accent)}
+@media (max-width:1000px){.kpis{grid-template-columns:repeat(3,1fr)}}@media (max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:end}
+.tools label{min-width:180px;flex:1}.tools .btn{height:42px}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;min-width:1000px}
+th,td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:#f7faf8;position:sticky;top:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr:hover td{background:#fafcfb}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.p-unpaid{background:#eef1ef;color:#56695f}.p-paid{background:#dff4ea;color:#0f6b56}.p-part{background:#fff1d6;color:#8a5a00}.p-refunded{background:#fde6e3;color:#a32d1d}.p-cancelled{background:#eceaea;color:#555}
+.small{font-size:13px;color:var(--muted)}
+a{color:var(--accent)}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+dialog{border:0;border-radius:18px;padding:0;max-width:460px;width:calc(100% - 32px);box-shadow:0 30px 80px -20px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(12,42,35,.45)}
+.dlg{padding:22px;display:grid;gap:12px}
+.dlg h2{margin:0;font-size:18px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.acts{display:flex;justify-content:space-between;gap:10px;margin-top:6px}
+</style>
+</head>
+<body>
+<header><div class="w"><div><b>Widgetry Academy</b><small>Admin</small></div><div id="who" hidden><span id="whoEmail" class="small" style="color:#a8c2b6;margin-right:10px"></span><button class="btn ghost" id="bOut">Sign out</button></div></div></header>
+<main>
+  <form class="login" id="fLogin" hidden>
+    <h1>Admin sign in</h1>
+    <label>Email<input id="lEmail" type="email" autocomplete="username" required></label>
+    <label>Password<input id="lPass" type="password" autocomplete="current-password" required></label>
+    <button class="btn" id="bIn" type="submit">Sign in</button>
+    <p class="err" id="lErr" hidden></p>
+  </form>
+
+  <div id="denied" class="note" hidden></div>
+
+  <section id="app" hidden>
+    <div class="kpis">
+      <div class="kpi"><span>Registrations</span><b id="kTotal">0</b></div>
+      <div class="kpi"><span>Paid in full</span><b id="kPaid">0</b></div>
+      <div class="kpi"><span>Part-paid</span><b id="kPart">0</b></div>
+      <div class="kpi"><span>Not paid yet</span><b id="kUnpaid">0</b></div>
+      <div class="kpi money"><span>Collected</span><b id="kRev">₹0</b></div>
+      <div class="kpi"><span>Balance due</span><b id="kDue">₹0</b></div>
+    </div>
+    <div class="tools">
+      <label>Search<input id="q" placeholder="Name, phone, email, payment ID"></label>
+      <label>Payment status<select id="fStatus"><option value="">All</option><option value="unpaid">Not paid</option><option value="paid">Paid</option><option value="part-paid">Part-paid</option><option value="refunded">Refunded</option><option value="cancelled">Cancelled</option></select></label>
+      <button class="btn ghost" id="bReload" type="button">Refresh</button>
+      <button class="btn" id="bCsv" type="button">Export CSV</button>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Registered</th><th>Student</th><th>Class / course</th><th>Contact</th><th>Experience</th><th>Plan</th><th class="num">Paid</th><th class="num">Due</th><th>Status</th><th></th></tr></thead>
+      <tbody id="rows"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody>
+    </table></div>
+    <p class="small" style="margin-top:12px">Always confirm a payment in the Razorpay dashboard before marking it Paid. Fees: Early bird ₹3,499 · Regular ₹4,999 · Booking ₹2,500 (+ balance).</p>
+  </section>
+</main>
+
+<dialog id="dlg"><form class="dlg" id="fEdit" method="dialog">
+  <h2 id="dName">Edit payment</h2>
+  <p class="small" id="dSub"></p>
+  <div class="row2">
+    <label>Plan<select id="ePlan"><option value="">Not chosen</option><option value="early-bird">Early bird ₹3,499</option><option value="regular">Regular ₹4,999</option><option value="booking">Booking ₹2,500 + balance</option></select></label>
+    <label>Status<select id="eStatus"><option value="unpaid">Not paid</option><option value="part-paid">Part-paid</option><option value="paid">Paid</option><option value="refunded">Refunded</option><option value="cancelled">Cancelled</option></select></label>
+  </div>
+  <div class="row2">
+    <label>Amount paid (₹)<input id="eAmt" type="number" min="0" step="1"></label>
+    <label>Razorpay payment ID<input id="ePid" placeholder="pay_…"></label>
+  </div>
+  <label>Notes<textarea id="eNotes" rows="3" placeholder="e.g. Balance promised by Weekend 2"></textarea></label>
+  <p class="err" id="eErr" hidden></p>
+  <div class="acts"><button class="btn ghost" value="cancel" formnovalidate>Cancel</button><button class="btn" id="bSave" value="save">Save</button></div>
+</form></dialog>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
+const $ = id => document.getElementById(id);
+const PRICE = { "early-bird": 3499, "regular": 4999, "booking": 4999 };
+const LABEL = { "early-bird": "Early bird", "regular": "Regular", "booking": "Booking (2 parts)" };
+const SLABEL = { unpaid: "Not paid", "part-paid": "Part-paid", paid: "Paid", refunded: "Refunded", cancelled: "Cancelled" };
+const SCLASS = { unpaid: "p-unpaid", "part-paid": "p-part", paid: "p-paid", refunded: "p-refunded", cancelled: "p-cancelled" };
+const inr = n => "₹" + Math.round(n || 0).toLocaleString("en-IN");
+const esc = t => { const d = document.createElement("div"); d.textContent = t ?? ""; return d.innerHTML; };
+let all = [], editing = null;
+
+function due(r) { const st = r.payStatus || "unpaid"; if (["refunded", "cancelled"].includes(st) || !r.plan) return 0; return Math.max(0, (PRICE[r.plan] || 0) - (r.amountPaid || 0)); }
+function fmtDate(ts) { const d = ts?.toDate ? ts.toDate() : null; return d ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"; }
+
+onAuthStateChanged(auth, async u => {
+  $("fLogin").hidden = !!u; $("who").hidden = !u; $("denied").hidden = true; $("app").hidden = true;
+  if (!u) return;
+  $("whoEmail").textContent = u.email || "";
+  await load(u);
+});
+
+$("fLogin").addEventListener("submit", async e => {
+  e.preventDefault(); $("lErr").hidden = true; $("bIn").disabled = true;
+  try { await signInWithEmailAndPassword(auth, $("lEmail").value.trim(), $("lPass").value); }
+  catch (x) { $("lErr").textContent = x.code === "auth/invalid-credential" ? "Wrong email or password." : (x.message || "Sign-in failed."); $("lErr").hidden = false; }
+  finally { $("bIn").disabled = false; }
+});
+$("bOut").onclick = () => signOut(auth);
+$("bReload").onclick = () => load(auth.currentUser);
+
+async function load(u) {
+  try {
+    const snap = await getDocs(collection(db, "registrations"));
+    all = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    $("app").hidden = false; render();
+  } catch (x) {
+    const d = $("denied"); d.hidden = false;
+    d.innerHTML = x.code === "permission-denied"
+      ? "<b>This account isn't set up as admin yet.</b><br>Copy this UID: <code>" + esc(u.uid) + "</code><br>Paste it into <code>firestore.rules</code> in place of <code>PASTE_ADMIN_UID_HERE</code>, then run <code>firebase deploy --only firestore:rules</code> and refresh this page."
+      : "Couldn't load registrations: " + esc(x.message || x.code);
+  }
+}
+
+function render() {
+  const q = $("q").value.trim().toLowerCase(), fs = $("fStatus").value;
+  const list = all.filter(r => (!fs || (r.payStatus || "unpaid") === fs) && (!q || [r.name, r.phone, r.email, r.paymentId, r.level].join(" ").toLowerCase().includes(q)));
+  const cnt = s => all.filter(r => (r.payStatus || "unpaid") === s).length;
+  $("kTotal").textContent = all.length; $("kPaid").textContent = cnt("paid"); $("kPart").textContent = cnt("part-paid"); $("kUnpaid").textContent = cnt("unpaid");
+  $("kRev").textContent = inr(all.filter(r => !["refunded", "cancelled"].includes(r.payStatus)).reduce((a, r) => a + (r.amountPaid || 0), 0));
+  $("kDue").textContent = inr(all.reduce((a, r) => a + due(r), 0));
+  if (!list.length) { $("rows").innerHTML = '<tr><td colspan="10" class="empty">' + (all.length ? "No matches." : "No registrations yet.") + "</td></tr>"; return; }
+  $("rows").innerHTML = list.map(r => {
+    const st = r.payStatus || "unpaid", wa = (r.phone || "").replace(/\D/g, "");
+    return `<tr>
+      <td class="small">${fmtDate(r.createdAt)}</td>
+      <td><b>${esc(r.name)}</b>${r.notes ? `<div class="small">📝 ${esc(r.notes)}</div>` : ""}</td>
+      <td>${esc(r.level)}</td>
+      <td><a href="https://wa.me/${wa}" target="_blank" rel="noopener">${esc(r.phone)}</a><div class="small">${esc(r.email)} ${r.emailVerified ? "✓" : ""}</div></td>
+      <td class="small">${esc(r.experience)}</td>
+      <td>${esc(LABEL[r.plan] || "—")}${r.paymentId ? `<div class="small">${esc(r.paymentId)}</div>` : ""}</td>
+      <td class="num">${inr(r.amountPaid)}</td>
+      <td class="num">${due(r) ? inr(due(r)) : "—"}</td>
+      <td><span class="pill ${SCLASS[st]}">${SLABEL[st]}</span></td>
+      <td><button class="btn ghost" data-id="${r.id}" style="padding:6px 12px">Edit</button></td></tr>`;
+  }).join("");
+  $("rows").querySelectorAll("button[data-id]").forEach(b => b.onclick = () => openEdit(b.dataset.id));
+}
+$("q").oninput = render; $("fStatus").onchange = render;
+
+function openEdit(id) {
+  editing = all.find(r => r.id === id); if (!editing) return;
+  $("dName").textContent = editing.name; $("dSub").textContent = (editing.phone || "") + " · " + (editing.email || "");
+  $("ePlan").value = editing.plan || ""; $("eStatus").value = editing.payStatus || "unpaid";
+  $("eAmt").value = editing.amountPaid ?? ""; $("ePid").value = editing.paymentId || ""; $("eNotes").value = editing.notes || "";
+  $("eErr").hidden = true; $("dlg").showModal();
+}
+$("ePlan").onchange = () => { if (!$("eAmt").value) { const p = $("ePlan").value; $("eAmt").value = p === "booking" ? 2500 : (PRICE[p] || ""); } };
+$("fEdit").addEventListener("submit", async e => {
+  if (e.submitter?.value !== "save") return;
+  e.preventDefault(); $("bSave").disabled = true; $("eErr").hidden = true;
+  const upd = { plan: $("ePlan").value, payStatus: $("eStatus").value, amountPaid: Number($("eAmt").value || 0), paymentId: $("ePid").value.trim(), notes: $("eNotes").value.trim().slice(0, 500), adminUpdatedAt: serverTimestamp() };
+  try { await updateDoc(doc(db, "registrations", editing.id), upd); Object.assign(editing, upd); $("dlg").close(); render(); }
+  catch (x) { $("eErr").textContent = "Couldn't save: " + (x.code === "permission-denied" ? "this account isn't admin in firestore.rules." : x.message); $("eErr").hidden = false; }
+  finally { $("bSave").disabled = false; }
+});
+
+$("bCsv").onclick = () => {
+  const cols = ["createdAt", "name", "level", "phone", "email", "emailVerified", "experience", "plan", "payStatus", "amountPaid", "balanceDue", "paymentId", "notes"];
+  const lines = [cols.join(",")].concat(all.map(r => cols.map(c => {
+    let v = c === "createdAt" ? fmtDate(r.createdAt) : c === "balanceDue" ? due(r) : c === "payStatus" ? (r.payStatus || "unpaid") : r[c];
+    v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }).join(",")));
+  const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "widgetry-registrations-" + new Date().toISOString().slice(0, 10) + ".csv"; a.click();
+};
+</script>
+</body>
+</html>
