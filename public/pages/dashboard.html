@@ -413,22 +413,31 @@
         return;
       }
 
-      // Open Razorpay using button ID
+      // Create a temporary container for the payment button
+      const paymentContainer = document.createElement('div');
+      paymentContainer.id = 'razorpay-payment-container';
+      paymentContainer.style.display = 'none';
+      document.body.appendChild(paymentContainer);
+
+      // Create form for payment button
       const form = document.createElement('form');
       form.method = 'POST';
-      form.action = `https://checkout.razorpay.com/i/${config.regular}/pay`;
 
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'user_id';
-      input.value = currentUser?.uid || '';
+      // Create and load the Razorpay payment button script
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/payment-button.js';
+      script.async = true;
+      script.setAttribute('data-payment_button_id', config.regular);
 
-      form.appendChild(input);
-      form.style.display = 'none';
-      document.body.appendChild(form);
+      form.appendChild(script);
+      paymentContainer.appendChild(form);
 
-      form.submit();
-      setTimeout(() => form.remove(), 1000);
+      // The payment button script will auto-load and trigger
+      // Clean up after 5 seconds
+      setTimeout(() => {
+        const container = document.getElementById('razorpay-payment-container');
+        if (container) container.remove();
+      }, 5000);
     }
 
     // Logout handler
