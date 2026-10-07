@@ -1,595 +1,263 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apply as Mentor | Widgetry Academy</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Unbounded:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles/base.css">
-  <link rel="stylesheet" href="../styles/components.css">
-  <style>
-    :root {
-      --bg: #f3f6f4;
-      --accent: #0f6b56;
-      --accent-2: #f2a900;
-      --text: #1a1a1a;
-      --border: #ddd;
-      --error: #dc3545;
-      --success: #28a745;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Become a Mentor | Widgetry Academy</title>
+<meta name="description" content="Teaching IT professional? Join Widgetry Academy mentors. No admin work, flexible batches, steady income.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../styles/base.css">
+<style>
+:root{
+  --bg:#f3f6f4; --surface:#fff; --ink:#0e1f1a; --muted:#56695f; --line:#d8e2dc;
+  --accent:#0f6b56; --accent-2:#f2a900; --accent-ink:#fff; --deep:#0c2a23; --deep-2:#123a30; --deep-line:#245446; --deep-fg:#eaf3ee; --deep-muted:#a8c2b6; --soft:#e3efe9;
+  --bad:#d64545; --ok:#1f9d55;
+  --display:"Unbounded","Segoe UI",system-ui,sans-serif;
+  --body:"DM Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6}
+a{color:var(--accent)}
+.w{max-width:1100px;margin:0 auto;padding:0 20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--accent-ink);padding:13px 24px;border-radius:12px;text-decoration:none;border:0;font:inherit;font-weight:700;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.6;cursor:wait}
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      padding: 40px 20px;
-    }
+.top{background:var(--deep);color:var(--deep-fg)}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 0;flex-wrap:wrap}
+.brand{color:#fff;text-decoration:none;font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.01em}
 
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
+section{padding:76px 0}
+.eyebrow{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:0}
+h2{font-family:var(--display);font-size:clamp(26px,3.6vw,38px);line-height:1.12;letter-spacing:-.015em;margin:10px 0 14px}
+.sub{color:var(--muted);max-width:640px;margin:0 0 36px}
 
-    .form-card {
-      background: white;
-      border-radius: 12px;
-      padding: 40px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
+/* form */
+.apply{background:var(--deep);color:var(--deep-fg)}
+.apply h2{color:#fff}
+.apply .sub{color:var(--deep-muted)}
+form.f{background:var(--surface);color:var(--ink);border-radius:24px;padding:32px;display:grid;grid-template-columns:1fr 1fr;gap:18px 20px}
+.f h4{grid-column:1/-1;margin:10px 0 -4px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.f h4:first-child{margin-top:0}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld.full{grid-column:1/-1}
+.fld label,.fld .lbl{font-weight:600;font-size:15px}
+.fld label i,.fld .lbl i{font-style:normal;color:var(--muted);font-weight:400}
+.fld input,.fld select,.fld textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;width:100%}
+.fld textarea{min-height:110px;resize:vertical}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips label{cursor:pointer}
+.chips input{position:absolute;opacity:0;pointer-events:none}
+.chips span{display:inline-block;padding:8px 14px;border-radius:99px;border:1.5px solid var(--line);font-size:14.5px;font-weight:500;user-select:none}
+.chips input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.consent{grid-column:1/-1;display:flex;gap:12px;align-items:flex-start;font-size:15px;background:var(--soft);padding:14px 16px;border-radius:12px}
+.consent input{margin-top:4px;width:18px;height:18px;accent-color:var(--accent);flex:none}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.err{grid-column:1/-1;color:var(--bad);font-weight:600;margin:0}
+.actions{grid-column:1/-1;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.actions small{color:var(--muted)}
+.done{background:var(--surface);color:var(--ink);border-radius:24px;padding:40px 32px;text-align:center}
+.done .big{width:64px;height:64px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:30px;margin:0 auto 16px}
+.done h3{font-family:var(--display);font-size:26px;margin:0 0 8px}
+.done p{color:var(--muted);max-width:520px;margin:0 auto 20px}
 
-    .form-header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
+.auth-required{background:var(--surface);color:var(--ink);border-radius:24px;padding:40px 32px;text-align:center;grid-column:1/-1}
+.auth-required p{color:var(--muted);margin:0 0 20px}
+.auth-required .btn{margin-top:10px}
 
-    .form-header h1 {
-      font-family: 'Unbounded', sans-serif;
-      font-size: 1.8rem;
-      color: var(--accent);
-      margin-bottom: 10px;
-    }
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:14px;padding:24px 0}
+footer .w{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer a{color:var(--muted)}
 
-    .form-header p {
-      color: #666;
-      font-size: 0.95rem;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: var(--text);
-      font-size: 0.9rem;
-    }
-
-    .required {
-      color: var(--error);
-    }
-
-    input[type="text"],
-    input[type="email"],
-    input[type="tel"],
-    input[type="number"],
-    textarea,
-    select {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.9rem;
-      transition: border-color 0.3s;
-    }
-
-    input[type="text"]:focus,
-    input[type="email"]:focus,
-    input[type="tel"]:focus,
-    input[type="number"]:focus,
-    textarea:focus,
-    select:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(15, 107, 86, 0.1);
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-
-    .skills-section {
-      margin-bottom: 20px;
-    }
-
-    .skill-checkboxes {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    .skill-checkbox {
-      display: flex;
-      align-items: center;
-    }
-
-    .skill-checkbox input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-      margin-right: 8px;
-    }
-
-    .skill-checkbox label {
-      margin: 0;
-      font-weight: 400;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-
-    .error-message {
-      color: var(--error);
-      font-size: 0.85rem;
-      margin-top: 5px;
-      display: none;
-    }
-
-    .error-message.show {
-      display: block;
-    }
-
-    .auth-required {
-      text-align: center;
-      padding: 40px 20px;
-      background: rgba(15, 107, 86, 0.05);
-      border-radius: 12px;
-      margin-top: 20px;
-    }
-
-    .auth-required p {
-      color: #666;
-      margin-bottom: 20px;
-    }
-
-    .auth-required a {
-      display: inline-block;
-      background: var(--accent);
-      color: white;
-      padding: 10px 24px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: 600;
-      transition: background 0.3s;
-    }
-
-    .auth-required a:hover {
-      background: #0a4a3f;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 30px;
-    }
-
-    button {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: background 0.3s;
-      font-family: 'DM Sans', sans-serif;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: #0a4a3f;
-    }
-
-    .btn-primary:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-
-    .btn-secondary {
-      background: transparent;
-      color: var(--accent);
-      border: 2px solid var(--accent);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(15, 107, 86, 0.05);
-    }
-
-    .success-message {
-      background: rgba(40, 167, 69, 0.1);
-      border: 1px solid var(--success);
-      color: #155724;
-      padding: 15px;
-      border-radius: 6px;
-      margin-bottom: 20px;
-      display: none;
-    }
-
-    .success-message.show {
-      display: block;
-    }
-
-    .loading-spinner {
-      display: none;
-      text-align: center;
-      margin: 20px 0;
-    }
-
-    .spinner {
-      width: 30px;
-      height: 30px;
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid var(--accent);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @media (max-width: 600px) {
-      .form-card {
-        padding: 20px;
-      }
-
-      .form-header h1 {
-        font-size: 1.5rem;
-      }
-
-      .skill-checkboxes {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+@media (max-width:900px){
+  form.f{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  section{padding:56px 0}
+  form.f{grid-template-columns:1fr;padding:22px 18px}
+}
+</style>
 </head>
 <body>
-  <div class="container">
-    <div class="form-card">
-      <div class="form-header">
-        <h1>Apply as Mentor</h1>
-        <p>Share your expertise and teach the next generation of Flutter developers</p>
+
+<div class="top">
+  <div class="w nav">
+    <a class="brand" href="../">Widgetry Academy</a>
+  </div>
+</div>
+
+<section class="apply" id="apply">
+  <div class="w">
+    <p class="eyebrow">Join Our Team</p>
+    <h2>Become a Widgetry Mentor</h2>
+    <p class="sub">Share your expertise and teach the next generation of Flutter developers. We handle students, payments, and marketing. You teach.</p>
+
+    <form class="f" id="fMentor" novalidate hidden>
+      <h4>About you</h4>
+      <div class="fld"><label for="m_name">Full name</label><input id="m_name" name="name" autocomplete="name" required maxlength="99"></div>
+      <div class="fld"><label for="m_email">Email</label><input id="m_email" name="email" type="email" autocomplete="email" required maxlength="150" readonly style="background:#f5f5f5"></div>
+      <div class="fld"><label for="m_phone">WhatsApp number</label><input id="m_phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+91 98xxxxxxxx" required maxlength="20"></div>
+
+      <h4>Your work</h4>
+      <div class="fld"><label for="m_company">Company / Organization</label><input id="m_company" name="company" required maxlength="100"></div>
+      <div class="fld"><label for="m_role">Role / Designation</label><input id="m_role" name="role" placeholder="e.g. Senior Flutter Developer" required maxlength="100"></div>
+      <div class="fld"><label for="m_exp">Total experience</label>
+        <select id="m_exp" name="experience" required>
+          <option value="">Select</option><option>1–3 years</option><option>3–5 years</option><option>5–8 years</option><option>8–12 years</option><option>12+ years</option>
+        </select></div>
+      <div class="fld"><label for="m_li">LinkedIn profile</label><input id="m_li" name="linkedin" type="url" placeholder="https://www.linkedin.com/in/…" maxlength="200"></div>
+
+      <div class="fld full"><span class="lbl">Skills you can teach</span>
+        <div class="chips" id="skills">
+          <label><input type="checkbox" value="Flutter"><span>Flutter</span></label>
+          <label><input type="checkbox" value="Dart"><span>Dart</span></label>
+          <label><input type="checkbox" value="Mobile Dev"><span>Mobile Dev</span></label>
+          <label><input type="checkbox" value="Web"><span>Web</span></label>
+          <label><input type="checkbox" value="Backend"><span>Backend</span></label>
+          <label><input type="checkbox" value="Firebase"><span>Firebase</span></label>
+          <label><input type="checkbox" value="UI/UX"><span>UI/UX</span></label>
+          <label><input type="checkbox" value="Testing"><span>Testing</span></label>
+        </div></div>
+
+      <h4>Teaching</h4>
+      <div class="fld full"><label for="m_course">What would you like to teach?</label><input id="m_course" name="course" placeholder="e.g. Flutter Basics, State Management" required maxlength="200"></div>
+      <div class="fld full"><label for="m_pitch">About you and your teaching style <i>(2–5 lines)</i></label><textarea id="m_pitch" name="bio" required maxlength="500"></textarea></div>
+      <div class="fld"><label for="m_avail">When are you available?</label>
+        <select id="m_avail" name="availability" required>
+          <option value="">Select</option><option>Weekends</option><option>Weekdays</option><option>Flexible</option>
+        </select></div>
+
+      <label class="consent"><input type="checkbox" id="m_ok" required><span>I confirm the details above are accurate and I can commit to teaching regularly.</span></label>
+
+      <p class="err" id="mErr" role="alert" hidden></p>
+      <div class="actions">
+        <button class="btn" id="mBtn" type="submit">Submit application</button>
+        <small>We'll review and contact you within 7 days.</small>
       </div>
+    </form>
 
-      <div id="authRequiredSection" class="auth-required" style="display: none;">
-        <p>You need to be logged in to apply as a mentor.</p>
-        <a href="login.html">Login to Your Account</a>
-        <p style="margin-top: 15px; font-size: 0.9rem;">
-          Don't have an account? <a href="register.html" style="color: var(--accent); text-decoration: underline;">Register here</a>
-        </p>
-      </div>
+    <div class="auth-required" id="authRequired" hidden>
+      <h3 style="margin:0 0 10px">Login Required</h3>
+      <p>You need to be logged in to apply as a mentor.</p>
+      <a class="btn" href="login.html">Login</a>
+      <p style="font-size:14px;margin-top:15px">Don't have an account? <a href="register.html">Register here</a></p>
+    </div>
 
-      <div id="loadingState" style="display: none; text-align: center; padding: 40px; color: #666;">
-        <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
-        <p>Loading...</p>
-      </div>
-
-      <form id="mentorForm" style="display: none;">
-        <div class="success-message" id="successMessage">
-          ✅ Application submitted successfully! We'll review your application and get back to you soon.
-        </div>
-
-        <!-- Basic Information -->
-        <div class="form-group">
-          <label for="name">Full Name <span class="required">*</span></label>
-          <input type="text" id="name" name="name" placeholder="Your full name" required>
-          <div class="error-message"></div>
-        </div>
-
-        <div class="form-group">
-          <label for="email">Email <span class="required">*</span></label>
-          <input type="email" id="email" name="email" placeholder="your@email.com" readonly style="background: #f5f5f5;">
-          <small style="color: #666;">Your registered email (read-only)</small>
-        </div>
-
-        <div class="form-group">
-          <label for="phone">Phone Number <span class="required">*</span></label>
-          <input type="tel" id="phone" name="phone" placeholder="+91 XXXXX XXXXX" required>
-          <div class="error-message"></div>
-        </div>
-
-        <!-- Professional Details -->
-        <div class="form-group">
-          <label for="role">Professional Role <span class="required">*</span></label>
-          <input type="text" id="role" name="role" placeholder="e.g., Senior Flutter Developer" required>
-          <div class="error-message"></div>
-        </div>
-
-        <div class="form-group">
-          <label for="company">Company/Organization</label>
-          <input type="text" id="company" name="company" placeholder="Your company name">
-        </div>
-
-        <div class="form-group">
-          <label for="experience">Years of Experience <span class="required">*</span></label>
-          <input type="number" id="experience" name="experience" min="0" max="50" placeholder="e.g., 5" required>
-          <div class="error-message"></div>
-        </div>
-
-        <div class="form-group">
-          <label for="linkedin">LinkedIn Profile URL</label>
-          <input type="text" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/yourprofile">
-        </div>
-
-        <!-- Skills Selection -->
-        <div class="skills-section">
-          <label>Technical Skills <span class="required">*</span></label>
-          <div class="skill-checkboxes">
-            <div class="skill-checkbox">
-              <input type="checkbox" id="skill_flutter" name="skills" value="Flutter">
-              <label for="skill_flutter">Flutter</label>
-            </div>
-            <div class="skill-checkbox">
-              <input type="checkbox" id="skill_dart" name="skills" value="Dart">
-              <label for="skill_dart">Dart</label>
-            </div>
-            <div class="skill-checkbox">
-              <input type="checkbox" id="skill_mobile" name="skills" value="Mobile Dev">
-              <label for="skill_mobile">Mobile Development</label>
-            </div>
-            <div class="skill-checkbox">
-              <input type="checkbox" id="skill_web" name="skills" value="Web">
-              <label for="skill_web">Web Development</label>
-            </div>
-            <div class="skill-checkbox">
-              <input type="checkbox" id="skill_backend" name="skills" value="Backend">
-              <label for="skill_backend">Backend/API</label>
-            </div>
-            <div class="skill-checkbox">
-              <input type="checkbox" id="skill_firebase" name="skills" value="Firebase">
-              <label for="skill_firebase">Firebase</label>
-            </div>
-            <div class="skill-checkbox">
-              <input type="checkbox" id="skill_ui" name="skills" value="UI/UX">
-              <label for="skill_ui">UI/UX Design</label>
-            </div>
-            <div class="skill-checkbox">
-              <input type="checkbox" id="skill_testing" name="skills" value="Testing">
-              <label for="skill_testing">Testing</label>
-            </div>
-          </div>
-          <div class="error-message"></div>
-        </div>
-
-        <!-- Teaching Details -->
-        <div class="form-group">
-          <label for="course">What will you teach? <span class="required">*</span></label>
-          <textarea id="course" name="course" placeholder="e.g., Flutter Basics, State Management, Firebase Integration" required></textarea>
-          <div class="error-message"></div>
-        </div>
-
-        <div class="form-group">
-          <label for="bio">About You <span class="required">*</span></label>
-          <textarea id="bio" name="bio" placeholder="Tell us about your experience and teaching approach" required></textarea>
-          <small style="color: #666;">Max 500 characters</small>
-          <div class="error-message"></div>
-        </div>
-
-        <!-- Availability -->
-        <div class="form-group">
-          <label for="availability">Your Availability <span class="required">*</span></label>
-          <select id="availability" name="availability" required>
-            <option value="">Select your availability</option>
-            <option value="Weekends">Weekends</option>
-            <option value="Weekdays">Weekdays</option>
-            <option value="Flexible">Flexible</option>
-          </select>
-          <div class="error-message"></div>
-        </div>
-
-        <!-- Form Actions -->
-        <div class="form-actions">
-          <button type="button" class="btn-secondary" onclick="window.history.back()">Cancel</button>
-          <button type="submit" class="btn-primary">Submit Application</button>
-        </div>
-
-        <div class="loading-spinner" id="loadingSpinner">
-          <div class="spinner"></div>
-          <p>Submitting your application...</p>
-        </div>
-      </form>
+    <div class="done" id="mDone" hidden>
+      <div class="big">✓</div>
+      <h3>Application submitted!</h3>
+      <p>Thank you, <span id="mDoneName"></span>. We'll review your application and contact you within 7 days via WhatsApp or email.</p>
+      <a class="btn" href="../mentor.html">View other mentors</a>
     </div>
   </div>
+</section>
 
-  <script type="module">
-    import { getCurrentUser, watchAuthState } from '../js/auth.js';
-    import { db } from '../js/firebase-init.js';
-    import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+<footer>
+  <div class="w">
+    <span>© 2026 Widgetry Academy</span>
+    <span><a href="../terms.html">Terms</a> · <a href="../privacy.html">Privacy</a></span>
+  </div>
+</footer>
 
-    const form = document.getElementById('mentorForm');
-    const authRequiredSection = document.getElementById('authRequiredSection');
-    const loadingState = document.getElementById('loadingState');
-    const successMessage = document.getElementById('successMessage');
-    const loadingSpinner = document.getElementById('loadingSpinner');
+<script type="module">
+import { watchAuthState, getCurrentUser } from '../js/auth.js';
+import { db } from '../js/firebase-init.js';
+import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-    // Check authentication on page load
-    watchAuthState((user) => {
-      // Hide loading state
-      loadingState.style.display = 'none';
+const form = document.getElementById('fMentor');
+const authRequired = document.getElementById('authRequired');
+const err = document.getElementById('mErr');
+const btn = document.getElementById('mBtn');
+const done = document.getElementById('mDone');
 
-      if (!user) {
-        authRequiredSection.style.display = 'block';
-        form.style.display = 'none';
-      } else {
-        authRequiredSection.style.display = 'none';
-        form.style.display = 'block';
-        document.getElementById('email').value = user.email;
-        document.getElementById('name').value = user.displayName || '';
-      }
-    });
+const $ = id => document.getElementById(id);
+const val = id => $(id).value.trim();
+const picked = id => [...document.querySelectorAll("#" + id + " input:checked")].map(i => i.value);
 
-    // Form submission
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+// Check auth state
+watchAuthState((user) => {
+  if (!user) {
+    form.hidden = true;
+    authRequired.hidden = false;
+  } else {
+    form.hidden = false;
+    authRequired.hidden = true;
+    document.getElementById('m_name').value = user.displayName || '';
+    document.getElementById('m_email').value = user.email;
+  }
+});
 
-      // Clear previous success message
-      successMessage.classList.remove('show');
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  err.hidden = true;
 
-      // Validate form
-      if (!validateForm()) {
-        return;
-      }
+  const user = getCurrentUser();
+  if (!user) {
+    window.location.href = 'login.html';
+    return;
+  }
 
-      const currentUser = getCurrentUser();
-      if (!currentUser) {
-        alert('You must be logged in to apply');
-        return;
-      }
+  let phone = val("m_phone").replace(/[\s()-]/g, "");
+  if (/^[6-9]\d{9}$/.test(phone)) phone = "+91" + phone;
+  if (/^91[6-9]\d{9}$/.test(phone)) phone = "+" + phone;
 
-      loadingSpinner.style.display = 'block';
+  const d = {
+    uid: user.uid,
+    name: val("m_name"),
+    email: user.email.toLowerCase(),
+    phone,
+    company: val("m_company"),
+    role: val("m_role"),
+    experience: val("m_exp"),
+    linkedin: val("m_li"),
+    skills: picked("skills"),
+    course: val("m_course"),
+    bio: val("m_pitch"),
+    availability: val("m_avail"),
+    status: "pending",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
 
-      try {
-        // Get selected skills
-        const selectedSkills = Array.from(document.querySelectorAll('input[name="skills"]:checked'))
-          .map(checkbox => checkbox.value);
+  // Validation
+  if (d.name.length < 2) return fail("Please enter your full name.");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return fail("Please enter a valid email.");
+  if (!/^\+[1-9]\d{9,14}$/.test(d.phone)) return fail("Please enter a valid WhatsApp number with country code.");
+  if (!d.company || !d.role) return fail("Please add your company and role.");
+  if (!d.experience) return fail("Please select your experience level.");
+  if (!d.skills.length) return fail("Please select at least one skill you can teach.");
+  if (!d.course) return fail("Tell us what you'd like to teach.");
+  if (!d.bio || d.bio.length < 20) return fail("Please write a few lines about your teaching style.");
+  if (!d.availability) return fail("Please select your availability.");
 
-        // Prepare application data
-        const applicationData = {
-          uid: currentUser.uid,
-          email: currentUser.email,
-          name: document.getElementById('name').value.trim(),
-          phone: document.getElementById('phone').value.trim(),
-          role: document.getElementById('role').value.trim(),
-          company: document.getElementById('company').value.trim(),
-          experience: parseInt(document.getElementById('experience').value),
-          linkedin: document.getElementById('linkedin').value.trim(),
-          skills: selectedSkills,
-          course: document.getElementById('course').value.trim(),
-          bio: document.getElementById('bio').value.trim(),
-          availability: document.getElementById('availability').value,
-          status: 'pending',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        };
+  btn.disabled = true;
+  btn.textContent = "Submitting…";
 
-        // Save to Firestore
-        const docRef = await addDoc(collection(db, 'mentorApplications'), applicationData);
-        console.log('Mentor application submitted:', docRef.id);
+  try {
+    await addDoc(collection(db, "mentorApplications"), d);
+    document.getElementById('mDoneName').textContent = d.name.split(" ")[0];
+    form.hidden = true;
+    done.hidden = false;
+    done.scrollIntoView({behavior:"smooth"});
+  } catch (x) {
+    console.error(x);
+    fail("Couldn't submit right now. Please check your connection and try again.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Submit application";
+  }
+});
 
-        // Show success message
-        loadingSpinner.style.display = 'none';
-        successMessage.classList.add('show');
-        form.reset();
-
-        // Redirect after 2 seconds
-        setTimeout(() => {
-          window.location.href = '/mentor.html';
-        }, 2000);
-
-      } catch (error) {
-        console.error('Error submitting application:', error);
-        loadingSpinner.style.display = 'none';
-        alert('Error submitting application. Please try again.\n' + error.message);
-      }
-    });
-
-    // Form validation
-    function validateForm() {
-      let isValid = true;
-      const errorMessages = document.querySelectorAll('.error-message');
-
-      // Clear all error messages
-      errorMessages.forEach(msg => msg.classList.remove('show'));
-
-      // Validate name
-      const name = document.getElementById('name').value.trim();
-      if (!name) {
-        showError('name', 'Name is required');
-        isValid = false;
-      }
-
-      // Validate phone
-      const phone = document.getElementById('phone').value.trim();
-      if (!phone) {
-        showError('phone', 'Phone number is required');
-        isValid = false;
-      } else if (!/^\+?[\d\s-()]{10,}$/.test(phone)) {
-        showError('phone', 'Please enter a valid phone number');
-        isValid = false;
-      }
-
-      // Validate role
-      const role = document.getElementById('role').value.trim();
-      if (!role) {
-        showError('role', 'Professional role is required');
-        isValid = false;
-      }
-
-      // Validate experience
-      const experience = document.getElementById('experience').value;
-      if (!experience || parseInt(experience) < 0) {
-        showError('experience', 'Please enter valid years of experience');
-        isValid = false;
-      }
-
-      // Validate skills
-      const selectedSkills = document.querySelectorAll('input[name="skills"]:checked').length;
-      if (selectedSkills === 0) {
-        showError('skills-section', 'Please select at least one skill');
-        isValid = false;
-      }
-
-      // Validate course
-      const course = document.getElementById('course').value.trim();
-      if (!course) {
-        showError('course', 'Please describe what you will teach');
-        isValid = false;
-      }
-
-      // Validate bio
-      const bio = document.getElementById('bio').value.trim();
-      if (!bio) {
-        showError('bio', 'Please tell us about yourself');
-        isValid = false;
-      } else if (bio.length > 500) {
-        showError('bio', 'Bio must be 500 characters or less');
-        isValid = false;
-      }
-
-      // Validate availability
-      const availability = document.getElementById('availability').value;
-      if (!availability) {
-        showError('availability', 'Please select your availability');
-        isValid = false;
-      }
-
-      return isValid;
-    }
-
-    function showError(fieldId, message) {
-      const field = document.getElementById(fieldId);
-      if (!field) return;
-
-      let errorElement;
-      if (fieldId === 'skills-section') {
-        errorElement = document.querySelector('.skills-section .error-message');
-      } else {
-        errorElement = field.parentElement.querySelector('.error-message');
-      }
-
-      if (errorElement) {
-        errorElement.textContent = message;
-        errorElement.classList.add('show');
-      }
-    }
-  </script>
+function fail(m) {
+  err.textContent = m;
+  err.hidden = false;
+  err.scrollIntoView({behavior:"smooth", block:"center"});
+}
+</script>
 </body>
 </html>
