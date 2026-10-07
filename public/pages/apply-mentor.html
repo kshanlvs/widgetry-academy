@@ -405,7 +405,7 @@
   </div>
 
   <script type="module">
-    import { getCurrentUser, onAuthReady } from '../js/auth.js';
+    import { getCurrentUser, watchAuthState } from '../js/auth.js';
     import { db } from '../js/firebase-init.js';
     import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
@@ -415,17 +415,15 @@
     const loadingSpinner = document.getElementById('loadingSpinner');
 
     // Check authentication on page load
-    onAuthReady(async () => {
-      const currentUser = getCurrentUser();
-
-      if (!currentUser) {
+    watchAuthState((user) => {
+      if (!user) {
         authRequiredSection.style.display = 'block';
         form.style.display = 'none';
       } else {
         authRequiredSection.style.display = 'none';
         form.style.display = 'block';
-        document.getElementById('email').value = currentUser.email;
-        document.getElementById('name').value = currentUser.displayName || '';
+        document.getElementById('email').value = user.email;
+        document.getElementById('name').value = user.displayName || '';
       }
     });
 
