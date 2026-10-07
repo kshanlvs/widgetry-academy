@@ -100,7 +100,7 @@ footer a{color:var(--muted)}
     <form class="f" id="fMentor" novalidate hidden>
       <h4>About you</h4>
       <div class="fld"><label for="m_name">Full name</label><input id="m_name" name="name" autocomplete="name" required maxlength="99"></div>
-      <div class="fld"><label for="m_email">Email</label><input id="m_email" name="email" type="email" autocomplete="email" required maxlength="150" readonly style="background:#e8ecea;color:#0e1f1a;cursor:not-allowed;opacity:0.9"></div>
+      <div class="fld"><label for="m_email">Email</label><input id="m_email" name="email" type="email" autocomplete="email" required maxlength="150"></div>
       <div class="fld"><label for="m_phone">WhatsApp number</label><input id="m_phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+91 98xxxxxxxx" required maxlength="20"></div>
 
       <h4>Your work</h4>
@@ -185,6 +185,21 @@ watchAuthState((user) => {
     // Pre-fill name and email if logged in
     document.getElementById('m_name').value = user.displayName || '';
     document.getElementById('m_email').value = user.email;
+    // Make email read-only for authenticated users
+    const emailField = document.getElementById('m_email');
+    emailField.setAttribute('readonly', '');
+    emailField.style.background = '#e8ecea';
+    emailField.style.color = '#0e1f1a';
+    emailField.style.cursor = 'not-allowed';
+    emailField.style.opacity = '0.9';
+  } else {
+    // Email field is editable for unauthenticated users - remove readonly
+    const emailField = document.getElementById('m_email');
+    emailField.removeAttribute('readonly');
+    emailField.style.background = '';
+    emailField.style.color = '';
+    emailField.style.cursor = '';
+    emailField.style.opacity = '';
   }
 });
 
