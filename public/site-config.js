@@ -5,9 +5,9 @@ window.WIDGETRY = {
   // Razorpay Payment Button IDs (start with "pl_"). Leave "" to show "Online payment opening soon".
   // Use TEST IDs only on a preview channel; on the live site use LIVE IDs or leave empty.
   razorpay: {
-    earlyBird: "",   // ₹3,499 – first 10 seats
-    regular:   "",   // ₹4,999
-    booking:   ""    // ₹2,500 – pay in 2 parts
+    earlyBird: "pl_Tl4maYsbl2Eaxn",   // ₹3,499 – first 10 seats
+    regular:   "pl_Tl4tO3qkfF95TV",   // ₹4,999
+    booking:   "pl_Tl4y52Nbm6N2QY"    // ₹2,500 – pay in 2 parts
   },
 
   // ---- Next batch (shown in the hero, fees section and WhatsApp messages) ----

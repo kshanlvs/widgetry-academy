@@ -7,49 +7,82 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid in ['E4edbAvcdwTdkTdNwcdWneVWe572'];
     }
 
-    // One reservation per student. Document ID = the student's Firebase UID.
+    // One registration record per student. Document ID = the student's Firebase UID.
     match /registrations/{uid} {
 
-      // Students can read only their own reservation. The admin can read all.
+      // Students can read only their own registration. The admin can read all.
       allow read: if (request.auth != null && request.auth.uid == uid) || isAdmin();
 
-      // Create: seat is "reserved" immediately; email verification is optional and comes later.
+      // Create: Registration with initial status "registered"
       allow create: if request.auth != null
         && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['name','level','experience','email','phone','emailVerified','phoneVerified','batch','status','createdAt'])
+        && request.resource.data.keys().hasOnly([
+          'name', 'email', 'phone', 'level', 'experience', 'batch',
+          'status', 'emailVerified', 'phoneVerified', 'amountPaid',
+          'paymentId', 'payStatus', 'plan', 'createdAt', 'updatedAt'
+        ])
         && request.resource.data.email == request.auth.token.email
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.name.size() < 100
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() < 100
+        && request.resource.data.email is string
+        && request.resource.data.phone is string
         && request.resource.data.level is string
         && request.resource.data.experience is string
-        && request.resource.data.phone is string
-        && request.resource.data.phone.matches('^\\+91[6-9][0-9]{9}$')
+        && request.resource.data.status == 'registered'
         && request.resource.data.emailVerified == false
         && request.resource.data.phoneVerified == false
-        && request.resource.data.status == 'reserved'
-        && request.resource.data.createdAt == request.time;
+        && request.resource.data.amountPaid == 0
+        && request.resource.data.payStatus == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
 
-      // Admin: may update payment and notes fields only.
-      allow update: if isAdmin()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['plan','amountPaid','paymentId','payStatus','notes','adminUpdatedAt']);
-
-      // Student: may only mark the email verified, once Firebase confirms it.
+      // Students can update their own profile (name, phone, level, experience, updatedAt only)
       allow update: if request.auth != null
         && request.auth.uid == uid
-        && request.auth.token.email_verified == true
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['emailVerified','status','verifiedAt'])
-        && request.resource.data.emailVerified == true
-        && request.resource.data.status == 'verified'
-        && request.resource.data.verifiedAt == request.time;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'level', 'experience', 'updatedAt'])
+        && request.resource.data.updatedAt == request.time;
 
-      // Delete: a student may cancel their own reservation only while it is still unverified ("Change email").
-      allow delete: if (request.auth != null
-        && request.auth.uid == uid
-        && resource.data.emailVerified == false) || isAdmin();
+      // Admin: can update payment, status, and notes
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'paymentId', 'amountPaid', 'payStatus', 'status', 'plan', 'notes', 'adminUpdatedAt'
+        ]);
+
+      // Delete: Students can delete only if not verified, Admin can delete any
+      allow delete: if (request.auth != null && request.auth.uid == uid && resource.data.emailVerified == false) || isAdmin();
+    }
+
+    // ===== COURSES COLLECTION =====
+    // Anyone can read courses, only admin can create/update/delete
+    match /courses/{courseId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ===== ENROLLMENTS COLLECTION =====
+    // Students can read/manage their own enrollments, admin can read all
+    match /enrollments/{enrollmentId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.uid || isAdmin()
+      );
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.uid
+        && request.resource.data.keys().hasOnly(['uid', 'courseId', 'status', 'enrolledAt', 'progress']);
+      allow update, delete: if request.auth != null && (
+        request.auth.uid == resource.data.uid || isAdmin()
+      );
+    }
+
+    // ===== PAYMENTS COLLECTION =====
+    // Students can read their own payments, admin can read all and create/update
+    match /payments/{paymentId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.uid || isAdmin()
+      );
+      allow create, update, delete: if isAdmin();
     }
 
     // WACollab Mentor applications: anyone can apply (no login); only the admin can read or manage.
+      // WACollab Mentor applications: anyone can apply (no login); only the admin can read or manage.
     match /mentorApplications/{id} {
       allow create: if request.resource.data.keys().hasOnly(['name','email','phone','city','company','role','experience','linkedin','portfolio','skills','course','availability','mode','teaching','video','pitch','consent','status','createdAt'])
         && request.resource.data.name is string && request.resource.data.name.size() > 1 && request.resource.data.name.size() < 100
@@ -71,9 +104,14 @@ service cloud.firestore {
         && request.resource.data.consent == true
         && request.resource.data.status == 'new'
         && request.resource.data.createdAt == request.time;
-      allow read, delete: if isAdmin();
+      
+      // PUBLIC: Anyone can read approved mentors (for showcase). ADMIN: Can read all.
+      allow read: if isAdmin() || resource.data.status == 'approved';
+      
+      allow delete: if isAdmin();
       allow update: if isAdmin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','notes','adminUpdatedAt']);
+    
     }
 
     match /{document=**} {

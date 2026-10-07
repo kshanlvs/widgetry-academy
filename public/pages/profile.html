@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Profile | Widgetry Academy</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="../styles/base.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <style>
+    .profile-header {
+      background: var(--deep);
+      color: var(--deep-fg);
+      padding-block: var(--sp-2xl);
+      border-bottom: 1px solid var(--deep-line);
+    }
+
+    .profile-header .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sp-lg);
+    }
+
+    .profile-header h1 {
+      color: var(--deep-fg);
+      margin-bottom: var(--sp-sm);
+    }
+
+    .profile-content {
+      padding-block: var(--sp-2xl);
+    }
+
+    .profile-container {
+      max-width: 600px;
+    }
+
+    .profile-section {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: var(--sp-lg);
+      border: 1px solid var(--line);
+      margin-bottom: var(--sp-lg);
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: var(--sp-lg);
+      padding-bottom: var(--sp-md);
+      border-bottom: 2px solid var(--line);
+    }
+
+    .profile-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-md);
+    }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-lg);
+    }
+
+    @media (max-width: 600px) {
+      .two-column {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-header .wrap {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      gap: var(--sp-sm);
+      margin-top: var(--sp-lg);
+    }
+
+    .loading-state {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-md);
+      color: var(--muted);
+      margin-top: var(--sp-lg);
+    }
+
+    .success-message {
+      padding: var(--sp-md);
+      background: color-mix(in srgb, var(--ok) 10%, transparent);
+      border-left: 4px solid var(--ok);
+      border-radius: var(--radius-md);
+      color: var(--ok);
+      margin-bottom: var(--sp-lg);
+      display: none;
+    }
+
+    .read-only {
+      padding: 12px 16px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      color: var(--muted);
+    }
+
+    .danger-zone {
+      background: color-mix(in srgb, var(--bad) 5%, transparent);
+      border: 1px solid color-mix(in srgb, var(--bad) 20%, transparent);
+      padding: var(--sp-lg);
+      border-radius: var(--radius-md);
+      margin-top: var(--sp-2xl);
+    }
+
+    .danger-zone-title {
+      color: var(--bad);
+      font-weight: 700;
+      margin-bottom: var(--sp-md);
+    }
+
+    .danger-zone-description {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: var(--sp-lg);
+    }
+
+    .btn-danger {
+      background: var(--bad);
+    }
+
+    .btn-danger:hover {
+      filter: brightness(1.1);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="profile-header">
+    <div class="wrap">
+      <div>
+        <h1>Edit Your Profile 📝</h1>
+        <p>Update your personal information and course preferences</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <div class="profile-content">
+    <div class="wrap">
+      <div class="profile-container">
+        <div class="success-message" id="successMessage">
+          ✓ Profile updated successfully!
+        </div>
+
+        <!-- Personal Information -->
+        <div class="profile-section">
+          <div class="section-title">👤 Personal Information</div>
+          <form class="profile-form" id="profileForm">
+            <div class="form-group">
+              <label for="name">Full Name</label>
+              <input type="text" id="name" name="name" required>
+              <div class="form-error"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" name="email" class="read-only" readonly>
+              <div class="form-hint">Your email cannot be changed. Contact support if needed.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <input type="tel" id="phone" name="phone" required>
+              <div class="form-hint">Include country code (e.g., +91)</div>
+              <div class="form-error"></div>
+            </div>
+
+            <div class="two-column">
+              <div class="form-group">
+                <label for="level">Education Level</label>
+                <select id="level" name="level">
+                  <option value="class-10">Class 10</option>
+                  <option value="class-12">Class 12</option>
+                  <option value="college">College</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="experience">Programming Experience</label>
+                <select id="experience" name="experience">
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn">💾 Save Changes</button>
+              <a href="../pages/dashboard.html" class="btn ghost">↩️ Back to Dashboard</a>
+            </div>
+
+            <div class="loading-state" id="loadingState">
+              <div class="spinner"></div>
+              <span>Updating your profile...</span>
+            </div>
+          </form>
+        </div>
+
+        <!-- Password -->
+        <div class="profile-section">
+          <div class="section-title">🔐 Change Password</div>
+          <p style="color: var(--muted); margin-bottom: var(--sp-lg); font-size: 14px;">
+            To change your password, please use the "Forgot Password" feature on the login page.
+          </p>
+          <a href="../pages/reset-password.html" class="btn ghost">Reset Password</a>
+        </div>
+
+        <!-- Account Settings -->
+        <div class="profile-section">
+          <div class="section-title">⚙️ Account Settings</div>
+
+          <div style="margin-bottom: var(--sp-lg);">
+            <div style="font-weight: 600; margin-bottom: var(--sp-sm);">Email Notifications</div>
+            <div class="checkbox">
+              <input type="checkbox" id="emailUpdates" name="emailUpdates" checked>
+              <label for="emailUpdates" style="margin-left: var(--sp-sm);">Receive course updates via email</label>
+            </div>
+            <div class="checkbox" style="margin-top: var(--sp-sm);">
+              <input type="checkbox" id="emailSms" name="emailSms" checked>
+              <label for="emailSms" style="margin-left: var(--sp-sm);">Receive class reminders via WhatsApp</label>
+            </div>
+          </div>
+
+          <button type="button" class="btn secondary" id="savePreferences">Save Preferences</button>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="danger-zone">
+          <div class="danger-zone-title">⚠️ Danger Zone</div>
+          <div class="danger-zone-description">
+            These actions are irreversible. Please proceed with caution.
+          </div>
+          <button type="button" class="btn btn-danger" id="deleteAccountBtn">🗑️ Delete My Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getCurrentUser, onAuthReady } from '../js/auth.js';
+    import { getRegistration, updateRegistration } from '../js/database.js';
+    import { showToast, showFormError, clearFormError, validatePhone, setButtonDisabled } from '../js/ui.js';
+
+    let currentUser = null;
+    let currentRegistration = null;
+
+    // Wait for auth to be ready
+    onAuthReady().then(async (user) => {
+      if (!user) {
+        window.location.href = '../pages/login.html';
+        return;
+      }
+
+      currentUser = user;
+
+      // Load user data
+      try {
+        currentRegistration = await getRegistration(user.uid);
+        if (currentRegistration) {
+          loadProfile(currentRegistration);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        showToast('Error loading your profile', 'error');
+      }
+    });
+
+    function loadProfile(registration) {
+      document.getElementById('name').value = registration.name || '';
+      document.getElementById('email').value = registration.email || '';
+      document.getElementById('phone').value = registration.phone || '';
+      document.getElementById('level').value = registration.level || '';
+      document.getElementById('experience').value = registration.experience || '';
+    }
+
+    // Form submission
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      document.querySelectorAll('.form-group').forEach(group => clearFormError(group));
+
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const level = document.getElementById('level').value;
+      const experience = document.getElementById('experience').value;
+
+      let hasError = false;
+
+      if (!name || name.length < 2) {
+        showFormError(document.getElementById('name').parentElement, 'Please enter a valid name');
+        hasError = true;
+      }
+
+      if (!validatePhone(phone)) {
+        showFormError(document.getElementById('phone').parentElement, 'Please enter a valid phone number');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      try {
+        const submitBtn = document.querySelector('#profileForm button[type="submit"]');
+        setButtonDisabled(submitBtn, true);
+        document.getElementById('loadingState').style.display = 'flex';
+
+        await updateRegistration(currentUser.uid, {
+          name,
+          phone,
+          level,
+          experience,
+        });
+
+        document.getElementById('successMessage').style.display = 'block';
+        showToast('✓ Profile updated successfully!', 'success');
+
+        setTimeout(() => {
+          document.getElementById('successMessage').style.display = 'none';
+        }, 3000);
+
+        setButtonDisabled(submitBtn, false);
+        document.getElementById('loadingState').style.display = 'none';
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        showToast(`✗ ${error.message}`, 'error');
+        setButtonDisabled(document.querySelector('#profileForm button[type="submit"]'), false);
+        document.getElementById('loadingState').style.display = 'none';
+      }
+    });
+
+    // Save preferences
+    document.getElementById('savePreferences').addEventListener('click', () => {
+      showToast('✓ Preferences saved!', 'success');
+    });
+
+    // Delete account
+    document.getElementById('deleteAccountBtn').addEventListener('click', () => {
+      if (confirm('Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently deleted.')) {
+        showToast('Account deletion is not yet implemented. Please contact support.', 'warning');
+      }
+    });
+  </script>
+</body>
+</html>

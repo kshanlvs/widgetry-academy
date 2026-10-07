@@ -310,43 +310,12 @@
     // Load approved mentors
     async function loadMentors() {
       try {
-        // Try with orderBy first (requires composite index)
-        let querySnapshot;
-        try {
-          const q = query(
-            collection(db, 'mentorApplications'),
-            where('status', '==', 'approved'),
-            orderBy('adminUpdatedAt', 'desc')
-          );
-          querySnapshot = await getDocs(q);
-        } catch (indexError) {
-          // Fallback: try without orderBy (index not ready)
-          if (indexError.code === 'failed-precondition') {
-            console.warn('⚠️ Composite index required. Using client-side sorting...');
-          } else {
-            console.warn('Query error, falling back:', indexError.message);
-          }
-
-          const q = query(
-            collection(db, 'mentorApplications'),
-            where('status', '==', 'approved')
-          );
-          const snapshot = await getDocs(q);
-
-          // Sort on client-side by adminUpdatedAt (newest first)
-          const docs = snapshot.docs.sort((a, b) => {
-            const aTime = a.data().adminUpdatedAt?.toMillis?.() || a.data().createdAt?.toMillis?.() || 0;
-            const bTime = b.data().adminUpdatedAt?.toMillis?.() || b.data().createdAt?.toMillis?.() || 0;
-            return bTime - aTime;
-          });
-
-          // Create snapshot-like object
-          querySnapshot = {
-            empty: docs.length === 0,
-            docs: docs,
-            forEach: (callback) => docs.forEach((doc) => callback(doc))
-          };
-        }
+        const q = query(
+          collection(db, 'mentorApplications'),
+          where('status', '==', 'approved'),
+          orderBy('adminUpdatedAt', 'desc')
+        );
+        const querySnapshot = await getDocs(q);
 
         const container = document.getElementById('mentorsContainer');
         container.innerHTML = '';
@@ -363,20 +332,8 @@
         });
       } catch (error) {
         console.error('Error loading mentors:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-
-        let errorMsg = 'Error loading mentors. ';
-        if (error.code === 'failed-precondition') {
-          errorMsg += 'Need to create a Firestore index. Check console for details.';
-        } else if (error.code === 'permission-denied') {
-          errorMsg += 'Permission denied. Check Firestore security rules.';
-        } else {
-          errorMsg += 'Please try again later.';
-        }
-
         document.getElementById('mentorsContainer').innerHTML =
-          `<div class="no-mentors" style="grid-column: 1 / -1;">${errorMsg}</div>`;
+          '<div class="no-mentors" style="grid-column: 1 / -1;">Error loading mentors. Please try again later.</div>';
       }
     }
 

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Widgetry Academy</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="../styles/base.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <style>
+    .dashboard-header {
+      background: var(--deep);
+      color: var(--deep-fg);
+      padding-block: var(--sp-2xl);
+      border-bottom: 1px solid var(--deep-line);
+    }
+
+    .dashboard-header .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sp-lg);
+    }
+
+    .user-greeting h1 {
+      color: var(--deep-fg);
+      margin-bottom: var(--sp-sm);
+    }
+
+    .user-greeting p {
+      color: var(--deep-muted);
+    }
+
+    .user-menu {
+      display: flex;
+      gap: var(--sp-md);
+      align-items: center;
+    }
+
+    .user-menu .btn {
+      background: var(--accent);
+    }
+
+    .dashboard-content {
+      padding-block: var(--sp-2xl);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--sp-lg);
+      margin-bottom: var(--sp-2xl);
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: var(--sp-lg);
+      border: 1px solid var(--line);
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: var(--sp-sm);
+    }
+
+    .stat-value {
+      font-family: var(--display);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .section {
+      margin-bottom: var(--sp-3xl);
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: var(--sp-lg);
+      padding-bottom: var(--sp-md);
+      border-bottom: 2px solid var(--line);
+    }
+
+    .course-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: var(--sp-lg);
+      border: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-md);
+    }
+
+    .course-header {
+      display: flex;
+      align-items: start;
+      gap: var(--sp-md);
+    }
+
+    .course-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .course-info h3 {
+      margin-bottom: var(--sp-sm);
+    }
+
+    .course-meta {
+      display: flex;
+      gap: var(--sp-md);
+      flex-wrap: wrap;
+      margin-bottom: var(--sp-md);
+    }
+
+    .course-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .payment-status {
+      padding: var(--sp-md);
+      border-radius: var(--radius-md);
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+      border-left: 4px solid var(--accent);
+    }
+
+    .payment-status.pending {
+      background: color-mix(in srgb, var(--warn) 10%, transparent);
+      border-color: var(--warn);
+      color: var(--warn);
+    }
+
+    .payment-status.completed {
+      background: color-mix(in srgb, var(--ok) 10%, transparent);
+      border-color: var(--ok);
+      color: var(--ok);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--line);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: var(--sp-sm);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+      transition: width 0.3s ease;
+    }
+
+    .button-group {
+      display: flex;
+      gap: var(--sp-sm);
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-header .wrap {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .user-menu {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .user-menu .btn {
+        width: 100%;
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--sp-2xl);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: var(--sp-md);
+    }
+
+    .empty-state-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: var(--sp-sm);
+    }
+
+    .empty-state-description {
+      color: var(--muted);
+      margin-bottom: var(--sp-lg);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="wrap">
+      <div class="user-greeting">
+        <h1>Welcome back, <span id="userName">User</span>! 👋</h1>
+        <p id="userEmail">your@email.com</p>
+      </div>
+      <div class="user-menu">
+        <a href="../pages/profile.html" class="btn ghost">📝 Edit Profile</a>
+        <button id="logoutBtn" class="btn ghost">🚪 Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <div class="dashboard-content">
+    <div class="wrap">
+      <!-- Stats -->
+      <div class="dashboard-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-label">Courses Enrolled</div>
+          <div class="stat-value" id="enrolledCount">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Amount Paid</div>
+          <div class="stat-value" id="amountPaid">₹0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Average Progress</div>
+          <div class="stat-value" id="avgProgress">0%</div>
+        </div>
+      </div>
+
+      <!-- Course Details -->
+      <div class="section">
+        <h2 class="section-title">📚 Your Course</h2>
+        <div id="courseSection">
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- Course Materials -->
+      <div class="section">
+        <h2 class="section-title">📄 Course Materials</h2>
+        <div class="card">
+          <div id="materialsSection">
+            <p class="text-muted">Course materials will be available after payment is completed.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getCurrentUser, onAuthReady, logoutUser } from '../js/auth.js';
+    import { getRegistration } from '../js/database.js';
+    import { showToast, formatCurrency } from '../js/ui.js';
+    import { db } from '../js/firebase-init.js';
+
+    let currentUser = null;
+
+    // Wait for auth to be ready
+    onAuthReady().then(async (user) => {
+      if (!user) {
+        window.location.href = '../pages/login.html';
+        return;
+      }
+
+      currentUser = user;
+      document.getElementById('userName').textContent = user.displayName || 'User';
+      document.getElementById('userEmail').textContent = user.email;
+
+      // Load user data
+      try {
+        const registration = await getRegistration(user.uid);
+        if (registration) {
+          loadDashboard(registration);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        showToast('Error loading your information', 'error');
+      }
+    });
+
+    function loadDashboard(registration) {
+      // Update stats
+      document.getElementById('amountPaid').textContent = formatCurrency(registration.amountPaid || 0);
+
+      // Load course card
+      const courseSection = document.getElementById('courseSection');
+
+      const paymentStatus = registration.payStatus === 'completed' ? 'completed' : 'pending';
+      const paymentClass = paymentStatus === 'pending' ? 'pending' : 'completed';
+
+      courseSection.innerHTML = `
+        <div class="course-card">
+          <div class="course-header">
+            <div class="course-icon">🚀</div>
+            <div class="course-info flex-1">
+              <h3>Flutter in 10 Days</h3>
+              <div class="course-meta">
+                <div class="course-meta-item">📅 ${registration.batch || 'Batch 1'}</div>
+                <div class="course-meta-item">👨‍🏫 Kishan Kumar Sharma</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="payment-status ${paymentClass}">
+            ${paymentStatus === 'pending'
+              ? `<strong>⏳ Payment Pending</strong><br>Complete your payment to access course materials`
+              : `<strong>✓ Payment Completed</strong><br>Amount: ${formatCurrency(registration.amountPaid)}`
+            }
+          </div>
+
+          <div>
+            <strong>📝 Registration Details</strong>
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; font-size: 14px;">
+              <div>
+                <div class="text-muted">Name</div>
+                <div>${registration.name}</div>
+              </div>
+              <div>
+                <div class="text-muted">Email</div>
+                <div>${registration.email}</div>
+              </div>
+              <div>
+                <div class="text-muted">Phone</div>
+                <div>${registration.phone}</div>
+              </div>
+              <div>
+                <div class="text-muted">Level</div>
+                <div>${registration.level}</div>
+              </div>
+              <div>
+                <div class="text-muted">Experience</div>
+                <div>${registration.experience}</div>
+              </div>
+              <div>
+                <div class="text-muted">Status</div>
+                <div><span class="badge">${registration.status}</span></div>
+              </div>
+            </div>
+          </div>
+
+          ${paymentStatus === 'pending' ? `
+            <div class="button-group">
+              <a href="https://widgetry-academy.web.app/payment-success.html?source=payment" class="btn large" style="flex: 1;">
+                💳 Proceed to Payment
+              </a>
+            </div>
+          ` : `
+            <div class="alert success">
+              ✓ You're all set! Check your email for course materials and WhatsApp group link.
+            </div>
+          `}
+        </div>
+      `;
+
+      // Load course materials if paid
+      if (paymentStatus === 'completed') {
+        const materialsSection = document.getElementById('materialsSection');
+        materialsSection.innerHTML = `
+          <div class="grid cols-2">
+            <a href="https://wa.me/918076950707" class="card" style="text-decoration: none; text-align: center; cursor: pointer;">
+              <div style="font-size: 32px; margin-bottom: 8px;">💬</div>
+              <div style="font-weight: 600;">Join WhatsApp Group</div>
+              <div class="text-muted" style="font-size: 13px; margin-top: 4px;">Get class updates and support</div>
+            </a>
+            <a href="https://widgetry-academy.web.app/Widgetry-Academy-Flutter-Brochure.pdf" class="card" style="text-decoration: none; text-align: center; cursor: pointer;" target="_blank">
+              <div style="font-size: 32px; margin-bottom: 8px;">📚</div>
+              <div style="font-weight: 600;">Course Brochure</div>
+              <div class="text-muted" style="font-size: 13px; margin-top: 4px;">Full course syllabus & details</div>
+            </a>
+          </div>
+        `;
+      }
+    }
+
+    // Logout handler
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        await logoutUser();
+        showToast('✓ Logged out successfully', 'success', 1500);
+        setTimeout(() => {
+          window.location.href = '../index.html';
+        }, 1500);
+      } catch (error) {
+        showToast('✗ Logout failed', 'error');
+      }
+    });
+  </script>
+</body>
+</html>
