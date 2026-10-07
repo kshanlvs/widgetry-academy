@@ -944,17 +944,43 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 </footer>
 
 <script src="site-config.js"></script>
-<script>
-(function(){
-  var cfg=(window.WIDGETRY&&window.WIDGETRY.razorpay)||{};
+<script type="module">
+// Payment button authentication check
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { firebaseConfig } from "./firebase-config.js";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// Wait for auth state
+onAuthStateChanged(auth, (user) => {
+  const cfg = (window.WIDGETRY && window.WIDGETRY.razorpay) || {};
+
   document.querySelectorAll('.paybox').forEach(function(box){
-    var id=cfg[box.getAttribute('data-pay')];
-    if(!id){box.innerHTML='<span class="paysoon">Online payment opening soon</span>';return;}
-    var f=document.createElement('form'); var sc=document.createElement('script');
-    sc.src='https://checkout.razorpay.com/v1/payment-button.js'; sc.async=true; sc.setAttribute('data-payment_button_id',id);
-    f.appendChild(sc); box.appendChild(f);
+    var id = cfg[box.getAttribute('data-pay')];
+
+    if(!id){
+      box.innerHTML = '<span class="paysoon">Online payment opening soon</span>';
+      return;
+    }
+
+    // If user is not logged in, show registration prompt instead of payment button
+    if(!user){
+      box.innerHTML = '<div style="text-align:center; padding: 20px; background: #f0f0f0; border-radius: 8px;"><p style="margin: 0 0 12px 0; font-weight: 600;">Register first to proceed with payment</p><a href="./pages/register.html" style="display: inline-block; background: #0f6b56; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600;">Go to Registration</a></div>';
+      return;
+    }
+
+    // If user is logged in, show Razorpay payment button
+    var f = document.createElement('form');
+    var sc = document.createElement('script');
+    sc.src = 'https://checkout.razorpay.com/v1/payment-button.js';
+    sc.async = true;
+    sc.setAttribute('data-payment_button_id', id);
+    f.appendChild(sc);
+    box.appendChild(f);
   });
-})();
+});
 </script>
 <script>
 (function(){
