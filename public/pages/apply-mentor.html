@@ -179,37 +179,32 @@ const $ = id => document.getElementById(id);
 const val = id => $(id).value.trim();
 const picked = id => [...document.querySelectorAll("#" + id + " input:checked")].map(i => i.value);
 
-// Check auth state
+// Check auth state - pre-fill if logged in, but allow form for unauthenticated users
 watchAuthState((user) => {
-  if (!user) {
-    form.hidden = true;
-    authRequired.hidden = false;
-  } else {
-    form.hidden = false;
-    authRequired.hidden = true;
+  if (user) {
+    // Pre-fill name and email if logged in
     document.getElementById('m_name').value = user.displayName || '';
     document.getElementById('m_email').value = user.email;
   }
 });
+
+// Show form for all users (authenticated or not)
+form.hidden = false;
+authRequired.hidden = true;
 
 form.addEventListener("submit", async e => {
   e.preventDefault();
   err.hidden = true;
 
   const user = getCurrentUser();
-  if (!user) {
-    window.location.href = 'login.html';
-    return;
-  }
-
   let phone = val("m_phone").replace(/[\s()-]/g, "");
   if (/^[6-9]\d{9}$/.test(phone)) phone = "+91" + phone;
   if (/^91[6-9]\d{9}$/.test(phone)) phone = "+" + phone;
 
   const d = {
-    uid: user.uid,
+    uid: user?.uid || "", // Use user uid if logged in, empty string if not
     name: val("m_name"),
-    email: user.email.toLowerCase(),
+    email: val("m_email").toLowerCase(), // Use form email for unauthenticated users
     phone,
     company: val("m_company"),
     role: val("m_role"),
