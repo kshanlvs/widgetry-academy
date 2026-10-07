@@ -4,7 +4,7 @@ service cloud.firestore {
 
     // ADMIN: paste your admin account's UID here (Firebase console → Authentication → Users → User UID).
     function isAdmin() {
-      return request.auth != null && request.auth.uid in ['E4edbAvcdwTdkTdNwcdWneVWe572'];
+      return request.auth != null && request.auth.uid in ['Raht6ud3vqc3XDmFOFLetFP6b8t2'];
     }
 
     // One registration record per student. Document ID = the student's Firebase UID.
@@ -81,34 +81,33 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // WACollab Mentor applications: anyone can apply (no login); only the admin can read or manage.
-      // WACollab Mentor applications: anyone can apply (no login); only the admin can read or manage.
+    // Mentor applications: authenticated users can apply; only the admin can read or manage.
     match /mentorApplications/{id} {
-      allow create: if request.resource.data.keys().hasOnly(['name','email','phone','city','company','role','experience','linkedin','portfolio','skills','course','availability','mode','teaching','video','pitch','consent','status','createdAt'])
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['uid','name','email','phone','company','role','experience','linkedin','skills','course','bio','availability','status','createdAt','updatedAt'])
+        && request.resource.data.uid == request.auth.uid
         && request.resource.data.name is string && request.resource.data.name.size() > 1 && request.resource.data.name.size() < 100
         && request.resource.data.email is string && request.resource.data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$') && request.resource.data.email.size() < 150
-        && request.resource.data.phone is string && request.resource.data.phone.matches('^\\+[1-9][0-9]{9,14}$')
-        && request.resource.data.city is string && request.resource.data.city.size() < 60
+        && request.resource.data.phone is string && request.resource.data.phone.size() > 0 && request.resource.data.phone.size() < 20
         && request.resource.data.company is string && request.resource.data.company.size() > 0 && request.resource.data.company.size() <= 100
         && request.resource.data.role is string && request.resource.data.role.size() > 0 && request.resource.data.role.size() <= 100
-        && request.resource.data.experience is string && request.resource.data.experience.size() < 20
-        && request.resource.data.linkedin is string && request.resource.data.linkedin.matches('^https?://([a-zA-Z]+\\.)?linkedin\\.com/.+') && request.resource.data.linkedin.size() <= 200
-        && request.resource.data.portfolio is string && request.resource.data.portfolio.size() <= 200
+        && request.resource.data.experience is integer && request.resource.data.experience >= 0 && request.resource.data.experience <= 50
+        && request.resource.data.linkedin is string && request.resource.data.linkedin.size() <= 200
         && request.resource.data.skills is list && request.resource.data.skills.size() > 0 && request.resource.data.skills.size() <= 10
-        && request.resource.data.course is string && request.resource.data.course.size() > 0 && request.resource.data.course.size() <= 200
-        && request.resource.data.availability is list && request.resource.data.availability.size() > 0 && request.resource.data.availability.size() <= 3
-        && request.resource.data.mode is string && request.resource.data.mode.size() < 20
-        && request.resource.data.teaching is string && request.resource.data.teaching.size() < 60
-        && request.resource.data.video is string && request.resource.data.video.size() <= 200
-        && request.resource.data.pitch is string && request.resource.data.pitch.size() >= 20 && request.resource.data.pitch.size() <= 1000
-        && request.resource.data.consent == true
-        && request.resource.data.status == 'new'
-        && request.resource.data.createdAt == request.time;
-      
-      // PUBLIC: Anyone can read approved mentors (for showcase). ADMIN: Can read all.
-      allow read: if isAdmin() || resource.data.status == 'approved';
-      
-      allow delete: if isAdmin();
+        && request.resource.data.course is string && request.resource.data.course.size() > 0 && request.resource.data.course.size() <= 500
+        && request.resource.data.bio is string && request.resource.data.bio.size() > 0 && request.resource.data.bio.size() <= 500
+        && request.resource.data.availability is string && request.resource.data.availability.size() > 0 && request.resource.data.availability.size() <= 50
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      // Users can read their own application; ADMIN can read all; PUBLIC can read approved mentors only
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid || isAdmin() || resource.data.status == 'approved';
+
+      // Users can delete their own pending applications only
+      allow delete: if request.auth != null && request.auth.uid == resource.data.uid && resource.data.status == 'pending' || isAdmin();
+
+      // Admin: can update status and add notes
       allow update: if isAdmin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','notes','adminUpdatedAt']);
     
