@@ -277,6 +277,11 @@
         </p>
       </div>
 
+      <div id="loadingState" style="display: none; text-align: center; padding: 40px; color: #666;">
+        <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+        <p>Loading...</p>
+      </div>
+
       <form id="mentorForm" style="display: none;">
         <div class="success-message" id="successMessage">
           ✅ Application submitted successfully! We'll review your application and get back to you soon.
@@ -411,11 +416,15 @@
 
     const form = document.getElementById('mentorForm');
     const authRequiredSection = document.getElementById('authRequiredSection');
+    const loadingState = document.getElementById('loadingState');
     const successMessage = document.getElementById('successMessage');
     const loadingSpinner = document.getElementById('loadingSpinner');
 
     // Check authentication on page load
     watchAuthState((user) => {
+      // Hide loading state
+      loadingState.style.display = 'none';
+
       if (!user) {
         authRequiredSection.style.display = 'block';
         form.style.display = 'none';
