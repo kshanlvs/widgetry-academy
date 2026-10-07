@@ -364,9 +364,7 @@
 
           ${paymentStatus === 'pending' ? `
             <div class="button-group">
-              <button id="paymentBtn" class="btn large" style="flex: 1;">
-                💳 Proceed to Payment (₹4,999)
-              </button>
+              <div class="paybox" data-pay="regular" style="flex: 1;"></div>
             </div>
           ` : `
             <div class="alert success">
@@ -395,50 +393,35 @@
         `;
       }
 
-      // Add payment button handler
-      const paymentBtn = document.getElementById('paymentBtn');
-      if (paymentBtn) {
-        paymentBtn.addEventListener('click', () => {
-          initiatePayment(registration);
-        });
-      }
     }
 
-    // Razorpay Payment Integration
-    function initiatePayment(registration) {
-      // Load site config
-      const config = window.WIDGETRY?.razorpay;
-      if (!config?.regular) {
-        showToast('Payment configuration not available. Please try again later.', 'error');
-        return;
-      }
+    // Load Razorpay payment buttons (same as homepage)
+    function loadPaymentButtons() {
+      const cfg = (window.WIDGETRY && window.WIDGETRY.razorpay) || {};
 
-      // Create a temporary container for the payment button
-      const paymentContainer = document.createElement('div');
-      paymentContainer.id = 'razorpay-payment-container';
-      paymentContainer.style.display = 'none';
-      document.body.appendChild(paymentContainer);
+      document.querySelectorAll('.paybox').forEach(function(box){
+        var id = cfg[box.getAttribute('data-pay')];
 
-      // Create form for payment button
-      const form = document.createElement('form');
-      form.method = 'POST';
+        if(!id){
+          box.innerHTML = '<span style="color: #666; font-size: 14px;">Payment button not configured</span>';
+          return;
+        }
 
-      // Create and load the Razorpay payment button script
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/payment-button.js';
-      script.async = true;
-      script.setAttribute('data-payment_button_id', config.regular);
-
-      form.appendChild(script);
-      paymentContainer.appendChild(form);
-
-      // The payment button script will auto-load and trigger
-      // Clean up after 5 seconds
-      setTimeout(() => {
-        const container = document.getElementById('razorpay-payment-container');
-        if (container) container.remove();
-      }, 5000);
+        // Create form and load Razorpay payment button
+        var f = document.createElement('form');
+        var sc = document.createElement('script');
+        sc.src = 'https://checkout.razorpay.com/v1/payment-button.js';
+        sc.async = true;
+        sc.setAttribute('data-payment_button_id', id);
+        f.appendChild(sc);
+        box.appendChild(f);
+      });
     }
+
+    // Load payment buttons after dashboard loads
+    setTimeout(() => {
+      loadPaymentButtons();
+    }, 500);
 
     // Logout handler
     document.getElementById('logoutBtn').addEventListener('click', async () => {
