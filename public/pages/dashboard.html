@@ -270,6 +270,7 @@
     </div>
   </div>
 
+  <script src="../site-config.js"></script>
   <script type="module">
     import { getCurrentUser, onAuthReady, logoutUser } from '../js/auth.js';
     import { getRegistration } from '../js/database.js';
@@ -363,9 +364,9 @@
 
           ${paymentStatus === 'pending' ? `
             <div class="button-group">
-              <a href="https://widgetry-academy.web.app/payment-success.html?source=payment" class="btn large" style="flex: 1;">
-                💳 Proceed to Payment
-              </a>
+              <button id="paymentBtn" class="btn large" style="flex: 1;">
+                💳 Proceed to Payment (₹4,999)
+              </button>
             </div>
           ` : `
             <div class="alert success">
@@ -393,6 +394,41 @@
           </div>
         `;
       }
+
+      // Add payment button handler
+      const paymentBtn = document.getElementById('paymentBtn');
+      if (paymentBtn) {
+        paymentBtn.addEventListener('click', () => {
+          initiatePayment(registration);
+        });
+      }
+    }
+
+    // Razorpay Payment Integration
+    function initiatePayment(registration) {
+      // Load site config
+      const config = window.WIDGETRY?.razorpay;
+      if (!config?.regular) {
+        showToast('Payment configuration not available. Please try again later.', 'error');
+        return;
+      }
+
+      // Open Razorpay using button ID
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `https://checkout.razorpay.com/i/${config.regular}/pay`;
+
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'user_id';
+      input.value = currentUser?.uid || '';
+
+      form.appendChild(input);
+      form.style.display = 'none';
+      document.body.appendChild(form);
+
+      form.submit();
+      setTimeout(() => form.remove(), 1000);
     }
 
     // Logout handler
