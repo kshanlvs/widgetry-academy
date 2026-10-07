@@ -4,7 +4,7 @@ service cloud.firestore {
 
     // ADMIN: paste your admin account's UID here (Firebase console → Authentication → Users → User UID).
     function isAdmin() {
-      return request.auth != null && request.auth.uid in ['Raht6ud3vqc3XDmFOFLetFP6b8t2'];
+      return request.auth != null && request.auth.uid in ['E4edbAvcdwTdkTdNwcdWneVWe572'];
     }
 
     // One registration record per student. Document ID = the student's Firebase UID.
