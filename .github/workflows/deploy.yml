@@ -25,4 +25,4 @@ jobs:
       - name: Deploy to Firebase
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/firebase-key.json
-        run: firebase deploy --project widgetry-academy
+        run: firebase deploy --project flutter-in-10-days
