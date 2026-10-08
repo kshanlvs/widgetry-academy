@@ -216,7 +216,7 @@ form.addEventListener("submit", async e => {
   if (/^[6-9]\d{9}$/.test(phone)) phone = "+91" + phone;
   if (/^91[6-9]\d{9}$/.test(phone)) phone = "+" + phone;
 
-  // Build form data - only include uid if user is authenticated
+  // Build form data - structure depends on auth state
   const d = {
     name: val("m_name"),
     email: val("m_email").toLowerCase(),
@@ -234,11 +234,12 @@ form.addEventListener("submit", async e => {
     updatedAt: serverTimestamp()
   };
 
-  // Only add uid if user is authenticated
+  // Add uid only if user is authenticated (avoids empty string issues)
   if (user?.uid) {
     d.uid = user.uid;
   } else {
-    d.uid = "";
+    // For unauthenticated submissions, use placeholder uid
+    d.uid = "anonymous";
   }
 
   // Validation
