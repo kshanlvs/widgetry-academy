@@ -274,6 +274,11 @@ const MSL = { new: "New", shortlisted: "Shortlisted", demo: "Demo scheduled", ap
 const MSC = { new: "m-new", shortlisted: "m-short", demo: "m-demo", approved: "m-approved", rejected: "m-rejected" };
 let mall = [], mediting = null;
 const link = (u, t) => u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t || u)}</a>` : "—";
+// New-form applications use status "pending" and plain values; old ones used lists. Handle both.
+const mStatus = r => (!r.status || r.status === "pending") ? "new" : r.status;
+const EXPL = { 2: "1–3 years", 4: "3–5 years", 6: "5–8 years", 10: "8–12 years", 15: "12+ years" };
+const mExp = r => typeof r.experience === "number" ? (EXPL[r.experience] || r.experience + "+ years") : (r.experience || "");
+const asText = v => Array.isArray(v) ? v.join(", ") : (v || "");
 
 async function loadMentors() {
   try {
@@ -288,17 +293,17 @@ $("mbReload").onclick = loadMentors;
 
 function renderM() {
   const q = $("mq").value.trim().toLowerCase(), fs = $("mfStatus").value;
-  const cnt = s => mall.filter(r => (r.status || "new") === s).length;
+  const cnt = s => mall.filter(r => mStatus(r) === s).length;
   $("cMen").textContent = mall.length; $("mkTotal").textContent = mall.length;
   $("mkNew").textContent = cnt("new"); $("mkShort").textContent = cnt("shortlisted"); $("mkDemo").textContent = cnt("demo"); $("mkOk").textContent = cnt("approved");
-  const list = mall.filter(r => (!fs || (r.status || "new") === fs) && (!q || [r.name, r.company, r.role, r.email, r.phone, r.course, r.city, (r.skills || []).join(" ")].join(" ").toLowerCase().includes(q)));
+  const list = mall.filter(r => (!fs || mStatus(r) === fs) && (!q || [r.name, r.company, r.role, r.email, r.phone, r.course, r.city, (r.skills || []).join(" ")].join(" ").toLowerCase().includes(q)));
   if (!list.length) { $("mrows").innerHTML = '<tr><td colspan="8" class="empty">' + (mall.length ? "No matches." : "No mentor applications yet.") + "</td></tr>"; return; }
   $("mrows").innerHTML = list.map(r => {
-    const st = r.status || "new", wa = (r.phone || "").replace(/\D/g, "");
+    const st = mStatus(r), wa = (r.phone || "").replace(/\D/g, "");
     return `<tr>
       <td class="small">${fmtDate(r.createdAt)}</td>
       <td><b>${esc(r.name)}</b><div class="small">${esc(r.city || "")}</div>${r.notes ? `<div class="small">📝 ${esc(r.notes)}</div>` : ""}</td>
-      <td>${esc(r.role)}<div class="small">${esc(r.company)} · ${esc(r.experience)}</div></td>
+      <td>${esc(r.role)}<div class="small">${esc(r.company)} · ${esc(mExp(r))}</div></td>
       <td><div class="tags">${(r.skills || []).map(k => `<span>${esc(k)}</span>`).join("")}</div></td>
       <td class="small">${esc(r.course)}</td>
       <td><a href="https://wa.me/${wa}" target="_blank" rel="noopener">${esc(r.phone)}</a><div class="small">${esc(r.email)}</div><div class="small">${link(r.linkedin, "LinkedIn")}</div></td>
@@ -314,16 +319,16 @@ function openM(id) {
   const r = mediting;
   $("mdName").textContent = r.name; $("mdSub").textContent = "Applied " + fmtDate(r.createdAt);
   const rows = [
-    ["Role", esc(r.role) + " at " + esc(r.company)], ["Experience", esc(r.experience)], ["City", esc(r.city || "—")],
+    ["Role", esc(r.role) + " at " + esc(r.company)], ["Experience", esc(mExp(r))], ["City", esc(r.city || "—")],
     ["WhatsApp", `<a href="https://wa.me/${(r.phone || "").replace(/\D/g, "")}" target="_blank" rel="noopener">${esc(r.phone)}</a>`],
     ["Email", `<a href="mailto:${esc(r.email)}">${esc(r.email)}</a>`],
     ["LinkedIn", link(r.linkedin)], ["GitHub / portfolio", link(r.portfolio)], ["Demo video", link(r.video)],
     ["Skills", esc((r.skills || []).join(", "))], ["Wants to teach", esc(r.course)],
-    ["Availability", esc((r.availability || []).join(", "))], ["Mode", esc(r.mode)], ["Teaching exp.", esc(r.teaching)]
+    ["Availability", esc(asText(r.availability))], ["Mode", esc(r.mode)], ["Teaching exp.", esc(r.teaching)]
   ];
   $("mdDet").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
-  $("mdPitch").textContent = r.pitch || "";
-  $("meStatus").value = r.status || "new"; $("meNotes").value = r.notes || "";
+  $("mdPitch").textContent = r.pitch || r.bio || "";
+  $("meStatus").value = mStatus(r); $("meNotes").value = r.notes || "";
   $("meErr").hidden = true; $("mdlg").showModal();
 }
 $("mfEdit").addEventListener("submit", async e => {
@@ -336,9 +341,9 @@ $("mfEdit").addEventListener("submit", async e => {
 });
 
 $("mbCsv").onclick = () => {
-  const cols = ["createdAt", "name", "email", "phone", "city", "company", "role", "experience", "linkedin", "portfolio", "skills", "course", "availability", "mode", "teaching", "video", "pitch", "status", "notes"];
+  const cols = ["createdAt", "name", "email", "phone", "city", "company", "role", "experience", "linkedin", "portfolio", "skills", "course", "availability", "mode", "teaching", "video", "pitch", "bio", "status", "notes"];
   const lines = [cols.join(",")].concat(mall.map(r => cols.map(c => {
-    let v = c === "createdAt" ? fmtDate(r.createdAt) : Array.isArray(r[c]) ? r[c].join("; ") : c === "status" ? (r.status || "new") : r[c];
+    let v = c === "createdAt" ? fmtDate(r.createdAt) : Array.isArray(r[c]) ? r[c].join("; ") : c === "status" ? mStatus(r) : c === "experience" ? mExp(r) : r[c];
     v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
   }).join(",")));
   const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
