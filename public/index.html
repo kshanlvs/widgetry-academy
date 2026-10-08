@@ -324,6 +324,54 @@ a.mbadge:hover{border-color:var(--accent)}
 .why .them li::before{content:"✕";color:var(--bad);font-weight:700}
 .why .us li::before{content:"✓";color:var(--ok);font-weight:800}
 @media (max-width:760px){.why{grid-template-columns:1fr}}
+/* Why Widgetry */
+.ww{background:var(--deep);color:var(--deep-fg);margin-bottom:80px;position:relative;overflow:hidden}
+.ww::before{content:"";position:absolute;inset:-40% -20% auto auto;width:620px;height:620px;border-radius:50%;background:radial-gradient(closest-side,rgba(63,199,159,.16),transparent);pointer-events:none}
+.ww .wrap{position:relative}
+.ww h2{color:#fff;font-size:clamp(28px,4.2vw,46px);line-height:1.08;max-width:20ch}
+.ww h2 em{font-style:normal;color:var(--accent-2)}
+.ww .eyebrow{color:var(--accent-2)}
+.ww .lede{color:var(--deep-muted);font-size:18px}
+.ww h3{color:#fff}
+.ww-track{list-style:none;margin:0 0 56px;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:14px;position:relative}
+.ww-track::before{content:"";position:absolute;left:8%;right:8%;top:21px;height:2px;background:linear-gradient(90deg,var(--deep-line),#3fc79f 60%,var(--accent-2))}
+.ww-track li{position:relative;text-align:center;padding:0 4px}
+.ww-track .dot{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;margin:0 auto 12px;background:var(--deep-2);border:2px solid #3fc79f;font-family:var(--mono);font-size:12px;font-weight:700;color:#fff;position:relative}
+.ww-track li:last-child .dot{background:var(--accent-2);border-color:var(--accent-2);color:#1d1400;box-shadow:0 0 0 6px rgba(242,169,0,.18)}
+.ww-track b{display:block;color:#fff;font-size:15.5px;line-height:1.3;margin-bottom:4px}
+.ww-track span{display:block;color:var(--deep-muted);font-size:13.5px;line-height:1.4}
+.ww-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:56px}
+.ww-card{background:var(--deep-2);border:1px solid var(--deep-line);border-radius:20px;padding:24px 22px;display:flex;flex-direction:column;gap:8px;transition:transform .2s ease,border-color .2s ease}
+.ww-card:hover{transform:translateY(-3px);border-color:#3fc79f}
+.ww-card .n{font-family:var(--display);font-weight:700;font-size:34px;line-height:1;color:var(--accent-2);letter-spacing:-.02em}
+.ww-card .n small{font-family:var(--body);font-size:14px;font-weight:600;color:var(--deep-muted);letter-spacing:0;margin-left:4px}
+.ww-card h3{font-size:19px;margin:6px 0 0}
+.ww-card p{margin:0;color:var(--deep-muted);font-size:15.5px;line-height:1.55}
+.ww-sub{font-family:var(--display);font-size:clamp(20px,2.6vw,26px);color:#fff;margin:0 0 18px}
+.ww .why{background:var(--deep-2);border-color:var(--deep-line)}
+.ww .why .them{background:rgba(0,0,0,.22)}
+.ww .why .them li{color:var(--deep-muted)}
+.ww .why .us{background:linear-gradient(160deg,rgba(63,199,159,.14),transparent 70%)}
+.ww .why .us li{color:var(--deep-fg)}
+.ww .why .them li::before{color:#ff7a7a}
+.ww .why .us li::before{color:#3fc79f}
+.ww-close{margin-top:40px;display:grid;grid-template-columns:1fr auto;gap:22px;align-items:center;background:linear-gradient(120deg,rgba(242,169,0,.14),rgba(63,199,159,.10));border:1px solid var(--deep-line);border-radius:22px;padding:26px clamp(20px,3vw,34px)}
+.ww-close h3{font-family:var(--display);font-size:clamp(20px,2.4vw,24px);margin:0 0 10px}
+.ww-close ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--deep-fg);font-size:15px}
+.ww-close li::before{content:"✓ ";color:#3fc79f;font-weight:800}
+.ww-close .acts{display:flex;gap:10px;flex-wrap:wrap}
+.ww-close .btn{background:var(--accent-2);color:#1d1400;white-space:nowrap}
+.ww-close .btn.ghost{background:transparent;color:#fff;border-color:var(--deep-line)}
+@media (max-width:900px){.ww-grid{grid-template-columns:1fr 1fr}.ww-close{grid-template-columns:1fr}}
+@media (max-width:760px){
+  .ww-track{grid-template-columns:1fr;gap:0;margin-bottom:44px}
+  .ww-track::before{left:21px;right:auto;top:10px;bottom:10px;width:2px;height:auto;background:linear-gradient(180deg,var(--deep-line),#3fc79f 60%,var(--accent-2))}
+  .ww-track li{display:grid;grid-template-columns:44px 1fr;column-gap:14px;text-align:left;padding:0 0 18px}
+  .ww-track .dot{margin:0;grid-row:span 2}
+  .ww-track b{align-self:end;margin:0}
+}
+@media (max-width:560px){.ww-grid{grid-template-columns:1fr}.ww-card{padding:20px 18px}.ww-close .btn{flex:1 1 100%}}
+@media (prefers-reduced-motion:reduce){.ww-card{transition:none}.ww-card:hover{transform:none}}
 
 /* showcase */
 .show{display:grid;gap:28px}
@@ -469,6 +517,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
   <div class="wrap">
     <a class="brand" href="#top">Flutter<span>/</span>10</a>
     <div class="navlinks">
+      <a href="#why">Why Widgetry</a>
       <a href="#downloads">Apps</a>
       <a href="#screens">Screens</a>
       <a href="#work">Live projects</a>
@@ -557,12 +606,32 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
   </div>
   <div class="gallery" tabindex="0" aria-label="App screenshots"><figure><div class="phone"><img class="rimg" src="shots/tataneu-home.jpg" alt="Tata Neu — Home & payments" loading="lazy"></div><figcaption><b>Tata Neu</b>Home & payments</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/tataneu-neupass.jpg" alt="Tata Neu — NeuPass rewards" loading="lazy"></div><figcaption><b>Tata Neu</b>NeuPass rewards</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/jie-employee.jpg" alt="Jobs in Education — Job seeker home" loading="lazy"></div><figcaption><b>Jobs in Education</b>Job seeker home</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/jie-employer.jpg" alt="Jobs in Education — Employer: find candidates" loading="lazy"></div><figcaption><b>Jobs in Education</b>Employer: find candidates</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/aseztak-welcome.jpg" alt="Aseztak Wholesale — Shop home" loading="lazy"></div><figcaption><b>Aseztak Wholesale</b>Shop home</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/aseztak-location.jpg" alt="Aseztak Wholesale — Shop by city" loading="lazy"></div><figcaption><b>Aseztak Wholesale</b>Shop by city</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/aseztak-signup.jpg" alt="Aseztak Wholesale — Business sign-up" loading="lazy"></div><figcaption><b>Aseztak Wholesale</b>Business sign-up</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/i360-pretrip.jpg" alt="I360 Vehicle Safety — Pre-trip checklist" loading="lazy"></div><figcaption><b>I360 Vehicle Safety</b>Pre-trip checklist</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/i360-language.jpg" alt="I360 Vehicle Safety — Language selection" loading="lazy"></div><figcaption><b>I360 Vehicle Safety</b>Language selection</figcaption></figure></div>
 </section>
-<section style="padding-top:0">
+<section id="why" class="ww">
   <div class="wrap">
     <div class="head">
-      <p class="eyebrow">Why this workshop</p>
-      <h2>Tutorials teach syntax. This teaches you to ship.</h2>
+      <p class="eyebrow">Why Widgetry</p>
+      <h2>Other courses give you notes. We give you <em>your own app.</em></h2>
+      <p class="lede">In 10 weekend sessions you go from never having written code to holding an app you built yourself, on your own phone. Here's what you'll be able to do along the way.</p>
     </div>
+
+    <ol class="ww-track" aria-label="What you can do after each stage">
+      <li><span class="dot">D1</span><b>Your first app runs on your phone</b><span>On day one, not week three</span></li>
+      <li><span class="dot">D4</span><b>Screens that react to you</b><span>Buttons, typing, live updates</span></li>
+      <li><span class="dot">D6</span><b>Live data from the internet</b><span>Call a real API</span></li>
+      <li><span class="dot">D8</span><b>Login and a cloud database</b><span>Firebase, like real apps</span></li>
+      <li><span class="dot">D10</span><b>Your app, ready to share</b><span>APK, GitHub and demo day</span></li>
+    </ol>
+
+    <div class="ww-grid">
+      <div class="ww-card"><div class="n">50M+</div><h3>Learn from someone who ships</h3><p>Your mentor builds Flutter apps for a living and has worked on apps with 50M+ downloads, including Tata Neu. You learn how real teams build, not how to pass a test.</p></div>
+      <div class="ww-card"><div class="n">0<small>coding needed</small></div><h3>Start from zero</h3><p>Day 1 begins with installing Flutter. If you can use a computer, you can follow along, whether you're in Class 10 or about to graduate.</p></div>
+      <div class="ww-card"><div class="n">100%<small>live</small></div><h3>Never stuck alone</h3><p>Every session is 2 hours of live coding and Q&amp;A. Hit an error? Ask right there and fix it before class ends. No pre-recorded videos, no waiting days for a reply.</p></div>
+      <div class="ww-card"><div class="n">Sat · Sun</div><h3>Fits around school and college</h3><p>Weekends only, five weekends in total. Nothing clashes with your classes, exams or tuition on weekdays.</p></div>
+      <div class="ww-card"><div class="n">3<small>proofs</small></div><h3>Something real for your resume</h3><p>An installable app, a GitHub portfolio and a certificate with a unique ID. Things you can actually show in an internship interview.</p></div>
+      <div class="ww-card"><div class="n">₹175<small>/ hour</small></div><h3>Serious value</h3><p>20 hours of live mentoring for ₹3,499 with the early-bird fee. Pay in two parts if that's easier.</p></div>
+    </div>
+
+    <p class="ww-sub">Learning alone vs learning with Widgetry</p>
     <div class="why">
       <div class="them">
         <h3>Learning alone from videos</h3>
@@ -574,13 +643,24 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
         </ul>
       </div>
       <div class="us">
-        <h3>Flutter in 10 Days</h3>
+        <h3>With Widgetry</h3>
         <ul>
           <li>Live coding with a working senior engineer</li>
           <li>Doubts solved in class, every weekend</li>
           <li>A finished app on your phone by Day 10</li>
           <li>Tips and habits from real production apps</li>
         </ul>
+      </div>
+    </div>
+
+    <div class="ww-close">
+      <div>
+        <h3>Still unsure? Try it first.</h3>
+        <ul><li>Free demo class</li><li>Full refund before Session 2</li><li>Secure payment by Razorpay</li></ul>
+      </div>
+      <div class="acts">
+        <a class="btn" href="#register">Reserve my seat</a>
+        <a class="btn ghost" id="wwDemo" href="#fees">Book free demo</a>
       </div>
     </div>
   </div>
@@ -1004,6 +1084,8 @@ onAuthStateChanged(auth, (user) => {
     nb.innerHTML='<div><p class="nb-k">'+esc(B.name||'Next batch')+'</p><p class="nb-t">'+(B.startDate?'Starts '+esc(B.startDate):'Dates announced soon')+'</p></div>'+
       '<ul>'+(B.days?'<li>🗓 '+esc(B.days)+'</li>':'')+(B.time?'<li>⏰ '+esc(B.time)+'</li>':'')+(B.mode?'<li>📍 '+esc(B.mode)+'</li>':'')+(B.demo?'<li>🎓 '+esc(B.demo)+'</li>':'<li>🎓 Free demo class available</li>')+'</ul>'+
       '<a class="btn" href="'+demoUrl+'"'+(demoUrl.charAt(0)==='#'?'':' target="_blank" rel="noopener"')+'>Book free demo</a>';nb.hidden=false;}
+  var wd=document.getElementById('wwDemo');
+  if(wd){var wu=waLink('Hi! I would like to book the free demo class for the Widgetry Academy Flutter workshop.');if(wu){wd.href=wu;wd.target='_blank';wd.rel='noopener';}}
   var fl=document.getElementById('ebFlag'); if(fl&&B.seatsLeft!=null){fl.textContent=B.seatsLeft>0?(B.seatsLeft+' of 10 seats left'):'Early bird full';}
   // Meta Pixel
   if(/^\d+$/.test(C.metaPixelId||'')){
