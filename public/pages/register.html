@@ -66,12 +66,24 @@
     }
 
     @media (max-width: 600px) {
+      section {
+        padding-block: var(--sp-lg) var(--sp-3xl);
+      }
+
       .two-column {
         grid-template-columns: 1fr;
       }
 
       .register-card {
         padding: var(--sp-lg);
+      }
+
+      .register-header h1 {
+        font-size: 22px;
+      }
+
+      .register-header p {
+        font-size: 14px;
       }
     }
 
