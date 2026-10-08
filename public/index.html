@@ -967,7 +967,7 @@ onAuthStateChanged(auth, (user) => {
 
     // If user is not logged in, show registration prompt instead of payment button
     if(!user){
-      box.innerHTML = '<div style="text-align:center; padding: 20px; background: #f0f0f0; border-radius: 8px;"><p style="margin: 0 0 12px 0; font-weight: 600;">📋 Register first to proceed with payment</p><a href="./pages/register.html" style="display: inline-block; background: #0f6b56; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-top: 8px;">Create Account</a></div>';
+      box.innerHTML = '<div style="text-align:center; padding: 20px 20px; background: #f3f6f4; border-radius: 8px; border-left: 4px solid #0f6b56;"><p style="margin: 0 0 12px 0; font-weight: 600; color: #0e1f1a; font-size: 14px;">📋 Register first to proceed with payment</p><a href="./pages/register.html" style="display: inline-block; background: #0f6b56; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-top: 8px; font-size: 14px; transition: all 0.3s ease;">Create Account</a></div>';
       // Clear Razorpay ID so button doesn't load
       box.setAttribute('data-pay', '');
       return;
