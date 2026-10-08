@@ -1304,5 +1304,35 @@ onAuthStateChanged(auth, async (u)=>{
 </script>
 
 
+<script type="module">
+// Full-stack course card: show an approved mentor from the database (mentorApplications, status "approved")
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+(async () => {
+  const box = document.getElementById("fsMentor");
+  const cfg = (window.WIDGETRY && window.WIDGETRY.fullStackMentor) || {};
+  if (!box || cfg.name) return; // a name in site-config.js overrides the database
+  try {
+    const app = getApps()[0] || initializeApp(firebaseConfig);
+    const snap = await getDocs(query(collection(getFirestore(app), "mentorApplications"), where("status", "==", "approved")));
+    const ms = snap.docs.map(d => d.data()).filter(m => m.name && !/kishan/i.test(m.name));
+    if (!ms.length) return;
+    const fit = m => /full.?stack|react|\.net|dotnet|node|javascript|web|backend|api/i.test([m.course, (m.skills || []).join(" "), m.role, m.pitch, m.bio].join(" "));
+    const t = m => (m.adminUpdatedAt && m.adminUpdatedAt.seconds) || 0;
+    ms.sort((a, b) => (fit(b) - fit(a)) || (t(b) - t(a)));
+    const m = ms[0];
+    const EXP = { 2: "1–3 years", 4: "3–5 years", 6: "5–8 years", 10: "8–12 years", 15: "12+ years" };
+    let exp = typeof m.experience === "number" ? (EXP[m.experience] || m.experience + "+ years") : String(m.experience || "").trim();
+    if (/^\d+$/.test(exp)) exp += "+ years";
+    else if (exp && !/year|yr/i.test(exp)) exp += " years";
+    const work = [m.role, m.company].filter(Boolean).join(", ");
+    const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const ini = m.name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase();
+    box.innerHTML = '<span class="crs-av" aria-hidden="true">' + esc(ini) + '</span><div><b>' + esc(m.name) + '</b><span>' +
+      esc([exp, work].filter(Boolean).join(" · ") || "Course mentor") + '</span></div>';
+  } catch (e) { console.warn("Mentor load skipped:", e.code || e.message); }
+})();
+</script>
 </body>
 </html>
