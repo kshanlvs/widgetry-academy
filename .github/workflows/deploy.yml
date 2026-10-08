@@ -22,7 +22,7 @@ jobs:
       - name: Create Firebase credentials
         run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /tmp/firebase-key.json
 
-      - name: Deploy to Firebase
+      - name: Deploy to Firebase Hosting
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/firebase-key.json
-        run: firebase deploy --project flutter-in-10-days
+        run: firebase deploy --project flutter-in-10-days --only hosting
