@@ -216,14 +216,14 @@ form.addEventListener("submit", async e => {
   if (/^[6-9]\d{9}$/.test(phone)) phone = "+91" + phone;
   if (/^91[6-9]\d{9}$/.test(phone)) phone = "+" + phone;
 
+  // Build form data - only include uid if user is authenticated
   const d = {
-    uid: user?.uid || "", // Use user uid if logged in, empty string if not
     name: val("m_name"),
-    email: val("m_email").toLowerCase(), // Use form email for unauthenticated users
+    email: val("m_email").toLowerCase(),
     phone,
     company: val("m_company"),
     role: val("m_role"),
-    experience: parseInt(val("m_exp"), 10), // Convert to integer for Firestore
+    experience: parseInt(val("m_exp"), 10),
     linkedin: val("m_li"),
     skills: picked("skills"),
     course: val("m_course"),
@@ -234,29 +234,56 @@ form.addEventListener("submit", async e => {
     updatedAt: serverTimestamp()
   };
 
+  // Only add uid if user is authenticated
+  if (user?.uid) {
+    d.uid = user.uid;
+  } else {
+    d.uid = "";
+  }
+
   // Validation
   if (d.name.length < 2) return fail("Please enter your full name.");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return fail("Please enter a valid email.");
-  if (!/^\+[1-9]\d{9,14}$/.test(d.phone)) return fail("Please enter a valid WhatsApp number with country code.");
+  if (!d.phone || !/^\+[1-9]\d{9,14}$/.test(d.phone)) return fail("Please enter a valid WhatsApp number with country code (e.g., +91 98765432109).");
   if (!d.company || !d.role) return fail("Please add your company and role.");
-  if (!d.experience) return fail("Please select your experience level.");
-  if (!d.skills.length) return fail("Please select at least one skill you can teach.");
-  if (!d.course) return fail("Tell us what you'd like to teach.");
-  if (!d.bio || d.bio.length < 20) return fail("Please write a few lines about your teaching style.");
+  if (!d.experience || d.experience <= 0) return fail("Please select your experience level.");
+  if (!d.skills || d.skills.length === 0) return fail("Please select at least one skill you can teach.");
+  if (!d.course || d.course.length < 3) return fail("Tell us what you'd like to teach (minimum 3 characters).");
+  if (!d.bio || d.bio.length < 20) return fail("Please write at least 20 characters about your teaching style.");
   if (!d.availability) return fail("Please select your availability.");
 
   btn.disabled = true;
   btn.textContent = "Submitting…";
 
   try {
-    await addDoc(collection(db, "mentorApplications"), d);
+    console.log("Submitting mentor application with data:", d);
+    const docRef = await addDoc(collection(db, "mentorApplications"), d);
+    console.log("Successfully submitted! Document ID:", docRef.id);
+
     document.getElementById('mDoneName').textContent = d.name.split(" ")[0];
     form.hidden = true;
     done.hidden = false;
     done.scrollIntoView({behavior:"smooth"});
   } catch (x) {
-    console.error(x);
-    fail("Couldn't submit right now. Please check your connection and try again.");
+    console.error("❌ Submission failed!");
+    console.error("Error code:", x.code);
+    console.error("Error message:", x.message);
+    console.error("Full error:", x);
+    console.error("Submitted data:", JSON.stringify(d, null, 2));
+    console.error("User state:", user ? "Authenticated (" + user.uid + ")" : "Unauthenticated");
+
+    // Provide specific error messages based on error type
+    if (x.code === "permission-denied") {
+      fail("Permission denied. Your submission was rejected. Please ensure all fields are correct and try again.");
+    } else if (x.code === "invalid-argument") {
+      fail("Invalid data detected. Please verify all fields are filled correctly (especially phone number and skills).");
+    } else if (x.code === "unavailable") {
+      fail("Service temporarily unavailable. Please check your internet and try again in a moment.");
+    } else if (x.code === "unauthenticated") {
+      fail("Please ensure you have an active internet connection and try again.");
+    } else {
+      fail("Couldn't submit right now. Please check your internet connection and try again. If the problem persists, contact support.");
+    }
   } finally {
     btn.disabled = false;
     btn.textContent = "Submit application";
