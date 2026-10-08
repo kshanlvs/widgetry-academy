@@ -19,7 +19,10 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
+      - name: Create Firebase credentials
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /tmp/firebase-key.json
+
       - name: Deploy to Firebase
-        run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > firebase-key.json
-          firebase deploy --project widgetry-academy --cred firebase-key.json
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/firebase-key.json
+        run: firebase deploy --project widgetry-academy
