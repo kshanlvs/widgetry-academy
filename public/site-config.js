@@ -13,12 +13,19 @@ window.WIDGETRY = {
   // ---- Next batch (shown in the hero, fees section and WhatsApp messages) ----
   batch: {
     name:      "Batch 1",
-    startDate: "",                       // e.g. "Saturday, 1 November 2026"
+    startDate: "Saturday, 10 October 2026", // e.g. "Saturday, 1 November 2026"
     days:      "Saturdays & Sundays",
-    time:      "",                       // e.g. "10:00 AM – 12:00 PM IST"
+    time:      "11:00 AM – 2:00 PM IST", // e.g. "10:00 AM – 12:00 PM IST"
     mode:      "",                       // e.g. "Live online (Google Meet)" or "In-person, Salt Lake"
     demo:      "",                       // e.g. "Free demo: Sunday, 26 October, 11 AM"
     seatsLeft: null                      // early-bird seats left, e.g. 7 (null = hide). Keep it honest.
+  },
+
+  // ---- Upcoming course mentor (shown on the "Full-Stack" coming-soon card) ----
+  fullStackMentor: {
+    name:       "",                      // e.g. "Rahul Verma"
+    experience: "",                      // e.g. "6+ years"
+    role:       ""                       // e.g. "Senior Software Engineer, TCS"
   },
 
   // ---- Contact (Contact page, policy pages, WhatsApp button) ----

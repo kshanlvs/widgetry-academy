@@ -333,6 +333,45 @@ a.mbadge:hover{border-color:var(--accent)}
 .ww .eyebrow{color:var(--accent-2)}
 .ww .lede{color:var(--deep-muted);font-size:18px}
 .ww h3{color:#fff}
+/* Courses */
+.crs{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.crs-card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:26px clamp(20px,2.6vw,30px);display:flex;flex-direction:column;gap:12px}
+.crs-card.soon{background:linear-gradient(165deg,var(--soft),var(--surface) 60%);border-style:dashed;border-color:var(--accent)}
+.crs-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.crs-status{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:6px 11px;border-radius:99px;background:rgba(242,169,0,.16);color:#9a6a00}
+.crs-status.open{background:rgba(31,157,85,.14);color:var(--ok)}
+.crs-meta{font-size:13.5px;color:var(--muted)}
+.crs-card h3{font-family:var(--display);font-size:clamp(21px,2.4vw,26px);margin:4px 0 0;line-height:1.15}
+.crs-sub{color:var(--muted);margin:0}
+.crs-tags{display:flex;flex-wrap:wrap;gap:6px}
+.crs-tags span{font-size:13px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--soft);color:var(--accent)}
+.crs-steps{list-style:none;margin:2px 0;padding:0;display:grid;gap:8px;counter-reset:s}
+.crs-steps li{counter-increment:s;display:grid;grid-template-columns:28px 1fr;column-gap:10px;font-size:14.5px;color:var(--muted);line-height:1.4}
+.crs-steps li::before{content:counter(s);grid-row:span 2;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:13px}
+.crs-steps b{color:var(--ink);font-size:15px}
+.crs-out{margin:0;font-size:15px;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.crs-mentor{display:flex;align-items:center;gap:12px;margin-top:auto;padding-top:6px}
+.crs-mentor img,.crs-av{width:46px;height:46px;border-radius:50%;object-fit:cover;flex:none}
+.crs-av{display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-family:var(--display);font-weight:700;font-size:17px}
+.crs-mentor b{display:block;font-size:15.5px}
+.crs-mentor span{font-size:13.5px;color:var(--muted)}
+.crs-card .btn{align-self:flex-start}
+.crs-soon[disabled]{background:transparent;color:var(--accent);border:1.5px dashed var(--accent);cursor:not-allowed;opacity:1}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .crs-status:not(.open){color:var(--accent-2)}}
+:root[data-theme="dark"] .crs-status:not(.open){color:var(--accent-2)}
+@media (max-width:820px){.crs{grid-template-columns:1fr}}
+@media (max-width:520px){.crs-card .btn{align-self:stretch}}
+.ww-method{display:grid;grid-template-columns:.9fr 1.4fr;gap:28px;align-items:center;background:var(--deep-2);border:1px solid var(--deep-line);border-radius:24px;padding:clamp(22px,3vw,34px);margin-bottom:56px}
+.ww-k{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#3fc79f;margin:0 0 8px;font-weight:600}
+.ww-mhead h3{font-family:var(--display);font-size:clamp(22px,2.8vw,30px);line-height:1.15;margin:0 0 12px}
+.ww-mhead p:last-child{color:var(--deep-muted);margin:0;font-size:15.5px}
+.ww-loop{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;counter-reset:none}
+.ww-loop li{background:rgba(0,0,0,.2);border:1px solid var(--deep-line);border-radius:16px;padding:16px;display:grid;grid-template-columns:34px 1fr;column-gap:12px;row-gap:4px}
+.ww-loop .st{grid-row:span 2;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--accent-2);color:#1d1400;font-family:var(--display);font-weight:700;font-size:15px}
+.ww-loop b{color:#fff;font-size:16px}
+.ww-loop span:not(.st){color:var(--deep-muted);font-size:14.5px;line-height:1.45}
+@media (max-width:900px){.ww-method{grid-template-columns:1fr}}
+@media (max-width:520px){.ww-loop{grid-template-columns:1fr}}
 .ww-track{list-style:none;margin:0 0 56px;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:14px;position:relative}
 .ww-track::before{content:"";position:absolute;left:8%;right:8%;top:21px;height:2px;background:linear-gradient(90deg,var(--deep-line),#3fc79f 60%,var(--accent-2))}
 .ww-track li{position:relative;text-align:center;padding:0 4px}
@@ -523,6 +562,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
       <a href="#work">Live projects</a>
       <a href="#mentor">Mentor</a>
       <a href="#schedule">Syllabus</a>
+      <a href="#courses">Courses</a>
       <a href="#fees">Fees</a>
       <a href="#certificate">Certificate</a>
       <a href="#faq">FAQ</a>
@@ -611,9 +651,24 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
     <div class="head">
       <p class="eyebrow">Why Widgetry</p>
       <h2>Other courses give you notes. We give you <em>your own app.</em></h2>
-      <p class="lede">In 10 weekend sessions you go from never having written code to holding an app you built yourself, on your own phone. Here's what you'll be able to do along the way.</p>
+      <p class="lede">We don't lecture topics one by one. We build a real product together and explain each concept the moment you need it. That's how we work on big projects every day, and it's how you learn to never get stuck.</p>
     </div>
 
+    <div class="ww-method">
+      <div class="ww-mhead">
+        <p class="ww-k">How every class works</p>
+        <h3>Build first. Understand as you go.</h3>
+        <p>We're shipping production apps right now, including OxyReach for Linde and I360 Vehicle Safety. You learn the same way our teams do on those projects, scaled down for beginners.</p>
+      </div>
+      <ol class="ww-loop">
+        <li><span class="st">1</span><b>Pick a real feature</b><span>A login screen, a product list, a live feed. Something a real app needs.</span></li>
+        <li><span class="st">2</span><b>Understand the why</b><span>The idea behind it in plain words, before any code.</span></li>
+        <li><span class="st">3</span><b>Build it yourself</b><span>You type it on your own laptop, live, step by step.</span></li>
+        <li><span class="st">4</span><b>Fix it together</b><span>When it breaks, we debug side by side, the way we do on client projects.</span></li>
+      </ol>
+    </div>
+
+    <p class="ww-sub">What you'll be able to do</p>
     <ol class="ww-track" aria-label="What you can do after each stage">
       <li><span class="dot">D1</span><b>Your first app runs on your phone</b><span>On day one, not week three</span></li>
       <li><span class="dot">D4</span><b>Screens that react to you</b><span>Buttons, typing, live updates</span></li>
@@ -808,6 +863,42 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
       <div><p class="eyebrow">After this workshop</p><h3>Want to go further? Professional Flutter Program</h3>
       <p>For students who finish this workshop and want to become job-ready: Bloc state management, clean architecture, offline-first apps, testing, CI/CD and publishing on the Play Store.</p></div>
       <span class="ns-tag">Coming soon</span>
+    </div>
+  </div>
+</section>
+
+<section id="courses" style="padding-top:0">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">Our courses</p>
+      <h2>Start with apps. Grow into full stack.</h2>
+      <p class="lede">Every Widgetry course is taught by a working engineer and built for students: beginner-friendly, weekend-only, and finished with something real you can show.</p>
+    </div>
+    <div class="crs">
+      <article class="crs-card">
+        <div class="crs-top"><span class="crs-status open">● Enrolling now</span><span class="crs-meta">10 sessions · Weekends</span></div>
+        <h3>Flutter in 10 Days</h3>
+        <p class="crs-sub">Build your own mobile app for Android, from zero.</p>
+        <div class="crs-tags"><span>Flutter</span><span>Dart</span><span>Firebase</span><span>APIs</span><span>GitHub</span></div>
+        <p class="crs-out"><b>You finish with:</b> your own installable Android app and a GitHub portfolio.</p>
+        <div class="crs-mentor"><img src="shots/mentor-square.jpg" alt="" loading="lazy"><div><b>Kishan Kumar Sharma</b><span>5+ years · Senior Software Engineer, Relevance Lab</span></div></div>
+        <a class="btn" href="#register">Reserve my seat</a>
+      </article>
+      <article class="crs-card soon">
+        <div class="crs-top"><span class="crs-status">◷ Coming soon</span><span class="crs-meta">Weekends · Beginner friendly</span></div>
+        <h3>Full-Stack Web Development</h3>
+        <p class="crs-sub">Build a complete website with your own backend, and put it live on the internet.</p>
+        <ol class="crs-steps">
+          <li><b>JavaScript basics</b>Make web pages that think and respond</li>
+          <li><b>React</b>Build modern, interactive screens</li>
+          <li><b>Your own API with .NET</b>The backend that stores and serves data</li>
+          <li><b>Deployment</b>Put your project live with a link to share</li>
+          <li><b>CI/CD</b>Your site updates itself when you push code</li>
+        </ol>
+        <p class="crs-out"><b>You finish with:</b> a live full-stack project with a frontend, an API and a real link.</p>
+        <div class="crs-mentor" id="fsMentor"><span class="crs-av" aria-hidden="true">FS</span><div><b>Taught by a working full-stack engineer</b><span>Mentor details announced soon</span></div></div>
+        <button class="btn crs-soon" type="button" disabled aria-disabled="true">Coming soon</button>
+      </article>
     </div>
   </div>
 </section>
@@ -1084,6 +1175,10 @@ onAuthStateChanged(auth, (user) => {
     nb.innerHTML='<div><p class="nb-k">'+esc(B.name||'Next batch')+'</p><p class="nb-t">'+(B.startDate?'Starts '+esc(B.startDate):'Dates announced soon')+'</p></div>'+
       '<ul>'+(B.days?'<li>🗓 '+esc(B.days)+'</li>':'')+(B.time?'<li>⏰ '+esc(B.time)+'</li>':'')+(B.mode?'<li>📍 '+esc(B.mode)+'</li>':'')+(B.demo?'<li>🎓 '+esc(B.demo)+'</li>':'<li>🎓 Free demo class available</li>')+'</ul>'+
       '<a class="btn" href="'+demoUrl+'"'+(demoUrl.charAt(0)==='#'?'':' target="_blank" rel="noopener"')+'>Book free demo</a>';nb.hidden=false;}
+  // Full-stack mentor card (from site-config.js)
+  var M=C.fullStackMentor||{}, fm=document.getElementById('fsMentor');
+  if(fm&&M.name){var ini=M.name.trim().split(/\s+/).map(function(w){return w.charAt(0);}).slice(0,2).join('').toUpperCase();
+    fm.innerHTML='<span class="crs-av" aria-hidden="true">'+esc(ini)+'</span><div><b>'+esc(M.name)+'</b><span>'+esc([M.experience,M.role].filter(Boolean).join(' · ')||'Course mentor')+'</span></div>';}
   var wd=document.getElementById('wwDemo');
   if(wd){var wu=waLink('Hi! I would like to book the free demo class for the Widgetry Academy Flutter workshop.');if(wu){wd.href=wu;wd.target='_blank';wd.rel='noopener';}}
   var fl=document.getElementById('ebFlag'); if(fl&&B.seatsLeft!=null){fl.textContent=B.seatsLeft>0?(B.seatsLeft+' of 10 seats left'):'Early bird full';}
