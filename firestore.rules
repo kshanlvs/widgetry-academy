@@ -102,8 +102,8 @@ service cloud.firestore {
       // Users can read their own application; ADMIN can read all; PUBLIC can read approved mentors only
       allow read: if request.auth != null && request.auth.uid == resource.data.uid || isAdmin() || resource.data.status == 'approved';
 
-      // Users can delete their own pending applications only
-      allow delete: if request.auth != null && request.auth.uid == resource.data.uid && resource.data.status == 'pending' || isAdmin();
+      // Users can delete their own applications while still new; admin can delete any
+      allow delete: if request.auth != null && request.auth.uid == resource.data.uid && resource.data.status in ['new', 'pending'] || isAdmin();
 
       // Admin: can update any field (status, notes, and converting old-format applications)
       allow update: if isAdmin();
