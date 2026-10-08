@@ -21,13 +21,6 @@ window.WIDGETRY = {
     seatsLeft: null                      // early-bird seats left, e.g. 7 (null = hide). Keep it honest.
   },
 
-  // ---- Upcoming course mentor (shown on the "Full-Stack" coming-soon card) ----
-  fullStackMentor: {
-    name:       "",                      // e.g. "Rahul Verma"
-    experience: "",                      // e.g. "6+ years"
-    role:       ""                       // e.g. "Senior Software Engineer, TCS"
-  },
-
   // ---- Contact (Contact page, policy pages, WhatsApp button) ----
   whatsapp:     "",                   // WhatsApp number with country code, digits only, e.g. "919876543210". Empty = no WhatsApp button.
   contactEmail: "",                   // e.g. "widgetry.academy@gmail.com"

@@ -95,7 +95,7 @@ service cloud.firestore {
         && request.resource.data.course is string && request.resource.data.course.size() > 0 && request.resource.data.course.size() <= 500
         && request.resource.data.bio is string && request.resource.data.bio.size() > 0 && request.resource.data.bio.size() <= 500
         && request.resource.data.availability is string && request.resource.data.availability.size() > 0 && request.resource.data.availability.size() <= 50
-        && request.resource.data.status == 'pending'
+        && request.resource.data.status in ['new', 'pending']
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
@@ -105,10 +105,9 @@ service cloud.firestore {
       // Users can delete their own pending applications only
       allow delete: if request.auth != null && request.auth.uid == resource.data.uid && resource.data.status == 'pending' || isAdmin();
 
-      // Admin: can update status and add notes
-      allow update: if isAdmin()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','notes','adminUpdatedAt']);
-    
+      // Admin: can update any field (status, notes, and converting old-format applications)
+      allow update: if isAdmin();
+
     }
 
     match /{document=**} {

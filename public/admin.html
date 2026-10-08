@@ -120,6 +120,7 @@ dialog::backdrop{background:rgba(12,42,35,.45)}
       <label>Status<select id="mfStatus"><option value="">All</option><option value="new">New</option><option value="shortlisted">Shortlisted</option><option value="demo">Demo scheduled</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
       <button class="btn ghost" id="mbReload" type="button">Refresh</button>
       <button class="btn" id="mbCsv" type="button">Export CSV</button>
+      <button class="btn ghost" id="mbFix" type="button" hidden>Fix old records</button>
     </div>
     <div class="tablewrap"><table>
       <thead><tr><th>Applied</th><th>Mentor</th><th>Work</th><th>Skills</th><th>Wants to teach</th><th>Contact</th><th>Status</th><th></th></tr></thead>
@@ -159,7 +160,7 @@ dialog::backdrop{background:rgba(12,42,35,.45)}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
@@ -279,6 +280,19 @@ const mStatus = r => (!r.status || r.status === "pending") ? "new" : r.status;
 const EXPL = { 2: "1–3 years", 4: "3–5 years", 6: "5–8 years", 10: "8–12 years", 15: "12+ years" };
 const mExp = r => typeof r.experience === "number" ? (EXPL[r.experience] || r.experience + "+ years") : (r.experience || "");
 const asText = v => Array.isArray(v) ? v.join(", ") : (v || "");
+// Changes that bring an old-format application to the current format. Values are converted, never dropped.
+const EXPN = { "1–3 years": 2, "3–5 years": 4, "5–8 years": 6, "8–12 years": 10, "12+ years": 15 };
+function mFixPatch(r) {
+  const p = {};
+  if (typeof r.experience === "string" && EXPN[r.experience] != null) p.experience = EXPN[r.experience];
+  if (Array.isArray(r.availability)) p.availability = r.availability.join(", ");
+  if (r.bio == null && typeof r.pitch === "string") { p.bio = r.pitch; p.pitch = deleteField(); }
+  if (r.uid == null) p.uid = "";
+  if (r.updatedAt == null) p.updatedAt = r.createdAt || serverTimestamp();
+  if (!r.status || r.status === "pending") p.status = "new";
+  return p;
+}
+const mNeedsFix = r => Object.keys(mFixPatch(r)).length > 0;
 
 async function loadMentors() {
   try {
@@ -295,6 +309,7 @@ function renderM() {
   const q = $("mq").value.trim().toLowerCase(), fs = $("mfStatus").value;
   const cnt = s => mall.filter(r => mStatus(r) === s).length;
   $("cMen").textContent = mall.length; $("mkTotal").textContent = mall.length;
+  const nFix = mall.filter(mNeedsFix).length; $("mbFix").hidden = !nFix; $("mbFix").textContent = "Fix " + nFix + " old record" + (nFix > 1 ? "s" : "");
   $("mkNew").textContent = cnt("new"); $("mkShort").textContent = cnt("shortlisted"); $("mkDemo").textContent = cnt("demo"); $("mkOk").textContent = cnt("approved");
   const list = mall.filter(r => (!fs || mStatus(r) === fs) && (!q || [r.name, r.company, r.role, r.email, r.phone, r.course, r.city, (r.skills || []).join(" ")].join(" ").toLowerCase().includes(q)));
   if (!list.length) { $("mrows").innerHTML = '<tr><td colspan="8" class="empty">' + (mall.length ? "No matches." : "No mentor applications yet.") + "</td></tr>"; return; }
@@ -339,6 +354,20 @@ $("mfEdit").addEventListener("submit", async e => {
   catch (x) { $("meErr").textContent = "Couldn't save: " + (x.code === "permission-denied" ? "deploy the latest firestore.rules." : x.message); $("meErr").hidden = false; }
   finally { $("mbSave").disabled = false; }
 });
+
+$("mbFix").onclick = async () => {
+  const todo = mall.filter(mNeedsFix);
+  if (!todo.length || !confirm("Convert " + todo.length + " old mentor application(s) to the current format? Every value is kept.")) return;
+  $("mbFix").disabled = true;
+  let done = 0, failed = 0;
+  for (const r of todo) {
+    try { await updateDoc(doc(db, "mentorApplications", r.id), mFixPatch(r)); done++; }
+    catch (x) { failed++; console.error("Fix failed for", r.id, x); }
+  }
+  $("mbFix").disabled = false;
+  alert(failed ? done + " fixed, " + failed + " failed. If it says permission denied, publish the latest Firestore rules first." : done + " record(s) fixed.");
+  loadMentors();
+};
 
 $("mbCsv").onclick = () => {
   const cols = ["createdAt", "name", "email", "phone", "city", "company", "role", "experience", "linkedin", "portfolio", "skills", "course", "availability", "mode", "teaching", "video", "pitch", "bio", "status", "notes"];

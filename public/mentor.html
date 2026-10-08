@@ -300,152 +300,62 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-    import { getFirestore, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
     import { firebaseConfig } from "./firebase-config.js";
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Load approved mentors
+    // Escape everything a mentor typed before putting it on the page
+    const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const EXP = { 2: '1–3 years', 4: '3–5 years', 6: '5–8 years', 10: '8–12 years', 15: '12+ years' };
+    const expLabel = e => typeof e === 'number' ? (EXP[e] || e + '+ years') : String(e || '');
+    const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
+
+    // Approved mentors only. Sorted here, so no Firestore composite index is needed.
     async function loadMentors() {
+      const container = document.getElementById('mentorsContainer');
       try {
-        // Try with orderBy first (requires composite index)
-        let querySnapshot;
-        try {
-          const q = query(
-            collection(db, 'mentorApplications'),
-            where('status', '==', 'approved'),
-            orderBy('adminUpdatedAt', 'desc')
-          );
-          querySnapshot = await getDocs(q);
-        } catch (indexError) {
-          // Fallback: try without orderBy (index not ready)
-          if (indexError.code === 'failed-precondition') {
-            console.warn('⚠️ Composite index required. Using client-side sorting...');
-          } else {
-            console.warn('Query error, falling back:', indexError.message);
-          }
-
-          const q = query(
-            collection(db, 'mentorApplications'),
-            where('status', '==', 'approved')
-          );
-          const snapshot = await getDocs(q);
-
-          // Sort on client-side by adminUpdatedAt (newest first)
-          const docs = snapshot.docs.sort((a, b) => {
-            const aTime = a.data().adminUpdatedAt?.toMillis?.() || a.data().createdAt?.toMillis?.() || 0;
-            const bTime = b.data().adminUpdatedAt?.toMillis?.() || b.data().createdAt?.toMillis?.() || 0;
-            return bTime - aTime;
-          });
-
-          // Create snapshot-like object
-          querySnapshot = {
-            empty: docs.length === 0,
-            docs: docs,
-            forEach: (callback) => docs.forEach((doc) => callback(doc))
-          };
-        }
-
-        const container = document.getElementById('mentorsContainer');
+        const snap = await getDocs(query(collection(db, 'mentorApplications'), where('status', '==', 'approved')));
+        const mentors = snap.docs.map(d => d.data())
+          .sort((a, b) => (b.adminUpdatedAt?.seconds || 0) - (a.adminUpdatedAt?.seconds || 0));
         container.innerHTML = '';
-
-        if (querySnapshot.empty) {
+        if (!mentors.length) {
           container.innerHTML = '<div class="no-mentors" style="grid-column: 1 / -1;">No mentors available yet. Check back soon!</div>';
           return;
         }
-
-        querySnapshot.forEach(doc => {
-          const mentor = doc.data();
-          const card = createMentorCard(mentor);
-          container.appendChild(card);
-        });
+        mentors.forEach(m => container.appendChild(createMentorCard(m)));
       } catch (error) {
         console.error('Error loading mentors:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-
-        let errorMsg = 'Error loading mentors. ';
-        if (error.code === 'failed-precondition') {
-          errorMsg += 'Need to create a Firestore index. Check console for details.';
-        } else if (error.code === 'permission-denied') {
-          errorMsg += 'Permission denied. Check Firestore security rules.';
-        } else {
-          errorMsg += 'Please try again later.';
-        }
-
-        document.getElementById('mentorsContainer').innerHTML =
-          `<div class="no-mentors" style="grid-column: 1 / -1;">${errorMsg}</div>`;
+        container.innerHTML = '<div class="no-mentors" style="grid-column: 1 / -1;">Error loading mentors. Please try again later.</div>';
       }
     }
 
+    // Public card: no email or phone number, only professional details and LinkedIn
     function createMentorCard(mentor) {
       const card = document.createElement('div');
       card.className = 'mentor-card';
-
-      // Parse skills array
       const skills = Array.isArray(mentor.skills) ? mentor.skills : [];
-      const skillsHtml = skills.map(skill =>
-        `<span class="skill-tag ${skill.toLowerCase()}">${skill}</span>`
-      ).join('');
-
-      // Create contact links
-      let contactsHtml = '';
-      if (mentor.email) {
-        contactsHtml += `
-          <a href="mailto:${mentor.email}" class="contact-link" title="Email">
-            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-          </a>
-        `;
-      }
-      if (mentor.linkedin) {
-        contactsHtml += `
-          <a href="${mentor.linkedin}" target="_blank" class="contact-link" title="LinkedIn">
-            <svg viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.39v-1.2h-2.84v8.37h2.84v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.84M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
-          </a>
-        `;
-      }
-      if (mentor.phone) {
-        const whatsappNumber = mentor.phone.replace(/[^\d]/g, '');
-        contactsHtml += `
-          <a href="https://wa.me/${whatsappNumber}" target="_blank" class="contact-link" title="WhatsApp">
-            <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.971 1.498l-.356.214-3.699-.971.992 3.605-.235.374a9.86 9.86 0 001.51 5.151 9.88 9.88 0 008.02 4.575c1.074.062 2.133-.195 3.127-.656l.355-.214 3.699.971-.992-3.605.235-.374a9.87 9.87 0 00-1.51-5.151 9.878 9.878 0 00-8.02-4.575zM12 0C5.383 0 0 5.383 0 12s5.383 12 12 12 12-5.383 12-12S18.617 0 12 0z"/></svg>
-          </a>
-        `;
-      }
-
+      const exp = expLabel(mentor.experience);
+      const li = safeUrl(mentor.linkedin);
       card.innerHTML = `
         <div class="mentor-header">
-          <div class="mentor-name">${mentor.name}</div>
-          <div class="mentor-title">${mentor.role}</div>
+          <div class="mentor-name">${esc(mentor.name)}</div>
+          <div class="mentor-title">${esc(mentor.role)}</div>
         </div>
         <div class="mentor-body">
-          ${mentor.company ? `<div class="mentor-company">🏢 ${mentor.company}</div>` : ''}
-          <div class="mentor-experience">${mentor.experience} years experience</div>
-
-          ${skills.length > 0 ? `
-            <div class="skills-label">Skills</div>
-            <div class="skills">
-              ${skillsHtml}
-            </div>
-          ` : ''}
-
-          ${mentor.course ? `
-            <div class="courses-label">Teaching</div>
-            <div class="courses">${mentor.course}</div>
-          ` : ''}
-
-          <div class="mentor-contacts">
-            ${contactsHtml}
-          </div>
-        </div>
-      `;
-
+          ${mentor.company ? `<div class="mentor-company">🏢 ${esc(mentor.company)}</div>` : ''}
+          ${exp ? `<div class="mentor-experience">${esc(exp)} experience</div>` : ''}
+          ${skills.length ? `<div class="skills-label">Skills</div><div class="skills">${skills.map(s => `<span class="skill-tag ${esc(String(s).toLowerCase())}">${esc(s)}</span>`).join('')}</div>` : ''}
+          ${mentor.course ? `<div class="courses-label">Teaching</div><div class="courses">${esc(mentor.course)}</div>` : ''}
+          ${li ? `<div class="mentor-contacts">
+            <a href="${esc(li)}" target="_blank" rel="noopener" class="contact-link" title="LinkedIn">
+              <svg viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.39v-1.2h-2.84v8.37h2.84v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.84M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+            </a></div>` : ''}
+        </div>`;
       return card;
     }
 
-    // Load mentors when page loads
     loadMentors();
   </script>
 </body>
