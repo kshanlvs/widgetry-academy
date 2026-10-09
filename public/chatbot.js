@@ -9,7 +9,7 @@
   window.__wgChat = true;
 
   var C = window.WIDGETRY || {};
-  var WA = String(C.whatsapp || "").replace(/\D/g, "");
+  var WA = String(C.whatsapp || "918617692683").replace(/\D/g, "");  // fallback if site-config.js is an old cached copy
   var onHome = !!document.getElementById("fees");
   var HOME = onHome ? "" : "/";
   var COURSE = "Flutter in 10 Days";

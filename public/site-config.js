@@ -23,7 +23,7 @@ window.WIDGETRY = {
 
   // ---- Contact (Contact page, policy pages, WhatsApp button) ----
   whatsapp:     "918617692683",       // WhatsApp number with country code, digits only, e.g. "919876543210". Empty = no WhatsApp button.
-  contactEmail: "",                   // e.g. "widgetry.academy@gmail.com"
+  contactEmail: "kishantechdev@gmail.com", // shown on the Contact page and policy pages
   contactPhone: "",                   // e.g. "+91 98765 43210" (optional)
   instagram:    "widgetry.academy",   // Instagram handle without @
   address:      "",                   // e.g. "Kolkata, West Bengal, India" (Razorpay may ask for this)
