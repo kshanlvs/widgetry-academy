@@ -64,6 +64,18 @@ dialog::backdrop{background:rgba(12,42,35,.45)}
 #mdlg{max-width:620px}
 .mdet{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;font-size:14px;margin:0}
 .mdet dt{color:var(--muted);font-weight:600}.mdet dd{margin:0;word-break:break-word}
+.bgrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:18px;align-items:start}
+@media (max-width:860px){.bgrid{grid-template-columns:1fr}}
+.bcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:grid;gap:14px;min-width:0}
+.bcard h2{margin:0;font-family:"Unbounded",sans-serif;font-size:20px}
+.opt{font-weight:500;color:var(--muted)}
+.okmsg{background:#e8f7ef;border:1px solid #b9e5cc;color:#0f6b56;border-radius:10px;padding:10px 12px;font-size:14px}
+.bprev{background:#0c2a23;color:#eaf3ee;border-radius:14px;padding:18px 20px;display:grid;gap:12px}
+.bprev .k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#f2a900;font-weight:700;margin:0}
+.bprev .t{font-family:"Unbounded",sans-serif;font-size:19px;margin:2px 0 0;color:#fff}
+.bprev ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:14px;color:#cfe2d8}
+.bstrip{border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--ink);display:flex;flex-wrap:wrap;gap:6px 12px}
+.bstrip b{color:var(--accent)}
 .pitch{background:var(--soft);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.5;white-space:pre-wrap}
 </style>
 </head>
@@ -83,6 +95,7 @@ dialog::backdrop{background:rgba(12,42,35,.45)}
   <div class="tabs" id="tabs" hidden>
     <button class="tab" data-tab="app" aria-selected="true">Students <span class="c" id="cStu">0</span></button>
     <button class="tab" data-tab="mapp" aria-selected="false">Mentors <span class="c" id="cMen">0</span></button>
+    <button class="tab" data-tab="bapp" aria-selected="false">Next batch</button>
   </div>
 
   <section id="app" hidden>
@@ -128,6 +141,41 @@ dialog::backdrop{background:rgba(12,42,35,.45)}
     </table></div>
     <p class="small" style="margin-top:12px">Process: New → Shortlisted (after LinkedIn check) → Demo scheduled (after 15-min call) → Approved / Rejected.</p>
   </section>
+
+  <section id="bapp" hidden>
+    <div class="bgrid">
+      <form class="bcard" id="fBatch" novalidate>
+        <h2>Next batch</h2>
+        <p class="small" style="margin:0">Shown on the homepage: the banner at the top and the next-batch card in Fees. Visitors see your changes the next time they open the page.</p>
+        <label>Batch name<input id="bName" maxlength="40" placeholder="e.g. Batch 2"></label>
+        <div class="row2">
+          <label>Start date<input id="bDate" type="date"></label>
+          <label>Days<select id="bDays"><option>Saturdays &amp; Sundays</option><option>Saturdays only</option><option>Sundays only</option><option>Weekday evenings</option></select></label>
+        </div>
+        <div class="row2">
+          <label>Class starts<input id="bFrom" type="time" value="11:00"></label>
+          <label>Class ends<input id="bTo" type="time" value="14:00"></label>
+        </div>
+        <label><span>Mode <span class="opt">(optional)</span></span><input id="bMode" maxlength="60" placeholder="e.g. Live online (Google Meet)"></label>
+        <label><span>Free demo <span class="opt">(optional)</span></span><input id="bDemo" maxlength="80" placeholder="e.g. Free demo: Sunday, 12 October, 11 AM"></label>
+        <label><span>Early-bird seats left <span class="opt">(optional · leave empty to hide)</span></span><input id="bSeats" type="number" min="0" max="10" inputmode="numeric" placeholder="e.g. 7"></label>
+        <p class="err" id="bErr" hidden></p>
+        <p class="okmsg" id="bOk" hidden></p>
+        <div class="acts">
+          <button class="btn ghost" type="button" id="bSoon" title="Hide the date and show “Dates announced soon”">Dates not fixed yet</button>
+          <button class="btn" type="submit" id="bSave2">Save batch details</button>
+        </div>
+      </form>
+      <div class="bcard">
+        <div class="small" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em">Preview</div>
+        <div class="small">Top banner</div>
+        <div class="bstrip" id="bPrevStrip"></div>
+        <div class="small">Next-batch card</div>
+        <div class="bprev" id="bPrev"></div>
+        <div class="small" id="bUpdated"></div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <dialog id="mdlg"><form class="dlg" id="mfEdit" method="dialog">
@@ -157,10 +205,11 @@ dialog::backdrop{background:rgba(12,42,35,.45)}
   <div class="acts"><button class="btn ghost" value="cancel" formnovalidate>Cancel</button><button class="btn" id="bSave" value="save">Save</button></div>
 </form></dialog>
 
+<script src="site-config.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
@@ -177,7 +226,7 @@ function due(r) { const st = r.payStatus || "unpaid"; if (["refunded", "cancelle
 function fmtDate(ts) { const d = ts?.toDate ? ts.toDate() : null; return d ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"; }
 
 onAuthStateChanged(auth, async u => {
-  $("fLogin").hidden = !!u; $("who").hidden = !u; $("denied").hidden = true; $("app").hidden = true; $("mapp").hidden = true; $("tabs").hidden = true;
+  $("fLogin").hidden = !!u; $("who").hidden = !u; $("denied").hidden = true; $("app").hidden = true; $("mapp").hidden = true; $("bapp").hidden = true; $("tabs").hidden = true;
   if (!u) return;
   $("whoEmail").textContent = u.email || "";
   await load(u);
@@ -261,12 +310,76 @@ $("bCsv").onclick = () => {
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "widgetry-registrations-" + new Date().toISOString().slice(0, 10) + ".csv"; a.click();
 };
 
+/* ---------- Next batch ---------- */
+const DAYN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MONN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const fmtLongDate = iso => { if (!iso) return ""; const [y, m, d] = iso.split("-").map(Number); const dt = new Date(y, m - 1, d); return `${DAYN[dt.getDay()]}, ${d} ${MONN[m - 1]} ${y}`; };
+const fmt12 = hm => { if (!hm) return ""; let [h, m] = hm.split(":").map(Number); const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12; return `${h}:${String(m).padStart(2, "0")} ${ap}`; };
+let batchLoaded = false, batchSoon = false;
+function batchFromForm() {
+  const iso = $("bDate").value, seats = $("bSeats").value.trim();
+  const from = $("bFrom").value, to = $("bTo").value;
+  return {
+    name: $("bName").value.trim() || "Next batch",
+    startISO: batchSoon ? "" : iso,
+    startDate: batchSoon ? "" : fmtLongDate(iso),
+    days: $("bDays").value,
+    timeFrom: from, timeTo: to,
+    time: from && to ? `${fmt12(from)} – ${fmt12(to)} IST` : "",
+    mode: $("bMode").value.trim(),
+    demo: $("bDemo").value.trim(),
+    seatsLeft: seats === "" ? null : Math.max(0, Math.min(10, parseInt(seats, 10) || 0))
+  };
+}
+function previewBatch() {
+  const B = batchFromForm(), parts = [];
+  if (B.startDate) parts.push("Starts " + B.startDate); if (B.days) parts.push(B.days); if (B.time) parts.push(B.time); if (B.mode) parts.push(B.mode);
+  $("bPrevStrip").innerHTML = "<b>" + esc(B.name) + "</b>" + (B.startDate ? parts.map(p => "<span>" + esc(p) + "</span>").join("") : "<span>Dates announced soon · Reserve now to get first access</span>") + (B.seatsLeft != null ? "<span>🔥 " + B.seatsLeft + " early-bird seats left</span>" : "");
+  $("bPrev").innerHTML = '<div><p class="k">' + esc(B.name) + '</p><p class="t">' + (B.startDate ? "Starts " + esc(B.startDate) : "Dates announced soon") + "</p></div><ul>" +
+    (B.days ? "<li>🗓 " + esc(B.days) + "</li>" : "") + (B.time ? "<li>⏰ " + esc(B.time) + "</li>" : "") + (B.mode ? "<li>📍 " + esc(B.mode) + "</li>" : "") +
+    "<li>🎓 " + esc(B.demo || "Free demo class available") + "</li></ul>";
+  $("bSoon").textContent = batchSoon ? "Use the date above" : "Dates not fixed yet";
+  $("bDate").disabled = batchSoon;
+}
+async function loadBatch() {
+  if (batchLoaded) return; batchLoaded = true;
+  let B = (window.WIDGETRY && window.WIDGETRY.batch) || {};
+  try { const snap = await getDoc(doc(db, "settings", "batch")); if (snap.exists()) { B = snap.data(); $("bUpdated").textContent = B.updatedAt?.toDate ? "Last saved " + fmtDate(B.updatedAt) : ""; } else $("bUpdated").textContent = "Not saved yet: the homepage is using the details in site-config.js."; }
+  catch (x) { $("bUpdated").textContent = "Couldn't load saved details (" + (x.code || x.message) + "). Showing defaults."; }
+  $("bName").value = B.name || "";
+  let iso = B.startISO || "";
+  if (!iso && B.startDate) { const m = String(B.startDate).match(/(\d{1,2}) (\w+) (\d{4})/); if (m) { const mi = MONN.indexOf(m[2]); if (mi > -1) iso = `${m[3]}-${String(mi + 1).padStart(2, "0")}-${m[1].padStart(2, "0")}`; } }
+  $("bDate").value = iso; batchSoon = !B.startDate;
+  if (B.days) { if (![...$("bDays").options].some(o => o.value === B.days)) $("bDays").add(new Option(B.days, B.days)); $("bDays").value = B.days; }
+  if (B.timeFrom) $("bFrom").value = B.timeFrom; if (B.timeTo) $("bTo").value = B.timeTo;
+  $("bMode").value = B.mode || ""; $("bDemo").value = B.demo || ""; $("bSeats").value = B.seatsLeft ?? "";
+  previewBatch();
+}
+["bName", "bDate", "bDays", "bFrom", "bTo", "bMode", "bDemo", "bSeats"].forEach(id => $(id).addEventListener("input", () => { $("bOk").hidden = true; previewBatch(); }));
+$("bSoon").onclick = () => { batchSoon = !batchSoon; $("bOk").hidden = true; previewBatch(); };
+$("fBatch").addEventListener("submit", async e => {
+  e.preventDefault(); $("bErr").hidden = true; $("bOk").hidden = true;
+  const B = batchFromForm();
+  if (!batchSoon && !B.startISO) { $("bErr").textContent = "Pick a start date, or tap “Dates not fixed yet”."; $("bErr").hidden = false; return; }
+  if (B.timeFrom && B.timeTo && B.timeTo <= B.timeFrom) { $("bErr").textContent = "The class end time must be after the start time."; $("bErr").hidden = false; return; }
+  $("bSave2").disabled = true;
+  try {
+    await setDoc(doc(db, "settings", "batch"), { ...B, updatedAt: serverTimestamp() });
+    $("bOk").textContent = "Saved. The homepage now shows: " + (B.startDate ? B.name + " · starts " + B.startDate : B.name + " · dates announced soon") + ".";
+    $("bOk").hidden = false; $("bUpdated").textContent = "Last saved just now";
+  } catch (x) {
+    $("bErr").textContent = "Couldn't save: " + (x.code === "permission-denied" ? "publish the latest Firestore rules (they add the settings section), then try again." : (x.message || x.code));
+    $("bErr").hidden = false;
+  } finally { $("bSave2").disabled = false; }
+});
+
 /* ---------- Tabs ---------- */
 let curTab = "app";
 function showTab(t) {
   curTab = t;
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
-  $("app").hidden = t !== "app"; $("mapp").hidden = t !== "mapp";
+  $("app").hidden = t !== "app"; $("mapp").hidden = t !== "mapp"; $("bapp").hidden = t !== "bapp";
+  if (t === "bapp") loadBatch();
 }
 document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
 

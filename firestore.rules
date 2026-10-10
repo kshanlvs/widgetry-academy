@@ -110,6 +110,13 @@ service cloud.firestore {
 
     }
 
+    // Site settings edited from the admin page (e.g. settings/batch = next batch details).
+    // Anyone can read them (the homepage shows them); only the admin can change them.
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

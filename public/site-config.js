@@ -13,7 +13,7 @@ window.WIDGETRY = {
   // ---- Next batch (shown in the hero, fees section and WhatsApp messages) ----
   batch: {
     name:      "Batch 1",
-    startDate: "Saturday, 10 October 2026", // e.g. "Saturday, 1 November 2026"
+    startDate: "Saturday, 17 October 2026", // fallback: live details are edited in Admin → Next batch
     days:      "Saturdays & Sundays",
     time:      "11:00 AM – 2:00 PM IST", // e.g. "10:00 AM – 12:00 PM IST"
     mode:      "",                       // e.g. "Live online (Google Meet)" or "In-person, Salt Lake"

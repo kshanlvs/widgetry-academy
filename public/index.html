@@ -1118,6 +1118,21 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 <script src="site-config.js"></script>
 <script src="chatbot.js" defer></script>
 <script type="module">
+// Next batch details saved from the admin page (settings/batch). Falls back to site-config.js if this fails.
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+try {
+  const app = getApps()[0] || initializeApp(firebaseConfig);
+  const snap = await getDoc(doc(getFirestore(app), "settings", "batch"));
+  if (snap.exists() && window.renderBatch) {
+    const live = snap.data(), base = (window.WIDGETRY && window.WIDGETRY.batch) || {};
+    window.WIDGETRY.batch = Object.assign({}, base, live);
+    window.renderBatch(window.WIDGETRY.batch);
+  }
+} catch (e) { console.warn("Using batch details from site-config.js:", e.code || e.message); }
+</script>
+<script type="module">
 // Payment button authentication check
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
@@ -1167,7 +1182,9 @@ onAuthStateChanged(auth, (user) => {
   var wf=document.getElementById('waFloat');
   if(waNum&&wf){wf.href=waLink('Hi! I have a question about the Widgetry Academy Flutter workshop.');wf.hidden=false;
     wf.addEventListener('click',function(){window.fbq&&fbq('track','Contact');});}
-  // Batch strip (hero) + next batch card (fees)
+  // Batch strip (hero) + next batch card (fees). Called with the code defaults now,
+  // and again with the live details saved from the admin page (see the module script below).
+  window.renderBatch=function(B){B=B||{};
   var parts=[];
   if(B.startDate)parts.push('Starts '+B.startDate); if(B.days)parts.push(B.days); if(B.time)parts.push(B.time); if(B.mode)parts.push(B.mode);
   var strip=document.getElementById('batchStrip');
@@ -1177,9 +1194,12 @@ onAuthStateChanged(auth, (user) => {
     nb.innerHTML='<div><p class="nb-k">'+esc(B.name||'Next batch')+'</p><p class="nb-t">'+(B.startDate?'Starts '+esc(B.startDate):'Dates announced soon')+'</p></div>'+
       '<ul>'+(B.days?'<li>🗓 '+esc(B.days)+'</li>':'')+(B.time?'<li>⏰ '+esc(B.time)+'</li>':'')+(B.mode?'<li>📍 '+esc(B.mode)+'</li>':'')+(B.demo?'<li>🎓 '+esc(B.demo)+'</li>':'<li>🎓 Free demo class available</li>')+'</ul>'+
       '<a class="btn" href="'+demoUrl+'"'+(demoUrl.charAt(0)==='#'?'':' target="_blank" rel="noopener"')+'>Book free demo</a>';nb.hidden=false;}
+  var fl=document.getElementById('ebFlag'); if(fl){if(fl.dataset.def==null)fl.dataset.def=fl.textContent; fl.textContent=(B.seatsLeft!=null&&B.seatsLeft!=='')?(B.seatsLeft>0?(B.seatsLeft+' of 10 seats left'):'Early bird full'):fl.dataset.def;}
+  };
+  renderBatch(B);
   var wd=document.getElementById('wwDemo');
   if(wd){var wu=waLink('Hi! I would like to book the free demo class for the Widgetry Academy Flutter workshop.');if(wu){wd.href=wu;wd.target='_blank';wd.rel='noopener';}}
-  var fl=document.getElementById('ebFlag'); if(fl&&B.seatsLeft!=null){fl.textContent=B.seatsLeft>0?(B.seatsLeft+' of 10 seats left'):'Early bird full';}
+
   // Meta Pixel
   if(/^\d+$/.test(C.metaPixelId||'')){
     !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
