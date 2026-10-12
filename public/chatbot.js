@@ -38,7 +38,7 @@
       act: [["See next batch", "go", "nextBatch"], ["Ask on WhatsApp", "wa", "Hi! I'd like details of the next batch of Flutter in 10 Days."]], rel: ["duration", "missed", "demo"] },
     { id: "duration", q: "How long is the course?",
       k: ["how long", "duration", "how many sessions", "how many classes", "sessions", "weeks", "days", "10 days", "ten days", "length"],
-      a: "It's 10 live online sessions spread over 5 weekends: one every Saturday and Sunday, about 3 hours each (30 hours in total). Each session is mostly hands-on building, with time for doubts.",
+      a: "It's 10 live online sessions spread over 5 weekends: one every Saturday and Sunday, 2 hours each (20 hours in total). Each session is mostly hands-on building, with time for doubts.",
       act: [["See the syllabus", "go", "schedule"]], rel: ["batch", "build", "missed"] },
     { id: "missed", q: "What if I miss a class?",
       k: ["miss", "missed", "absent", "skip", "can't attend", "cant attend", "not able to attend", "recording", "recorded"],
