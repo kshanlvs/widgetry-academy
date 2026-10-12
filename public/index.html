@@ -111,6 +111,13 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px
 .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
 .navlinks .btn{color:var(--accent-ink);padding:9px 18px;font-size:15px}
 @media (max-width:760px){.navlinks a:not(.btn){display:none}}
+.navtoggle{display:none;background:none;border:1px solid var(--line);color:var(--ink);border-radius:10px;width:42px;height:40px;font-size:20px;line-height:1;cursor:pointer;margin-left:auto;margin-right:10px}
+@media (max-width:760px){
+  .navtoggle{display:block}
+  .navlinks.open{position:absolute;left:0;right:0;top:100%;flex-direction:column;align-items:stretch;gap:0;background:var(--surface);border-bottom:1px solid var(--line);padding:6px 20px 16px;box-shadow:0 12px 24px rgba(0,0,0,.08)}
+  .navlinks.open a:not(.btn){display:block;padding:12px 0;border-bottom:1px solid var(--line);color:var(--ink);font-size:16px}
+  .navlinks.open .btn{margin-top:12px;text-align:center}
+}
 
 /* announcement */
 .announce{background:var(--deep);color:var(--deep-fg);font-size:14px;text-align:center;padding:9px 16px}
@@ -605,10 +612,12 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 <nav>
   <div class="wrap">
     <a class="brand" href="#top">Flutter<span>/</span>10</a>
-    <div class="navlinks">
+    <button class="navtoggle" type="button" aria-expanded="false" aria-controls="navlinks" aria-label="Open menu">☰</button>
+    <div class="navlinks" id="navlinks">
+      <a href="#courses">Courses</a>
       <a href="#why">Why Widgetry</a>
       <a href="#schedule">Syllabus</a>
-      <a href="#mentor">Mentor</a>
+      <a href="mentor.html">Mentors</a>
       <a href="apps.html">My apps</a>
       <a href="#fees">Fees</a>
       <a href="#faq">FAQ</a>
@@ -659,6 +668,41 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
     <b>Tata Neu</b><b>Linde · OxyReach</b><b>I360 Vehicle Safety</b><b>Relevance Lab</b><b>Ascendion</b><b>Aseztak</b><a href="apps.html" style="color:inherit;font-weight:600;white-space:nowrap">See the apps →</a>
   </div>
 </div>
+
+<section id="courses" style="padding-top:56px">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">Our courses</p>
+      <h2>Start with apps. Grow into full stack.</h2>
+      <p class="lede">Every Widgetry course is taught by a working engineer and built for students: beginner-friendly, weekend-only, and finished with something real you can show.</p>
+    </div>
+    <div class="crs">
+      <article class="crs-card">
+        <div class="crs-top"><span class="crs-status open">● Enrolling now</span><span class="crs-meta">10 sessions · Live online · Weekends</span></div>
+        <h3>Flutter in 10 Days</h3>
+        <p class="crs-sub">Build your own mobile app for Android, from zero. No coding experience needed.</p>
+        <div class="crs-tags"><span>Flutter</span><span>Dart</span><span>Firebase</span><span>APIs</span><span>GitHub</span></div>
+        <p class="crs-out"><b>You finish with:</b> your own installable Android app and a GitHub portfolio.</p>
+        <div class="crs-mentor"><img src="shots/mentor-square.jpg" alt="" loading="lazy"><div><b>Kishan Kumar Sharma</b><span>5+ years · Senior Software Engineer, Relevance Lab</span></div></div>
+        <div class="mx-links"><a class="btn" href="#register">Reserve my seat</a><a class="btn ghost" href="#schedule">See syllabus</a></div>
+      </article>
+      <article class="crs-card soon">
+        <div class="crs-top"><span class="crs-status">◷ Coming soon</span><span class="crs-meta">Weekends · Beginner friendly</span></div>
+        <h3>Full-Stack Web Development</h3>
+        <p class="crs-sub">Build a complete website with your own backend, and put it live on the internet.</p>
+        <ol class="crs-steps">
+          <li><b>JavaScript basics</b>Make web pages that think and respond</li>
+          <li><b>React</b>Build modern, interactive screens</li>
+          <li><b>Your own API with .NET</b>The backend that stores and serves data</li>
+          <li><b>Deployment</b>Put your project live with a link to share</li>
+          <li><b>CI/CD</b>Your site updates itself when you push code</li>
+        </ol>
+        <p class="crs-out"><b>You finish with:</b> a live full-stack project with a frontend, an API and a real link.</p>
+        <button class="btn crs-soon" type="button" disabled aria-disabled="true">Coming soon</button>
+      </article>
+    </div>
+  </div>
+</section>
 
 <section id="why" class="ww">
   <div class="wrap">
@@ -721,7 +765,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
         </ul>
         <div class="mx-links">
           <a class="btn" href="apps.html">See apps I've built →</a>
-          <a class="btn ghost" href="https://www.linkedin.com/in/kishan-kr-sharma-8a24b5b7" target="_blank" rel="noopener">LinkedIn</a>
+          <a class="btn ghost" href="mentor.html">Meet all our mentors</a>
         </div>
       </div>
     </div>
@@ -752,11 +796,6 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
       <div class="week"><div class="wk">Weekend<b>5</b></div>
         <div class="day"><p class="d">Day 9 · Saturday</p><h3>Polish your app</h3><p>Theme, app icon, splash screen and fixing bugs together.</p></div>
         <div class="day final"><p class="d">Day 10 · Sunday</p><h3>Build, share & demo day</h3><p>Build your APK, upload code to GitHub and present your app.</p></div></div>
-    </div>
-    <div class="nextstep" id="courses">
-      <div><p class="eyebrow">Coming next at Widgetry</p><h3>Full-Stack Web Development</h3>
-      <p>JavaScript, React, your own API with .NET, deployment and CI/CD. Beginner friendly, on weekends, ending with a live project you can share.</p></div>
-      <span class="ns-tag">Coming soon</span>
     </div>
   </div>
 </section>
@@ -945,6 +984,11 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
   </div>
 </footer>
 
+<script>
+(function(){var b=document.querySelector('.navtoggle'),n=document.getElementById('navlinks');if(!b||!n)return;
+b.addEventListener('click',function(){var o=n.classList.toggle('open');b.setAttribute('aria-expanded',o);b.textContent=o?'✕':'☰';});
+n.addEventListener('click',function(e){if(e.target.tagName==='A'){n.classList.remove('open');b.setAttribute('aria-expanded','false');b.textContent='☰';}});})();
+</script>
 <script src="site-config.js"></script>
 <script src="chatbot.js" defer></script>
 <script type="module">
