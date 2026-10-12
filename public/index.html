@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <title>Flutter App Development Course | Widgetry Academy</title>
-<meta name="description" content="Learn Flutter app development in 10 weekend sessions. Hands-on course for Class 10 to graduation students in Kolkata. Build your own Android app, get a certificate. Taught by a senior engineer with 5+ years of experience.">
-<meta name="keywords" content="Flutter course Kolkata, Flutter course for beginners, app development course Kolkata, app development course for students, Flutter training, mobile app development course, Dart course, weekend coding class Kolkata">
+<meta name="description" content="Learn Flutter app development in 10 live online weekend sessions. For Class 10 to graduation students, no coding experience needed. Build your own Android app and get a certificate. Taught by a senior engineer with 5+ years of experience.">
+<meta name="keywords" content="Flutter course online, Flutter course Kolkata, Flutter course for beginners, app development course Kolkata, app development course for students, Flutter training, mobile app development course, Dart course, weekend coding class Kolkata">
 <link rel="canonical" href="https://widgetry-academy.web.app/">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="robots" content="index, follow">
@@ -14,7 +14,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Widgetry Academy">
 <meta property="og:title" content="Mobile App Development with Flutter | Widgetry Academy">
-<meta property="og:description" content="10 weekend sessions. Build your own Android app. For Class 10 to graduation students.">
+<meta property="og:description" content="10 live online weekend sessions. Build your own Android app. For Class 10 to graduation students.">
 <meta property="og:url" content="https://widgetry-academy.web.app/">
 <meta property="og:image" content="https://widgetry-academy.web.app/og-image.jpg">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
@@ -56,9 +56,10 @@
       "teaches": ["Flutter", "Dart", "Mobile app development", "Firebase", "REST APIs"],
       "hasCourseInstance": {
         "@type": "CourseInstance",
-        "courseSchedule": { "@type": "Schedule", "repeatFrequency": "P1W", "byDay": ["https://schema.org/Saturday", "https://schema.org/Sunday"], "repeatCount": 10 },
+        "courseSchedule": { "@type": "Schedule", "repeatFrequency": "P1W", "byDay": ["https://schema.org/Saturday", "https://schema.org/Sunday"], "duration": "PT3H", "repeatCount": 10 },
         "instructor": { "@type": "Person", "name": "Kishan Kumar Sharma", "jobTitle": "Founder, Widgetry Academy" },
-        "location": { "@type": "Place", "name": "Kolkata", "address": { "@type": "PostalAddress", "addressLocality": "Kolkata", "addressCountry": "IN" } }
+        "courseMode": "Online",
+        "courseWorkload": "PT30H"
       }
     }
   ]
@@ -572,25 +573,43 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
   @keyframes float1{0%,100%{transform:translateX(-62%) rotate(-4deg) translateY(0)}50%{transform:translateX(-62%) rotate(-4deg) translateY(-10px)}}
   @keyframes float2{0%,100%{transform:translateX(-2%) rotate(5deg) translateY(0)}50%{transform:translateX(-2%) rotate(5deg) translateY(8px)}}
 }
+
+/* compact mentor card (homepage) */
+.mx{display:grid;grid-template-columns:200px 1fr;gap:32px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:28px}
+.mx-photo{width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:18px;display:block}
+.mx h2{margin:6px 0 4px}
+.mx-role{color:var(--muted);margin:0 0 10px;font-weight:600;font-size:15px}
+.mx-apps{list-style:none;padding:0;margin:18px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.mx-apps li{background:var(--soft);border-radius:14px;padding:12px 14px;min-width:0}
+.mx-apps b{display:block;font-family:var(--display);font-size:22px;color:var(--accent);line-height:1.2}
+.mx-apps span{display:block;font-size:14px;font-weight:600;line-height:1.35}
+.mx-apps small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.mx-links{display:flex;gap:10px;flex-wrap:wrap}
+@media (max-width:700px){.mx{grid-template-columns:1fr;gap:16px;padding:20px}.mx-photo{width:96px}.mx-apps{gap:8px}.mx-apps li{padding:10px}.mx-apps b{font-size:18px}}
+/* pay box when not reserved yet */
+.paypre{text-align:center;padding:16px;border-radius:12px;background:var(--soft)}
+.paypre a.btn{display:inline-block;text-decoration:none}
+.paypre p{margin:8px 0 0;font-size:13px;color:var(--muted)}
+.paypre p a{color:var(--accent)}
+/* apps page CTA band */
+.cta-band{background:var(--deep);color:var(--deep-fg);border-radius:24px;padding:32px;display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.cta-band h2{color:#fff;margin:6px 0}
+.cta-band p{margin:0;color:var(--deep-muted)}
 </style>
 
 </head>
 <body>
-<div class="announce">New weekend batch · Saturdays & Sundays · <b>Limited seats</b> — <a href="#register" style="color:inherit">reserve yours →</a></div>
+<div class="announce">New batch · Live online · Saturdays & Sundays · <b>Limited seats</b> — <a href="#register" style="color:inherit">reserve yours →</a></div>
 
 <nav>
   <div class="wrap">
     <a class="brand" href="#top">Flutter<span>/</span>10</a>
     <div class="navlinks">
       <a href="#why">Why Widgetry</a>
-      <a href="#downloads">Apps</a>
-      <a href="#screens">Screens</a>
-      <a href="#work">Live projects</a>
-      <a href="#mentor">Mentor</a>
       <a href="#schedule">Syllabus</a>
-      <a href="#courses">Courses</a>
+      <a href="#mentor">Mentor</a>
+      <a href="apps.html">My apps</a>
       <a href="#fees">Fees</a>
-      <a href="#certificate">Certificate</a>
       <a href="#faq">FAQ</a>
       <a class="btn" href="#register">Reserve seat</a>
     </div>
@@ -606,18 +625,18 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
       </div>
       <p class="eyebrow">10-day weekend Flutter app development workshop</p>
       <h1>Learn Flutter from an engineer who <em>ships real apps.</em></h1>
-      <p class="lede">I build production apps for enterprise clients like Linde and have worked on the Tata Neu super app. In 10 weekend sessions, I'll teach you how to build your own app the way the industry does it, from Class 10 all the way to graduation.</p>
+      <p class="lede">I build production apps for enterprise clients like Linde and have worked on the Tata Neu super app. In 10 live online weekend sessions, I'll teach you to build your own app the way the industry does it. For students from Class 10 to graduation.</p>
       <div class="chips">
-        <span class="chip">10 live sessions</span>
+        <span class="chip">Live online</span>
         <span class="chip">Saturdays & Sundays</span>
         <span class="chip">Class 10 – Graduation</span>
-        <span class="chip">Zero coding needed</span>
+        <span class="chip">No coding experience needed</span>
         <span class="chip">Certificate</span>
       </div>
       <div class="ctas">
         <a class="btn" href="#register">Reserve my seat</a>
-        <a class="btn ghost" href="#work">See apps I've built</a>
-        <a class="btn ghost" href="Widgetry-Academy-Flutter-Brochure.pdf" download>Download brochure (PDF)</a>
+        <a class="btn ghost demo-wa" href="#fees">Book free demo</a>
+        <a class="btn ghost" href="apps.html">See apps I've built</a>
       </div>
       <div class="batchstrip" id="batchStrip" hidden></div>
       <div class="proof">
@@ -636,42 +655,10 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 <div class="strip">
   <div class="wrap">
     <p>Apps & teams I've built for</p>
-    <b>Tata Neu</b><b>Linde · OxyReach</b><b>I360 Vehicle Safety</b><b>Relevance Lab</b><b>Ascendion</b><b>Aseztak</b>
+    <b>Tata Neu</b><b>Linde · OxyReach</b><b>I360 Vehicle Safety</b><b>Relevance Lab</b><b>Ascendion</b><b>Aseztak</b><a href="apps.html" style="color:inherit;font-weight:600;white-space:nowrap">See the apps →</a>
   </div>
 </div>
 
-
-<section id="downloads">
-  <div class="wrap">
-    <div class="dl-top">
-      <div class="head" style="margin:0">
-        <p class="eyebrow">Apps used by millions</p>
-        <h2>Learn from code that runs on millions of phones</h2>
-        <p class="lede">Download numbers from Google Play for apps I've built or worked on. Enterprise apps run privately inside client companies.</p>
-      </div>
-      <div class="mega">50M+<small>Play Store downloads across apps I've worked on</small></div>
-    </div>
-    <div class="dl-grid">
-      <a class="dl link" href="https://play.google.com/store/apps/details?id=com.tatadigital.tcp" target="_blank" rel="noopener" aria-label="Tata Neu on Google Play"><div class="phone"><img class="rimg" src="shots/tataneu-home.jpg" alt="Tata Neu home screen" loading="lazy"></div><div class="num">50M+</div><h3>Tata Neu</h3><p class="star"><b>★ 4.1</b> · 333K reviews</p><p class="sub">Super app · Flutter contributor</p><span class="gp">View on Google Play →</span></a>
-      <a class="dl link" href="https://play.google.com/store/apps/details?id=com.jie.ajpl" target="_blank" rel="noopener" aria-label="Jobs in Education on Google Play"><div class="phone"><img class="rimg" src="shots/jie-employee.jpg" alt="Jobs in Education job seeker home screen" loading="lazy"></div><div class="num">100K+</div><h3>Jobs in Education</h3><p class="star"><b>★ 3.1</b> · Google Play</p><p class="sub">Job portal · built at Anandpushp</p><span class="gp">View on Google Play →</span></a>
-      <a class="dl link" href="https://play.google.com/store/apps/details?id=com.AseZtakWholesaleOnlinePrivateLimited.buyer" target="_blank" rel="noopener" aria-label="Aseztak Wholesale on Google Play"><div class="phone"><img class="rimg" src="shots/aseztak-welcome.jpg" alt="Aseztak Wholesale app home screen" loading="lazy"></div><div class="num">100K+</div><h3>Aseztak Wholesale</h3><p class="star"><b>★ 3.8</b> · 952 reviews</p><p class="sub">B2B commerce · built at Aseztak</p><span class="gp">View on Google Play →</span></a>
-      <div class="dl"><div class="phone"><img class="rimg" src="shots/i360-pretrip.jpg" alt="I360 pre-trip details screen" loading="lazy"></div><div class="num ent">Launching soon</div><h3>I360 Vehicle Safety</h3><p class="star">In final development</p><p class="sub">Current work · Relevance Lab</p><span class="gp off">Coming to Play Store</span></div>
-      <div class="dl"><div class="phone" aria-hidden="true"><div class="screen"><div class="notch" style="background:#00527a"><i></i></div><div class="appbar" style="background:#00527a"><small>OxyReach</small><b>Overview</b></div><div class="sbody"><div class="kpis"><div class="kpi"><b>128</b><span>Requests</span></div><div class="kpi"><b>96%</b><span>On-time</span></div></div><div class="card"><div class="rowx"><span class="t">Site 07</span><span class="pill warn">En route</span></div></div><div class="card"><div class="rowx"><span class="t">Site 14</span><span class="pill ok">Delivered</span></div></div></div><div class="tabs"><span class="on">Home</span><span>Track</span><span>Me</span></div></div></div><div class="num ent">Enterprise</div><h3>OxyReach</h3><p class="star">Built for Linde</p><p class="sub">Current work · Relevance Lab</p><span class="gp off">Private enterprise app</span></div>
-    </div>
-    <p class="src">Download counts and ratings from Google Play, October 2026. Tap a card to open the app on Google Play. OxyReach screen is an illustrative preview.</p>
-  </div>
-</section>
-
-<section id="screens" style="padding-top:0">
-  <div class="wrap">
-    <div class="head">
-      <p class="eyebrow">Real screens</p>
-      <h2>Straight from the apps</h2>
-      <p class="lede">Actual screens from apps I've built and worked on. Swipe to see more.</p>
-    </div>
-  </div>
-  <div class="gallery" tabindex="0" aria-label="App screenshots"><figure><div class="phone"><img class="rimg" src="shots/tataneu-home.jpg" alt="Tata Neu — Home & payments" loading="lazy"></div><figcaption><b>Tata Neu</b>Home & payments</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/tataneu-neupass.jpg" alt="Tata Neu — NeuPass rewards" loading="lazy"></div><figcaption><b>Tata Neu</b>NeuPass rewards</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/jie-employee.jpg" alt="Jobs in Education — Job seeker home" loading="lazy"></div><figcaption><b>Jobs in Education</b>Job seeker home</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/jie-employer.jpg" alt="Jobs in Education — Employer: find candidates" loading="lazy"></div><figcaption><b>Jobs in Education</b>Employer: find candidates</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/aseztak-welcome.jpg" alt="Aseztak Wholesale — Shop home" loading="lazy"></div><figcaption><b>Aseztak Wholesale</b>Shop home</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/aseztak-location.jpg" alt="Aseztak Wholesale — Shop by city" loading="lazy"></div><figcaption><b>Aseztak Wholesale</b>Shop by city</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/aseztak-signup.jpg" alt="Aseztak Wholesale — Business sign-up" loading="lazy"></div><figcaption><b>Aseztak Wholesale</b>Business sign-up</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/i360-pretrip.jpg" alt="I360 Vehicle Safety — Pre-trip checklist" loading="lazy"></div><figcaption><b>I360 Vehicle Safety</b>Pre-trip checklist</figcaption></figure><figure><div class="phone"><img class="rimg" src="shots/i360-language.jpg" alt="I360 Vehicle Safety — Language selection" loading="lazy"></div><figcaption><b>I360 Vehicle Safety</b>Language selection</figcaption></figure></div>
-</section>
 <section id="why" class="ww">
   <div class="wrap">
     <div class="head">
@@ -703,161 +690,40 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
       <li><span class="dot">D10</span><b>Your app, ready to share</b><span>APK, GitHub and demo day</span></li>
     </ol>
 
-    <div class="ww-grid">
-      <div class="ww-card"><div class="n">50M+</div><h3>Learn from someone who ships</h3><p>Your mentor builds Flutter apps for a living and has worked on apps with 50M+ downloads, including Tata Neu. You learn how real teams build, not how to pass a test.</p></div>
-      <div class="ww-card"><div class="n">0<small>coding needed</small></div><h3>Start from zero</h3><p>Day 1 begins with installing Flutter. If you can use a computer, you can follow along, whether you're in Class 10 or about to graduate.</p></div>
-      <div class="ww-card"><div class="n">100%<small>live</small></div><h3>Never stuck alone</h3><p>Every session is 2 hours of live coding and Q&amp;A. Hit an error? Ask right there and fix it before class ends. No pre-recorded videos, no waiting days for a reply.</p></div>
-      <div class="ww-card"><div class="n">Sat · Sun</div><h3>Fits around school and college</h3><p>Weekends only, five weekends in total. Nothing clashes with your classes, exams or tuition on weekdays.</p></div>
-      <div class="ww-card"><div class="n">3<small>proofs</small></div><h3>Something real for your resume</h3><p>An installable app, a GitHub portfolio and a certificate with a unique ID. Things you can actually show in an internship interview.</p></div>
-      <div class="ww-card"><div class="n">₹175<small>/ hour</small></div><h3>Serious value</h3><p>20 hours of live mentoring for ₹3,499 with the early-bird fee. Pay in two parts if that's easier.</p></div>
-    </div>
-
-    <p class="ww-sub">Learning alone vs learning with Widgetry</p>
-    <div class="why">
-      <div class="them">
-        <h3>Learning alone from videos</h3>
-        <ul>
-          <li>Copy-paste code you don't fully understand</li>
-          <li>Stuck on setup errors with no one to ask</li>
-          <li>Half-finished projects, nothing to show</li>
-          <li>Outdated patterns no company uses</li>
-        </ul>
-      </div>
-      <div class="us">
-        <h3>With Widgetry</h3>
-        <ul>
-          <li>Live coding with a working senior engineer</li>
-          <li>Doubts solved in class, every weekend</li>
-          <li>A finished app on your phone by Day 10</li>
-          <li>Tips and habits from real production apps</li>
-        </ul>
-      </div>
-    </div>
 
     <div class="ww-close">
       <div>
         <h3>Still unsure? Try it first.</h3>
-        <ul><li>Free demo class</li><li>Full refund before Session 2</li><li>Secure payment by Razorpay</li></ul>
+        <ul><li>Free demo class, live online</li><li>Full refund before Session 2</li><li>Secure payment by Razorpay</li></ul>
       </div>
       <div class="acts">
         <a class="btn" href="#register">Reserve my seat</a>
-        <a class="btn ghost" id="wwDemo" href="#fees">Book free demo</a>
+        <a class="btn ghost demo-wa" id="wwDemo" href="#fees">Book free demo</a>
       </div>
-    </div>
-  </div>
-</section>
-
-<section id="work" style="padding-top:0">
-  <div class="wrap">
-    <div class="head">
-      <p class="eyebrow">What I'm building right now</p>
-      <h2>Real apps, real users, real problems</h2>
-      <p class="lede">You'll learn from the same decisions I make every day on these production apps: offline support, field workflows, dashboards, and clean, testable code.</p>
-    </div>
-
-    <div class="show">
-      <article class="proj">
-        <div class="pair"><div class="phone"><img class="rimg" src="shots/i360-pretrip.jpg" alt="I360 pre-trip checklist with answers"></div><div class="phone"><img class="rimg" src="shots/i360-language.jpg" alt="I360 language selection screen"></div></div>
-        <div>
-          <span class="tag">Current work · Launching soon</span>
-          <h3>I360 Vehicle Safety</h3>
-          <p class="lede">A fleet safety app where drivers complete pre-trip vehicle checks and supervisors assign drivers to vehicles, so no unsafe vehicle leaves the yard.</p>
-          <ul class="feat">
-            <li>Step-by-step vehicle precheck with defect photos</li>
-            <li>Supervisor dashboard to assign drivers and spot defects</li>
-            <li>Offline-first: checks save without network and sync later</li>
-            <li>Multi-language: Hindi, Tamil, Thai, Bahasa Indonesia and English</li>
-          </ul>
-          <div class="stack"><span>Flutter</span><span>Bloc</span><span>go_router</span><span>Clean Architecture</span><span>Offline sync</span><span>Localization</span></div>
-        </div>
-      </article>
-
-      <article class="proj flip">
-        <div>
-          <span class="tag">Current work · Client: Linde</span>
-          <h3>OxyReach</h3>
-          <p class="lede">An enterprise mobile app built for Linde, one of the world's largest industrial gas companies. Built to enterprise standards for reliability, security and scale.</p>
-          <ul class="feat">
-            <li>Enterprise-grade architecture with Bloc and clean layers</li>
-            <li>Dashboards and live status tracking</li>
-            <li>Automated CI/CD releases with high crash-free rates</li>
-          </ul>
-          <div class="stack"><span>Flutter</span><span>Bloc</span><span>REST APIs</span><span>CI/CD</span></div>
-        </div>
-        <div class="phone" aria-hidden="true">
-          <div class="screen">
-            <div class="notch" style="background:#00527a"><i></i></div>
-            <div class="appbar" style="background:#00527a"><small>OxyReach</small><b>Track</b></div>
-            <div class="sbody">
-              <div class="card"><div class="rowx"><span class="t">Request #A-2291</span><span class="pill warn">En route</span></div><div class="m" style="margin-top:4px">ETA 42 min · Site 07</div></div>
-              <div class="card">
-                <div class="check"><span class="box y">✓</span>Request received</div>
-                <div class="check"><span class="box y">✓</span>Approved</div>
-                <div class="check"><span class="box y">✓</span>Dispatched</div>
-                <div class="check"><span class="box e"></span>Delivered</div>
-              </div>
-              <div class="kpis"><div class="kpi"><b>12</b><span>Today</span></div><div class="kpi"><b>3</b><span>Pending</span></div></div>
-            </div>
-            <div class="tabs"><span>Home</span><span>Requests</span><span class="on">Track</span><span>Profile</span></div>
-          </div>
-        </div>
-      </article>
-    </div>
-    <p class="note">App screens shown are illustrative previews. Client data is not shown.</p>
-  </div>
-</section>
-
-<section style="padding-top:0">
-  <div class="wrap">
-    <div class="head">
-      <p class="eyebrow">More apps I've worked on</p>
-      <h2>From super apps to AI side projects</h2>
-      <p class="lede">Large products like Tata Neu were built by full engineering teams, and I worked on them as a Flutter developer in those teams. The smaller apps and side projects I built myself.</p>
-    </div>
-    <div class="apps">
-      <div class="app"><div class="ic" style="background:#4b2a86">T</div><p class="k">Super app</p><h3>Tata Neu</h3><p>Shopping, payments, rewards and travel booking under one Tata brand app.</p><a class="glink" href="https://play.google.com/store/apps/details?id=com.tatadigital.tcp" target="_blank" rel="noopener">Google Play →</a></div>
-      <div class="app"><div class="ic" style="background:#0f7b6c">J</div><p class="k">Job portal</p><h3>Jobs in Education</h3><p>AI job matching, video resumes, real-time chat and application tracking.</p><a class="glink" href="https://play.google.com/store/apps/details?id=com.jie.ajpl" target="_blank" rel="noopener">Google Play →</a></div>
-      <div class="app"><div class="ic" style="background:#c0571b">A</div><p class="k">B2B commerce</p><h3>Aseztak Wholesale</h3><p>Wholesaler-to-retailer platform with live inventory sync and secure payments.</p><a class="glink" href="https://play.google.com/store/apps/details?id=com.AseZtakWholesaleOnlinePrivateLimited.buyer" target="_blank" rel="noopener">Google Play →</a></div>
-      <div class="app"><div class="ic" style="background:#1d1d1d">✦</div><p class="k">AI · OpenAI</p><h3>ArtBox</h3><p>AI tattoo concept generator showing LLM integration in a mobile app.</p></div>
-      <div class="app"><div class="ic" style="background:#0277bd">C</div><p class="k">Realtime</p><h3>Realtime Chat</h3><p>Secure one-to-one messaging with Firebase authentication and live sync.</p></div>
-      <div class="app"><div class="ic" style="background:#2e8b3a">Q</div><p class="k">Quick commerce</p><h3>Quick Commerce</h3><p>Buyer and seller apps with live inventory and order tracking.</p></div>
     </div>
   </div>
 </section>
 
 <section id="mentor" style="padding-top:0">
-  <div class="wrap mentor">
-    <div>
-      <div class="mframe-wrap">
-        <div class="mframe">
-          <img src="shots/mentor.jpg" width="720" height="900" alt="Kishan Kumar Sharma working at his desk" loading="lazy">
-          <div class="mlive"><i></i>Building enterprise Flutter apps</div>
-          <div class="mcap"><b>Kishan Kumar Sharma</b><span>Founder(Senior Software Engineer), Widgetry Academy</span></div>
+  <div class="wrap">
+    <div class="mx">
+      <img class="mx-photo" src="shots/mentor-square.jpg" width="300" height="300" alt="Kishan Kumar Sharma" loading="lazy">
+      <div>
+        <p class="eyebrow">Your mentor</p>
+        <h2>Kishan Kumar Sharma</h2>
+        <p class="mx-role">Senior Software Engineer, Relevance Lab · MCA · 5+ years in Flutter</p>
+        <p style="margin:0">I lead Flutter architecture for enterprise apps and mentor the engineers on my team. This workshop brings the same mentoring to students, live, every weekend.</p>
+        <ul class="mx-apps" aria-label="Apps worked on">
+          <li><b>50M+</b><span>Tata Neu<small>worked on in a team</small></span></li>
+          <li><b>100K+</b><span>Jobs in Education<small>Google Play</small></span></li>
+          <li><b>100K+</b><span>Aseztak Wholesale<small>Google Play</small></span></li>
+        </ul>
+        <div class="mx-links">
+          <a class="btn" href="apps.html">See apps I've built →</a>
+          <a class="btn ghost" href="https://www.linkedin.com/in/kishan-kr-sharma-8a24b5b7" target="_blank" rel="noopener">LinkedIn</a>
         </div>
-        <a class="mbadge b1" href="https://www.linkedin.com/in/kishan-kr-sharma-8a24b5b7" target="_blank" rel="noopener"><span class="bi">in</span><span><b>LinkedIn</b>View profile ✓</span></a>
-        <div class="mbadge b2"><span class="bi">5+</span><span><b>Years</b>in Flutter</span></div>
-        <div class="mbadge b3"><span class="bi">📱</span><span><b>50M+</b>app downloads</span></div>
-      </div>
-      <p class="eyebrow">Your mentor</p>
-      <h2 style="margin-block:8px 14px">Kishan Kumar Sharma</h2>
-      <p class="lede">Founder and Senior Software Engineer at Widgetry Academy. MCA from Siliguri Institute of Technology. I lead Flutter architecture for enterprise apps and mentor engineers on my team. This workshop brings that same mentoring to students.</p>
-      <div class="stats">
-        <div class="stat"><b>5+</b><span>years building Flutter apps</span></div>
-        <div class="stat"><b>99%+</b><span>crash-free sessions on releases</span></div>
-        <div class="stat"><b>4</b><span>companies, Kolkata to Mumbai</span></div>
-      </div>
-      <div class="links">
-        <a class="btn ghost" href="https://www.linkedin.com/in/kishan-kr-sharma-8a24b5b7" target="_blank" rel="noopener">LinkedIn</a>
-        <a class="btn ghost" href="https://github.com/kshanlvs" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
-    <ol class="timeline">
-      <li><span class="when">Feb 2026 – Present</span><h3>Senior Software Engineer</h3><span class="co">Relevance Lab</span><p>Own Flutter architecture for enterprise apps including I360 and OxyReach for Linde. Built CI/CD that cut deployment effort by ~40%.</p></li>
-      <li><span class="when">Aug 2024 – Oct 2025</span><h3>Software Developer</h3><span class="co">Ascendion Digital Solutions · Mumbai</span><p>Scalable Flutter apps for Android and iOS. 90%+ test coverage, 25% faster app responsiveness.</p></li>
-      <li><span class="when">Nov 2021 – Jul 2024</span><h3>Flutter Developer</h3><span class="co">Anandpushp Technologies · Kolkata</span><p>Cross-platform apps for Android and iOS with 99% crash-free releases.</p></li>
-      <li><span class="when">Feb 2021 – Nov 2021</span><h3>Flutter Developer</h3><span class="co">Aseztak Wholesale Online · Siliguri</span><p>Built the B2B wholesale app and its FastAPI backend.</p></li>
-      <li style="padding-bottom:0"><span class="when">2018 · 2020</span><h3>BCA & MCA</h3><span class="co">University of North Bengal · SIT Siliguri</span></li>
-    </ol>
   </div>
 </section>
 
@@ -886,45 +752,10 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
         <div class="day"><p class="d">Day 9 · Saturday</p><h3>Polish your app</h3><p>Theme, app icon, splash screen and fixing bugs together.</p></div>
         <div class="day final"><p class="d">Day 10 · Sunday</p><h3>Build, share & demo day</h3><p>Build your APK, upload code to GitHub and present your app.</p></div></div>
     </div>
-    <div class="nextstep">
-      <div><p class="eyebrow">After this workshop</p><h3>Want to go further? Professional Flutter Program</h3>
-      <p>For students who finish this workshop and want to become job-ready: Bloc state management, clean architecture, offline-first apps, testing, CI/CD and publishing on the Play Store.</p></div>
+    <div class="nextstep" id="courses">
+      <div><p class="eyebrow">Coming next at Widgetry</p><h3>Full-Stack Web Development</h3>
+      <p>JavaScript, React, your own API with .NET, deployment and CI/CD. Beginner friendly, on weekends, ending with a live project you can share.</p></div>
       <span class="ns-tag">Coming soon</span>
-    </div>
-  </div>
-</section>
-
-<section id="courses" style="padding-top:0">
-  <div class="wrap">
-    <div class="head">
-      <p class="eyebrow">Our courses</p>
-      <h2>Start with apps. Grow into full stack.</h2>
-      <p class="lede">Every Widgetry course is taught by a working engineer and built for students: beginner-friendly, weekend-only, and finished with something real you can show.</p>
-    </div>
-    <div class="crs">
-      <article class="crs-card">
-        <div class="crs-top"><span class="crs-status open">● Enrolling now</span><span class="crs-meta">10 sessions · Weekends</span></div>
-        <h3>Flutter in 10 Days</h3>
-        <p class="crs-sub">Build your own mobile app for Android, from zero.</p>
-        <div class="crs-tags"><span>Flutter</span><span>Dart</span><span>Firebase</span><span>APIs</span><span>GitHub</span></div>
-        <p class="crs-out"><b>You finish with:</b> your own installable Android app and a GitHub portfolio.</p>
-        <div class="crs-mentor"><img src="shots/mentor-square.jpg" alt="" loading="lazy"><div><b>Kishan Kumar Sharma</b><span>5+ years · Senior Software Engineer, Relevance Lab</span></div></div>
-        <a class="btn" href="#register">Reserve my seat</a>
-      </article>
-      <article class="crs-card soon">
-        <div class="crs-top"><span class="crs-status">◷ Coming soon</span><span class="crs-meta">Weekends · Beginner friendly</span></div>
-        <h3>Full-Stack Web Development</h3>
-        <p class="crs-sub">Build a complete website with your own backend, and put it live on the internet.</p>
-        <ol class="crs-steps">
-          <li><b>JavaScript basics</b>Make web pages that think and respond</li>
-          <li><b>React</b>Build modern, interactive screens</li>
-          <li><b>Your own API with .NET</b>The backend that stores and serves data</li>
-          <li><b>Deployment</b>Put your project live with a link to share</li>
-          <li><b>CI/CD</b>Your site updates itself when you push code</li>
-        </ol>
-        <p class="crs-out"><b>You finish with:</b> a live full-stack project with a frontend, an API and a real link.</p>
-        <button class="btn crs-soon" type="button" disabled aria-disabled="true">Coming soon</button>
-      </article>
     </div>
   </div>
 </section>
@@ -943,11 +774,10 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
     </div>
     <div class="parents">
       <div class="big">For parents</div>
-      <p>Your child learns from a working senior engineer with an MCA, in small weekend batches that don't clash with school or college. They finish with a real app they built themselves, and a skill companies across India hire for.</p>
+      <p>Your child learns from a working senior engineer with an MCA, in small, live online weekend batches they join from home, so nothing clashes with school or college. They finish with a real app they built themselves, and a skill companies across India hire for.</p>
     </div>
   </div>
 </section>
-
 
 <section id="certificate" style="padding-top:0">
   <div class="wrap cert-wrap">
@@ -974,47 +804,17 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
             <p class="c-title">Mobile App Development with Flutter</p>
             <p class="c-pres">This certificate is proudly presented to</p>
             <p class="c-name">Student Name</p>
-            <p class="c-body">for completing <b>20 hours of hands-on, instructor-led training</b> in cross-platform mobile app development and delivering a working app as a capstone project.</p>
+            <p class="c-body">for completing <b>30 hours of hands-on, instructor-led training</b> in cross-platform mobile app development and delivering a working app as a capstone project.</p>
             <div class="c-skills"><span>Dart</span><span>UI Widgets</span><span>REST APIs</span><span>Navigation</span><span>Firebase</span><span>App Release</span></div>
           </div>
           <div class="c-foot">
             <div class="c-sig"><div class="line">Kishan Sharma</div><b>Kishan Kumar Sharma, MCA</b><span>Mentor · Senior Software Engineer</span></div>
-            <div class="c-seal"><div><b>20</b>HOURS<br>HANDS-ON</div></div>
+            <div class="c-seal"><div><b>30</b>HOURS<br>HANDS-ON</div></div>
             <div class="c-sig r"><div class="line" style="font-family:var(--mono);font-size:calc(14/760*100cqw);padding-top:calc(12/760*100cqw)">DD Month 2026</div><b>Date of completion</b><span>Kolkata, India</span></div>
           </div>
         </div>
         <div class="c-sample" aria-hidden="true"><span>SAMPLE</span></div>
       </div>
-    </div>
-  </div>
-</section>
-<section style="padding-top:0">
-  <div class="wrap">
-    <div class="head"><p class="eyebrow">Batch details</p><h2>Everything you need to know</h2></div>
-    <dl class="details">
-      <div class="row"><dt>Duration</dt><dd>10 sessions over 5 weekends</dd></div>
-      <div class="row"><dt>Days</dt><dd>Saturdays and Sundays only</dd></div>
-      <div class="row"><dt>Session length</dt><dd>2 hours each, live coding plus Q&A</dd></div>
-      <div class="row"><dt>Eligibility</dt><dd>Class 10 students through graduates, any stream</dd></div>
-      <div class="row"><dt>You'll need</dt><dd>A laptop (Windows, macOS or Linux, 8 GB RAM recommended) and an Android phone if you have one</dd></div>
-      <div class="row"><dt>Fee</dt><dd>₹3,499 early bird (first 10 seats) · ₹4,999 regular · or ₹2,500 to book and pay the rest by Weekend 2. <a href="#fees">See fees</a></dd></div>
-    </dl>
-  </div>
-</section>
-
-<section id="trust" style="padding-top:0">
-  <div class="wrap">
-    <div class="head">
-      <p class="eyebrow">Why you can trust us</p>
-      <h2>A real mentor. Clear policies. Safe payments.</h2>
-    </div>
-    <div class="trust">
-      <div class="tcard"><img src="shots/mentor-square.jpg" alt="" class="tface"><div><b>A real, verifiable mentor</b><p>Kishan Kumar Sharma, Senior Software Engineer. Check his <a href="https://www.linkedin.com/in/kishan-kr-sharma-8a24b5b7" target="_blank" rel="noopener">LinkedIn</a> and <a href="https://github.com/kshanlvs" target="_blank" rel="noopener">GitHub</a>.</p></div></div>
-      <div class="tcard"><span class="ti">🔒</span><div><b>Secure payments by Razorpay</b><p>Pay with UPI, card or net banking. We never see your card or UPI details.</p></div></div>
-      <div class="tcard"><span class="ti">↩️</span><div><b>Clear refund policy</b><p>Full refund before Session 2, 50% before Session 3. <a href="refund.html">Read the policy</a>.</p></div></div>
-      <div class="tcard"><span class="ti">🎓</span><div><b>Try before you pay</b><p>Join a free demo class first. No commitment.</p></div></div>
-      <div class="tcard"><span class="ti">📱</span><div><b>Apps used by millions</b><p>Built and worked on apps with 50M+ downloads on Google Play.</p></div></div>
-      <div class="tcard"><span class="ti">💬</span><div><b>Talk to us anytime</b><p>Questions? <a href="contact.html">Contact us</a> or message us on WhatsApp.</p></div></div>
     </div>
   </div>
 </section>
@@ -1049,16 +849,19 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
       </div>
     </div>
     <ul class="feeinc">
-      <li>10 live sessions · 20 hours</li><li>Build your own app</li><li>Certificate of completion</li><li>Doubt-solving every class</li>
+      <li>10 live online sessions · 30 hours</li><li>Build your own app</li><li>Certificate of completion</li><li>Doubt-solving every class</li>
     </ul>
-    <p class="feenote">Free demo class available. See our <a href="refund.html">refund policy</a>: full refund before Session 2, 50% before Session 3.</p>
+    <p class="feenote">Not sure yet? <a class="demo-wa" href="#nextBatch">Book the free demo class</a> first. See our <a href="refund.html">refund policy</a>: full refund before Session 2, 50% before Session 3.</p>
   </div>
 </section>
 
 <section id="faq" style="padding-top:0">
   <div class="wrap">
     <div class="head"><p class="eyebrow">Questions</p><h2>Frequently asked</h2></div>
+    <details><summary>Are classes online or offline?</summary><p>Live online. You join from home on your laptop, code along with me in real time and ask questions as we go. There are no pre-recorded videos.</p></details>
+    <details><summary>How long is each session?</summary><p>About 3 hours, on Saturdays and Sundays: 10 sessions over 5 weekends, 30 hours in total. Exact timings for each batch are on the batch card above.</p></details>
     <details><summary>I've never written code. Can I join?</summary><p>Yes. Days 1 and 2 cover setup and Dart from the beginning. If you can use a computer comfortably, you can follow along.</p></details>
+    <details><summary>What do I need?</summary><p>A laptop (Windows, macOS or Linux, 8 GB RAM recommended), a stable internet connection, and an Android phone if you have one. Any stream, from Class 10 to graduation, can join.</p></details>
     <details><summary>Do I need a Mac or an iPhone?</summary><p>No. Any Windows, macOS or Linux laptop works. We build and test on Android; the same code runs on iOS.</p></details>
     <details><summary>What if I miss a session?</summary><p>Message me and I'll help you catch up before the next class.</p></details>
     <details><summary>Will I get a certificate?</summary><p>Yes, after you complete and present your project on Day 10.</p></details>
@@ -1125,10 +928,10 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
     <div style="background:var(--deep);color:var(--deep-fg);border-radius:24px;padding:32px;display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap">
       <div style="max-width:620px">
         <p style="margin:0;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-2);font-weight:700">Teach with Widgetry</p>
-        <h2 style="margin:8px 0 8px;color:#fff">Working IT professional? Become a WACollab Mentor.</h2>
+        <h2 style="margin:8px 0 8px;color:#fff">Working IT professional? Become a Widgetry mentor.</h2>
         <p style="margin:0;color:var(--deep-muted)">Teach on weekends with a ready-made course kit. We handle students, payments and marketing.</p>
       </div>
-      <a class="btn" href="mentor.html" style="background:var(--accent-2);color:#1d1400">Apply as a mentor</a>
+      <a class="btn" href="pages/apply-mentor.html" style="background:var(--accent-2);color:#1d1400">Apply as a mentor</a>
     </div>
   </div>
 </section>
@@ -1136,7 +939,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
   <div class="wrap">
     <span>© 2026 Widgetry Academy · Mobile App Development with Flutter</span>
     <nav class="flinks"><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refund.html">Refund policy</a><a href="contact.html">Contact</a>
-    <a href="mentor.html">Become a mentor</a>
+    <a href="apps.html">My apps</a><a href="mentor.html">Our mentors</a><a href="pages/apply-mentor.html">Become a mentor</a>
     </nav>
   </div>
 </footer>
@@ -1152,7 +955,7 @@ try {
   const app = getApps()[0] || initializeApp(firebaseConfig);
   const snap = await getDoc(doc(getFirestore(app), "settings", "batch"));
   if (snap.exists() && window.renderBatch) {
-    const live = snap.data(), base = (window.WIDGETRY && window.WIDGETRY.batch) || {};
+    const live = Object.fromEntries(Object.entries(snap.data()).filter(([k, v]) => v !== "" && v != null)), base = (window.WIDGETRY && window.WIDGETRY.batch) || {};
     window.WIDGETRY.batch = Object.assign({}, base, live);
     window.renderBatch(window.WIDGETRY.batch);
   }
@@ -1170,24 +973,15 @@ const auth = getAuth(app);
 // Wait for auth state
 onAuthStateChanged(auth, (user) => {
   const cfg = (window.WIDGETRY && window.WIDGETRY.razorpay) || {};
-
   document.querySelectorAll('.paybox').forEach(function(box){
     var id = cfg[box.getAttribute('data-pay')];
-
-    if(!id){
-      box.innerHTML = '<span class="paysoon">Online payment opening soon</span>';
-      return;
-    }
-
-    // If user is not logged in, show registration prompt instead of payment button
+    box.innerHTML = '';
+    if(!id){ box.innerHTML = '<span class="paysoon">Online payment opening soon</span>'; return; }
+    // Not reserved yet: send them to the 30-second form on this page first
     if(!user){
-      box.innerHTML = '<div style="text-align:center; padding: 20px 20px; background: #f3f6f4; border-radius: 8px; border-left: 4px solid #0f6b56;"><p style="margin: 0 0 12px 0; font-weight: 600; color: #0e1f1a; font-size: 14px;">📋 Register first to proceed with payment</p><a href="./pages/register.html" style="display: inline-block; background: #0f6b56; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-top: 8px; font-size: 14px; transition: all 0.3s ease;">Create Account</a></div>';
-      // Clear Razorpay ID so button doesn't load
-      box.setAttribute('data-pay', '');
+      box.innerHTML = '<div class="paypre"><a class="btn" href="#register">Reserve your seat first</a><p>Takes 30 seconds, then pay here. <a href="pages/login.html">Already registered? Log in</a></p></div>';
       return;
     }
-
-    // If user is logged in, show Razorpay payment button
     var f = document.createElement('form');
     var sc = document.createElement('script');
     sc.src = 'https://checkout.razorpay.com/v1/payment-button.js';
@@ -1223,8 +1017,8 @@ onAuthStateChanged(auth, (user) => {
   var fl=document.getElementById('ebFlag'); if(fl){if(fl.dataset.def==null)fl.dataset.def=fl.textContent; fl.textContent=(B.seatsLeft!=null&&B.seatsLeft!=='')?(B.seatsLeft>0?(B.seatsLeft+' of 10 seats left'):'Early bird full'):fl.dataset.def;}
   };
   renderBatch(B);
-  var wd=document.getElementById('wwDemo');
-  if(wd){var wu=waLink('Hi! I would like to book the free demo class for the Widgetry Academy Flutter workshop.');if(wu){wd.href=wu;wd.target='_blank';wd.rel='noopener';}}
+  var wu=waLink('Hi! I would like to book the free demo class for the Widgetry Academy Flutter workshop.');
+  if(wu)document.querySelectorAll('.demo-wa').forEach(function(a){a.href=wu;a.target='_blank';a.rel='noopener';a.addEventListener('click',function(){window.fbq&&fbq('track','Contact');});});
 
   // Meta Pixel
   if(/^\d+$/.test(C.metaPixelId||'')){

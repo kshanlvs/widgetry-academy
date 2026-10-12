@@ -16,7 +16,7 @@ window.WIDGETRY = {
     startDate: "Saturday, 17 October 2026", // fallback: live details are edited in Admin → Next batch
     days:      "Saturdays & Sundays",
     time:      "11:00 AM – 2:00 PM IST", // e.g. "10:00 AM – 12:00 PM IST"
-    mode:      "",                       // e.g. "Live online (Google Meet)" or "In-person, Salt Lake"
+    mode:      "Live online",            // e.g. "Live online (Google Meet)"
     demo:      "",                       // e.g. "Free demo: Sunday, 26 October, 11 AM"
     seatsLeft: null                      // early-bird seats left, e.g. 7 (null = hide). Keep it honest.
   },
