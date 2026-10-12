@@ -548,6 +548,7 @@ details p{color:var(--muted);margin-top:10px;max-width:65ch}
 .panel.done{border-color:#3fc79f}
 .ghostd{background:transparent;color:#fff;border:1px solid var(--deep-line)}
 .err{background:#3a1414;border:1px solid #7a2a2a;color:#ffd6d6;border-radius:10px;padding:10px 14px;font-size:14px;margin:0}
+.err.known{background:#123a30;border-color:#2f6b58;color:#eaf3ee}
 .btn[disabled]{opacity:.6;cursor:wait}
 .tip{font-size:13.5px!important;color:var(--deep-muted)!important}
 .vbox{display:grid;gap:10px;border-top:1px solid var(--deep-line);padding-top:12px}
@@ -1030,7 +1031,7 @@ onAuthStateChanged(auth, (user) => {
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, onAuthStateChanged, reload, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, onAuthStateChanged, reload, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
@@ -1041,7 +1042,7 @@ const db = getFirestore(app);
 const $ = (id) => document.getElementById(id);
 const returnUrl = location.origin + location.pathname + "#register";
 
-function err(msg){ const e=$("err"); e.textContent = msg || ""; e.hidden = !msg; }
+function err(msg){ const e=$("err"); e.className="err"; e.textContent = msg || ""; e.hidden = !msg; }
 function info(msg){ const e=$("info"); e.textContent = msg || ""; e.hidden = !msg; }
 function busy(b,on,label){ b.disabled = on; if(label) b.textContent = label; }
 const friendly = (e) => ({
@@ -1088,9 +1089,34 @@ $("fDetails").addEventListener("submit", async (e)=>{
     await setDoc(doc(db,"registrations",user.uid), rec);
     showDone(rec, false);
     window.fbq && fbq('track','Lead',{content_name:'Flutter workshop seat'});
-  }catch(x){ err(friendly(x)); }
+  }catch(x){
+    if(x?.code === "auth/email-already-in-use") showAlreadyReserved(d.email);
+    else err(friendly(x));
+  }
   finally{ busy(b,false,"Reserve my seat"); }
 });
+
+// Email already has a seat: send a link to set a password, then log in and come back here to pay
+function showAlreadyReserved(email){
+  const e=$("err"); e.hidden=false; e.className="err known";
+  e.innerHTML='';
+  const p=document.createElement("p"); p.style.margin="0 0 10px";
+  p.textContent="You've already reserved a seat with "+email+". To continue on this device, set a password and log in.";
+  const b=document.createElement("button"); b.type="button"; b.className="btn ghostd"; b.textContent="Email me a link to set my password";
+  const l=document.createElement("a"); l.href="pages/login.html?next=%2F%23register&email="+encodeURIComponent(email); l.textContent="I have a password: log in";
+  l.style.cssText="display:block;margin-top:10px;color:inherit;font-weight:600";
+  b.addEventListener("click", async ()=>{
+    busy(b,true,"Sending…");
+    try{
+      const back = { url: location.origin + "/pages/login.html?next=%2F%23register&email=" + encodeURIComponent(email) };
+      try{ await sendPasswordResetEmail(auth, email, back); }
+      catch(x1){ if(/continue-uri|unauthorized/.test(x1?.code||"")) await sendPasswordResetEmail(auth, email); else throw x1; }
+      p.textContent="Link sent to "+email+" (check Spam too). Set your password, then log in, and you'll come back here to pay.";
+      b.remove();
+    }catch(x2){ busy(b,false,"Email me a link to set my password"); p.textContent=friendly(x2); }
+  });
+  e.append(p,b,l);
+}
 
 // Optional email verification
 let poll;

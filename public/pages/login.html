@@ -163,10 +163,16 @@
     import { loginUser, onAuthReady } from '../js/auth.js';
     import { showToast, showFormError, clearFormError, validateEmail, setButtonDisabled } from '../js/ui.js';
 
+    // Where to go after login: ?next=/... (same site only), otherwise the dashboard
+    const params = new URLSearchParams(location.search);
+    const nextRaw = params.get('next') || '';
+    const NEXT = /^\/(?!\/)/.test(nextRaw) ? nextRaw : '../pages/dashboard.html';
+    if (params.get('email')) document.getElementById('email').value = params.get('email');
+
     // Check if already logged in
     onAuthReady().then(user => {
       if (user) {
-        window.location.href = '../pages/dashboard.html';
+        window.location.href = NEXT;
       }
     });
 
@@ -209,7 +215,7 @@
 
         // Redirect to dashboard
         setTimeout(() => {
-          window.location.href = '../pages/dashboard.html';
+          window.location.href = NEXT;
         }, 1500);
       } catch (error) {
         console.error('Login error:', error);
