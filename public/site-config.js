@@ -26,7 +26,8 @@ window.WIDGETRY = {
   contactEmail: "kishantechdev@gmail.com", // shown on the Contact page and policy pages
   contactPhone: "",                   // e.g. "+91 98765 43210" (optional)
   instagram:    "widgetry.academy",   // Instagram handle without @
-  address:      "",                   // e.g. "Kolkata, West Bengal, India" (Razorpay may ask for this)
+  address:      "Kolkata, West Bengal, India", // shown on the Contact page (city only, no street address)
+  udyam:        "UDYAM-WB-22-0009252",  // MSME registration number
   ownerName:    "Kishan Kumar Sharma",// Legal name used for Razorpay KYC
 
   // ---- Tracking ----
