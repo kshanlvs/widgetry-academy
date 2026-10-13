@@ -8,7 +8,7 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-s
 // Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyB9HRc_R4KOh9n5Ih-bxKcUtHEqpdHMOYQ",
-  authDomain: "flutter-in-10-days.firebaseapp.com",
+  authDomain: "widgetry-academy.web.app",
   projectId: "flutter-in-10-days",
   storageBucket: "flutter-in-10-days.firebasestorage.app",
   messagingSenderId: "456315843656",
