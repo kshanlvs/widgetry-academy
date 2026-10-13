@@ -722,6 +722,9 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 .crs-price span{font-size:13.5px;color:var(--muted);flex-basis:100%}
 .crs-card.flagship .btn{padding:14px 24px;font-size:16px}
 .crs-card.soon{opacity:.86}
+.crs.eq{align-items:stretch}
+.crs-card > .mx-links:last-child{margin-top:auto}
+.crs-card > .crs-mentor + .mx-links{margin-top:0}
 @media (max-width:820px){.crs{grid-template-columns:1fr}}
 @media (max-width:520px){.crs-flag{font-size:11px;padding:10px 14px}.crs-card.flagship{padding-top:54px}.crs-card .mx-links .btn{flex:1 1 100%;text-align:center}}
 </style>
@@ -1196,7 +1199,8 @@ try {
     const inr = n => "₹" + Number(n).toLocaleString("en-IN");
     let batchUsed = keepFlutter;
     box.innerHTML = flutterHtml + list.map(c => {
-      const soon = c.status === "soon", flag = c.flagship && !soon;
+      const soon = c.status === "soon", flag = !soon;
+      const band = (c.badge || "").trim() || (c.flagship ? "★ Flagship course" : "★ New course");
       let when = ""; if (c.showBatch && !soon && !batchUsed) { when = '<p class="crs-when" id="crsBatch" hidden></p>'; batchUsed = true; }
       const ph = img(c.mentorPhoto), ini = (c.mentorName || "").split(/\s+/).map(w => w[0] || "").join("").slice(0, 2).toUpperCase();
       const ext = u => /^https:/.test(u) ? ' target="_blank" rel="noopener"' : "";
@@ -1204,7 +1208,7 @@ try {
         : '<div class="mx-links"><a class="btn" href="' + esc(link(c.ctaLink)) + '"' + ext(link(c.ctaLink)) + '>' + esc(c.cta || "Reserve my seat") + '</a>' +
           (c.cta2 ? '<a class="btn ghost" href="' + esc(link(c.cta2Link)) + '"' + ext(link(c.cta2Link)) + '>' + esc(c.cta2) + '</a>' : "") + '</div>';
       return '<article class="crs-card' + (flag ? " flagship" : "") + (soon ? " soon" : "") + '"' + (flag ? ' aria-label="' + esc(c.title) + ', enrolling now"' : "") + '>' +
-        (flag ? '<div class="crs-flag"><span>★ Flagship course</span><span class="crs-live"><i></i>Enrolling now</span></div>' : "") +
+        (flag ? '<div class="crs-flag"><span>' + esc(band) + '</span><span class="crs-live"><i></i>Enrolling now</span></div>' : "") +
         '<div class="crs-top">' + (flag ? "" : '<span class="crs-status' + (soon ? "" : " open") + '">' + (soon ? "◷ Coming soon" : "● Enrolling now") + "</span>") + (c.meta ? '<span class="crs-meta">' + esc(c.meta) + "</span>" : "") + "</div>" +
         "<h3>" + esc(c.title) + "</h3>" + when +
         (c.tagline ? '<p class="crs-sub">' + esc(c.tagline) + "</p>" : "") +
@@ -1215,8 +1219,9 @@ try {
         (c.mentorName ? '<div class="crs-mentor">' + (ph ? '<img src="' + esc(ph) + '" alt="" loading="lazy">' : '<span class="crs-av">' + esc(ini) + "</span>") + "<div><b>" + esc(c.mentorName) + "</b><span>" + esc(c.mentorLine || "") + "</span></div></div>" : "") +
         btns + "</article>";
     }).join("");
-    const n = list.length + (keepFlutter ? 1 : 0), firstFlag = keepFlutter || list[0].flagship;
-    box.style.gridTemplateColumns = n === 2 && firstFlag ? "" : (n === 1 ? "minmax(0,640px)" : "repeat(auto-fit,minmax(min(300px,100%),1fr))");
+    const n = list.length + (keepFlutter ? 1 : 0), allOpen = list.every(c => c.status !== "soon");
+    box.style.gridTemplateColumns = n === 1 ? "minmax(0,640px)" : (n === 2 && !allOpen ? "" : "repeat(auto-fit,minmax(min(300px,100%),1fr))");
+    box.classList.toggle("eq", allOpen);
     if (window.renderBatch) window.renderBatch((window.WIDGETRY && window.WIDGETRY.batch) || {});
   }
 } catch (e) { console.warn("Using built-in course cards:", e.code || e.message); }

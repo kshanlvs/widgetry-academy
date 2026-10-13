@@ -223,6 +223,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
           <label>Position<input id="cOrder" type="number" min="1" max="50" value="1"></label>
           <label>&nbsp;<span class="chk"><input type="checkbox" id="cFlag"> Highlight as flagship</span></label>
         </div>
+        <label><span>Label on the green band <span class="opt">(optional · default: “★ Flagship course” or “★ New course”)</span></span><input id="cBadge" maxlength="30" placeholder="e.g. ★ Advanced course"></label>
         <label><span>Short details line <span class="opt">(optional)</span></span><input id="cMeta" maxlength="90" placeholder="e.g. 10 live online sessions · Saturdays & Sundays · 2 hrs each"></label>
         <label><span>Topics <span class="opt">(comma separated)</span></span><input id="cTags" maxlength="160" placeholder="Flutter, Dart, Firebase, APIs, GitHub"></label>
         <label><span>What they'll learn, step by step <span class="opt">(optional · one per line: Topic — short description)</span></span><textarea id="cSteps" rows="5" placeholder="JavaScript basics — Make web pages that think and respond&#10;React — Build modern, interactive screens"></textarea></label>
@@ -523,7 +524,7 @@ function renderCourses() {
 function courseFromForm() {
   const num = id => { const v = $(id).value.trim(); return v === "" ? null : Math.max(0, Math.round(Number(v) || 0)); };
   return {
-    title: $("cTitle").value.trim(), tagline: $("cTagline").value.trim(), status: $("cStatus").value,
+    title: $("cTitle").value.trim(), tagline: $("cTagline").value.trim(), status: $("cStatus").value, badge: $("cBadge").value.trim(),
     flagship: $("cFlag").checked, order: Math.max(1, parseInt($("cOrder").value, 10) || 1), meta: $("cMeta").value.trim(),
     tags: $("cTags").value.split(",").map(t => t.trim()).filter(Boolean).slice(0, 12),
     steps: $("cSteps").value.split("\n").map(l => l.trim()).filter(Boolean).slice(0, 12).map(l => { const m = l.split(/\s+[—–-]\s+|\s*\|\s*/); return { t: (m[0] || "").slice(0, 60), d: m.slice(1).join(" — ").slice(0, 120) }; }),
@@ -533,7 +534,7 @@ function courseFromForm() {
   };
 }
 function fillCourse(c) {
-  $("cTitle").value = c.title || ""; $("cTagline").value = c.tagline || ""; $("cStatus").value = c.status || "open"; $("cFlag").checked = !!c.flagship;
+  $("cTitle").value = c.title || ""; $("cTagline").value = c.tagline || ""; $("cBadge").value = c.badge || ""; $("cStatus").value = c.status || "open"; $("cFlag").checked = !!c.flagship;
   $("cOrder").value = c.order ?? (call.length + 1); $("cMeta").value = c.meta || ""; $("cTags").value = (c.tags || []).join(", ");
   $("cSteps").value = (c.steps || []).map(s => s.d ? s.t + " — " + s.d : s.t).join("\n"); $("cOutcome").value = c.outcome || "";
   $("cPrice").value = c.price ?? ""; $("cMrp").value = c.mrp ?? ""; $("cPriceNote").value = c.priceNote || ""; $("cBatch").checked = !!c.showBatch;
@@ -544,9 +545,9 @@ function fillCourse(c) {
 function previewCourse() {
   const c = courseFromForm(), soon = c.status === "soon";
   $("cPrev").innerHTML = `<div class="cprev${soon ? " soon" : ""}">
-    ${c.flagship && !soon ? '<div class="cprev-flag"><span>★ Flagship course</span><span>● Enrolling now</span></div>' : ""}
+    ${!soon && c.status !== "hidden" ? `<div class="cprev-flag"><span>${esc(c.badge || (c.flagship ? "★ Flagship course" : "★ New course"))}</span><span>● Enrolling now</span></div>` : ""}
     <div class="cprev-in">
-      ${c.flagship && !soon ? "" : `<span class="pill c-${esc(c.status)}" style="justify-self:start">${esc(CST[c.status])}</span>`}
+      ${!soon && c.status !== "hidden" ? "" : `<span class="pill c-${esc(c.status)}" style="justify-self:start">${esc(CST[c.status])}</span>`}
       ${c.meta ? `<div class="small">${esc(c.meta)}</div>` : ""}
       <h4>${esc(c.title || "Course name")}</h4>
       ${c.showBatch ? '<div style="color:var(--accent);font-weight:700">🗓 Next batch starts … (from Next batch tab)</div>' : ""}
