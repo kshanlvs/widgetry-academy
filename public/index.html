@@ -727,6 +727,29 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 .crs-card > .crs-mentor + .mx-links{margin-top:0}
 @media (max-width:820px){.crs{grid-template-columns:1fr}}
 @media (max-width:520px){.crs-flag{font-size:11px;padding:10px 14px}.crs-card.flagship{padding-top:54px}.crs-card .mx-links .btn{flex:1 1 100%;text-align:center}}
+
+/* registration popup + Google button */
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;font:inherit;font-weight:700;font-size:16px;padding:12px 16px;border-radius:12px;border:0;background:#fff;color:#1f1f1f;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.gbtn:hover{background:#f3f4f6}.gbtn[disabled]{opacity:.6;cursor:wait}
+#regStart .btn{width:100%;text-align:center}
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
+.regdlg{border:0;padding:0;border-radius:22px;width:min(460px,calc(100% - 24px));max-height:calc(100dvh - 24px);background:var(--deep);color:var(--deep-fg);box-shadow:0 40px 100px -20px rgba(0,0,0,.6)}
+.regdlg::backdrop{background:rgba(4,19,14,.62);backdrop-filter:blur(3px)}
+.regdlg form{padding:26px 24px 22px;gap:14px;position:relative}
+.regdlg h2{color:#fff;font-size:24px;margin:6px 0 4px}
+.regdlg .eyebrow{color:var(--accent-2)}
+.rg-sub{margin:0;color:var(--deep-muted);font-size:15px}
+.rg-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:1px solid var(--deep-line);background:transparent;color:var(--deep-fg);font-size:16px;cursor:pointer}
+.rg-or{display:flex;align-items:center;gap:10px;color:var(--deep-muted);font-size:13px;margin-top:14px}
+.rg-or::before,.rg-or::after{content:"";flex:1;height:1px;background:var(--deep-line)}
+.rg-signed{margin:0;background:var(--deep-2);border:1px solid #3fc79f;border-radius:12px;padding:10px 12px;font-size:14px}
+.rg-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.rg-two{grid-template-columns:1fr}}
+.rg-fine{margin:0;font-size:12.5px;color:var(--deep-muted)}.rg-fine a{color:inherit}
+.rg-toast{position:fixed;left:50%;bottom:24px;translate:-50% 0;z-index:60;background:#0f6b56;color:#fff;font-weight:700;padding:12px 18px;border-radius:12px;box-shadow:0 16px 40px -12px rgba(0,0,0,.5);max-width:calc(100% - 32px)}
+.payreg{text-align:center;padding:16px;border-radius:12px;background:var(--soft)}
+.payreg .btn{width:100%}
+.payreg p{margin:8px 0 0;font-size:13px;color:var(--muted)}
 </style>
 
 </head>
@@ -1092,50 +1115,67 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
   <div class="wrap">
     <div class="register">
       <div>
-        <p class="eyebrow">Seats are limited per batch</p>
+        <p class="eyebrow">Register once · takes 30 seconds</p>
         <h2 style="margin-block:8px 14px">Reserve your seat</h2>
-        <p class="lede">Fill in your details to reserve your seat. I'll contact you on WhatsApp with batch dates, timings and fee.</p>
+        <p class="lede">Register to book the free demo or join any course. I'll contact you on WhatsApp with batch dates and timings.</p>
       </div>
-      <div id="reg" class="reg">
-        <form id="fDetails" novalidate>
-          <label for="name">Full name<input id="name" autocomplete="name" required placeholder="e.g. Ananya Das"></label>
-          <label for="level">Current class / course
-            <select id="level" required>
-              <option value="">Select…</option>
-              <option>Class 10</option><option>Class 11</option><option>Class 12</option>
-              <option>Undergraduate (1st–2nd year)</option><option>Undergraduate (3rd–4th year)</option><option>Graduate</option>
-            </select>
-          </label>
-          <label for="email">Email<input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
-          <label for="phone">WhatsApp / mobile number
-            <div class="tel"><span>+91</span><input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="10" required placeholder="10-digit mobile number"></div>
-          </label>
-          <label for="exp">Any coding experience?
-            <select id="exp"><option>None, complete beginner</option><option>A little (school/college)</option><option>Comfortable with one language</option></select>
-          </label>
-          <button class="btn reg-btn" id="bSubmit" type="submit">Reserve my seat</button>
-        </form>
-
-        <div id="pDone" class="panel done" hidden>
-          <h3>Seat reserved 🎉</h3>
-          <p>Thanks, <b id="doneName"></b>. I'll contact you on WhatsApp at <b id="donePhone"></b> with batch dates and timings.</p>
-          <a class="btn reg-btn" href="#fees" style="text-decoration:none">Pay now to confirm your seat →</a>
-          <div id="verifyBox" class="vbox">
-            <p class="tip">Optional: verify <b id="doneEmail"></b> so you also get batch details by email.</p>
-            <div class="row2">
-              <button class="btn ghostd" id="bVerify" type="button">Send verification email</button>
-              <button class="btn ghostd" id="bChange" type="button">Edit my details</button>
-            </div>
-          </div>
-          <p id="verifiedNote" class="tip" hidden>✓ Email verified</p>
-          <p id="info" class="tip" hidden></p>
+      <div class="reg">
+        <div id="regStart" class="panel">
+          <h3>Create your free account</h3>
+          <button class="gbtn" type="button" data-google><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>
+          <button class="btn reg-btn" type="button" data-open-reg>Register with email</button>
+          <p class="tip" style="margin:0">Already registered? <a href="pages/login.html?next=%2F%23register" style="color:inherit">Log in</a></p>
         </div>
-
-        <p id="err" class="err" role="alert" hidden></p>
+        <div id="pDone" class="panel done" hidden>
+          <h3>You're registered 🎉</h3>
+          <p>Thanks, <b id="doneName"></b>. I'll contact you on WhatsApp at <b id="donePhone"></b> with batch dates and timings.</p>
+          <p style="margin:0">Interested in: <b id="doneCourse"></b></p>
+          <a class="btn reg-btn" href="#fees" style="text-decoration:none">Pay for Flutter in 10 Days →</a>
+          <a class="btn ghostd" href="#courses" style="text-decoration:none">Join another course</a>
+          <p class="tip" style="margin:0">Not you? <button class="linkbtn" type="button" id="bSignOut">Sign out</button></p>
+        </div>
       </div>
     </div>
   </div>
 </section>
+
+<dialog id="regDlg" class="regdlg" aria-labelledby="rgTitle">
+  <form id="fDetails" novalidate>
+    <button type="button" class="rg-x" aria-label="Close" data-close>✕</button>
+    <div>
+      <p class="eyebrow" style="margin:0">Takes 30 seconds · free</p>
+      <h2 id="rgTitle">Register to continue</h2>
+      <p class="rg-sub" id="rgSub">Register once to book the free demo or join any course.</p>
+    </div>
+    <div id="rgGoogleRow">
+      <button class="gbtn" type="button" data-google><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>
+      <div class="rg-or"><span>or use your email</span></div>
+    </div>
+    <p class="rg-signed" id="rgSigned" hidden></p>
+    <label for="name">Full name<input id="name" autocomplete="name" required maxlength="80" placeholder="e.g. Ananya Das"></label>
+    <label for="email" id="rgEmailRow">Email<input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+    <label for="phone">WhatsApp / mobile number
+      <div class="tel"><span>+91</span><input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="10" required placeholder="10-digit mobile number"></div>
+    </label>
+    <div class="rg-two">
+      <label for="level">Class / course
+        <select id="level" required>
+          <option value="">Select…</option>
+          <option>Class 10</option><option>Class 11</option><option>Class 12</option>
+          <option>Undergraduate (1st–2nd year)</option><option>Undergraduate (3rd–4th year)</option><option>Graduate</option><option>Working professional</option>
+        </select>
+      </label>
+      <label for="exp">Coding experience
+        <select id="exp"><option>None, complete beginner</option><option>A little (school/college)</option><option>Comfortable with one language</option></select>
+      </label>
+    </div>
+    <label for="rgCourse">I'm interested in<select id="rgCourse"></select></label>
+    <button class="btn reg-btn" id="bSubmit" type="submit">Register &amp; continue</button>
+    <p id="err" class="err" role="alert" hidden></p>
+    <p class="rg-fine">We use your number only to send batch details on WhatsApp. <a href="privacy.html">Privacy policy</a></p>
+  </form>
+</dialog>
+<div id="rgToast" class="rg-toast" role="status" hidden></div>
 
 <a id="waFloat" class="wafloat" href="#" target="_blank" rel="noopener" aria-label="Chat on WhatsApp" hidden><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><path fill="#fff" d="M16 3C9 3 3.3 8.6 3.3 15.6c0 2.3.6 4.5 1.8 6.4L3 29l7.2-1.9c1.8 1 3.8 1.5 5.8 1.5 7 0 12.7-5.6 12.7-12.6S23 3 16 3zm0 23.1c-1.8 0-3.6-.5-5.2-1.4l-.4-.2-4.3 1.1 1.2-4.2-.3-.4c-1-1.6-1.5-3.5-1.5-5.4C5.5 10 10.2 5.3 16 5.3S26.5 10 26.5 15.6 21.8 26.1 16 26.1zm5.8-7.8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-1 1.2-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.5-1.6-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.6.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.5c.2.2 2.3 3.6 5.7 5 .8.3 1.4.5 1.9.7.8.3 1.5.2 2.1.1.6-.1 1.9-.8 2.2-1.5.3-.7.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z"/></svg><span>Chat with us</span></a>
 
@@ -1226,37 +1266,7 @@ try {
   }
 } catch (e) { console.warn("Using built-in course cards:", e.code || e.message); }
 </script>
-<script type="module">
-// Payment button authentication check
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-import { firebaseConfig } from "./firebase-config.js";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-// Wait for auth state
-onAuthStateChanged(auth, (user) => {
-  const cfg = (window.WIDGETRY && window.WIDGETRY.razorpay) || {};
-  document.querySelectorAll('.paybox').forEach(function(box){
-    var id = cfg[box.getAttribute('data-pay')];
-    box.innerHTML = '';
-    if(!id){ box.innerHTML = '<span class="paysoon">Online payment opening soon</span>'; return; }
-    // Not reserved yet: send them to the 30-second form on this page first
-    if(!user){
-      box.innerHTML = '<div class="paypre"><a class="btn" href="#register">Reserve your seat first</a><p>Takes 30 seconds, then pay here. <a href="pages/login.html">Already registered? Log in</a></p></div>';
-      return;
-    }
-    var f = document.createElement('form');
-    var sc = document.createElement('script');
-    sc.src = 'https://checkout.razorpay.com/v1/payment-button.js';
-    sc.async = true;
-    sc.setAttribute('data-payment_button_id', id);
-    f.appendChild(sc);
-    box.appendChild(f);
-  });
-});
-</script>
 <script>
 (function(){
   var C=window.WIDGETRY||{}, B=C.batch||{};
@@ -1295,141 +1305,200 @@ onAuthStateChanged(auth, (user) => {
 })();
 </script>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, onAuthStateChanged, reload, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+// Registration (email or Google) is required before any course can be bought.
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-auth.languageCode = "en";
+const app = getApps()[0] || initializeApp(firebaseConfig);
+const auth = getAuth(app); auth.languageCode = "en";
 const db = getFirestore(app);
-const $ = (id) => document.getElementById(id);
-const returnUrl = location.origin + location.pathname + "#register";
+const $ = id => document.getElementById(id);
+const esc = t => { const d = document.createElement("div"); d.textContent = t == null ? "" : String(t); return d.innerHTML; };
+const dlg = $("regDlg");
+const store = { get(k){ try { return sessionStorage.getItem(k); } catch(_) { return null; } }, set(k, v){ try { sessionStorage.setItem(k, v); } catch(_) {} }, del(k){ try { sessionStorage.removeItem(k); } catch(_) {} } };
+let me = { user: null, reg: null, ready: false }, pending = null, saving = false;
 
-function err(msg){ const e=$("err"); e.className="err"; e.textContent = msg || ""; e.hidden = !msg; }
-function info(msg){ const e=$("info"); e.textContent = msg || ""; e.hidden = !msg; }
-function busy(b,on,label){ b.disabled = on; if(label) b.textContent = label; }
-const friendly = (e) => ({
-  "auth/email-already-in-use":"This email has already reserved a seat. Please use a different email.",
-  "auth/invalid-email":"Please enter a valid email address.",
-  "auth/too-many-requests":"Too many attempts. Please wait a few minutes and try again.",
-  "auth/network-request-failed":"Network problem. Check your internet connection and try again.",
-  "auth/operation-not-allowed":"Registration is temporarily unavailable. Please try again later.",
-  "permission-denied":"Couldn't save your reservation. Please refresh and try again."
-}[e?.code] || (e?.message || "Something went wrong. Please try again."));
+const friendly = e => ({
+  "auth/email-already-in-use": "This email is already registered.",
+  "auth/invalid-email": "Please enter a valid email address.",
+  "auth/too-many-requests": "Too many attempts. Please wait a few minutes and try again.",
+  "auth/network-request-failed": "Network problem. Check your internet connection and try again.",
+  "auth/operation-not-allowed": "Google sign-in isn't switched on yet. Please register with your email below.",
+  "auth/unauthorized-domain": "Google sign-in isn't set up for this website yet. Please register with your email below.",
+  "auth/popup-closed-by-user": "",
+  "permission-denied": "Couldn't save your registration. Please refresh and try again."
+}[e?.code] ?? (e?.message || "Something went wrong. Please try again."));
+function err(msg){ const e = $("err"); e.className = "err"; e.textContent = msg || ""; e.hidden = !msg; }
+function busy(b, on, label){ b.disabled = on; if (label) b.textContent = label; }
+function toast(msg){ const t = $("rgToast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 4000); }
+
+function courseNames(){ const n = [...document.querySelectorAll("#courses .crs-card:not(.soon) h3")].map(h => h.textContent.trim()).filter(Boolean); return n.length ? n : ["Flutter in 10 Days"]; }
+function fillCourses(sel){ const names = courseNames(), s = $("rgCourse"); s.innerHTML = names.map(n => "<option>" + esc(n) + "</option>").join(""); if (sel && names.includes(sel)) s.value = sel; }
+
+// ----- popup -----
+function setMode(){
+  const g = me.user && !me.reg;           // signed in (e.g. Google) but registration not finished
+  $("rgGoogleRow").hidden = !!g; $("rgEmailRow").hidden = !!g; $("rgSigned").hidden = !g;
+  if (g) { $("rgSigned").innerHTML = "✓ Signed in as <b>" + esc(me.user.email) + "</b>. Just a few details to finish."; if (!$("name").value) $("name").value = me.user.displayName || ""; }
+  $("rgTitle").textContent = g ? "Almost done" : "Register to continue";
+}
+function openReg(course, then, sub){
+  if (me.reg) { if (then) then(); return; }
+  fillCourses(course); pending = then || null; err(); setMode();
+  $("rgSub").textContent = sub || "Register once to book the free demo or join any course.";
+  if (!dlg.open) dlg.showModal();
+}
+window.openRegistration = openReg;
+dlg.querySelector("[data-close]").onclick = () => dlg.close();
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+dlg.addEventListener("close", () => { store.set("wgRegDismissed", "1"); });
+document.querySelectorAll("[data-open-reg]").forEach(b => b.onclick = () => openReg("", null));
 
 function readForm(){
-  const d = { name:$("name").value.trim(), level:$("level").value, email:$("email").value.trim().toLowerCase(),
-              phone:$("phone").value.replace(/\D/g,""), exp:$("exp").value };
-  if(!d.name || !d.level) throw new Error("Please enter your name and class/course.");
-  if(!/^\S+@\S+\.\S+$/.test(d.email)) throw new Error("Please enter a valid email address.");
-  if(!/^[6-9]\d{9}$/.test(d.phone)) throw new Error("Please enter a valid 10-digit Indian mobile number.");
+  const d = { name: $("name").value.trim(), level: $("level").value, email: $("email").value.trim().toLowerCase(),
+              phone: $("phone").value.replace(/\D/g, "").replace(/^91(?=\d{10}$)/, ""), exp: $("exp").value, course: $("rgCourse").value };
+  if (!d.name) throw new Error("Please enter your name.");
+  if (!me.user && !/^\S+@\S+\.\S+$/.test(d.email)) throw new Error("Please enter a valid email address.");
+  if (!/^[6-9]\d{9}$/.test(d.phone)) throw new Error("Please enter a valid 10-digit Indian mobile number.");
+  if (!d.level) throw new Error("Please choose your class / course.");
   return d;
 }
-function randomPassword(){
-  const a = new Uint8Array(24); crypto.getRandomValues(a);
-  return Array.from(a, b => b.toString(16).padStart(2,"0")).join("") + "Aa1!";
-}
-function prefill(d){
-  $("name").value = d.name || ""; $("level").value = d.level || ""; if(d.experience) $("exp").value = d.experience;
-  $("email").value = d.email || ""; $("phone").value = (d.phone || "").replace(/^\+91/,"");
-}
-function showForm(){ $("fDetails").hidden = false; $("pDone").hidden = true; }
-function showDone(d, verified){
-  $("fDetails").hidden = true; $("pDone").hidden = false;
-  $("doneName").textContent = d.name; $("donePhone").textContent = d.phone; $("doneEmail").textContent = d.email;
-  $("verifyBox").hidden = verified; $("verifiedNote").hidden = !verified;
-}
+function randomPassword(){ const a = new Uint8Array(24); crypto.getRandomValues(a); return Array.from(a, b => b.toString(16).padStart(2, "0")).join("") + "Aa1!"; }
 
-// Reserve: create account + save reservation. Email verification is optional.
-$("fDetails").addEventListener("submit", async (e)=>{
+$("fDetails").addEventListener("submit", async e => {
   e.preventDefault(); err();
-  let d; try{ d = readForm(); }catch(x){ return err(x.message); }
-  const b=$("bSubmit"); busy(b,true,"Reserving…");
-  try{
-    const { user } = await createUserWithEmailAndPassword(auth, d.email, randomPassword());
-    const rec = { name:d.name, level:d.level, experience:d.exp, email:user.email, phone:"+91"+d.phone,
-                  emailVerified:false, phoneVerified:false, batch:"Weekend batch", status:"reserved", createdAt: serverTimestamp() };
-    await setDoc(doc(db,"registrations",user.uid), rec);
-    showDone(rec, false);
-    window.fbq && fbq('track','Lead',{content_name:'Flutter workshop seat'});
-  }catch(x){
-    if(x?.code === "auth/email-already-in-use") showAlreadyReserved(d.email);
+  let d; try { d = readForm(); } catch (x) { return err(x.message); }
+  const b = $("bSubmit"); busy(b, true, "Registering…"); saving = true;
+  try {
+    let user = me.user;
+    if (!user) user = (await createUserWithEmailAndPassword(auth, d.email, randomPassword())).user;
+    // Same format the Firestore rules accept for every registration
+    const rec = { name: d.name.slice(0, 99), email: user.email, phone: "+91" + d.phone, level: d.level, experience: d.exp, batch: d.course,
+                  status: "registered", emailVerified: false, phoneVerified: false, amountPaid: 0, paymentId: null, payStatus: "pending", plan: null,
+                  createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+    await setDoc(doc(db, "registrations", user.uid), rec);
+    me.user = user; me.reg = rec;
+    window.fbq && fbq("track", "Lead", { content_name: d.course });
+    finish();
+  } catch (x) {
+    if (x?.code === "auth/email-already-in-use") showAlready(d.email);
     else err(friendly(x));
-  }
-  finally{ busy(b,false,"Reserve my seat"); }
+  } finally { saving = false; busy(b, false, "Register & continue"); }
 });
 
-// Email already has a seat: send a link to set a password, then log in and come back here to pay
-function showAlreadyReserved(email){
-  const e=$("err"); e.hidden=false; e.className="err known";
-  e.innerHTML='';
-  const p=document.createElement("p"); p.style.margin="0 0 10px";
-  p.textContent="You've already reserved a seat with "+email+". To continue on this device, set a password and log in.";
-  const b=document.createElement("button"); b.type="button"; b.className="btn ghostd"; b.textContent="Email me a link to set my password";
-  const l=document.createElement("a"); l.href="pages/login.html?next=%2F%23register&email="+encodeURIComponent(email); l.textContent="I have a password: log in";
-  l.style.cssText="display:block;margin-top:10px;color:inherit;font-weight:600";
-  b.addEventListener("click", async ()=>{
-    busy(b,true,"Sending…");
-    try{
-      const back = { url: location.origin + "/pages/login.html?next=%2F%23register&email=" + encodeURIComponent(email) };
-      try{ await sendPasswordResetEmail(auth, email, back); }
-      catch(x1){ if(/continue-uri|unauthorized/.test(x1?.code||"")) await sendPasswordResetEmail(auth, email); else throw x1; }
-      p.textContent="Link sent to "+email+" (check Spam too). Set your password, then log in, and you'll come back here to pay.";
-      b.remove();
-    }catch(x2){ busy(b,false,"Email me a link to set my password"); p.textContent=friendly(x2); }
-  });
-  e.append(p,b,l);
-}
-
-// Optional email verification
-let poll;
-async function checkVerified(){
-  const u = auth.currentUser; if(!u) return false;
-  try{ await reload(u); }catch(_){ return false; }
-  if(!u.emailVerified) return false;
-  try{
-    await u.getIdToken(true);
-    await updateDoc(doc(db,"registrations",u.uid), { emailVerified:true, status:"verified", verifiedAt: serverTimestamp() });
-  }catch(_){}
-  clearInterval(poll); info(); $("verifyBox").hidden = true; $("verifiedNote").hidden = false;
-  return true;
-}
-$("bVerify").addEventListener("click", async ()=>{
-  err(); const u = auth.currentUser; if(!u) return;
-  const b=$("bVerify"); busy(b,true,"Sending…");
-  try{
-    await sendEmailVerification(u, { url: returnUrl });
-    info("Sent to " + u.email + ". If it's not in your inbox, check Spam.");
-    clearInterval(poll); poll = setInterval(checkVerified, 5000);
-    let t=60; const iv=setInterval(()=>{ t--; b.textContent="Resend in "+t+"s"; if(t<=0){ clearInterval(iv); busy(b,false,"Resend email"); } },1000);
-  }catch(x){ err(friendly(x)); busy(b,false,"Send verification email"); }
-});
-document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible" && !$("pDone").hidden) checkVerified(); });
-
-// Edit details: cancel the unverified reservation and go back to the form
-$("bChange").addEventListener("click", async ()=>{
-  err(); info(); clearInterval(poll);
-  const u = auth.currentUser; const b=$("bChange"); busy(b,true,"One moment…");
-  try{
-    if(u){
-      try{ const snap = await getDoc(doc(db,"registrations",u.uid)); if(snap.exists()) prefill(snap.data()); await deleteDoc(doc(db,"registrations",u.uid)); }catch(_){}
-      try{ await deleteUser(u); }catch(_){ await signOut(auth); }
+// Google
+async function google(btn){
+  err(); const course = dlg.open ? $("rgCourse").value : "";
+  btn && (btn.disabled = true);
+  try {
+    const r = await signInWithPopup(auth, new GoogleAuthProvider());
+    await afterGoogle(r.user, course);
+  } catch (x) {
+    if (["auth/popup-blocked", "auth/operation-not-supported-in-this-environment"].includes(x?.code)) {
+      store.set("wgRedirect", JSON.stringify({ course }));
+      return signInWithRedirect(auth, new GoogleAuthProvider());
     }
-  }finally{ busy(b,false,"Edit my details"); showForm(); $("name").focus(); }
-});
+    if (["auth/popup-closed-by-user", "auth/cancelled-popup-request"].includes(x?.code)) return;
+    if (!dlg.open) openReg(course, pending);
+    err(friendly(x));
+  } finally { btn && (btn.disabled = false); }
+}
+document.querySelectorAll("[data-google]").forEach(b => b.onclick = () => google(b));
+async function afterGoogle(user, course){
+  me.user = user;
+  const snap = await getDoc(doc(db, "registrations", user.uid)).catch(() => null);
+  if (snap && snap.exists()) { me.reg = snap.data(); finish("Welcome back, " + (me.reg.name || "").split(" ")[0] + "!"); return; }
+  me.reg = null; openReg(course, pending); setMode(); $("phone").focus();
+}
+getRedirectResult(auth).then(r => {
+  if (!r || !r.user) return;
+  let c = ""; try { c = JSON.parse(store.get("wgRedirect") || "{}").course || ""; } catch (_) {}
+  store.del("wgRedirect"); afterGoogle(r.user, c);
+}).catch(x => { if (x?.code) { openReg("", null); err(friendly(x)); } });
 
-// Returning visitor in the same browser
-onAuthStateChanged(auth, async (u)=>{
-  if(!u) return showForm();
-  try{
-    const snap = await getDoc(doc(db,"registrations",u.uid));
-    if(!snap.exists()) return showForm();
-    const d = snap.data(); prefill(d); showDone(d, !!d.emailVerified);
-    if(!d.emailVerified) checkVerified();
-  }catch(_){ showForm(); }
+// Email already registered: offer Google, password setup, or log in
+function showAlready(email){
+  const e = $("err"); e.hidden = false; e.className = "err known"; e.innerHTML = "";
+  const p = document.createElement("p"); p.style.margin = "0 0 10px";
+  p.textContent = email + " is already registered. If you used Google before, tap “Continue with Google” above. Otherwise set a password and log in:";
+  const b = document.createElement("button"); b.type = "button"; b.className = "btn ghostd"; b.textContent = "Email me a link to set my password";
+  const l = document.createElement("a"); l.href = "pages/login.html?next=%2F%23register&email=" + encodeURIComponent(email); l.textContent = "I have a password: log in";
+  l.style.cssText = "display:block;margin-top:10px;color:inherit;font-weight:600";
+  b.onclick = async () => {
+    busy(b, true, "Sending…");
+    try {
+      const back = { url: location.origin + "/pages/login.html?next=%2F%23register&email=" + encodeURIComponent(email) };
+      try { await sendPasswordResetEmail(auth, email, back); }
+      catch (x1) { if (/continue-uri|unauthorized/.test(x1?.code || "")) await sendPasswordResetEmail(auth, email); else throw x1; }
+      p.textContent = "Link sent to " + email + " (check Spam too). Set your password, then log in and you'll come back here."; b.remove();
+    } catch (x2) { busy(b, false, "Email me a link to set my password"); p.textContent = friendly(x2); }
+  };
+  e.append(p, b, l);
+}
+
+function finish(msg){
+  const fn = pending; pending = null;
+  if (dlg.open) dlg.close();
+  render();
+  toast(msg || "You're registered ✓ You can now join any course.");
+  if (fn) setTimeout(fn, 300);
+}
+
+// ----- page state -----
+function render(){
+  const r = me.reg;
+  document.body.dataset.registered = r ? "1" : "0";
+  $("regStart").hidden = !!r; $("pDone").hidden = !r;
+  if (r) { $("doneName").textContent = r.name || ""; $("donePhone").textContent = r.phone || ""; $("doneCourse").textContent = r.batch || "Flutter in 10 Days"; }
+  // Fee payment buttons: only for registered students
+  const cfg = (window.WIDGETRY && window.WIDGETRY.razorpay) || {};
+  document.querySelectorAll(".paybox").forEach(box => {
+    const id = cfg[box.getAttribute("data-pay")];
+    box.innerHTML = "";
+    if (!id) { box.innerHTML = '<span class="paysoon">Online payment opening soon</span>'; return; }
+    if (!r) {
+      box.innerHTML = '<div class="payreg"><button class="btn" type="button">Register to pay</button><p>Takes 30 seconds · free</p></div>';
+      box.querySelector("button").onclick = () => openReg("Flutter in 10 Days", () => document.getElementById("fees").scrollIntoView({ behavior: "smooth", block: "start" }), "Register first, then you can pay for your seat.");
+      return;
+    }
+    const f = document.createElement("form"), sc = document.createElement("script");
+    sc.src = "https://checkout.razorpay.com/v1/payment-button.js"; sc.async = true; sc.setAttribute("data-payment_button_id", id);
+    f.appendChild(sc); box.appendChild(f);
+  });
+}
+
+// Any course buy link (Razorpay page) or "Reserve seat" link needs registration first
+document.addEventListener("click", e => {
+  const a = e.target.closest && e.target.closest("a[href]"); if (!a) return;
+  const href = a.getAttribute("href") || "", card = a.closest("#courses .crs-card");
+  const isBuy = !!card && /^https:\/\//.test(href) && !/wa\.me|whatsapp/.test(href);
+  const isReserve = href === "#register";
+  if (!isBuy && !isReserve) return;
+  if (me.reg) return;                                    // registered: links work normally
+  e.preventDefault(); e.stopPropagation();
+  const course = card ? (card.querySelector("h3")?.textContent || "").trim() : "Flutter in 10 Days";
+  openReg(course, isBuy ? () => { location.href = href; }
+                        : () => document.getElementById("register").scrollIntoView({ behavior: "smooth", block: "start" }),
+          isBuy ? "Register first, then you'll go straight to payment for " + course + "." : "");
+}, true);
+
+$("bSignOut").onclick = async () => { await signOut(auth); me = { user: null, reg: null, ready: true }; render(); };
+
+onAuthStateChanged(auth, async u => {
+  if (saving) return;
+  me.user = u; me.reg = null;
+  if (u) { try { const snap = await getDoc(doc(db, "registrations", u.uid)); if (snap.exists()) me.reg = snap.data(); } catch (_) {} }
+  me.ready = true; render();
+  if (dlg.open) setMode();
+  // First visit: ask for registration after a few seconds (once per visit, never over another popup)
+  if (!me.reg && !store.get("wgRegDismissed") && !autoTimer) autoTimer = setTimeout(() => {
+    if (!me.reg && !dlg.open && !document.querySelector("dialog[open]")) openReg("", null, "Get batch dates, the free demo class and course updates on WhatsApp.");
+  }, 8000);
 });
+let autoTimer = null;
+render();
 </script>
 
 

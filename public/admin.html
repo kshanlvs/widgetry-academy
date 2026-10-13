@@ -314,7 +314,8 @@ const inr = n => "₹" + Math.round(n || 0).toLocaleString("en-IN");
 const esc = t => { const d = document.createElement("div"); d.textContent = t ?? ""; return d.innerHTML; };
 let all = [], editing = null;
 
-function due(r) { const st = r.payStatus || "unpaid"; if (["refunded", "cancelled"].includes(st) || !r.plan) return 0; return Math.max(0, (PRICE[r.plan] || 0) - (r.amountPaid || 0)); }
+const ps = r => (!r.payStatus || r.payStatus === "pending") ? "unpaid" : r.payStatus;
+function due(r) { const st = ps(r); if (["refunded", "cancelled"].includes(st) || !r.plan) return 0; return Math.max(0, (PRICE[r.plan] || 0) - (r.amountPaid || 0)); }
 function fmtDate(ts) { const d = ts?.toDate ? ts.toDate() : null; return d ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"; }
 
 onAuthStateChanged(auth, async u => {
@@ -352,17 +353,17 @@ async function load(u) {
 
 function render() {
   const q = $("q").value.trim().toLowerCase(), fs = $("fStatus").value;
-  const list = all.filter(r => (!fs || (r.payStatus || "unpaid") === fs) && (!q || [r.name, r.phone, r.email, r.paymentId, r.level].join(" ").toLowerCase().includes(q)));
-  const cnt = s => all.filter(r => (r.payStatus || "unpaid") === s).length;
+  const list = all.filter(r => (!fs || ps(r) === fs) && (!q || [r.name, r.phone, r.email, r.paymentId, r.level].join(" ").toLowerCase().includes(q)));
+  const cnt = s => all.filter(r => ps(r) === s).length;
   $("cStu").textContent = all.length; $("kTotal").textContent = all.length; $("kPaid").textContent = cnt("paid"); $("kPart").textContent = cnt("part-paid"); $("kUnpaid").textContent = cnt("unpaid");
   $("kRev").textContent = inr(all.filter(r => !["refunded", "cancelled"].includes(r.payStatus)).reduce((a, r) => a + (r.amountPaid || 0), 0));
   $("kDue").textContent = inr(all.reduce((a, r) => a + due(r), 0));
   if (!list.length) { $("rows").innerHTML = '<tr><td colspan="10" class="empty">' + (all.length ? "No matches." : "No registrations yet.") + "</td></tr>"; return; }
   $("rows").innerHTML = list.map(r => {
-    const st = r.payStatus || "unpaid", wa = (r.phone || "").replace(/\D/g, "");
+    const st = ps(r), wa = (r.phone || "").replace(/\D/g, "");
     return `<tr>
       <td class="small">${fmtDate(r.createdAt)}</td>
-      <td><b>${esc(r.name)}</b>${r.notes ? `<div class="small">📝 ${esc(r.notes)}</div>` : ""}</td>
+      <td><b>${esc(r.name)}</b>${r.batch ? `<div class="small">📚 ${esc(r.batch)}</div>` : ""}${r.notes ? `<div class="small">📝 ${esc(r.notes)}</div>` : ""}</td>
       <td>${esc(r.level)}</td>
       <td><a href="https://wa.me/${wa}" target="_blank" rel="noopener">${esc(r.phone)}</a><div class="small">${esc(r.email)} ${r.emailVerified ? "✓" : ""}</div></td>
       <td class="small">${esc(r.experience)}</td>
@@ -379,7 +380,7 @@ $("q").oninput = render; $("fStatus").onchange = render;
 function openEdit(id) {
   editing = all.find(r => r.id === id); if (!editing) return;
   $("dName").textContent = editing.name; $("dSub").textContent = (editing.phone || "") + " · " + (editing.email || "");
-  $("ePlan").value = editing.plan || ""; $("eStatus").value = editing.payStatus || "unpaid";
+  $("ePlan").value = editing.plan || ""; $("eStatus").value = ps(editing);
   $("eAmt").value = editing.amountPaid ?? ""; $("ePid").value = editing.paymentId || ""; $("eNotes").value = editing.notes || "";
   $("eErr").hidden = true; $("dlg").showModal();
 }
@@ -394,9 +395,9 @@ $("fEdit").addEventListener("submit", async e => {
 });
 
 $("bCsv").onclick = () => {
-  const cols = ["createdAt", "name", "level", "phone", "email", "emailVerified", "experience", "plan", "payStatus", "amountPaid", "balanceDue", "paymentId", "notes"];
+  const cols = ["createdAt", "name", "batch", "level", "phone", "email", "emailVerified", "experience", "plan", "payStatus", "amountPaid", "balanceDue", "paymentId", "notes"];
   const lines = [cols.join(",")].concat(all.map(r => cols.map(c => {
-    let v = c === "createdAt" ? fmtDate(r.createdAt) : c === "balanceDue" ? due(r) : c === "payStatus" ? (r.payStatus || "unpaid") : r[c];
+    let v = c === "createdAt" ? fmtDate(r.createdAt) : c === "balanceDue" ? due(r) : c === "payStatus" ? ps(r) : r[c];
     v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
   }).join(",")));
   const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
