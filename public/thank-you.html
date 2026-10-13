@@ -8,7 +8,7 @@
 <div style="text-align:center;padding:10px 0 6px">
   <div style="width:84px;height:84px;margin:0 auto 18px;border-radius:50%;background:#3fc79f;display:grid;place-items:center;font-size:44px;color:#04130e;font-weight:800">✓</div>
   <h1>Thank you! Your payment is received.</h1>
-  <p class="upd" style="margin-top:8px">Welcome to Widgetry Academy's Flutter workshop.</p>
+  <p class="upd" style="margin-top:8px" id="tyCourse">Welcome to Widgetry Academy's Flutter workshop.</p>
 </div>
 <div class="card"><b>What happens next</b>
 <ol style="margin:8px 0 0;padding-left:22px;font-size:17px">
@@ -16,12 +16,19 @@
   <li>We'll message you on <b>WhatsApp within 24 hours</b> with your batch dates, timings and class link.</li>
   <li>Before Session 1, install <b>VS Code</b> on your laptop. We'll help you set up Flutter in class.</li>
 </ol></div>
-<div class="card"><b>Paid the ₹2,500 booking amount?</b><span style="font-size:16px;font-weight:500">Your seat is booked. Pay the remaining balance before Weekend 2. We'll send you a payment link.</span></div>
+<div class="card" id="tyBooking"><b>Paid the ₹2,500 booking amount?</b><span style="font-size:16px;font-weight:500">Your seat is booked. Pay the remaining balance before Weekend 2. We'll send you a payment link.</span></div>
 <div class="card"><b>Didn't get a receipt or a message?</b><span style="font-size:16px;font-weight:500">Check your spam folder, then reach us through the <a href="contact.html">Contact page</a> with your payment ID.</span></div>
 <p style="text-align:center;margin-top:30px"><a href="./" style="display:inline-block;background:#0f6b56;color:#fff;text-decoration:none;font-weight:700;padding:14px 26px;border-radius:12px">Back to home</a></p>
 </main>
 <footer><div class="w">© 2026 Widgetry Academy · Operated by <span class="owner">Kishan Kumar Sharma</span> · Contact: <span class="cemail fill">see Contact page</span></div></footer>
 <script src="site-config.js"></script>
+<script>
+(function(){ // ?course=food-delivery → that course's welcome line; no parameter = Flutter workshop (default)
+  var COURSES={"food-delivery":"Food Delivery App with Flutter"};
+  var k=new URLSearchParams(location.search).get("course"), name=k&&COURSES[k];
+  if(name){document.getElementById("tyCourse").textContent="Welcome to the "+name+" course at Widgetry Academy.";var b=document.getElementById("tyBooking");if(b)b.remove();}
+})();
+</script>
 <script>
 (function(){var c=window.WIDGETRY||{};
  document.querySelectorAll('.owner').forEach(function(e){if(c.ownerName)e.textContent=c.ownerName;});
