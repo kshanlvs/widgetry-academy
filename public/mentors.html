@@ -318,9 +318,14 @@
     async function loadMentors() {
       const container = document.getElementById('mentorsContainer');
       try {
-        const snap = await getDocs(query(collection(db, 'mentorApplications'), where('status', '==', 'approved')));
-        const mentors = snap.docs.map(d => d.data())
-          .sort((a, b) => (b.adminUpdatedAt?.seconds || 0) - (a.adminUpdatedAt?.seconds || 0));
+        // Public profiles hold only safe fields. The old query is a fallback until the new rules are published.
+        let mentors = [];
+        try { mentors = (await getDocs(collection(db, 'mentorProfiles'))).docs.map(d => d.data()); } catch (_) {}
+        if (!mentors.length) {
+          try { mentors = (await getDocs(query(collection(db, 'mentorApplications'), where('status', '==', 'approved')))).docs.map(d => d.data()); }
+          catch (_) { mentors = []; }
+        }
+        mentors.sort((a, b) => ((b.updatedAt || b.adminUpdatedAt)?.seconds || 0) - ((a.updatedAt || a.adminUpdatedAt)?.seconds || 0));
         container.innerHTML = '';
         if (!mentors.length) {
           container.innerHTML = '<div class="no-mentors" style="grid-column: 1 / -1;">No mentors available yet. Check back soon!</div>';
@@ -360,5 +365,6 @@
 
     loadMentors();
   </script>
+<script src="site-config.js"></script>
 </body>
 </html>

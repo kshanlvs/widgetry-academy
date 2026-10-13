@@ -30,5 +30,17 @@ window.WIDGETRY = {
   ownerName:    "Kishan Kumar Sharma",// Legal name used for Razorpay KYC
 
   // ---- Tracking ----
-  metaPixelId:  ""                    // Meta (Facebook/Instagram) Pixel ID, digits only. Empty = off.
+  metaPixelId:  "",                   // Meta (Facebook/Instagram) Pixel ID, digits only. Empty = off.
+  gaId:         ""                    // Google Analytics 4 Measurement ID, e.g. "G-ABC123XYZ". Empty = off.
 };
+
+// Google Analytics (loads only when gaId is set; never on the admin or student dashboard pages)
+(function () {
+  var id = (window.WIDGETRY || {}).gaId || "";
+  if (!/^G-[A-Z0-9]+$/i.test(id) || /\/(admin|pages\/dashboard|pages\/profile)\.html/.test(location.pathname)) return;
+  var s = document.createElement("script"); s.async = true; s.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
+  document.head.appendChild(s);
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function () { dataLayer.push(arguments); };
+  gtag("js", new Date()); gtag("config", id);
+})();

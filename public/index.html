@@ -1296,7 +1296,7 @@ try {
   };
   renderBatch(B);
   var wu=waLink('Hi! I would like to book the free demo class for the Widgetry Academy Flutter workshop.');
-  if(wu)document.querySelectorAll('.demo-wa').forEach(function(a){a.href=wu;a.target='_blank';a.rel='noopener';a.addEventListener('click',function(){window.fbq&&fbq('track','Contact');});});
+  if(wu)document.querySelectorAll('.demo-wa').forEach(function(a){a.href=wu;a.target='_blank';a.rel='noopener';a.addEventListener('click',function(){window.fbq&&fbq('track','Contact');window.gtag&&gtag('event','book_demo_click');});});
 
   // Meta Pixel
   if(/^\d+$/.test(C.metaPixelId||'')){
@@ -1383,6 +1383,7 @@ $("fDetails").addEventListener("submit", async e => {
     await setDoc(doc(db, "registrations", user.uid), rec);
     me.user = user; me.reg = rec;
     window.fbq && fbq("track", "Lead", { content_name: d.course });
+    window.gtag && gtag("event", "sign_up", { method: me.user && user.providerData?.[0]?.providerId === "google.com" ? "Google" : "Email", course: d.course });
     finish();
   } catch (x) {
     if (x?.code === "auth/email-already-in-use") showAlready(d.email);
@@ -1467,6 +1468,7 @@ function render(){
       box.querySelector("button").onclick = () => openReg("Flutter in 10 Days", () => document.getElementById("fees").scrollIntoView({ behavior: "smooth", block: "start" }), "Register first, then you can pay for your seat.");
       return;
     }
+    box.addEventListener("pointerdown", () => { window.gtag && gtag("event", "begin_checkout", { course: "Flutter in 10 Days", plan: box.getAttribute("data-pay") }); }, { once: true });
     const f = document.createElement("form"), sc = document.createElement("script");
     sc.src = "https://checkout.razorpay.com/v1/payment-button.js"; sc.async = true; sc.setAttribute("data-payment_button_id", id);
     f.appendChild(sc); box.appendChild(f);
@@ -1480,7 +1482,7 @@ document.addEventListener("click", e => {
   const isBuy = !!card && /^https:\/\//.test(href) && !/wa\.me|whatsapp/.test(href);
   const isReserve = href === "#register";
   if (!isBuy && !isReserve) return;
-  if (me.reg) return;                                    // registered: links work normally
+  if (me.reg) { if (isBuy && window.gtag) gtag("event", "begin_checkout", { course: (card.querySelector("h3")?.textContent || "").trim() }); return; } // registered: links work normally
   e.preventDefault(); e.stopPropagation();
   const course = card ? (card.querySelector("h3")?.textContent || "").trim() : "Flutter in 10 Days";
   openReg(course, isBuy ? () => { location.href = href; }

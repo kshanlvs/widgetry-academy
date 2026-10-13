@@ -164,6 +164,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
       <thead><tr><th>Applied</th><th>Mentor</th><th>Work</th><th>Skills</th><th>Wants to teach</th><th>Contact</th><th>Status</th><th></th></tr></thead>
       <tbody id="mrows"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
     </table></div>
+    <p class="note" id="mSyncNote" hidden style="margin-top:12px"></p>
     <p class="small" style="margin-top:12px">Process: New → Shortlisted (after LinkedIn check) → Demo scheduled (after 15-min call) → Approved / Rejected.</p>
   </section>
 
@@ -650,11 +651,36 @@ function mFixPatch(r) {
 }
 const mNeedsFix = r => Object.keys(mFixPatch(r)).length > 0;
 
+// Public mentor card = only these fields. Phone, email, notes and everything else stay private.
+const publicProfile = r => ({
+  name: r.name || "", role: r.role || "", company: r.company || "", experience: r.experience ?? "",
+  skills: Array.isArray(r.skills) ? r.skills.slice(0, 10) : [], course: r.course || "",
+  linkedin: /^https?:\/\//i.test(r.linkedin || "") ? r.linkedin : "", updatedAt: serverTimestamp()
+});
+async function syncProfile(r) {
+  if (mStatus(r) === "approved") await setDoc(doc(db, "mentorProfiles", r.id), publicProfile(r));
+  else await deleteDoc(doc(db, "mentorProfiles", r.id));
+}
+// Make the public list match the approvals (fixes mentors approved before this feature existed)
+async function syncAllProfiles() {
+  const note = $("mSyncNote");
+  try {
+    const have = new Set((await getDocs(collection(db, "mentorProfiles"))).docs.map(d => d.id));
+    const approved = mall.filter(r => mStatus(r) === "approved");
+    for (const r of approved) if (!have.has(r.id)) await setDoc(doc(db, "mentorProfiles", r.id), publicProfile(r));
+    for (const id of have) if (!approved.some(r => r.id === id)) await deleteDoc(doc(db, "mentorProfiles", id));
+    note.hidden = true;
+  } catch (x) {
+    note.innerHTML = "<b>Mentor list not synced.</b> Publish the latest <code>firestore.rules</code> from GitHub (it adds <code>mentorProfiles</code>), then reopen this tab. Until then the public Mentors page keeps working the old way.";
+    note.hidden = false;
+  }
+}
 async function loadMentors() {
   try {
     const snap = await getDocs(collection(db, "mentorApplications"));
     mall = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     renderM();
+    syncAllProfiles();
   } catch (x) {
     $("mrows").innerHTML = '<tr><td colspan="8" class="empty">Couldn\'t load mentor applications: ' + esc(x.code === "permission-denied" ? "deploy the latest firestore.rules (firebase deploy --only firestore:rules)." : (x.message || x.code)) + "</td></tr>";
   }
@@ -706,7 +732,10 @@ $("mfEdit").addEventListener("submit", async e => {
   if (e.submitter?.value !== "save") return;
   e.preventDefault(); $("mbSave").disabled = true; $("meErr").hidden = true;
   const upd = { status: $("meStatus").value, notes: $("meNotes").value.trim().slice(0, 500), adminUpdatedAt: serverTimestamp() };
-  try { await updateDoc(doc(db, "mentorApplications", mediting.id), upd); Object.assign(mediting, upd); $("mdlg").close(); renderM(); }
+  try {
+    await updateDoc(doc(db, "mentorApplications", mediting.id), upd); Object.assign(mediting, upd); $("mdlg").close(); renderM();
+    try { await syncProfile(mediting); } catch (_) { syncAllProfiles(); }
+  }
   catch (x) { $("meErr").textContent = "Couldn't save: " + (x.code === "permission-denied" ? "deploy the latest firestore.rules." : x.message); $("meErr").hidden = false; }
   finally { $("mbSave").disabled = false; }
 });
