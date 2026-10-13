@@ -1185,12 +1185,17 @@ try {
   const list = snap.docs.map(d => d.data()).filter(c => c.showOnSite === true && c.status !== "hidden" && c.title).sort((a, b) => (a.order || 99) - (b.order || 99));
   const box = document.querySelector("#courses .crs");
   if (list.length && box) {
+    // Keep the built-in Flutter flagship card unless a "Flutter in 10 Days" course has been saved in admin
+    const builtIn = box.querySelector(".crs-card.flagship");
+    const keepFlutter = builtIn && !list.some(c => /^flutter in 10 days$/i.test((c.title || "").trim()));
+    const flutterHtml = keepFlutter ? builtIn.outerHTML : "";
+    if (keepFlutter) list.forEach(c => { c.flagship = false; });
     const esc = t => { const d = document.createElement("div"); d.textContent = t == null ? "" : String(t); return d.innerHTML; };
     const link = u => /^(#[\w-]+|[\w./-]+\.html(#[\w-]+)?|https:\/\/\S+)$/.test(u || "") ? u : "#register";
     const img = u => /^([\w./-]+\.(jpg|jpeg|png|webp|svg)|https:\/\/\S+)$/i.test(u || "") ? u : "";
     const inr = n => "₹" + Number(n).toLocaleString("en-IN");
-    let batchUsed = false;
-    box.innerHTML = list.map(c => {
+    let batchUsed = keepFlutter;
+    box.innerHTML = flutterHtml + list.map(c => {
       const soon = c.status === "soon", flag = c.flagship && !soon;
       let when = ""; if (c.showBatch && !soon && !batchUsed) { when = '<p class="crs-when" id="crsBatch" hidden></p>'; batchUsed = true; }
       const ph = img(c.mentorPhoto), ini = (c.mentorName || "").split(/\s+/).map(w => w[0] || "").join("").slice(0, 2).toUpperCase();
@@ -1210,7 +1215,8 @@ try {
         (c.mentorName ? '<div class="crs-mentor">' + (ph ? '<img src="' + esc(ph) + '" alt="" loading="lazy">' : '<span class="crs-av">' + esc(ini) + "</span>") + "<div><b>" + esc(c.mentorName) + "</b><span>" + esc(c.mentorLine || "") + "</span></div></div>" : "") +
         btns + "</article>";
     }).join("");
-    box.style.gridTemplateColumns = list.length === 2 && list[0].flagship ? "" : (list.length === 1 ? "minmax(0,640px)" : "repeat(auto-fit,minmax(min(300px,100%),1fr))");
+    const n = list.length + (keepFlutter ? 1 : 0), firstFlag = keepFlutter || list[0].flagship;
+    box.style.gridTemplateColumns = n === 2 && firstFlag ? "" : (n === 1 ? "minmax(0,640px)" : "repeat(auto-fit,minmax(min(300px,100%),1fr))");
     if (window.renderBatch) window.renderBatch((window.WIDGETRY && window.WIDGETRY.batch) || {});
   }
 } catch (e) { console.warn("Using built-in course cards:", e.code || e.message); }
