@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 // All settings come from environment variables (Cloud Run / .env). Nothing secret is hard-coded.
 const env = process.env;
 
@@ -27,10 +28,9 @@ export const config = {
   // Local testing only: serve ../public so the site and /api share one origin.
   serveStatic: env.SERVE_STATIC_DIR || "",
 
-  hashSalt: env.HASH_SALT || "change-me-in-production",
+  // Salt for hashing reporters' IPs. Falls back to a value derived from the DB password so it stays stable.
+  hashSalt: env.HASH_SALT || (env.DB_PASSWORD ? createHash("sha256").update("wj-salt|" + env.DB_PASSWORD).digest("hex") : "dev-salt"),
   jobLifetimeDays: Number(env.JOB_LIFETIME_DAYS || 30),
 };
 
-if (config.isProduction && config.hashSalt === "change-me-in-production") {
-  console.warn("[config] HASH_SALT is not set. Set it in production.");
-}
+if (config.isProduction && config.hashSalt === "dev-salt") console.warn("[config] Set HASH_SALT or DB_PASSWORD in production.");

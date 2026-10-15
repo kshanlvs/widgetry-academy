@@ -1,4 +1,4 @@
--- Widgetry Jobs: initial schema (MySQL 8.0+)
+-- Widgetry Jobs: initial schema (MySQL 8.0+ and MySQL-compatible hosts such as TiDB Cloud)
 -- Jobs board (employers post, admin approves) + Talent Network (job-seeker profiles).
 
 CREATE TABLE companies (
@@ -45,7 +45,6 @@ CREATE TABLE jobs (
   KEY idx_jobs_level (level),
   KEY idx_jobs_city (city),
   KEY idx_jobs_posted_by (posted_by_uid),
-  FULLTEXT KEY ft_jobs_text (title, description),
   CONSTRAINT fk_jobs_company FOREIGN KEY (company_id) REFERENCES companies (id),
   CONSTRAINT chk_jobs_salary CHECK (salary_min IS NULL OR salary_max IS NULL OR salary_min <= salary_max),
   CONSTRAINT chk_jobs_apply CHECK (apply_url IS NOT NULL OR apply_email IS NOT NULL)
@@ -106,8 +105,7 @@ CREATE TABLE candidates (
   PRIMARY KEY (id),
   UNIQUE KEY uq_candidates_uid (uid),
   UNIQUE KEY uq_candidates_public_id (public_id),
-  KEY idx_candidates_verification (verification),
-  FULLTEXT KEY ft_candidates_text (headline, about)
+  KEY idx_candidates_verification (verification)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE candidate_skills (

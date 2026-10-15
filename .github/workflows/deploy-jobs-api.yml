@@ -1,15 +1,22 @@
-# Deploys the Widgetry Jobs API to Cloud Run. Manual for now: Actions → "Deploy jobs API" → Run workflow.
-# Needs these GitHub secrets: GCP_SA_KEY (service account JSON), and in Google Secret Manager: jobs-db-password, jobs-hash-salt.
+# Deploys the Widgetry Jobs API to Cloud Run (pay per use: scales to zero when nobody visits).
+# Database: TiDB Cloud Starter (MySQL-compatible) or any MySQL 8 host.
+# Needs GitHub secrets: JOBS_DB_HOST, JOBS_DB_USER, JOBS_DB_PASSWORD (+ the existing FIREBASE_SERVICE_ACCOUNT).
+# Until they exist, this workflow does nothing and passes.
 name: Deploy jobs API
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ main, widgetry-jobs ]
+    paths: [ "jobs-api/**", ".github/workflows/deploy-jobs-api.yml" ]
+
+concurrency: deploy-jobs-api
 
 env:
   PROJECT_ID: flutter-in-10-days
-  REGION: asia-south1
+  REGION: asia-southeast1          # Singapore: same region as the TiDB database
   SERVICE: widgetry-jobs-api
-  SQL_INSTANCE: flutter-in-10-days:asia-south1:widgetry-jobs
+  REPO: widgetry
 
 jobs:
   deploy:
@@ -17,23 +24,70 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Test
-        working-directory: jobs-api
+      - name: Check setup
+        id: cfg
+        env:
+          DB_PASSWORD: ${{ secrets.JOBS_DB_PASSWORD }}
+          DB_HOST: ${{ secrets.JOBS_DB_HOST }}
         run: |
-          npm ci
-          npm run typecheck
+          if [ -z "$DB_PASSWORD" ] || [ -z "$DB_HOST" ]; then
+            echo "::notice::Jobs API not deployed: add JOBS_DB_HOST, JOBS_DB_USER and JOBS_DB_PASSWORD secrets first."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Type-check
+        if: steps.cfg.outputs.ready == 'true'
+        working-directory: jobs-api
+        run: npm ci && npm run typecheck
 
       - uses: google-github-actions/auth@v2
+        if: steps.cfg.outputs.ready == 'true'
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - uses: google-github-actions/setup-gcloud@v2
+        if: steps.cfg.outputs.ready == 'true'
+
+      - name: Enable services and image repository (first run only)
+        if: steps.cfg.outputs.ready == 'true'
+        run: |
+          gcloud services enable run.googleapis.com artifactregistry.googleapis.com --project "$PROJECT_ID"
+          gcloud artifacts repositories describe "$REPO" --location "$REGION" --project "$PROJECT_ID" >/dev/null 2>&1 || \
+            gcloud artifacts repositories create "$REPO" --repository-format docker --location "$REGION" --project "$PROJECT_ID" \
+              --description "Widgetry container images"
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+
+      - name: Build and push image
+        if: steps.cfg.outputs.ready == 'true'
+        run: |
+          IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$SERVICE:${GITHUB_SHA::12}"
+          docker build -t "$IMAGE" jobs-api
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 
       - name: Deploy to Cloud Run
+        if: steps.cfg.outputs.ready == 'true'
+        env:
+          DB_HOST: ${{ secrets.JOBS_DB_HOST }}
+          DB_USER: ${{ secrets.JOBS_DB_USER }}
+          DB_PASSWORD: ${{ secrets.JOBS_DB_PASSWORD }}
+          DB_PORT: ${{ secrets.JOBS_DB_PORT || '4000' }}
         run: |
-          gcloud run deploy "$SERVICE" \
-            --project "$PROJECT_ID" --region "$REGION" --source jobs-api \
-            --allow-unauthenticated --min-instances 0 --max-instances 3 --memory 512Mi \
-            --add-cloudsql-instances "$SQL_INSTANCE" \
-            --set-env-vars "DB_SOCKET=/cloudsql/$SQL_INSTANCE,DB_USER=jobs,DB_NAME=widgetry_jobs,FIREBASE_PROJECT_ID=$PROJECT_ID,MIGRATE_ON_START=1" \
-            --set-secrets "DB_PASSWORD=jobs-db-password:latest,HASH_SALT=jobs-hash-salt:latest"
+          # Env file written as JSON (valid YAML) so special characters in the password are safe
+          node -e 'const e=process.env; require("fs").writeFileSync("env.yaml", JSON.stringify({
+            DB_HOST:e.DB_HOST, DB_PORT:e.DB_PORT, DB_USER:e.DB_USER, DB_PASSWORD:e.DB_PASSWORD, DB_NAME:"widgetry_jobs", DB_SSL:"1",
+            FIREBASE_PROJECT_ID:e.PROJECT_ID, ADMIN_UIDS:"E4edbAvcdwTdkTdNwcdWneVWe572", MIGRATE_ON_START:"1", NODE_ENV:"production" }))'
+          gcloud run deploy "$SERVICE" --project "$PROJECT_ID" --region "$REGION" --image "$IMAGE" \
+            --allow-unauthenticated --min-instances 0 --max-instances 2 --cpu 1 --memory 512Mi --concurrency 40 \
+            --env-vars-file env.yaml --quiet
+          rm -f env.yaml
+
+      - name: Health check
+        if: steps.cfg.outputs.ready == 'true'
+        run: |
+          URL=$(gcloud run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" --format 'value(status.url)')
+          echo "Service: $URL"
+          for i in 1 2 3 4 5; do curl -fsS "$URL/api/health" && exit 0; sleep 5; done
+          echo "::error::Health check failed"; exit 1

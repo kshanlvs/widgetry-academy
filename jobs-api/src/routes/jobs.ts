@@ -10,6 +10,15 @@ import { jobInput, jobSearch, reportInput, publicId, hashIp, ftQuery, COMMON_SKI
 
 export const jobsRouter = Router();
 
+let ftAvailable: boolean | null = null;
+async function hasFulltext() {
+  if (ftAvailable === null) {
+    const [r] = await query<{ n: number }>("SELECT COUNT(*) AS n FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'jobs' AND index_name = 'ft_jobs_text'").catch(() => [{ n: 0 }]);
+    ftAvailable = Number(r?.n ?? 0) > 0;
+  }
+  return ftAvailable;
+}
+
 const LIVE = "j.status = 'approved' AND (j.expires_at IS NULL OR j.expires_at > UTC_TIMESTAMP())";
 const likeEsc = (s: string) => s.replace(/[\\%_]/g, m => "\\" + m);
 
@@ -108,8 +117,15 @@ jobsRouter.get("/jobs", wrap(async (req, res) => {
   if (f.skill) { where.push("EXISTS (SELECT 1 FROM job_skills s WHERE s.job_id = j.id AND s.skill = ?)"); params.push(f.skill); }
   if (f.q) {
     const ft = ftQuery(f.q), like = "%" + likeEsc(f.q) + "%";
-    if (ft) { where.push("(MATCH(j.title, j.description) AGAINST (? IN BOOLEAN MODE) OR c.name LIKE ? OR EXISTS (SELECT 1 FROM job_skills s2 WHERE s2.job_id = j.id AND s2.skill LIKE ?))"); params.push(ft, like, like); }
-    else { where.push("(j.title LIKE ? OR c.name LIKE ?)"); params.push(like, like); }
+    if (ft && await hasFulltext()) {
+      where.push("(MATCH(j.title, j.description) AGAINST (? IN BOOLEAN MODE) OR c.name LIKE ? OR EXISTS (SELECT 1 FROM job_skills s2 WHERE s2.job_id = j.id AND s2.skill LIKE ?))"); params.push(ft, like, like);
+    } else if (ft) {
+      // No full-text index (e.g. TiDB): every word must appear in the title, description, company or skills
+      for (const w of f.q.toLowerCase().split(/\s+/).filter(x => x.length >= 2).slice(0, 5)) {
+        const l = "%" + likeEsc(w) + "%";
+        where.push("(j.title LIKE ? OR j.description LIKE ? OR c.name LIKE ? OR EXISTS (SELECT 1 FROM job_skills s2 WHERE s2.job_id = j.id AND s2.skill LIKE ?))"); params.push(l, l, l, l);
+      }
+    } else { where.push("(j.title LIKE ? OR c.name LIKE ?)"); params.push(like, like); }
   }
   const w = where.join(" AND ");
   const [count] = await query<{ n: number }>(`SELECT COUNT(*) AS n FROM jobs j JOIN companies c ON c.id = j.company_id WHERE ${w}`, params);

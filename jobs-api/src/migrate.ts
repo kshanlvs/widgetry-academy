@@ -7,15 +7,26 @@ import { config } from "./config.js";
 
 const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../migrations");
 
+const connect = (database?: string) => mysql.createConnection({
+  host: config.db.socketPath ? undefined : config.db.host,
+  port: config.db.socketPath ? undefined : config.db.port,
+  socketPath: config.db.socketPath,
+  user: config.db.user, password: config.db.password, database,
+  ssl: config.db.ssl ? { minVersion: "TLSv1.2", rejectUnauthorized: true } : undefined,
+  multipleStatements: true,
+});
+
 export async function migrate(log = console.log) {
-  const conn = await mysql.createConnection({
-    host: config.db.socketPath ? undefined : config.db.host,
-    port: config.db.socketPath ? undefined : config.db.port,
-    socketPath: config.db.socketPath,
-    user: config.db.user, password: config.db.password, database: config.db.database,
-    ssl: config.db.ssl ? { minVersion: "TLSv1.2", rejectUnauthorized: true } : undefined,
-    multipleStatements: true,
-  });
+  let conn: mysql.Connection;
+  try { conn = await connect(config.db.database); }
+  catch (e: any) {
+    if (e?.errno !== 1049) throw e;              // 1049 = unknown database: create it on first run
+    const c = await connect();
+    await c.query(`CREATE DATABASE IF NOT EXISTS \`${config.db.database.replace(/`/g, "")}\` CHARACTER SET utf8mb4`);
+    await c.end();
+    log(`[migrate] created database ${config.db.database}`);
+    conn = await connect(config.db.database);
+  }
   try {
     await conn.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
       version VARCHAR(100) NOT NULL PRIMARY KEY, applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)`);
@@ -27,7 +38,11 @@ export async function migrate(log = console.log) {
       const sql = await readFile(path.join(dir, f), "utf8");
       log(`[migrate] applying ${f}`);
       // MySQL DDL auto-commits, so each file should be safe to re-run only after a fix; keep files small.
-      await conn.query(sql);
+      try { await conn.query(sql); }
+      catch (e: any) {
+        if (!f.includes(".optional.")) throw e;
+        log(`[migrate] skipped optional ${f}: ${e?.message}`);
+      }
       await conn.query("INSERT INTO schema_migrations (version) VALUES (?)", [f]);
     }
     log("[migrate] up to date");

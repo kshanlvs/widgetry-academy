@@ -31,7 +31,7 @@
         "source": "/api/**",
         "run": {
           "serviceId": "widgetry-jobs-api",
-          "region": "asia-south1"
+          "region": "asia-southeast1"
         }
       }
     ]
