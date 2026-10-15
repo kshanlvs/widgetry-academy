@@ -4,7 +4,7 @@ import type mysql from "mysql2/promise";
 import { query, tx } from "../db.js";
 import { HttpError, wrap } from "../errors.js";
 import { requireAuth } from "../auth.js";
-import { candidateInput, publicId } from "../validate.js";
+import { candidateInput, publicId, resumeSettingsInput, photoInput, openToWorkInput } from "../validate.js";
 
 export const talentRouter = Router();
 
@@ -23,6 +23,7 @@ export function candidateOut(r: any, skills: string[], forAdmin = false) {
     githubUrl: r.github_url ?? null, linkedinUrl: r.linkedin_url ?? null, portfolioUrl: r.portfolio_url ?? null,
     apps: json(r.apps), experience: json(r.experience), education: json(r.education), certifications: json(r.certifications),
     about: r.about ?? null, skills,
+    resumeSettings: r.resume_settings ? (typeof r.resume_settings === "string" ? JSON.parse(r.resume_settings) : r.resume_settings) : null,
     openToWork: !!r.open_to_work, hiddenCompanies: r.hidden_companies ?? null,
     verification: r.verification, status: r.status,
     createdAt: r.created_at, updatedAt: r.updated_at,
@@ -35,7 +36,10 @@ async function load(uid: string) {
   const [r] = await query("SELECT * FROM candidates WHERE uid = ?", [uid]);
   if (!r) return null;
   const skills = (await query<{ skill: string }>("SELECT skill FROM candidate_skills WHERE candidate_id = ? ORDER BY skill", [r.id])).map(s => s.skill);
-  return candidateOut(r, skills);
+  const out = candidateOut(r, skills);
+  const [ph] = await query<{ mime: string; data: Buffer }>("SELECT mime, data FROM candidate_photos WHERE candidate_id = ?", [r.id]);
+  out.photo = ph ? `data:${ph.mime};base64,${Buffer.from(ph.data).toString("base64")}` : null;
+  return out;
 }
 
 talentRouter.use((_req, res, next) => { res.set("Cache-Control", "private, no-store"); next(); });
@@ -76,4 +80,50 @@ talentRouter.put("/talent/me", requireAuth, wrap(async (req, res) => {
 talentRouter.delete("/talent/me", requireAuth, wrap(async (req, res) => {
   await query("DELETE FROM candidates WHERE uid = ?", [req.user!.uid]);
   res.json({ ok: true, message: "Your profile has been deleted." });
+}));
+
+async function myId(uid: string) {
+  const [r] = await query<{ id: number }>("SELECT id FROM candidates WHERE uid = ?", [uid]);
+  if (!r) throw new HttpError(404, "Create your profile first.");
+  return r.id;
+}
+
+// Check the real file type from its first bytes, not just what the browser says
+function sniff(b: Buffer) {
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg";
+  if (b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return "image/png";
+  if (b.subarray(0, 4).toString("ascii") === "RIFF" && b.subarray(8, 12).toString("ascii") === "WEBP") return "image/webp";
+  return null;
+}
+const MAX_PHOTO = 250 * 1024;
+
+talentRouter.put("/talent/me/photo", requireAuth, wrap(async (req, res) => {
+  const id = await myId(req.user!.uid);
+  const { dataUrl } = photoInput.parse(req.body);
+  const buf = Buffer.from(dataUrl.slice(dataUrl.indexOf(",") + 1), "base64");
+  const mime = sniff(buf);
+  if (!mime) throw new HttpError(400, "That file isn't a valid JPG, PNG or WebP image.");
+  if (buf.length > MAX_PHOTO) throw new HttpError(400, "The photo is too large. Please use a smaller image.");
+  await query("INSERT INTO candidate_photos (candidate_id, mime, data) VALUES (?,?,?) ON DUPLICATE KEY UPDATE mime = VALUES(mime), data = VALUES(data)", [id, mime, buf]);
+  res.json({ ok: true, photo: `data:${mime};base64,${buf.toString("base64")}`, message: "Profile photo updated." });
+}));
+
+talentRouter.delete("/talent/me/photo", requireAuth, wrap(async (req, res) => {
+  const id = await myId(req.user!.uid);
+  await query("DELETE FROM candidate_photos WHERE candidate_id = ?", [id]);
+  res.json({ ok: true, message: "Profile photo removed." });
+}));
+
+talentRouter.put("/talent/me/resume-settings", requireAuth, wrap(async (req, res) => {
+  const id = await myId(req.user!.uid);
+  const s = resumeSettingsInput.parse(req.body);
+  await query("UPDATE candidates SET resume_settings = ? WHERE id = ?", [JSON.stringify(s), id]);
+  res.json({ ok: true, resumeSettings: s });
+}));
+
+talentRouter.patch("/talent/me", requireAuth, wrap(async (req, res) => {
+  const id = await myId(req.user!.uid);
+  const { openToWork } = openToWorkInput.parse(req.body);
+  await query("UPDATE candidates SET open_to_work = ? WHERE id = ?", [openToWork ? 1 : 0, id]);
+  res.json({ ok: true, openToWork, message: openToWork ? "You're open to work." : "Your profile is paused." });
 }));

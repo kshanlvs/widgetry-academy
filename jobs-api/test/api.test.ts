@@ -263,3 +263,40 @@ test("employers can edit, mark filled and delete only their own jobs", async () 
   assert.equal((await call("DELETE", "/my/jobs/" + id, undefined, own)).status, 200);
   assert.equal((await call("GET", "/my/jobs/" + id, undefined, own)).status, 404);
 });
+
+test("profile photo, resume settings and open-to-work toggle", async () => {
+  const tok = "dev:seek9:meera@test.dev:Meera";
+  const PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+  assert.equal((await call("PUT", "/talent/me/photo", { dataUrl: PNG }, tok)).status, 404, "needs a profile first");
+  await call("PUT", "/talent/me", { fullName: "Meera Iyer", headline: "Flutter Developer", experienceYears: 1, skills: ["Flutter"], consent: true }, tok);
+  const fake = "data:image/png;base64," + Buffer.from("<script>alert(1)</script>").toString("base64");
+  assert.equal((await call("PUT", "/talent/me/photo", { dataUrl: fake }, tok)).status, 400, "content must really be an image");
+  assert.equal((await call("PUT", "/talent/me/photo", { dataUrl: "data:image/svg+xml;base64,PHN2Zz4=" }, tok)).status, 400, "no SVG");
+  const big = "data:image/jpeg;base64," + Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(260 * 1024)]).toString("base64");
+  assert.equal((await call("PUT", "/talent/me/photo", { dataUrl: big }, tok)).status, 400, "too large");
+  const ok = await call("PUT", "/talent/me/photo", { dataUrl: PNG }, tok);
+  assert.equal(ok.status, 200);
+  assert.equal((await call("GET", "/talent/me", undefined, tok)).body.profile.photo, PNG);
+
+  assert.equal((await call("PUT", "/talent/me/resume-settings", { template: "fancy" }, tok)).status, 400);
+  const rs = await call("PUT", "/talent/me/resume-settings", { template: "classic", accent: "navy", title: "Senior Flutter Engineer", showPhoto: true, hide: ["phone"] }, tok);
+  assert.equal(rs.status, 200);
+  const me = (await call("GET", "/talent/me", undefined, tok)).body.profile;
+  assert.equal(me.resumeSettings.template, "classic");
+  assert.deepEqual(me.resumeSettings.hide, ["phone"]);
+
+  assert.equal((await call("PATCH", "/talent/me", { openToWork: false }, tok)).body.openToWork, false);
+  assert.equal((await call("GET", "/talent/me", undefined, tok)).body.profile.openToWork, false);
+
+  // A full profile save keeps the photo and settings
+  await call("PUT", "/talent/me", { fullName: "Meera Iyer", headline: "Flutter Developer · 1 year", experienceYears: 1, skills: ["Flutter"], consent: true }, tok);
+  const after = (await call("GET", "/talent/me", undefined, tok)).body.profile;
+  assert.equal(after.photo, PNG); assert.equal(after.resumeSettings.accent, "navy");
+
+  assert.equal((await call("DELETE", "/talent/me/photo", undefined, tok)).status, 200);
+  assert.equal((await call("GET", "/talent/me", undefined, tok)).body.profile.photo, null);
+  await call("PUT", "/talent/me/photo", { dataUrl: PNG }, tok);
+  await call("DELETE", "/talent/me", undefined, tok);
+  const [{ n }] = await pool.query("SELECT COUNT(*) AS n FROM candidate_photos").then(([r]) => r as any[]);
+  assert.equal(Number(n), 0, "deleting the profile deletes the photo");
+});

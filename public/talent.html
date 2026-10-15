@@ -47,6 +47,7 @@
 
   <div id="statusBox" hidden></div>
 
+  <a href="my-profile.html" id="backLink" hidden style="font-weight:700;text-decoration:none">← Back to my profile</a>
   <form class="formcard" id="fProfile" novalidate hidden>
     <fieldset><legend>About you</legend>
       <div class="row2">
@@ -226,7 +227,12 @@ onUser(async u => {
   $("gate").hidden = !!u; $("fProfile").hidden = !u;
   if (!u) { $("statusBox").hidden = true; return; }
   if (!$("fullName").value) $("fullName").value = u.displayName || "";
-  try { const r = await api("/talent/me", { auth: true }); if (r.profile) fill(r.profile); else { if (!$("apps").children.length) addApp(); if (!$("edu").children.length) addEdu(); } showStatus(r.profile); }
+  try {
+    const r = await api("/talent/me", { auth: true });
+    // People who already have a profile land on their profile page; ?edit=1 opens this form
+    if (r.profile && !new URLSearchParams(location.search).has("edit")) { location.replace("my-profile.html"); return; }
+    if (r.profile) { $("backLink").hidden = false; document.title = "Edit profile | Widgetry Jobs"; }
+    if (r.profile) fill(r.profile); else { if (!$("apps").children.length) addApp(); if (!$("edu").children.length) addEdu(); } showStatus(r.profile); }
   catch (e) { $("err").textContent = e.message; $("err").hidden = false; }
 });
 drawSkills();
@@ -248,10 +254,9 @@ $("fProfile").addEventListener("submit", async e => {
   };
   const b = $("bSave"); b.disabled = true;
   try {
-    const r = await api("/talent/me", { method: "PUT", body, auth: true });
-    fill(r.profile); showStatus(r.profile);
-    $("ok").innerHTML = esc(r.message) + ` Your resume is ready: <a href="resume.html">view &amp; download it</a>.`; $("ok").hidden = false;
-    toast("Profile saved"); $("statusBox").scrollIntoView({ behavior: "smooth", block: "start" });
+    await api("/talent/me", { method: "PUT", body, auth: true });
+    $("ok").textContent = "Saved! Opening your profile…"; $("ok").hidden = false;
+    location.href = "my-profile.html?saved=1";
   } catch (x) {
     const f = x.issues?.[0]?.field; if (f && $(f)) $(f).focus();
     $("err").textContent = x.message; $("err").hidden = false;

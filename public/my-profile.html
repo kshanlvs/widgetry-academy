@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My profile | Widgetry Jobs</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&display=swap">
+<link rel="stylesheet" href="jobs.css">
+<style id="resumeCss"></style>
+<style>
+.cover{height:150px;background:var(--deep);background-image:radial-gradient(circle at 80% 0%,rgba(242,169,0,.25),transparent 45%),radial-gradient(circle at 10% 100%,rgba(63,199,159,.22),transparent 50%),linear-gradient(120deg,#0c2a23,#123a30 60%,#1d3a20)}
+.pwrap{max-width:1120px;margin:0 auto;padding:0 20px 60px}
+.head{position:relative;margin-top:-70px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:22px;align-items:end;box-shadow:0 10px 30px rgba(12,42,35,.08)}
+.avatar{position:relative;width:132px;height:132px;margin-top:-58px}
+.avatar .pic{width:100%;height:100%;border-radius:50%;object-fit:cover;border:5px solid var(--surface);background:var(--soft);display:grid;place-items:center;font:800 44px var(--display);color:var(--accent);box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.avatar .cam{position:absolute;right:2px;bottom:6px;width:40px;height:40px;border-radius:50%;border:3px solid var(--surface);background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;cursor:pointer;font-size:17px}
+.avatar .cam:hover{filter:brightness(1.1)}
+.avatar.busy .pic{opacity:.5}
+.pwho{min-width:0;overflow-wrap:anywhere}
+.pwho h1{font-size:clamp(24px,3vw,32px)}
+.pwho .hl{margin:6px 0 0;font-size:17px;font-weight:600;color:var(--ink)}
+.pwho .meta{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;color:var(--muted);font-size:14.5px}
+.pwho .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.hacts{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.rmphoto{font-size:13px;margin-top:6px;text-align:center}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;margin-top:20px;align-items:start}
+.main{display:grid;gap:16px;min-width:0}
+.side{display:grid;gap:16px;position:sticky;top:76px}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 22px}
+.pcard h2{font-size:17px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.pcard h2 a{font:600 14px var(--body);text-decoration:none}
+.pempty{color:var(--muted);font-size:14.5px;margin:0}
+.pempty a{font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips span{background:var(--soft);color:var(--ink);border-radius:999px;padding:6px 13px;font-size:14px;font-weight:600}
+.tl{list-style:none;margin:0;padding:0;display:grid;gap:18px}
+.tl>li{position:relative;padding-left:24px}
+.tl>li::before{content:"";position:absolute;left:4px;top:8px;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
+.tl>li:not(:last-child)::after{content:"";position:absolute;left:8px;top:22px;bottom:-14px;width:2px;background:var(--line)}
+.tl b{font-size:16px}
+.tl .sub{color:var(--muted);font-size:14px}
+.tl ul{margin:6px 0 0;padding-left:18px;font-size:14.5px}
+.projects{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.proj{border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:6px;align-content:start}
+.proj b{font-size:15.5px}
+.proj p{margin:0;color:var(--muted);font-size:14px}
+.proj a{font-size:14px;font-weight:700;text-decoration:none;overflow-wrap:anywhere}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.kv div{background:var(--bg);border-radius:12px;padding:10px 12px}
+.kv small{display:block;color:var(--muted);font-size:12.5px;font-weight:600}
+.kv span{font-weight:600}
+.links{display:flex;flex-wrap:wrap;gap:10px}
+.links a{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:12px;padding:8px 12px;text-decoration:none;color:var(--ink);font-weight:600;font-size:14px}
+/* score */
+@property --v{syntax:"<number>";inherits:false;initial-value:0}
+.ring{--v:0;width:132px;height:132px;border-radius:50%;margin:4px auto 10px;display:grid;place-items:center;background:conic-gradient(var(--accent) calc(var(--v)*1%),var(--soft) 0);transition:--v 1s}
+.ring div{width:104px;height:104px;border-radius:50%;background:var(--surface);display:grid;place-items:center;text-align:center}
+.ring b{font:800 32px var(--display);line-height:1}
+.ring small{display:block;color:var(--muted);font-size:12px;font-weight:600}
+.lvl{text-align:center;font-weight:700;margin:0 0 10px}
+.todo{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.todo li{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.todo li::before{content:"";flex:none;width:18px;height:18px;margin-top:1px;border-radius:50%;border:2px solid var(--line)}
+.todo a{font-weight:600;text-decoration:none}
+.mini{position:relative;height:250px;overflow:hidden;border-radius:10px;border:1px solid var(--line);background:#fff;margin-bottom:12px}
+.mini .scale{pointer-events:none;position:absolute;top:0;left:0;width:794px;padding:40px 46px;transform-origin:top left}
+.mini::after{content:"";position:absolute;inset:auto 0 0;height:60px;background:linear-gradient(transparent,#fff)}
+.switch{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.switch input{appearance:none;width:46px;height:26px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;flex:none;transition:background .2s}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch input:checked{background:var(--ok)}
+.switch input:checked::after{left:23px}
+.msg{max-width:560px;margin:70px auto;text-align:center;display:grid;gap:14px;justify-items:center}
+.skel{height:420px;border-radius:20px;background:linear-gradient(90deg,var(--surface),var(--soft),var(--surface));background-size:200% 100%;animation:sk 1.2s infinite;margin-top:-70px}
+@keyframes sk{to{background-position:-200% 0}}
+@media (max-width:960px){.grid{grid-template-columns:1fr}.side{position:static;order:-1}}
+@media (max-width:700px){.head{grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center;padding:18px}.pwho .meta,.pwho .badges{justify-content:center}.hacts{justify-content:center}.projects,.kv{grid-template-columns:1fr}.avatar{margin-top:-80px}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
+</style>
+</head><body>
+<nav class="jnav"><div class="wrap">
+  <a class="brand" href="jobs.html">Widgetry<span> Jobs</span></a>
+  <div class="jlinks">
+    <a href="jobs.html">Jobs</a>
+    <a href="my-profile.html" aria-current="page">My profile</a>
+    <a href="resume.html" class="hide-m">My resume</a>
+    <a href="./" class="hide-m">Academy</a>
+    <span class="who" id="who"></span>
+  </div>
+</div></nav>
+<div class="cover" aria-hidden="true"></div>
+<div class="pwrap" id="root"><div class="skel"></div></div>
+<input type="file" id="file" accept="image/jpeg,image/png,image/webp" hidden>
+
+<script type="module">
+import { $, esc, api, LABEL, onUser, mountWho, toast } from "./jobs.js";
+import { renderResume, profileScore, RESUME_CSS } from "./resume-render.js";
+$("resumeCss").textContent = RESUME_CSS;
+mountWho($("who"));
+
+let p = null;
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const ym = v => { if (!v) return "Present"; const [y, m] = v.split("-"); return `${MONTHS[+m - 1]} ${y}`; };
+const safe = u => (/^https?:\/\//i.test(u || "") ? u : "");
+const short = u => u.replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$/, "");
+const lines = t => String(t || "").split(/\n+/).map(s => s.replace(/^\s*[-•*]\s*/, "").trim()).filter(Boolean);
+const initials = n => String(n || "?").trim().split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+const EDIT = "talent.html?edit=1";
+const BADGE = { self: ["mute", "Self-declared"], portfolio: ["ok", "✓ Portfolio checked"], verified: ["feat", "★ Widgetry verified"] };
+const card = (title, body, editHash = "") => `<section class="pcard"><h2>${title}<a href="${EDIT}${editHash}">Edit</a></h2>${body}</section>`;
+const empty = (txt, hash = "") => `<p class="pempty">${txt} <a href="${EDIT}${hash}">Add now →</a></p>`;
+
+function render() {
+  const [bc, bt] = BADGE[p.verification] || BADGE.self;
+  const sc = profileScore(p);
+  const lvl = sc.score >= 85 ? "All-star profile ⭐" : sc.score >= 65 ? "Strong profile" : sc.score >= 40 ? "Good start" : "Just getting started";
+  const rs = p.resumeSettings || {};
+  const pic = p.photo ? `<img class="pic" src="${p.photo}" alt="${esc(p.fullName)}">` : `<div class="pic" aria-label="No photo yet">${esc(initials(p.fullName))}</div>`;
+  const meta = [p.city && `📍 ${esc(p.city)}`, `💼 ${p.experienceYears > 0 ? `${p.experienceYears} yr${p.experienceYears == 1 ? "" : "s"} Flutter` : "Fresher"}`, p.currentCompany && `🏢 ${esc(p.currentCompany)}`, `✉️ ${esc(p.email)}`].filter(Boolean);
+
+  const exp = (p.experience || []).length ? `<ul class="tl">${p.experience.map(w => `<li><b>${esc(w.role)}</b><div class="sub">${esc(w.company)} · ${ym(w.start)} – ${ym(w.end)}</div>${lines(w.points).length ? `<ul>${lines(w.points).map(l => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul>` : empty("No work experience yet. Add jobs or internships, newest first.", "#work");
+  const projects = (p.apps || []).length ? `<div class="projects">${p.apps.map(a => `<div class="proj"><b>${esc(a.name)}</b>${a.role ? `<span class="badge mute" style="justify-self:start">${esc(a.role)}</span>` : ""}${a.about ? `<p>${esc(a.about)}</p>` : ""}${safe(a.url) ? `<a href="${esc(a.url)}" target="_blank" rel="noopener nofollow">${esc(short(a.url).slice(0, 50))} ↗</a>` : ""}</div>`).join("")}</div>` : empty("Show what you've built. A Play Store or GitHub link is the strongest proof.", "#apps");
+  const edu = (p.education || []).length ? `<ul class="tl">${p.education.map(e => `<li><b>${esc(e.degree)}</b><div class="sub">${esc(e.institute)}${e.year ? ` · ${esc(e.year)}` : ""}${e.score ? ` · ${esc(e.score)}` : ""}</div></li>`).join("")}</ul>` : empty("Add your degree or course.", "#edu");
+  const certs = (p.certifications || []).length ? `<ul class="tl">${p.certifications.map(c => `<li><b>${esc(c.name)}</b><div class="sub">${[c.issuer, c.year].filter(Boolean).map(esc).join(" · ")}</div></li>`).join("")}</ul>` : empty("Courses and certificates help freshers stand out.", "#certs");
+  const links = [["GitHub", p.githubUrl], ["LinkedIn", p.linkedinUrl], ["Portfolio", p.portfolioUrl]].filter(([, u]) => safe(u));
+  const prefs = [
+    ["Job type", (p.jobTypes || []).map(t => LABEL.type[t]).join(", ") || "Not set"],
+    ["Work mode", (p.workModes || []).map(m => LABEL.mode[m]).join(", ") || "Not set"],
+    ["Notice period", p.noticePeriod ? LABEL.notice[p.noticePeriod] : "Not set"],
+    ["Expected salary 🔒", p.expectedSalaryLpa != null ? `${p.expectedSalaryLpa} LPA` : "Not set"],
+    ["Phone 🔒", p.phone || "Not set"],
+    ["Hidden from 🔒", p.hiddenCompanies || "Nobody"],
+  ];
+
+  $("root").innerHTML = `
+  <div class="head">
+    <div><div class="avatar" id="avatar">${pic}<label class="cam" for="file" title="${p.photo ? "Change photo" : "Add photo"}" aria-label="${p.photo ? "Change photo" : "Add photo"}">📷</label></div>
+      ${p.photo ? `<div class="rmphoto"><button class="linkbtn" type="button" id="bRmPhoto">Remove photo</button></div>` : ""}</div>
+    <div class="pwho">
+      <h1>${esc(p.fullName)}</h1>
+      <p class="hl">${esc(p.headline)}</p>
+      <div class="meta">${meta.map(m => `<span>${m}</span>`).join("")}</div>
+      <div class="badges"><span class="badge ${bc}">${bt}</span><span class="badge ${p.openToWork ? "ok" : "mute"}" id="otwBadge">${p.openToWork ? "● Open to work" : "Paused"}</span></div>
+    </div>
+    <div class="hacts"><a class="btn" href="${EDIT}">✏️ Edit profile</a><a class="btn ghost" href="resume.html">📄 My resume</a></div>
+  </div>
+
+  <div class="grid">
+    <div class="main">
+      ${card("About", p.about ? `<p style="margin:0;white-space:pre-line">${esc(p.about)}</p>` : empty("Write 2–3 lines about what you build and what you're looking for."))}
+      ${card("Skills", (p.skills || []).length ? `<div class="chips">${p.skills.map(s => `<span>${esc(s)}</span>`).join("")}</div>` : empty("Add your skills."))}
+      ${card("Experience", exp, "#work")}
+      ${card("Apps &amp; projects", projects, "#apps")}
+      ${card("Education", edu, "#edu")}
+      ${card("Certifications", certs, "#certs")}
+      ${card("Links", links.length ? `<div class="links">${links.map(([n, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener nofollow">${n} ↗</a>`).join("")}</div>` : empty("Add GitHub and LinkedIn so recruiters can check your work."))}
+      ${card("Job preferences", `<div class="kv">${prefs.map(([k, v]) => `<div><small>${k}</small><span>${esc(v)}</span></div>`).join("")}</div><p class="small muted" style="margin:10px 0 0">🔒 Private: only you and the Widgetry team see these.</p>`)}
+    </div>
+    <aside class="side">
+      <section class="pcard">
+        <h2 style="margin-bottom:4px">Profile score</h2>
+        <div class="ring" id="ring" role="img" aria-label="Profile score ${sc.score} out of 100"><div><span><b>${sc.score}</b><small>/ 100</small></span></div></div>
+        <p class="lvl">${lvl}</p>
+        ${sc.tips.length ? `<p class="small muted" style="margin:0 0 8px">${sc.tips.length} step${sc.tips.length > 1 ? "s" : ""} to 100:</p><ul class="todo">${sc.tips.map(t => `<li>${t.action === "photo" ? `<a href="#" data-photo>${esc(t.text)}</a>` : t.action === "verify" ? `<span>${esc(t.text)} <span class="muted">(we review profiles with apps and GitHub)</span></span>` : `<a href="${EDIT}">${esc(t.text)}</a>`}</li>`).join("")}</ul>` : `<p class="small muted" style="text-align:center;margin:0">Your profile is complete. Recruiters love this.</p>`}
+      </section>
+      <section class="pcard">
+        <h2>Your resume<a href="resume.html">Customize</a></h2>
+        <div class="mini" aria-hidden="true"><div class="scale" id="miniScale">${renderResume(p, rs.template || "modern", rs)}</div></div>
+        <a class="btn" href="resume.html" style="width:100%">Customize &amp; download PDF</a>
+      </section>
+      <section class="pcard">
+        <label class="switch"><span><b>Open to work</b><br><span class="small muted">Turn off to pause your profile.</span></span><input type="checkbox" id="otw" ${p.openToWork ? "checked" : ""} aria-label="Open to work"></label>
+      </section>
+      <p class="small muted" style="margin:0;text-align:center">Want to leave? <a href="${EDIT}#bDelete">Delete your profile</a></p>
+    </aside>
+  </div>`;
+
+  requestAnimationFrame(() => { $("ring").style.setProperty("--v", sc.score); });
+  fitMini();
+  $("otw").onchange = async e => {
+    const v = e.target.checked;
+    try { const r = await api("/talent/me", { method: "PATCH", body: { openToWork: v }, auth: true }); p.openToWork = v; const b = $("otwBadge"); b.className = "badge " + (v ? "ok" : "mute"); b.textContent = v ? "● Open to work" : "Paused"; toast(r.message); }
+    catch (x) { e.target.checked = !v; toast(x.message); }
+  };
+  document.querySelectorAll("[data-photo]").forEach(a => a.onclick = e => { e.preventDefault(); $("file").click(); });
+  if ($("bRmPhoto")) $("bRmPhoto").onclick = async () => {
+    if (!confirm("Remove your profile photo?")) return;
+    try { await api("/talent/me/photo", { method: "DELETE", auth: true }); p.photo = null; render(); toast("Photo removed"); } catch (x) { toast(x.message); }
+  };
+}
+
+function fitMini() {
+  const m = $("miniScale"); if (!m) return;
+  const w = m.parentElement.clientWidth; m.style.transform = `scale(${w / 794})`;
+}
+addEventListener("resize", fitMini);
+
+/** Crop to a centred square and shrink to 400px JPEG, so uploads are small and fast. */
+async function toSquareJpeg(file) {
+  let bmp;
+  try { bmp = await createImageBitmap(file); }
+  catch { throw new Error("We couldn't open that image. Please choose a JPG or PNG photo."); }
+  const side = Math.min(bmp.width, bmp.height), size = Math.min(400, side);
+  const c = document.createElement("canvas"); c.width = c.height = size;
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, size, size);
+  g.drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, size, size);
+  for (const q of [0.86, 0.75, 0.6]) { const d = c.toDataURL("image/jpeg", q); if (d.length < 300_000) return d; }
+  throw new Error("This photo is too detailed. Please try another one.");
+}
+
+$("file").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  if (!/^image\/(jpeg|png|webp)$/.test(f.type)) return toast("Please choose a JPG, PNG or WebP photo.");
+  if (f.size > 15 * 1024 * 1024) return toast("That photo is over 15 MB. Please choose a smaller one.");
+  const av = $("avatar"); av?.classList.add("busy");
+  try {
+    const dataUrl = await toSquareJpeg(f);
+    const r = await api("/talent/me/photo", { method: "PUT", body: { dataUrl }, auth: true });
+    p.photo = r.photo; render(); toast("Looking good! Photo updated.");
+  } catch (x) { av?.classList.remove("busy"); toast(x.message || "Couldn't read that image. Try a JPG or PNG."); }
+};
+
+onUser(async u => {
+  if (!u) { $("root").innerHTML = `<div class="msg" style="margin-top:0;padding-top:30px"><h2>Sign in to see your profile</h2><a class="btn" href="talent.html">Sign in</a></div>`; return; }
+  try {
+    const r = await api("/talent/me", { auth: true });
+    if (!r.profile) { $("root").innerHTML = `<div class="msg pcard" style="margin-top:-70px"><h2>Create your profile</h2><p class="muted" style="margin:0">Takes 5 minutes. You get an ATS-ready resume and a place in the Widgetry Talent Network.</p><a class="btn gold" href="talent.html?edit=1">Create my profile</a></div>`; return; }
+    p = r.profile; render();
+    if (new URLSearchParams(location.search).get("saved")) { toast("Profile saved"); history.replaceState(null, "", "my-profile.html"); }
+  } catch (x) { $("root").innerHTML = `<div class="msg"><p>${esc(x.message)}</p></div>`; }
+});
+</script>
+</body></html>

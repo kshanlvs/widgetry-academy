@@ -77,7 +77,7 @@ export const GOOGLE_SVG = '<svg viewBox="0 0 48 48" width="20" height="20" aria-
 /** Small "signed in as … · Sign out" area in the nav */
 export function mountWho(el) {
   onUser(u => {
-    el.innerHTML = u ? `<span class="hide-m">${esc(u.email || "")}</span> <button class="linkbtn" type="button">Sign out</button>` : "";
+    el.innerHTML = u ? `${location.pathname.endsWith("my-profile.html") ? "" : `<a href="my-profile.html" class="hide-m" style="font-weight:700">My profile</a>`} <span class="hide-m">${esc(u.email || "")}</span> <button class="linkbtn" type="button">Sign out</button>` : "";
     const b = el.querySelector("button"); if (b) b.onclick = () => logOut();
   });
 }

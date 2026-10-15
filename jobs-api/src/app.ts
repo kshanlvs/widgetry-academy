@@ -31,7 +31,9 @@ export function createApp() {
     next();
   });
   api.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-  api.use(express.json({ limit: "64kb" }));
+  // Small bodies everywhere; only the photo upload may be larger
+  const smallJson = express.json({ limit: "64kb" }), photoJson = express.json({ limit: "400kb" });
+  api.use((req, res, next) => (req.path === "/talent/me/photo" ? photoJson : smallJson)(req, res, next));
   api.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 600, standardHeaders: "draft-7", legacyHeaders: false,
     handler: (_req, res) => res.status(429).json({ error: "Too many requests. Please slow down." }) }));
   api.use(optionalAuth);

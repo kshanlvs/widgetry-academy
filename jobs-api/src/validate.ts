@@ -114,6 +114,22 @@ export const candidateInput = z.object({
 });
 export type CandidateInput = z.infer<typeof candidateInput>;
 
+// Resume look, saved per seeker
+export const ACCENTS = ["green", "navy", "black", "maroon", "teal", "purple"] as const;
+export const HIDEABLE = ["photo", "phone", "email", "city", "summary", "projects", "education", "certifications"] as const;
+export const resumeSettingsInput = z.object({
+  template: z.enum(["classic", "modern", "compact"]).default("modern"),
+  accent: z.enum(ACCENTS).default("green"),
+  title: optText(140),                                  // target role shown instead of the headline
+  showPhoto: z.boolean().default(false),
+  hide: z.array(z.enum(HIDEABLE)).max(HIDEABLE.length).default([]),
+});
+
+// Profile photo: the browser resizes to a small JPEG/PNG/WebP first
+export const photoInput = z.object({ dataUrl: z.string().max(400_000).regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, "Upload a JPG, PNG or WebP image") });
+
+export const openToWorkInput = z.object({ openToWork: z.boolean() });
+
 export const employerJobPatch = z.object({ status: z.enum(["filled"]) });
 
 export const adminJobPatch = z.object({

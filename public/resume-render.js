@@ -47,10 +47,19 @@ export function autoSummary(p) {
   return `${who}${builds}.${stack} Focused on clean, maintainable code and smooth user experiences.`;
 }
 
-export function renderResume(p, template = "modern") {
+export const ACCENTS = { green: "#0f6b56", navy: "#1d3557", black: "#111111", maroon: "#7a1f2b", teal: "#0e6d7a", purple: "#53389e" };
+
+/**
+ * opts (all optional, saved per seeker): { accent, title, showPhoto, hide: ["photo","phone","email","city","summary","projects","education","certifications"] }
+ */
+export function renderResume(p, template = "modern", opts = {}) {
   const t = TEMPLATES[template] ? template : "modern";
+  const hide = new Set(opts.hide || []), show = k => !hide.has(k);
+  const accent = ACCENTS[opts.accent] || null;
+  const style = accent && t !== "classic" ? ` style="--rs-accent:${accent};--rs-rule:${accent}40"` : accent && t === "classic" ? ` style="--rs-head-rule:${accent}"` : "";
+  const photo = opts.showPhoto && show("photo") && /^data:image\/(jpeg|png|webp);base64,/.test(p.photo || "") ? `<img class="photo" src="${p.photo}" alt="">` : "";
   const contact = [
-    p.city && `${esc(p.city)}, India`, p.phone && esc(phone(p.phone)), p.email && esc(p.email),
+    show("city") && p.city && `${esc(p.city)}, India`, show("phone") && p.phone && esc(phone(p.phone)), show("email") && p.email && esc(p.email),
     ...[p.linkedinUrl, p.githubUrl, p.portfolioUrl].filter(safe).map(u => `<a href="${esc(u)}">${esc(short(u))}</a>`),
   ].filter(Boolean).join(`<span class="sep"> | </span>`);
 
@@ -71,14 +80,14 @@ export function renderResume(p, template = "modern") {
   const certs = certList.map(c => `<li><b>${esc(c.name)}</b>${c.issuer ? ` – ${esc(c.issuer)}` : ""}${c.year ? ` (${esc(c.year)})` : ""}</li>`).join("");
 
   const sec = (title, body) => (body ? `<section><h2>${title}</h2>${body}</section>` : "");
-  return `<article class="resume t-${t}">
-    <header><h1>${esc(p.fullName)}</h1><p class="title">${esc(p.headline)}</p><p class="contact">${contact}</p></header>
-    ${sec("Professional Summary", `<p>${esc(summary)}</p>`)}
+  return `<article class="resume t-${t}${photo ? " has-photo" : ""}"${style}>
+    <header>${photo}<div class="hd"><h1>${esc(p.fullName)}</h1><p class="title">${esc((opts.title || "").trim() || p.headline)}</p><p class="contact">${contact}</p></div></header>
+    ${show("summary") ? sec("Professional Summary", `<p>${esc(summary)}</p>`) : ""}
     ${sec("Technical Skills", skills && `<ul class="skills">${skills}</ul>`)}
     ${sec("Professional Experience", work)}
-    ${sec("Projects", projects)}
-    ${sec("Education", edu)}
-    ${sec("Certifications", certs && `<ul>${certs}</ul>`)}
+    ${show("projects") ? sec("Projects", projects) : ""}
+    ${show("education") ? sec("Education", edu) : ""}
+    ${show("certifications") ? sec("Certifications", certs && `<ul>${certs}</ul>`) : ""}
   </article>`;
 }
 
@@ -125,9 +134,13 @@ export const RESUME_CSS = `
 .resume .what{min-width:0}
 .resume .when{flex:none;font-size:9.5pt;color:var(--rs-muted);white-space:nowrap}
 .resume .sep{color:var(--rs-muted)}
+.resume .photo{width:62pt;height:62pt;border-radius:50%;object-fit:cover;flex:none}
+.resume.has-photo header{display:flex;gap:14pt;align-items:center}
+.resume.has-photo .hd{min-width:0}
 /* Classic: serif, centered header, black */
 .resume.t-classic{font-family:"Source Serif 4",Georgia,"Times New Roman",serif;font-size:10.8pt}
-.resume.t-classic header{text-align:center;border-bottom:1.5px solid #111;padding-bottom:7pt}
+.resume.t-classic header{text-align:center;border-bottom:1.5px solid var(--rs-head-rule,#111);padding-bottom:7pt}
+.resume.t-classic.has-photo header{text-align:left}
 .resume.t-classic h1{font-size:23pt;letter-spacing:.03em;text-transform:uppercase;font-weight:600}
 .resume.t-classic .title{color:#222;font-weight:500;font-style:italic}
 .resume.t-classic h2{border-bottom:.75px solid #111;letter-spacing:.03em;font-size:10.5pt}
@@ -163,3 +176,23 @@ export const SAMPLE = {
   certifications: [{ name: "Flutter in 10 Days", issuer: "Widgetry Academy", year: 2026 }],
   verification: "self",
 };
+
+/** Profile score (0–100): how complete and convincing the whole profile is. */
+export function profileScore(p) {
+  const work = p.experience || [], pts = work.flatMap(w => lines(w.points));
+  const checks = [
+    [!!p.photo, 8, "Add a profile photo", "photo"],
+    [!!(p.about && p.about.length >= 120), 10, "Write a 2–3 line summary about what you build", "edit"],
+    [(p.skills || []).length >= 6, 10, "Add at least 6 skills", "edit"],
+    [work.length > 0 || Number(p.experienceYears) === 0, 12, "Add your work experience or internships", "edit"],
+    [pts.some(l => /\d/.test(l)), 10, "Use numbers in your achievements (downloads, % faster, users)", "edit"],
+    [(p.apps || []).some(a => safe(a.url)), 14, "Add an app or project with a Play Store or GitHub link", "edit"],
+    [(p.education || []).length > 0, 8, "Add your education", "edit"],
+    [!!(p.githubUrl && p.linkedinUrl), 8, "Add both GitHub and LinkedIn", "edit"],
+    [!!p.phone, 5, "Add your phone number", "edit"],
+    [(p.jobTypes || []).length > 0 && (p.workModes || []).length > 0, 5, "Tell us the job type and work mode you want", "edit"],
+    [p.verification !== "self", 10, "Get your portfolio checked by a Widgetry engineer", "verify"],
+  ];
+  const score = checks.reduce((s, [ok, w]) => s + (ok ? w : 0), 0);
+  return { score, done: checks.filter(c => c[0]).length, total: checks.length, tips: checks.filter(c => !c[0]).map(c => ({ text: c[2], action: c[3] })) };
+}
