@@ -62,6 +62,6 @@ DB_PORT=3306 DB_PASSWORD=... ALLOW_DEV_AUTH=1 npm test
 3. **GoDaddy DNS** → add the records Railway shows (CNAME `api` → `xxxx.up.railway.app`).
 4. Check `https://api.widgetryacademy.in/api/health` returns `{"ok":true}`, then merge `widgetry-jobs` into `main`.
 
-Railway redeploys automatically on every push that touches `jobs-api/` (build settings are in `railway.json`, health check `/api/health`). The server address used by the pages is in `public/jobs-api-url.js`.
+Railway redeploys automatically on every push that touches `jobs-api/` (it builds from the `Dockerfile`; set Deploy → Healthcheck Path to `/api/health`). The server address used by the pages is in `public/jobs-api-url.js`.
 
 > Until the API is live the jobs pages show "Can't reach the jobs server"; the academy is unaffected.
