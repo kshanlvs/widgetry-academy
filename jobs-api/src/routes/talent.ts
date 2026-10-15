@@ -9,6 +9,7 @@ import { candidateInput, publicId } from "../validate.js";
 export const talentRouter = Router();
 
 const csv = (v: string | null) => (v ? v.split(",").filter(Boolean) : []);
+const json = (v: any) => (typeof v === "string" ? JSON.parse(v) : (v ?? []));
 
 export function candidateOut(r: any, skills: string[], forAdmin = false) {
   const out: any = {
@@ -20,7 +21,7 @@ export function candidateOut(r: any, skills: string[], forAdmin = false) {
     noticePeriod: r.notice_period ?? null,
     expectedSalaryLpa: r.expected_salary_lpa != null ? Number(r.expected_salary_lpa) : null,
     githubUrl: r.github_url ?? null, linkedinUrl: r.linkedin_url ?? null, portfolioUrl: r.portfolio_url ?? null,
-    apps: typeof r.apps === "string" ? JSON.parse(r.apps) : (r.apps ?? []),
+    apps: json(r.apps), experience: json(r.experience), education: json(r.education),
     about: r.about ?? null, skills,
     openToWork: !!r.open_to_work, hiddenCompanies: r.hidden_companies ?? null,
     verification: r.verification, status: r.status,
@@ -50,19 +51,19 @@ talentRouter.put("/talent/me", requireAuth, wrap(async (req, res) => {
   await tx(async c => {
     const vals = [p.fullName, u.email, p.phone, p.headline, p.currentCompany, p.experienceYears, p.city,
       p.workModes.join(",") || null, p.jobTypes.join(",") || null, p.noticePeriod ?? null, p.expectedSalaryLpa ?? null,
-      p.githubUrl, p.linkedinUrl, p.portfolioUrl, JSON.stringify(p.apps), p.about, p.openToWork ? 1 : 0, p.hiddenCompanies];
+      p.githubUrl, p.linkedinUrl, p.portfolioUrl, JSON.stringify(p.apps), JSON.stringify(p.experience), JSON.stringify(p.education), p.about, p.openToWork ? 1 : 0, p.hiddenCompanies];
     const [existing] = await c.query("SELECT id FROM candidates WHERE uid = ? FOR UPDATE", [u.uid]);
     let id: number;
     if ((existing as any[]).length) {
       id = (existing as any[])[0].id;
       await c.query(`UPDATE candidates SET full_name=?, email=?, phone=?, headline=?, current_company=?, experience_years=?, city=?,
-        work_modes=?, job_types=?, notice_period=?, expected_salary_lpa=?, github_url=?, linkedin_url=?, portfolio_url=?, apps=?, about=?,
+        work_modes=?, job_types=?, notice_period=?, expected_salary_lpa=?, github_url=?, linkedin_url=?, portfolio_url=?, apps=?, experience=?, education=?, about=?,
         open_to_work=?, hidden_companies=? WHERE id=?`, [...vals, id]);
       await c.query("DELETE FROM candidate_skills WHERE candidate_id = ?", [id]);
     } else {
       const [ins] = await c.query(`INSERT INTO candidates (public_id, uid, full_name, email, phone, headline, current_company, experience_years, city,
-        work_modes, job_types, notice_period, expected_salary_lpa, github_url, linkedin_url, portfolio_url, apps, about,
-        open_to_work, hidden_companies, consent_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP())`,
+        work_modes, job_types, notice_period, expected_salary_lpa, github_url, linkedin_url, portfolio_url, apps, experience, education, about,
+        open_to_work, hidden_companies, consent_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP())`,
         [publicId(), u.uid, ...vals]);
       id = (ins as mysql.ResultSetHeader).insertId;
     }

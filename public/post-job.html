@@ -36,8 +36,15 @@
     <p class="err" id="gErr" hidden></p>
   </section>
 
+  <section class="formcard" id="mineBox" hidden>
+    <h2 style="font-size:20px">Your posted jobs</h2>
+    <p class="muted small" style="margin:0">Edit a job any time (it goes back to a quick review), mark it filled when you've hired, or delete it.</p>
+    <div class="mine" id="mine"></div>
+  </section>
+
   <!-- Form -->
   <form class="formcard" id="fJob" novalidate hidden>
+    <div class="editbar" id="editBar" hidden><span>Editing <b id="editTitle"></b></span><button class="btn ghost small" type="button" id="bCancelEdit">Cancel editing</button></div>
     <fieldset><legend>Company</legend>
       <div class="row2">
         <label>Company name<input id="companyName" maxlength="120" required placeholder="e.g. Bytewave Technologies"></label>
@@ -83,10 +90,6 @@
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn" id="bSubmit" type="submit">Submit for review</button><span class="muted small">Free · goes live after a quick review · listed for 30 days</span></div>
   </form>
 
-  <section class="formcard" id="mineBox" hidden>
-    <h2 style="font-size:20px">Your posted jobs</h2>
-    <div class="mine" id="mine"></div>
-  </section>
 </main>
 
 <footer class="jfoot"><div class="wrap">
@@ -96,6 +99,7 @@
 
 <script type="module">
 import { $, esc, api, LABEL, onUser, googleSignIn, loginLink, GOOGLE_SVG, mountWho, timeAgo, toast } from "./jobs.js";
+let editingId = null;
 mountWho($("who"));
 $("bGoogle").innerHTML = GOOGLE_SVG + "Continue with Google";
 $("lLogin").href = loginLink();
@@ -130,10 +134,44 @@ async function loadMine() {
     $("mine").innerHTML = r.items.map(j => {
       const [cls, txt] = STATUS[j.status] || ["mute", j.status];
       return `<div class="it"><div style="min-width:0"><b>${esc(j.title)}</b><div class="muted small">${esc(j.company.name)} · submitted ${timeAgo(j.postedAt)}${j.rejectReason ? ` · <span style="color:var(--bad)">${esc(j.rejectReason)}</span>` : ""}</div></div>
-        <div style="display:flex;gap:10px;align-items:center;flex:none"><span class="badge ${cls}">${txt}</span>${j.status === "approved" ? `<a class="small" href="job.html?id=${encodeURIComponent(j.id)}">View</a>` : ""}</div></div>`;
+        <div class="acts"><span class="badge ${cls}">${txt}</span>${j.status === "approved" ? `<a class="small" href="job.html?id=${encodeURIComponent(j.id)}">View</a>` : ""}
+          ${j.status === "filled" || j.status === "expired" ? "" : `<button class="btn ghost small" type="button" data-edit="${esc(j.id)}">Edit</button>`}
+          ${j.status === "approved" ? `<button class="btn ghost small" type="button" data-fill="${esc(j.id)}">Mark filled</button>` : ""}
+          <button class="btn danger small" type="button" data-del="${esc(j.id)}" data-t="${esc(j.title)}">Delete</button></div></div>`;
     }).join("");
+    $("mine").querySelectorAll("[data-edit]").forEach(b => b.onclick = () => startEdit(b.dataset.edit));
+    $("mine").querySelectorAll("[data-fill]").forEach(b => b.onclick = async () => {
+      if (!confirm("Mark this job as filled? Candidates will no longer be able to apply.")) return;
+      try { const r = await api("/my/jobs/" + encodeURIComponent(b.dataset.fill), { method: "PATCH", body: { status: "filled" }, auth: true }); toast(r.message); loadMine(); }
+      catch (x) { toast(x.message); }
+    });
+    $("mine").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+      if (!confirm(`Delete "${b.dataset.t}"? This removes it permanently.`)) return;
+      try { await api("/my/jobs/" + encodeURIComponent(b.dataset.del), { method: "DELETE", auth: true }); if (editingId === b.dataset.del) stopEdit(); toast("Job deleted"); loadMine(); }
+      catch (x) { toast(x.message); }
+    });
   } catch { /* list is optional */ }
 }
+
+const FIELDS = ["companyName", "companyWebsite", "title", "jobType", "workMode", "level", "city", "salaryMin", "salaryMax", "salaryPeriod", "description", "applyUrl", "applyEmail", "contactName", "contactEmail"];
+async function startEdit(id) {
+  try {
+    const r = await api("/my/jobs/" + encodeURIComponent(id), { auth: true });
+    for (const k of FIELDS) $(k).value = r.form[k] ?? "";
+    if (!r.form.salaryPeriod) $("salaryPeriod").value = "month";
+    skills = r.form.skills?.length ? r.form.skills : ["Flutter"]; drawSkills(); cityState();
+    $("descCount").textContent = $("description").value.length + " / 8000";
+    editingId = id; $("editTitle").textContent = r.form.title; $("editBar").hidden = false;
+    $("bSubmit").textContent = "Save changes"; $("agree").checked = false; $("err").hidden = true; $("ok").hidden = true;
+    $("fJob").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (x) { toast(x.message); }
+}
+function stopEdit() {
+  editingId = null; $("editBar").hidden = true; $("bSubmit").textContent = "Submit for review";
+  for (const id of ["title", "description", "salaryMin", "salaryMax", "applyUrl", "applyEmail"]) $(id).value = "";
+  $("agree").checked = false; $("descCount").textContent = "0 / 8000";
+}
+$("bCancelEdit").onclick = stopEdit;
 
 onUser(u => {
   $("gate").hidden = !!u; $("fJob").hidden = !u;
@@ -153,18 +191,18 @@ $("fJob").addEventListener("submit", async e => {
     description: $("description").value, skills, applyUrl: $("applyUrl").value, applyEmail: $("applyEmail").value,
     contactName: $("contactName").value, contactEmail: $("contactEmail").value, agree: true,
   };
-  const b = $("bSubmit"); b.disabled = true; b.textContent = "Submitting…";
+  const b = $("bSubmit"), wasEdit = !!editingId; b.disabled = true; b.textContent = wasEdit ? "Saving…" : "Submitting…";
   try {
-    const r = await api("/jobs", { method: "POST", body, auth: true });
+    const r = wasEdit ? await api("/my/jobs/" + encodeURIComponent(editingId), { method: "PUT", body, auth: true })
+                      : await api("/jobs", { method: "POST", body, auth: true });
+    stopEdit();
     $("ok").textContent = r.message; $("ok").hidden = false;
-    for (const id of ["title", "description", "salaryMin", "salaryMax", "applyUrl", "applyEmail"]) $(id).value = "";
-    $("agree").checked = false; $("descCount").textContent = "0 / 8000";
-    toast("Job submitted for review"); loadMine();
+    toast(wasEdit ? "Changes sent for review" : "Job submitted for review"); loadMine();
     $("ok").scrollIntoView({ behavior: "smooth", block: "center" });
   } catch (x) {
     const field = x.issues?.[0]?.field; if (field && $(field)) $(field).focus();
     $("err").textContent = x.message; $("err").hidden = false;
-  } finally { b.disabled = false; b.textContent = "Submit for review"; }
+  } finally { b.disabled = false; b.textContent = editingId ? "Save changes" : "Submit for review"; }
 });
 </script>
 </body></html>

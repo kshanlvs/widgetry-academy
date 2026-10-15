@@ -6,7 +6,7 @@ import { query, tx } from "../db.js";
 import { config } from "../config.js";
 import { HttpError, wrap } from "../errors.js";
 import { requireAuth } from "../auth.js";
-import { jobInput, jobSearch, reportInput, publicId, hashIp, ftQuery, COMMON_SKILLS, type JobInput } from "../validate.js";
+import { jobInput, employerJobPatch, jobSearch, reportInput, publicId, hashIp, ftQuery, COMMON_SKILLS, type JobInput } from "../validate.js";
 
 export const jobsRouter = Router();
 
@@ -167,6 +167,49 @@ jobsRouter.get("/my/jobs", requireAuth, wrap(async (req, res) => {
   const sk = await skillsFor(rows.map(r => r.id));
   res.set("Cache-Control", "private, no-store");
   res.json({ items: rows.map(r => ({ ...jobOut(r, sk.get(r.id)), rejectReason: r.status === "rejected" ? r.reject_reason : null })) });
+}));
+
+/** The signed-in employer's own job, or 404 (never reveals other people's jobs). */
+async function ownJob(uid: string, pid: string) {
+  const [r] = await query(`${SELECT_JOB} WHERE j.public_id = ? AND j.posted_by_uid = ?`, [pid.slice(0, 12), uid]);
+  if (!r) throw new HttpError(404, "Job not found.");
+  return r;
+}
+
+// Full details for the edit form
+jobsRouter.get("/my/jobs/:id", requireAuth, wrap(async (req, res) => {
+  const r = await ownJob(req.user!.uid, String(req.params.id));
+  const sk = await skillsFor([r.id]);
+  res.set("Cache-Control", "private, no-store");
+  const clean = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v != null));   // empty fields left out
+  res.json({ id: r.public_id, status: r.status, form: clean({
+    companyName: r.company_name, companyWebsite: r.company_website, title: r.title, jobType: r.job_type, workMode: r.work_mode,
+    level: r.level, city: r.city, salaryMin: r.salary_min, salaryMax: r.salary_max, salaryPeriod: r.salary_period,
+    description: r.description, skills: sk.get(r.id) ?? [], applyUrl: r.apply_url, applyEmail: r.apply_email,
+    contactName: r.contact_name, contactEmail: r.contact_email }) });
+}));
+
+// Edit: any change goes back to review so nothing unchecked goes live
+jobsRouter.put("/my/jobs/:id", requireAuth, postLimiter, wrap(async (req, res) => {
+  const r = await ownJob(req.user!.uid, String(req.params.id));
+  if (r.status === "filled" || r.status === "expired") throw new HttpError(409, "This job is closed. Post a new job instead.");
+  await updateJob(r.id, jobInput.parse(req.body));
+  await query("UPDATE jobs SET status = 'pending', reject_reason = NULL WHERE id = ?", [r.id]);
+  res.json({ ok: true, status: "pending", message: "Changes saved. Your job will be live again after a quick review." });
+}));
+
+// Mark as filled (stops applications, keeps the page as "position filled")
+jobsRouter.patch("/my/jobs/:id", requireAuth, wrap(async (req, res) => {
+  const r = await ownJob(req.user!.uid, String(req.params.id));
+  employerJobPatch.parse(req.body);
+  await query("UPDATE jobs SET status = 'filled' WHERE id = ?", [r.id]);
+  res.json({ ok: true, status: "filled", message: "Marked as filled. Candidates can no longer apply." });
+}));
+
+jobsRouter.delete("/my/jobs/:id", requireAuth, wrap(async (req, res) => {
+  const r = await ownJob(req.user!.uid, String(req.params.id));
+  await query("DELETE FROM jobs WHERE id = ?", [r.id]);
+  res.json({ ok: true, message: "Job deleted." });
 }));
 
 // ---------- Reports ----------

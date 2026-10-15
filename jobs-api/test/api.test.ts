@@ -221,3 +221,41 @@ test("CORS: academy website allowed, other sites refused", async () => {
   assert.equal(bad.status, 403);
   assert.equal(bad.headers.get("access-control-allow-origin"), null);
 });
+
+test("resume: work history and education are saved and validated", async () => {
+  const tok = "dev:seek7:asha@test.dev:Asha";
+  const base = { fullName: "Asha Roy", headline: "Flutter Developer", experienceYears: 2, skills: ["Flutter"], consent: true };
+  const bad = await call("PUT", "/talent/me", { ...base, experience: [{ company: "X", role: "Dev", start: "2024-05", end: "2023-01" }] }, tok);
+  assert.equal(bad.status, 400);
+  const r = await call("PUT", "/talent/me", { ...base,
+    experience: [{ company: "Nimbus Labs", role: "Flutter Developer", start: "2023-06", end: "", points: "Built the delivery app\nCut crashes by 40%" }],
+    education: [{ degree: "MCA", institute: "Techno India", year: 2022, score: "8.1 CGPA" }] }, tok);
+  assert.equal(r.status, 200);
+  assert.equal(r.body.profile.experience[0].end, null);
+  assert.equal(r.body.profile.experience[0].points, "Built the delivery app\nCut crashes by 40%");
+  assert.equal(r.body.profile.education[0].year, 2022);
+});
+
+test("employers can edit, mark filled and delete only their own jobs", async () => {
+  const own = "dev:emp7:hr@own.test:Own", other = "dev:emp8:hr@other.test:Other";
+  const p = await call("POST", "/jobs", goodJob({ title: "Flutter Engineer (Maps)" }), own);
+  assert.equal(p.status, 201);
+  const id = p.body.id;
+  await call("PATCH", "/admin/jobs/" + id, { status: "approved" }, ADMIN);
+  assert.equal((await call("GET", "/my/jobs/" + id, undefined, other)).status, 404);
+  assert.equal((await call("PUT", "/my/jobs/" + id, goodJob(), other)).status, 404);
+  assert.equal((await call("DELETE", "/my/jobs/" + id, undefined, other)).status, 404);
+  const g = await call("GET", "/my/jobs/" + id, undefined, own);
+  assert.equal(g.body.form.title, "Flutter Engineer (Maps)");
+  const e = await call("PUT", "/my/jobs/" + id, { ...g.body.form, title: "Senior Flutter Engineer (Maps)", agree: true }, own);
+  assert.equal(e.status, 200);
+  assert.equal(e.body.status, "pending", "edits go back to review");
+  assert.equal((await call("GET", "/jobs/" + id)).status, 404, "not public while in review");
+  await call("PATCH", "/admin/jobs/" + id, { status: "approved" }, ADMIN);
+  assert.equal((await call("PATCH", "/my/jobs/" + id, { status: "approved" }, own)).status, 400, "employer can't self-approve");
+  assert.equal((await call("PATCH", "/my/jobs/" + id, { status: "filled" }, own)).body.status, "filled");
+  assert.equal((await call("GET", "/jobs/" + id)).body.status, "filled");
+  assert.equal((await call("PUT", "/my/jobs/" + id, { ...g.body.form, agree: true }, own)).status, 409);
+  assert.equal((await call("DELETE", "/my/jobs/" + id, undefined, own)).status, 200);
+  assert.equal((await call("GET", "/my/jobs/" + id, undefined, own)).status, 404);
+});

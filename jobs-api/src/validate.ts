@@ -78,6 +78,17 @@ export const reportInput = z.object({
 
 const appItem = z.object({ name: trim(80).min(1), url: optUrl, role: optText(80) });
 
+const month = z.string().trim().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Use month and year");
+const workItem = z.object({
+  company: trim(120).min(1, "Add the company name"), role: trim(100).min(1, "Add your role"),
+  start: month, end: z.union([month, z.literal("")]).optional().transform(v => (v ? v : null)),   // empty = present
+  points: trim(1500).optional().transform(v => (v ? v : null)),                                   // one achievement per line
+}).refine(w => !w.end || w.end >= w.start, { message: "End date must be after the start date", path: ["end"] });
+const eduItem = z.object({
+  degree: trim(120).min(1, "Add the degree or course"), institute: trim(150).min(1, "Add the college or school"),
+  year: z.coerce.number().int().min(1970).max(2040).optional().nullable(), score: optText(40),
+});
+
 export const candidateInput = z.object({
   fullName: trim(100).min(2, "Your name is required"),
   phone: z.string().trim().regex(/^\+?\d[\d\s-]{7,16}$/, "Enter a valid phone number").optional().or(z.literal("")).transform(v => (v ? v.replace(/[\s-]/g, "") : null)),
@@ -91,6 +102,8 @@ export const candidateInput = z.object({
   expectedSalaryLpa: z.coerce.number().min(0).max(500).optional().nullable(),
   githubUrl: optUrl, linkedinUrl: optUrl, portfolioUrl: optUrl,
   apps: z.array(appItem).max(8).default([]),
+  experience: z.array(workItem).max(10).default([]),
+  education: z.array(eduItem).max(6).default([]),
   about: optText(2000),
   skills: skillList.refine(s => s.length > 0, "Add at least one skill"),
   openToWork: z.boolean().default(true),
@@ -98,6 +111,8 @@ export const candidateInput = z.object({
   consent: z.literal(true, { errorMap: () => ({ message: "Please agree to how we use your profile" }) }),
 });
 export type CandidateInput = z.infer<typeof candidateInput>;
+
+export const employerJobPatch = z.object({ status: z.enum(["filled"]) });
 
 export const adminJobPatch = z.object({
   status: z.enum(["pending", "approved", "rejected", "filled", "expired"]).optional(),

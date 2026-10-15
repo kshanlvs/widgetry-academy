@@ -64,6 +64,15 @@
       <div class="chiprow" id="skillChips"></div>
       <div class="skillin"><input id="skillOther" maxlength="40" placeholder="Add another skill" aria-label="Add another skill"><button class="btn ghost small" type="button" id="bAddSkill">Add</button></div>
     </fieldset>
+    <fieldset><legend>Work experience <span class="opt">(for your resume)</span></legend>
+      <p class="muted small" style="margin:0">Newest first. Freshers can skip this and add internships or projects instead.</p>
+      <div id="work" style="display:grid;gap:12px"></div>
+      <button class="btn ghost small" type="button" id="bAddWork" style="justify-self:start">+ Add a job</button>
+    </fieldset>
+    <fieldset><legend>Education <span class="opt">(for your resume)</span></legend>
+      <div id="edu" style="display:grid;gap:12px"></div>
+      <button class="btn ghost small" type="button" id="bAddEdu" style="justify-self:start">+ Add education</button>
+    </fieldset>
     <fieldset><legend>Proof of work (this is what gets you verified)</legend>
       <div class="row3">
         <label><span>GitHub <span class="opt">(optional)</span></span><input id="githubUrl" type="url" maxlength="300" placeholder="https://github.com/you"></label>
@@ -132,13 +141,50 @@ function addApp(a = {}) {
 }
 $("bAddApp").onclick = () => addApp();
 
+function addWork(w = {}) {
+  if ($("work").children.length >= 10) return;
+  const box = document.createElement("div"); box.className = "subcard work";
+  box.innerHTML = `<div class="row2"><label>Company<input class="wCompany" maxlength="120" value="${esc(w.company || "")}"></label>
+      <label>Role<input class="wRole" maxlength="100" placeholder="e.g. Flutter Developer" value="${esc(w.role || "")}"></label></div>
+    <div class="row3"><label>From<input class="wStart" type="month" value="${esc(w.start || "")}" placeholder="2023-06"></label>
+      <label>To<input class="wEnd" type="month" value="${esc(w.end || "")}" placeholder="2024-12"></label>
+      <label class="check" style="align-self:end;padding-bottom:10px"><input type="checkbox" class="wNow"${w.company && !w.end ? " checked" : ""}> I work here now</label></div>
+    <label><span>What you did <span class="opt">(one point per line: features you built, results, tech used)</span></span><textarea class="wPoints" maxlength="1500" style="min-height:90px" placeholder="Built the order tracking screen with Google Maps and Firebase&#10;Reduced app crashes by 40% with error handling and tests">${esc(w.points || "")}</textarea></label>
+    <button class="btn ghost small" type="button" style="justify-self:end">Remove</button>`;
+  const now = box.querySelector(".wNow"), end = box.querySelector(".wEnd");
+  const sync = () => { end.disabled = now.checked; if (now.checked) end.value = ""; }; now.onchange = sync; sync();
+  box.querySelector("button").onclick = () => box.remove();
+  $("work").appendChild(box);
+}
+function addEdu(e = {}) {
+  if ($("edu").children.length >= 6) return;
+  const box = document.createElement("div"); box.className = "subcard edu";
+  box.innerHTML = `<div class="row2"><label>Degree / course<input class="eDegree" maxlength="120" placeholder="e.g. MCA, B.Tech CSE, Class 12" value="${esc(e.degree || "")}"></label>
+      <label>College / school<input class="eInst" maxlength="150" value="${esc(e.institute || "")}"></label></div>
+    <div class="row3"><label><span>Year <span class="opt">(passing)</span></span><input class="eYear" type="number" min="1970" max="2040" inputmode="numeric" value="${esc(e.year ?? "")}"></label>
+      <label><span>Score <span class="opt">(optional)</span></span><input class="eScore" maxlength="40" placeholder="8.1 CGPA / 78%" value="${esc(e.score || "")}"></label>
+      <button class="btn ghost small" type="button" style="align-self:end;justify-self:end">Remove</button></div>`;
+  box.querySelector("button").onclick = () => box.remove();
+  $("edu").appendChild(box);
+}
+$("bAddWork").onclick = () => addWork();
+$("bAddEdu").onclick = () => addEdu();
+const collectWork = () => [...document.querySelectorAll(".work")].map(b => ({
+  company: b.querySelector(".wCompany").value.trim(), role: b.querySelector(".wRole").value.trim(),
+  start: b.querySelector(".wStart").value.trim(), end: b.querySelector(".wNow").checked ? "" : b.querySelector(".wEnd").value.trim(),
+  points: b.querySelector(".wPoints").value.trim() })).filter(w => w.company || w.role);
+const collectEdu = () => [...document.querySelectorAll(".edu")].map(b => ({
+  degree: b.querySelector(".eDegree").value.trim(), institute: b.querySelector(".eInst").value.trim(),
+  year: b.querySelector(".eYear").value ? Number(b.querySelector(".eYear").value) : null, score: b.querySelector(".eScore").value.trim() })).filter(e => e.degree || e.institute);
+
 const BADGE = { self: ["mute", "Self-declared"], portfolio: ["ok", "✓ Portfolio checked"], verified: ["feat", "★ Widgetry verified"] };
 function showStatus(p) {
   if (!p) { $("statusBox").hidden = true; return; }
   const [cls, txt] = BADGE[p.verification] || BADGE.self;
   $("statusBox").innerHTML = `<div class="card" style="display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
     <div><b>Your profile is ${p.openToWork ? "active" : "paused"}</b><div class="muted small">Verification: <span class="badge ${cls}">${txt}</span>${p.verification === "self" ? " · Add your apps and GitHub so we can check your portfolio." : ""}</div></div>
-    <span class="badge ${p.openToWork ? "ok" : "mute"}">${p.openToWork ? "Open to work" : "Paused"}</span></div>`;
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="badge ${p.openToWork ? "ok" : "mute"}">${p.openToWork ? "Open to work" : "Paused"}</span>
+      <a class="btn small" href="resume.html">📄 View &amp; download resume</a></div></div>`;
   $("statusBox").hidden = false;
 }
 
@@ -152,6 +198,8 @@ function fill(p) {
   document.querySelectorAll('input[name="wm"]').forEach(c => (c.checked = p.workModes.includes(c.value)));
   skills = p.skills.length ? p.skills : skills; drawSkills();
   $("apps").innerHTML = ""; (p.apps.length ? p.apps : [{}]).forEach(addApp);
+  $("work").innerHTML = ""; (p.experience || []).forEach(addWork);
+  $("edu").innerHTML = ""; (p.education?.length ? p.education : [{}]).forEach(addEdu);
   $("consent").checked = true; $("bDelete").hidden = false; $("bSave").textContent = "Update my profile";
 }
 
@@ -159,7 +207,7 @@ onUser(async u => {
   $("gate").hidden = !!u; $("fProfile").hidden = !u;
   if (!u) { $("statusBox").hidden = true; return; }
   if (!$("fullName").value) $("fullName").value = u.displayName || "";
-  try { const r = await api("/talent/me", { auth: true }); if (r.profile) fill(r.profile); else if (!$("apps").children.length) addApp(); showStatus(r.profile); }
+  try { const r = await api("/talent/me", { auth: true }); if (r.profile) fill(r.profile); else { if (!$("apps").children.length) addApp(); if (!$("edu").children.length) addEdu(); } showStatus(r.profile); }
   catch (e) { $("err").textContent = e.message; $("err").hidden = false; }
 });
 drawSkills();
@@ -173,6 +221,7 @@ $("fProfile").addEventListener("submit", async e => {
     fullName: $("fullName").value, phone: $("phone").value, headline: $("headline").value, currentCompany: $("currentCompany").value,
     experienceYears: Number($("experienceYears").value || 0), city: $("city").value, about: $("about").value,
     githubUrl: $("githubUrl").value, linkedinUrl: $("linkedinUrl").value, portfolioUrl: $("portfolioUrl").value, apps, skills,
+    experience: collectWork(), education: collectEdu(),
     jobTypes: [...document.querySelectorAll('input[name="jt"]:checked')].map(c => c.value),
     workModes: [...document.querySelectorAll('input[name="wm"]:checked')].map(c => c.value),
     noticePeriod: $("noticePeriod").value || null, expectedSalaryLpa: $("expectedSalaryLpa").value === "" ? null : Number($("expectedSalaryLpa").value),
@@ -182,7 +231,7 @@ $("fProfile").addEventListener("submit", async e => {
   try {
     const r = await api("/talent/me", { method: "PUT", body, auth: true });
     fill(r.profile); showStatus(r.profile);
-    $("ok").textContent = r.message + " We'll review your portfolio and update your verification."; $("ok").hidden = false;
+    $("ok").innerHTML = esc(r.message) + ` Your resume is ready: <a href="resume.html">view &amp; download it</a>.`; $("ok").hidden = false;
     toast("Profile saved"); $("statusBox").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (x) {
     const f = x.issues?.[0]?.field; if (f && $(f)) $(f).focus();
@@ -194,7 +243,7 @@ $("bDelete").onclick = async () => {
   if (!confirm("Delete your Talent Network profile? This removes everything you've added and can't be undone.")) return;
   try {
     await api("/talent/me", { method: "DELETE", auth: true });
-    $("fProfile").reset(); $("apps").innerHTML = ""; addApp(); skills = ["Flutter", "Dart"]; drawSkills();
+    $("fProfile").reset(); $("apps").innerHTML = ""; addApp(); $("work").innerHTML = ""; $("edu").innerHTML = ""; addEdu(); skills = ["Flutter", "Dart"]; drawSkills();
     $("bDelete").hidden = true; $("bSave").textContent = "Save my profile"; showStatus(null); toast("Your profile has been deleted");
   } catch (x) { $("err").textContent = x.message; $("err").hidden = false; }
 };
