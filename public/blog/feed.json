@@ -1,0 +1,79 @@
+{
+ "version": "https://jsonfeed.org/version/1.1",
+ "title": "Widgetry Blog",
+ "home_page_url": "https://widgetryacademy.in/blog/",
+ "items": [
+  {
+   "id": "flutter-vs-react-native-jobs",
+   "url": "https://widgetryacademy.in/blog/flutter-vs-react-native-jobs.html",
+   "title": "Flutter vs React Native Jobs in India: Which Should You Learn in 2026?",
+   "summary": "An honest, data-based comparison of Flutter and React Native for your career in India: job demand, salaries, adoption, learning curve and which to pick.",
+   "date_published": "2026-10-16",
+   "date_modified": "2026-10-16",
+   "tags": [
+    "Careers"
+   ],
+   "reading_minutes": 4
+  },
+  {
+   "id": "flutter-developer-salary-india",
+   "url": "https://widgetryacademy.in/blog/flutter-developer-salary-india.html",
+   "title": "Flutter Developer Salary in India (2026): Fresher to Senior, With Real Data",
+   "summary": "What Flutter developers earn in India in 2026, by experience level, with data from PayScale and Glassdoor, plus what actually moves your salary up.",
+   "date_published": "2026-10-16",
+   "date_modified": "2026-10-16",
+   "tags": [
+    "Salary"
+   ],
+   "reading_minutes": 5
+  },
+  {
+   "id": "flutter-developer-jobs-india",
+   "url": "https://widgetryacademy.in/blog/flutter-developer-jobs-india.html",
+   "title": "Flutter Developer Jobs in India (2026): Where to Find Them and How to Get Hired",
+   "summary": "Where Flutter jobs in India are posted, which cities hire most, the skills employers ask for, and a step-by-step plan to land your next Flutter role.",
+   "date_published": "2026-10-16",
+   "date_modified": "2026-10-16",
+   "tags": [
+    "Jobs"
+   ],
+   "reading_minutes": 5
+  },
+  {
+   "id": "how-to-become-flutter-developer",
+   "url": "https://widgetryacademy.in/blog/how-to-become-flutter-developer.html",
+   "title": "How to Become a Flutter Developer in 2026: A Practical Roadmap for Beginners",
+   "summary": "A realistic step-by-step roadmap from zero to job-ready Flutter developer: what to learn at each stage, how long it takes, and how to build a portfolio.",
+   "date_published": "2026-10-15",
+   "date_modified": "2026-10-15",
+   "tags": [
+    "Learning"
+   ],
+   "reading_minutes": 5
+  },
+  {
+   "id": "flutter-developer-resume",
+   "url": "https://widgetryacademy.in/blog/flutter-developer-resume.html",
+   "title": "Flutter Developer Resume: ATS-Friendly Format, Example Bullet Points and Tips",
+   "summary": "How to write a Flutter developer resume that passes ATS screening and gets interviews: format, section order, example bullet points and mistakes to avoid.",
+   "date_published": "2026-10-14",
+   "date_modified": "2026-10-14",
+   "tags": [
+    "Resume"
+   ],
+   "reading_minutes": 4
+  },
+  {
+   "id": "flutter-interview-questions",
+   "url": "https://widgetryacademy.in/blog/flutter-interview-questions.html",
+   "title": "Flutter Interview Questions and Answers (2026): Freshers to Experienced",
+   "summary": "The Flutter interview questions Indian companies actually ask, with clear answers: widgets, state management, async Dart, performance and architecture.",
+   "date_published": "2026-10-13",
+   "date_modified": "2026-10-13",
+   "tags": [
+    "Interviews"
+   ],
+   "reading_minutes": 7
+  }
+ ]
+}

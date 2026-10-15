@@ -68,7 +68,7 @@ DB_PORT=3306 DB_PASSWORD=... ALLOW_DEV_AUTH=1 npm test
 1. **TiDB Cloud** (tidbcloud.com) → create a **Starter** cluster in **Singapore**, set a monthly spending limit. Connect → note **host**, **user** (`xxxx.root`), **password**.
 2. **Railway** (railway.com) → sign in with GitHub → Hobby plan → New Project → Deploy from GitHub repo → `kshanlvs/widgetry-academy`.
    - Service Settings → **Root Directory** `jobs-api`; **Branch** `main` (or `widgetry-jobs` to test first); **Region** Southeast Asia (Singapore).
-   - **Variables**: `DB_HOST`, `DB_PORT=4000`, `DB_USER`, `DB_PASSWORD`, `DB_NAME=widgetry_jobs`, `DB_SSL=1`, `NODE_ENV=production`, `MIGRATE_ON_START=1`.
+   - **Variables**: `DB_HOST`, `DB_PORT=4000`, `DB_USER`, `DB_PASSWORD`, `DB_NAME=widgetry_jobs`, `DB_SSL=1`, `NODE_ENV=production`, `MIGRATE_ON_START=1`, and for app push notifications `FIREBASE_SERVICE_ACCOUNT` (the whole JSON key from Firebase → Project settings → Service accounts → Generate new private key).
    - Settings → Networking → **Custom Domain** `api.widgetryacademy.in`, port 8080. Railway shows a CNAME (and a TXT) record.
 3. **GoDaddy DNS** → add the records Railway shows (CNAME `api` → `xxxx.up.railway.app`).
 4. Check `https://api.widgetryacademy.in/api/health` returns `{"ok":true}`, then merge `widgetry-jobs` into `main`.

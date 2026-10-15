@@ -1,20 +1,15 @@
 // Verifies the Firebase ID token the website already has (Google or email login). No second login system.
 import type { Request, Response, NextFunction } from "express";
-import { initializeApp, getApps, applicationDefault } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
+import { adminApp } from "./firebase.js";
 import { config } from "./config.js";
 import { HttpError } from "./errors.js";
 
 export interface AuthUser { uid: string; email: string | null; emailVerified: boolean; name: string | null }
 declare global { namespace Express { interface Request { user?: AuthUser } } }
 
-function admin() {
-  if (!getApps().length) {
-    // Only the project id is needed to verify sign-in tokens (no service account, no Blaze plan).
-    initializeApp({ projectId: config.firebaseProjectId, ...(process.env.GOOGLE_APPLICATION_CREDENTIALS ? { credential: applicationDefault() } : {}) });
-  }
-  return getAuth();
-}
+// Only the project id is needed to verify sign-in tokens (no service account, no Blaze plan).
+const admin = () => getAuth(adminApp());
 
 async function readUser(req: Request): Promise<AuthUser | undefined> {
   const h = req.get("authorization") || "";

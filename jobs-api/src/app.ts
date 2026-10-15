@@ -9,6 +9,7 @@ import { optionalAuth } from "./auth.js";
 import { jobsRouter } from "./routes/jobs.js";
 import { talentRouter } from "./routes/talent.js";
 import { adminRouter } from "./routes/admin.js";
+import { devicesRouter } from "./routes/devices.js";
 
 export function createApp() {
   const app = express();
@@ -44,6 +45,7 @@ export function createApp() {
   });
   api.use(jobsRouter);
   api.use(talentRouter);
+  api.use(devicesRouter);
   api.use("/admin", adminRouter);
   api.use((_req, res) => res.status(404).json({ error: "Not found." }));
   api.use(errorHandler);

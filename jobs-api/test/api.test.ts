@@ -6,6 +6,7 @@ import type { Server } from "node:http";
 import { createApp } from "../src/app.js";
 import { pool } from "../src/db.js";
 import { migrate } from "../src/migrate.js";
+import { setSender } from "../src/notify.js";
 
 const ADMIN = "dev:E4edbAvcdwTdkTdNwcdWneVWe572:admin@widgetry.test:Admin";
 const EMP = "dev:emp1:hr@acme.test:Acme HR";
@@ -349,4 +350,55 @@ test("categories: Flutter, Android and iOS jobs and seekers", async () => {
   assert.deepEqual(s.body.profile.categories, ["flutter", "android"]);
   const list = (await call("GET", "/admin/candidates?category=android", undefined, ADMIN)).body.items;
   assert.ok(list.some((c: any) => c.fullName === "Cat Roy"));
+});
+
+test("push: devices, new-job topic, employer and verification messages, admin announcements", async () => {
+  const sent: { to: string; title: string; body: string; link?: string }[] = [];
+  setSender({
+    async topic(topic, p) { sent.push({ to: "topic:" + topic, title: p.title, body: p.body, link: p.link }); },
+    async tokens(tokens, p) { for (const t of tokens) sent.push({ to: "token:" + t, title: p.title, body: p.body }); return tokens.filter(t => t.startsWith("dead")); },
+  });
+  const wait = () => new Promise(r => setTimeout(r, 150));
+  const emp = "dev:pushemp:hr@push.test:Push HR", seek = "dev:pushseek:s@push.test:Seeker";
+  const tokA = "a".repeat(40), tokDead = "dead" + "x".repeat(40);
+  assert.equal((await call("POST", "/me/devices", { token: tokA, platform: "android" })).status, 401);
+  assert.equal((await call("POST", "/me/devices", { token: "short" }, emp)).status, 400);
+  assert.equal((await call("POST", "/me/devices", { token: tokA, platform: "android" }, emp)).status, 201);
+  assert.equal((await call("POST", "/me/devices", { token: tokDead, platform: "ios" }, emp)).status, 201);
+
+  // Employer job approved: category topic + employer's phones; the dead token is cleaned up
+  const j = await call("POST", "/jobs", goodJob({ title: "Push Flutter Dev", applyUrl: "https://push.test/careers/1" }), emp);
+  await call("PATCH", "/admin/jobs/" + j.body.id, { status: "approved" }, ADMIN); await wait();
+  assert.ok(sent.some(m => m.to === "topic:jobs-flutter" && m.body === "Push Flutter Dev at Acme Apps"), JSON.stringify(sent));
+  assert.ok(sent.some(m => m.to === "token:" + tokA && m.title.startsWith("Your job is live")));
+  const [{ n }] = await pool.query("SELECT COUNT(*) AS n FROM device_tokens WHERE token = ?", [tokDead]).then(([r]) => r as any[]);
+  assert.equal(Number(n), 0, "invalid tokens removed");
+  // Re-approving doesn't announce again
+  sent.length = 0;
+  await call("PATCH", "/admin/jobs/" + j.body.id, { status: "pending" }, ADMIN);
+  await call("PATCH", "/admin/jobs/" + j.body.id, { status: "approved" }, ADMIN); await wait();
+  assert.ok(!sent.some(m => m.to.startsWith("topic:")));
+
+  // Bulk import: one message per category
+  sent.length = 0;
+  const desc = "Build features in Kotlin with Jetpack Compose and coroutines for our Android app, and ship to the Play Store every sprint.";
+  const base = { category: "android", companyName: "Push Droid", jobType: "full_time", workMode: "remote", level: "mid", description: desc };
+  await call("POST", "/admin/jobs/import", { jobs: [{ ...base, title: "Android A", applyUrl: "https://pd.test/a" }, { ...base, title: "Android B", applyUrl: "https://pd.test/b" }] }, ADMIN); await wait();
+  const topicMsgs = sent.filter(m => m.to === "topic:jobs-android");
+  assert.equal(topicMsgs.length, 1); assert.equal(topicMsgs[0]!.title, "2 new Android jobs");
+
+  // Verification change reaches the seeker
+  sent.length = 0;
+  await call("PUT", "/talent/me", { fullName: "Push Seeker", headline: "Flutter Developer", experienceYears: 1, skills: ["Flutter"], consent: true }, seek);
+  await call("POST", "/me/devices", { token: "s".repeat(40), platform: "android" }, seek);
+  const cid = (await call("GET", "/talent/me", undefined, seek)).body.profile.id;
+  await call("PATCH", "/admin/candidates/" + cid, { verification: "verified" }, ADMIN); await wait();
+  assert.ok(sent.some(m => m.to === "token:" + "s".repeat(40) && m.title.includes("verified")));
+
+  // Admin announcements
+  assert.equal((await call("POST", "/admin/notify", { audience: "academy", title: "Batch 2", body: "Starts Saturday" }, EMP)).status, 403);
+  assert.equal((await call("POST", "/admin/notify", { audience: "nobody", title: "Hi there", body: "Test" }, ADMIN)).status, 400);
+  assert.equal((await call("POST", "/admin/notify", { audience: "academy", title: "Batch 2 starts", body: "Saturday 11 AM, see you there" }, ADMIN)).status, 200);
+  assert.ok(sent.some(m => m.to === "topic:academy"));
+  setSender(null);
 });
