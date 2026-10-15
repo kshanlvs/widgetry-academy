@@ -1,7 +1,7 @@
 // Firebase web app config. Safe to be public: access is controlled by firestore.rules.
 export const firebaseConfig = {
   apiKey: "AIzaSyB9HRc_R4KOh9n5Ih-bxKcUtHEqpdHMOYQ",
-  authDomain: "widgetry-academy.web.app",
+  authDomain: "widgetryacademy.in",
   projectId: "flutter-in-10-days",
   storageBucket: "flutter-in-10-days.firebasestorage.app",
   messagingSenderId: "456315843656",
