@@ -229,11 +229,15 @@ test("resume: work history and education are saved and validated", async () => {
   assert.equal(bad.status, 400);
   const r = await call("PUT", "/talent/me", { ...base,
     experience: [{ company: "Nimbus Labs", role: "Flutter Developer", start: "2023-06", end: "", points: "Built the delivery app\nCut crashes by 40%" }],
-    education: [{ degree: "MCA", institute: "Techno India", year: 2022, score: "8.1 CGPA" }] }, tok);
+    education: [{ degree: "MCA", institute: "Techno India", year: 2022, score: "8.1 CGPA" }],
+    certifications: [{ name: "Flutter in 10 Days", issuer: "Widgetry Academy", year: 2026 }],
+    apps: [{ name: "QuickBite", url: "https://play.google.com/store/apps/details?id=q", role: "Lead", about: "Food delivery app with live tracking" }] }, tok);
   assert.equal(r.status, 200);
   assert.equal(r.body.profile.experience[0].end, null);
   assert.equal(r.body.profile.experience[0].points, "Built the delivery app\nCut crashes by 40%");
   assert.equal(r.body.profile.education[0].year, 2022);
+  assert.equal(r.body.profile.certifications[0].issuer, "Widgetry Academy");
+  assert.equal(r.body.profile.apps[0].about, "Food delivery app with live tracking");
 });
 
 test("employers can edit, mark filled and delete only their own jobs", async () => {

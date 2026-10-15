@@ -76,7 +76,7 @@ export const reportInput = z.object({
   details: optText(500),
 });
 
-const appItem = z.object({ name: trim(80).min(1), url: optUrl, role: optText(80) });
+const appItem = z.object({ name: trim(80).min(1), url: optUrl, role: optText(80), about: optText(400) });   // about: what it does, tech used
 
 const month = z.string().trim().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Use month and year");
 const workItem = z.object({
@@ -104,6 +104,8 @@ export const candidateInput = z.object({
   apps: z.array(appItem).max(8).default([]),
   experience: z.array(workItem).max(10).default([]),
   education: z.array(eduItem).max(6).default([]),
+  certifications: z.array(z.object({ name: trim(120).min(1, "Add the certificate name"), issuer: optText(120),
+    year: z.coerce.number().int().min(1970).max(2040).optional().nullable() })).max(8).default([]),
   about: optText(2000),
   skills: skillList.refine(s => s.length > 0, "Add at least one skill"),
   openToWork: z.boolean().default(true),
