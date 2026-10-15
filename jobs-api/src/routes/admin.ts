@@ -59,6 +59,33 @@ adminRouter.get("/jobs", wrap(async (req, res) => {
   })) });
 }));
 
+// Bulk import: paste many jobs at once. Everything is checked first; if any job has a problem, nothing is added.
+const bulkBody = z.object({ jobs: z.array(z.record(z.unknown())).min(1).max(50), dryRun: z.boolean().default(false) });
+adminRouter.post("/jobs/import", wrap(async (req, res) => {
+  const { jobs, dryRun } = bulkBody.parse(req.body);
+  const report: { index: number; title: string; status: "ok" | "invalid" | "duplicate"; message?: string }[] = [];
+  const valid: { index: number; job: ReturnType<typeof jobInput.parse> }[] = [];
+  const seen = new Set<string>();
+  for (const [i, raw] of jobs.entries()) {
+    const input: any = { ...raw };
+    if (typeof input.skills === "string") input.skills = input.skills.split(",").map((x: string) => x.trim()).filter(Boolean);
+    if (!input.contactEmail) input.contactEmail = req.user!.email;
+    const title = String(input.title ?? `Job ${i + 1}`).slice(0, 140);
+    const r = jobInput.safeParse(input);
+    if (!r.success) { const iss = r.error.issues[0]; report.push({ index: i, title, status: "invalid", message: `${iss.path.join(".") || "job"}: ${iss.message}` }); continue; }
+    const key = (r.data.applyUrl || r.data.applyEmail || "").toLowerCase() + "|" + r.data.title.toLowerCase();
+    const [dup] = await query("SELECT 1 FROM jobs j JOIN companies c ON c.id = j.company_id WHERE j.status IN ('pending','approved') AND ((j.apply_url IS NOT NULL AND j.apply_url = ?) OR (c.name = ? AND j.title = ?)) LIMIT 1",
+      [r.data.applyUrl, r.data.companyName, r.data.title]);
+    if (dup || seen.has(key)) { report.push({ index: i, title, status: "duplicate", message: "Already on Widgetry Jobs (same apply link or same company and title)" }); continue; }
+    seen.add(key); valid.push({ index: i, job: r.data }); report.push({ index: i, title, status: "ok" });
+  }
+  const invalid = report.filter(r => r.status === "invalid").length;
+  if (dryRun || invalid) return res.status(invalid && !dryRun ? 400 : 200).json({ created: 0, report, error: invalid && !dryRun ? `${invalid} job(s) need fixing. Nothing was added.` : undefined });
+  const created: string[] = [];
+  for (const v of valid) created.push((await createJob(v.job, { uid: req.user!.uid, approved: true })).publicId);
+  res.status(201).json({ created: created.length, ids: created, report });
+}));
+
 // Admin posts go live immediately
 adminRouter.post("/jobs", wrap(async (req, res) => {
   const j = jobInput.parse(req.body);

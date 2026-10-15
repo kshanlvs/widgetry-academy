@@ -111,6 +111,8 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
 .j-pending{background:#fff1d6;color:#8a5a00}.j-approved{background:#dff4ea;color:#0f6b56}.j-rejected{background:#fde6e3;color:#a32d1d}.j-filled,.j-expired{background:#eceaea;color:#555}
 .v-self{background:#eceaea;color:#555}.v-portfolio{background:#e6f0ff;color:#1d4fa8}.v-verified{background:#dff4ea;color:#0f6b56}
 #jdlg{max-width:680px}#jdlg .dlg{max-height:85vh;overflow:auto}
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:var(--accent);text-decoration:underline;cursor:pointer}
+#bdlg{max-width:760px}#bdlg .dlg{max-height:88vh;overflow:auto}#bdlg textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:10px}
 .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}@media (max-width:560px){.row3{grid-template-columns:1fr}}
 .jnote{background:#e8f1ec;border:1px solid #c9ddd2;border-radius:10px;padding:10px 12px;font-size:14px}
 .pitch{background:var(--soft);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.5;white-space:pre-wrap}
@@ -297,6 +299,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
       <label>Status<select id="jStatus"><option value="pending">In review</option><option value="approved">Live</option><option value="rejected">Rejected</option><option value="filled">Filled</option><option value="expired">Expired</option><option value="all">All</option></select></label>
       <label>Search<input id="jq" placeholder="Title, company, contact email"></label>
       <button class="btn ghost" id="jReload" type="button">Refresh</button>
+      <button class="btn ghost" id="jBulk" type="button">Bulk import</button>
       <button class="btn" id="jNew" type="button">+ Post a job</button>
     </div>
     <div class="jl" id="jList"><p class="small">Loading…</p></div>
@@ -315,6 +318,16 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
     <p class="small" style="margin-top:12px">Profiles are private: only you can see them. Verify: check their apps and GitHub (Portfolio checked), then a 20–30 min technical call (Widgetry verified).</p>
   </section>
 </main>
+
+<dialog id="bdlg"><form class="dlg" id="bForm" method="dialog" novalidate>
+  <h2>Bulk import jobs</h2>
+  <p class="small" style="margin:0">Paste the jobs Claude prepares for you (a JSON list). Click <b>Check</b> first: if any job has a problem, nothing is added. Duplicates are skipped. Imported jobs go live immediately for 30 days.</p>
+  <textarea id="bText" rows="14" spellcheck="false" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px" placeholder='[ { "companyName": "...", "title": "...", ... } ]'></textarea>
+  <p class="small" style="margin:0"><button class="linkbtn" type="button" id="bTpl">Insert an example</button> · Fields: companyName, companyWebsite, title, jobType (full_time / internship / freelance / contract / part_time), workMode (onsite / hybrid / remote), level (fresher / junior / mid / senior / lead), city, salaryMin, salaryMax, salaryPeriod (month / year / project), description, skills, applyUrl or applyEmail</p>
+  <div id="bReport" class="jl"></div>
+  <p class="err" id="bErr" hidden></p>
+  <div class="acts"><button class="btn ghost" value="cancel" formnovalidate>Close</button><button class="btn ghost" type="button" id="bCheck">Check</button><button class="btn" type="button" id="bGo" disabled>Import</button></div>
+</form></dialog>
 
 <dialog id="jdlg"><form class="dlg" id="jForm" method="dialog" novalidate>
   <h2 id="jdTitle">Post a job</h2>
@@ -775,6 +788,45 @@ function openJobForm(j) {
   $("jfErr").hidden = true; $("jdlg").showModal();
 }
 $("jNew").onclick = () => openJobForm(null);
+
+// ----- Bulk import -----
+const BULK_EXAMPLE = [{ companyName: "Example Labs", companyWebsite: "https://example.com", title: "Flutter Developer", jobType: "full_time", workMode: "hybrid", level: "junior", city: "Kolkata",
+  description: "Build and ship features for our Flutter app with Firebase and REST APIs. Work with design and backend teams, write tests and fix bugs. 1-2 years of Flutter experience.",
+  skills: "Flutter, Dart, Firebase, REST APIs", applyUrl: "https://example.com/careers/flutter-developer" }];
+let bulkJobs = null;
+$("jBulk").onclick = () => { $("bErr").hidden = true; $("bReport").innerHTML = ""; $("bGo").disabled = true; $("bdlg").showModal(); };
+$("bTpl").onclick = () => { $("bText").value = JSON.stringify(BULK_EXAMPLE, null, 2); $("bGo").disabled = true; };
+$("bText").addEventListener("input", () => { $("bGo").disabled = true; $("bReport").innerHTML = ""; });
+function parseBulk() {
+  let v; try { v = JSON.parse($("bText").value.trim()); } catch { throw new Error("That isn't valid JSON. Paste exactly what Claude gave you, starting with [ and ending with ]."); }
+  if (!Array.isArray(v)) v = [v];
+  if (!v.length) throw new Error("No jobs found."); if (v.length > 50) throw new Error("Import at most 50 jobs at a time.");
+  return v;
+}
+const BICON = { ok: ["p-paid", "Ready"], invalid: ["p-refunded", "Fix needed"], duplicate: ["p-unpaid", "Already posted"] };
+function showBulk(report) {
+  $("bReport").innerHTML = report.map(r => { const [c, t] = BICON[r.status]; return `<div class="ji" style="padding:10px 12px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><b>${r.index + 1}. ${esc(r.title)}</b><span class="pill ${c}">${t}</span></div>${r.message ? `<div class="small">${esc(r.message)}</div>` : ""}</div>`; }).join("");
+}
+$("bCheck").onclick = async () => {
+  $("bErr").hidden = true; $("bGo").disabled = true;
+  try {
+    bulkJobs = parseBulk();
+    const r = await japi("/admin/jobs/import", { method: "POST", body: { jobs: bulkJobs, dryRun: true } });
+    showBulk(r.report);
+    const ok = r.report.filter(x => x.status === "ok").length, bad = r.report.filter(x => x.status === "invalid").length;
+    $("bGo").disabled = !ok || !!bad; $("bGo").textContent = ok ? `Import ${ok} job${ok > 1 ? "s" : ""}` : "Import";
+    if (bad) { $("bErr").textContent = `${bad} job(s) need fixing before you can import.`; $("bErr").hidden = false; }
+  } catch (x) { $("bErr").textContent = x.message; $("bErr").hidden = false; }
+};
+$("bGo").onclick = async () => {
+  $("bGo").disabled = true; $("bErr").hidden = true;
+  try {
+    const r = await japi("/admin/jobs/import", { method: "POST", body: { jobs: bulkJobs } });
+    showBulk(r.report); $("bText").value = "";
+    $("bReport").insertAdjacentHTML("afterbegin", `<p class="small" style="color:var(--ok,#1f9d55);font-weight:700;margin:0">✓ ${r.created} job${r.created === 1 ? "" : "s"} added and live.</p>`);
+    $("jStatus").value = "approved"; loadJobs();
+  } catch (x) { $("bErr").textContent = x.message; $("bErr").hidden = false; }
+};
 $("jForm").addEventListener("submit", async e => {
   if (e.submitter?.value !== "save") return;
   e.preventDefault(); $("jfErr").hidden = true; $("jfSave").disabled = true;

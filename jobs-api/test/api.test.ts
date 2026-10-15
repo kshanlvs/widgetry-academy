@@ -300,3 +300,23 @@ test("profile photo, resume settings and open-to-work toggle", async () => {
   const [{ n }] = await pool.query("SELECT COUNT(*) AS n FROM candidate_photos").then(([r]) => r as any[]);
   assert.equal(Number(n), 0, "deleting the profile deletes the photo");
 });
+
+test("admin bulk import: checks everything first, skips duplicates, posts live", async () => {
+  const desc = "Build consumer features in Flutter with Bloc and REST APIs, improve architecture, fix performance issues and mentor juniors.";
+  const a = { companyName: "Bulk Co", title: "Flutter Engineer", jobType: "full_time", workMode: "onsite", level: "mid", city: "Pune", description: desc, skills: "Flutter, Dart, bloc", applyUrl: "https://bulk.test/careers/flutter" };
+  const b = { ...a, title: "Flutter Intern", jobType: "internship", level: "fresher", applyUrl: "https://bulk.test/careers/intern" };
+  const bad = { ...a, title: "Broken", applyUrl: "javascript:alert(1)" };
+  assert.equal((await call("POST", "/admin/jobs/import", { jobs: [a] }, EMP)).status, 403);
+  const check = await call("POST", "/admin/jobs/import", { jobs: [a, b, bad], dryRun: true }, ADMIN);
+  assert.equal(check.status, 200);
+  assert.deepEqual(check.body.report.map((r: any) => r.status), ["ok", "ok", "invalid"]);
+  const refused = await call("POST", "/admin/jobs/import", { jobs: [a, b, bad] }, ADMIN);
+  assert.equal(refused.status, 400); assert.equal(refused.body.created, 0);
+  const ok = await call("POST", "/admin/jobs/import", { jobs: [a, b, a] }, ADMIN);
+  assert.equal(ok.status, 201); assert.equal(ok.body.created, 2);
+  assert.equal(ok.body.report[2].status, "duplicate");
+  const job = (await call("GET", "/jobs/" + ok.body.ids[0])).body;
+  assert.equal(job.status, "open"); assert.deepEqual(job.skills, ["Bloc", "Dart", "Flutter"]);
+  const again = await call("POST", "/admin/jobs/import", { jobs: [a] }, ADMIN);
+  assert.equal(again.body.created, 0); assert.equal(again.body.report[0].status, "duplicate");
+});
