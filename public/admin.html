@@ -100,6 +100,19 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
 .cprev-in h4{margin:0;font-family:"Unbounded",sans-serif;font-size:18px}
 .cprev-in ol{margin:0;padding-left:18px;color:var(--muted)}
 .cprev-price b{font-family:"Unbounded",sans-serif;font-size:20px}.cprev-price s{color:var(--muted);margin-left:6px}
+
+.jl{display:grid;gap:12px}
+.ji{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:8px}
+.ji h3{margin:0;font-size:17px}
+.ji .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px;color:var(--muted)}
+.ji .acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;margin-top:0}
+.ji .acts .btn{padding:7px 12px;font-size:13px}
+.ji details{font-size:14px}.ji details p{white-space:pre-wrap;margin:8px 0 0}
+.j-pending{background:#fff1d6;color:#8a5a00}.j-approved{background:#dff4ea;color:#0f6b56}.j-rejected{background:#fde6e3;color:#a32d1d}.j-filled,.j-expired{background:#eceaea;color:#555}
+.v-self{background:#eceaea;color:#555}.v-portfolio{background:#e6f0ff;color:#1d4fa8}.v-verified{background:#dff4ea;color:#0f6b56}
+#jdlg{max-width:680px}#jdlg .dlg{max-height:85vh;overflow:auto}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}@media (max-width:560px){.row3{grid-template-columns:1fr}}
+.jnote{background:#e8f1ec;border:1px solid #c9ddd2;border-radius:10px;padding:10px 12px;font-size:14px}
 .pitch{background:var(--soft);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.5;white-space:pre-wrap}
 </style>
 </head>
@@ -121,6 +134,8 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
     <button class="tab" data-tab="mapp" aria-selected="false">Mentors <span class="c" id="cMen">0</span></button>
     <button class="tab" data-tab="bapp" aria-selected="false">Next batch</button>
     <button class="tab" data-tab="capp" aria-selected="false">Courses <span class="c" id="cCrs">0</span></button>
+    <button class="tab" data-tab="japp" aria-selected="false">Jobs <span class="c" id="cJobs">0</span></button>
+    <button class="tab" data-tab="tapp" aria-selected="false">Talent <span class="c" id="cTal">0</span></button>
   </div>
 
   <section id="app" hidden>
@@ -269,7 +284,56 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
       </form>
     </div>
   </section>
+  <section id="japp" hidden>
+    <p class="note" id="jOff" hidden></p>
+    <div class="kpis k5">
+      <div class="kpi"><span>In review</span><b id="jkP">0</b></div>
+      <div class="kpi money"><span>Live</span><b id="jkA">0</b></div>
+      <div class="kpi"><span>Rejected</span><b id="jkR">0</b></div>
+      <div class="kpi"><span>Filled / expired</span><b id="jkF">0</b></div>
+      <div class="kpi"><span>Open reports</span><b id="jkRep">0</b></div>
+    </div>
+    <div class="tools">
+      <label>Status<select id="jStatus"><option value="pending">In review</option><option value="approved">Live</option><option value="rejected">Rejected</option><option value="filled">Filled</option><option value="expired">Expired</option><option value="all">All</option></select></label>
+      <label>Search<input id="jq" placeholder="Title, company, contact email"></label>
+      <button class="btn ghost" id="jReload" type="button">Refresh</button>
+      <button class="btn" id="jNew" type="button">+ Post a job</button>
+    </div>
+    <div class="jl" id="jList"><p class="small">Loading…</p></div>
+    <h2 style="font-size:17px;margin:26px 0 10px">Open reports</h2>
+    <div class="jl" id="jReports"></div>
+    <p class="small" style="margin-top:12px">Approving a job makes it live for 30 days. Jobs reported by 3 different people go back to "In review" automatically. Public page: <a href="jobs.html" target="_blank">jobs.html</a></p>
+  </section>
+
+  <section id="tapp" hidden>
+    <div class="tools">
+      <label>Verification<select id="tVer"><option value="">All</option><option value="self">Self-declared</option><option value="portfolio">Portfolio checked</option><option value="verified">Widgetry verified</option></select></label>
+      <label>Search<input id="tq" placeholder="Name, email, headline, company"></label>
+      <button class="btn ghost" id="tReload" type="button">Refresh</button>
+    </div>
+    <div class="jl" id="tList"><p class="small">Loading…</p></div>
+    <p class="small" style="margin-top:12px">Profiles are private: only you can see them. Verify: check their apps and GitHub (Portfolio checked), then a 20–30 min technical call (Widgetry verified).</p>
+  </section>
 </main>
+
+<dialog id="jdlg"><form class="dlg" id="jForm" method="dialog" novalidate>
+  <h2 id="jdTitle">Post a job</h2>
+  <p class="small" style="margin:0">Jobs you post here go live immediately.</p>
+  <div class="row2"><label>Company<input id="jf_companyName" maxlength="120" required></label><label>Company website<input id="jf_companyWebsite" type="url" maxlength="300" placeholder="https://"></label></div>
+  <label>Job title<input id="jf_title" maxlength="140" required></label>
+  <div class="row3"><label>Type<select id="jf_jobType"><option value="full_time">Full-time</option><option value="internship">Internship</option><option value="freelance">Freelance</option><option value="contract">Contract</option><option value="part_time">Part-time</option></select></label>
+    <label>Mode<select id="jf_workMode"><option value="onsite">On-site</option><option value="hybrid">Hybrid</option><option value="remote">Remote</option></select></label>
+    <label>Level<select id="jf_level"><option value="fresher">Fresher</option><option value="junior">Junior (0–2)</option><option value="mid">Mid (2–5)</option><option value="senior">Senior (5+)</option><option value="lead">Lead</option></select></label></div>
+  <label>City<input id="jf_city" maxlength="80" placeholder="Required unless remote"></label>
+  <div class="row3"><label>Salary min (₹)<input id="jf_salaryMin" type="number" min="0"></label><label>Salary max (₹)<input id="jf_salaryMax" type="number" min="0"></label>
+    <label>Per<select id="jf_salaryPeriod"><option value="month">month</option><option value="year">year</option><option value="project">project</option></select></label></div>
+  <label>Description (min 80 characters)<textarea id="jf_description" rows="7" maxlength="8000"></textarea></label>
+  <label>Skills (comma separated)<input id="jf_skills" maxlength="400" placeholder="Flutter, Dart, Firebase, Bloc"></label>
+  <div class="row2"><label>Apply link<input id="jf_applyUrl" type="url" maxlength="400" placeholder="https://"></label><label>Apply email<input id="jf_applyEmail" type="email" maxlength="200"></label></div>
+  <div class="row2"><label>Contact name (private)<input id="jf_contactName" maxlength="100"></label><label>Contact email (private)<input id="jf_contactEmail" type="email" maxlength="200" required></label></div>
+  <p class="err" id="jfErr" hidden></p>
+  <div class="acts"><button class="btn ghost" value="cancel" formnovalidate>Cancel</button><button class="btn" id="jfSave" value="save">Save</button></div>
+</form></dialog>
 
 <dialog id="mdlg"><form class="dlg" id="mfEdit" method="dialog">
   <h2 id="mdName">Mentor</h2>
@@ -320,7 +384,7 @@ function due(r) { const st = ps(r); if (["refunded", "cancelled"].includes(st) |
 function fmtDate(ts) { const d = ts?.toDate ? ts.toDate() : null; return d ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"; }
 
 onAuthStateChanged(auth, async u => {
-  $("fLogin").hidden = !!u; $("who").hidden = !u; $("denied").hidden = true; $("app").hidden = true; $("mapp").hidden = true; $("bapp").hidden = true; $("capp").hidden = true; $("tabs").hidden = true;
+  $("fLogin").hidden = !!u; $("who").hidden = !u; $("denied").hidden = true; $("app").hidden = true; $("mapp").hidden = true; $("bapp").hidden = true; $("capp").hidden = true; $("japp").hidden = true; $("tapp").hidden = true; $("tabs").hidden = true;
   if (!u) return;
   $("whoEmail").textContent = u.email || "";
   await load(u);
@@ -328,6 +392,7 @@ onAuthStateChanged(auth, async u => {
   $("tabs").hidden = false; showTab(curTab);
   await loadMentors();
   loadCourses();
+  loadJobStats();
 });
 
 $("fLogin").addEventListener("submit", async e => {
@@ -617,13 +682,161 @@ async function addSeed(title, btn) {
 }
 resetCourse();
 
+
+/* ---------- Widgetry Jobs (MySQL API at /api) ---------- */
+const JT = { full_time: "Full-time", internship: "Internship", freelance: "Freelance", contract: "Contract", part_time: "Part-time" };
+const JM = { remote: "Remote", onsite: "On-site", hybrid: "Hybrid" };
+const JL = { fresher: "Fresher", junior: "Junior", mid: "Mid", senior: "Senior", lead: "Lead" };
+const JS = { pending: "In review", approved: "Live", rejected: "Rejected", filled: "Filled", expired: "Expired" };
+const VL = { self: "Self-declared", portfolio: "Portfolio checked", verified: "Widgetry verified" };
+const safe = u => /^https?:\/\//i.test(u || "") ? u : "";
+const jdate = d => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+async function japi(path, { method = "GET", body } = {}) {
+  const token = await auth.currentUser.getIdToken();
+  let r;
+  try { r = await fetch("/api" + path, { method, headers: { "content-type": "application/json", authorization: "Bearer " + token }, body: body ? JSON.stringify(body) : undefined }); }
+  catch { throw new Error("Can't reach the jobs server."); }
+  if (r.status === 404 && !(r.headers.get("content-type") || "").includes("json")) throw new Error("The jobs server isn't connected to this website yet.");
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || ("Error " + r.status));
+  return d;
+}
+function jOffline(x) { $("jOff").textContent = x.message; $("jOff").hidden = false; }
+
+async function loadJobStats() {
+  try {
+    const s = await japi("/admin/stats");
+    const n = k => s.jobs[k] || 0;
+    $("jkP").textContent = n("pending"); $("jkA").textContent = n("approved"); $("jkR").textContent = n("rejected");
+    $("jkF").textContent = n("filled") + n("expired"); $("jkRep").textContent = s.openReports;
+    $("cJobs").textContent = n("pending"); $("cTal").textContent = Object.values(s.candidates).reduce((a, b) => a + b, 0);
+    $("jOff").hidden = true;
+  } catch (x) { $("cJobs").textContent = "–"; $("cTal").textContent = "–"; jOffline(x); }
+}
+
+let jitems = [], jediting = null;
+async function loadJobs() {
+  loadJobStats();
+  const p = new URLSearchParams({ status: $("jStatus").value }); if ($("jq").value.trim()) p.set("q", $("jq").value.trim());
+  try {
+    jitems = (await japi("/admin/jobs?" + p)).items;
+    $("jList").innerHTML = jitems.length ? jitems.map(jobCard).join("") : '<p class="small">No jobs here.</p>';
+    $("jList").querySelectorAll("[data-act]").forEach(b => b.onclick = () => jobAction(b.dataset.id, b.dataset.act));
+  } catch (x) { $("jList").innerHTML = ""; jOffline(x); }
+  try {
+    const reps = (await japi("/admin/reports")).items;
+    $("jReports").innerHTML = reps.length ? reps.map(r => `<div class="ji"><div><b>${esc(r.job.title)}</b> · ${esc(r.job.company)} <span class="pill j-${esc(r.job.status)}">${esc(JS[r.job.status] || r.job.status)}</span></div>
+      <div class="meta"><span>Reason: <b>${esc(r.reason.replace(/_/g, " "))}</b></span><span>${jdate(r.createdAt)}</span></div>${r.details ? `<div class="pitch">${esc(r.details)}</div>` : ""}
+      <div class="acts"><a class="btn ghost" href="job.html?id=${encodeURIComponent(r.job.id)}" target="_blank">View job</a><button class="btn ghost" data-rep="${r.id}">Close report</button></div></div>`).join("") : '<p class="small">No open reports.</p>';
+    $("jReports").querySelectorAll("[data-rep]").forEach(b => b.onclick = async () => { try { await japi(`/admin/reports/${b.dataset.rep}`, { method: "PATCH", body: { status: "closed" } }); loadJobs(); } catch (x) { alert(x.message); } });
+  } catch { $("jReports").innerHTML = ""; }
+}
+function jobCard(j) {
+  const sal = j.salary ? `₹${(j.salary.min ?? "").toLocaleString("en-IN")}${j.salary.max != null ? "–" + j.salary.max.toLocaleString("en-IN") : "+"} / ${j.salary.period}` : "No salary given";
+  const btn = (act, label, cls = "ghost") => `<button class="btn ${cls}" data-id="${j.id}" data-act="${act}">${label}</button>`;
+  const acts = [];
+  if (j.status !== "approved") acts.push(btn("approve", j.status === "expired" ? "Re-open 30 days" : "Approve", ""));
+  if (j.status === "pending" || j.status === "approved") acts.push(btn("reject", "Reject"));
+  if (j.status === "approved") acts.push(btn("filled", "Mark filled"), btn("extend", "+30 days"), btn(j.featured ? "unfeature" : "feature", j.featured ? "Unfeature" : "★ Feature"));
+  acts.push(btn("edit", "Edit"), btn("delete", "Delete"));
+  return `<div class="ji">
+    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3>${esc(j.title)}</h3><span class="pill j-${esc(j.status)}">${esc(JS[j.status] || j.status)}</span></div>
+    <div class="meta"><b style="color:var(--ink)">${esc(j.company.name)}</b>${safe(j.company.website) ? `<a href="${esc(j.company.website)}" target="_blank" rel="noopener">website</a>` : ""}<span>${JT[j.type]} · ${JM[j.mode]}${j.city ? " · " + esc(j.city) : ""} · ${JL[j.level]}</span><span>${esc(sal)}</span>${j.featured ? "<span>★ Featured</span>" : ""}${j.openReports ? `<span style="color:var(--bad)">⚑ ${j.openReports} report(s)</span>` : ""}</div>
+    <div class="meta"><span>Contact: ${esc(j.contact.name || "")} <a href="mailto:${esc(j.contact.email)}">${esc(j.contact.email)}</a></span><span>Submitted ${jdate(j.createdAt)}</span>${j.expiresAt ? `<span>Expires ${jdate(j.expiresAt)}</span>` : ""}</div>
+    <div class="meta"><span>Apply: ${safe(j.apply.url) ? `<a href="${esc(j.apply.url)}" target="_blank" rel="noopener">${esc(j.apply.url)}</a>` : ""} ${j.apply.email ? esc(j.apply.email) : ""}</span></div>
+    ${j.skills.length ? `<div class="tags">${j.skills.map(s => `<span>${esc(s)}</span>`).join("")}</div>` : ""}
+    ${j.rejectReason ? `<div class="small" style="color:var(--bad)">Rejected: ${esc(j.rejectReason)}</div>` : ""}
+    <details><summary>Description</summary><p>${esc(j.description)}</p></details>
+    <div class="acts">${acts.join("")}${j.status === "approved" ? `<a class="btn ghost" href="job.html?id=${encodeURIComponent(j.id)}" target="_blank">View</a>` : ""}</div>
+  </div>`;
+}
+async function jobAction(id, act) {
+  const j = jitems.find(x => x.id === id); if (!j) return;
+  try {
+    if (act === "approve") await japi(`/admin/jobs/${id}`, { method: "PATCH", body: { status: "approved" } });
+    if (act === "reject") { const reason = prompt("Reason (shown to the employer):", "Please add more details about the role and salary."); if (reason === null) return; await japi(`/admin/jobs/${id}`, { method: "PATCH", body: { status: "rejected", rejectReason: reason } }); }
+    if (act === "filled") await japi(`/admin/jobs/${id}`, { method: "PATCH", body: { status: "filled" } });
+    if (act === "extend") await japi(`/admin/jobs/${id}`, { method: "PATCH", body: { extendDays: 30 } });
+    if (act === "feature" || act === "unfeature") await japi(`/admin/jobs/${id}`, { method: "PATCH", body: { featured: act === "feature" } });
+    if (act === "delete") { if (!confirm(`Delete "${j.title}" permanently?`)) return; await japi(`/admin/jobs/${id}`, { method: "DELETE" }); }
+    if (act === "edit") return openJobForm(j);
+    loadJobs();
+  } catch (x) { alert(x.message); }
+}
+const JF = ["companyName", "companyWebsite", "title", "jobType", "workMode", "level", "city", "salaryMin", "salaryMax", "salaryPeriod", "description", "applyUrl", "applyEmail", "contactName", "contactEmail"];
+function openJobForm(j) {
+  jediting = j || null;
+  $("jdTitle").textContent = j ? "Edit job" : "Post a job";
+  const raw = j ? j.raw : { jobType: "full_time", workMode: "onsite", level: "junior", salaryPeriod: "month", contactEmail: auth.currentUser?.email || "" };
+  for (const k of JF) $("jf_" + k).value = raw[k] ?? "";
+  if (!raw.salaryPeriod) $("jf_salaryPeriod").value = "month";
+  $("jf_skills").value = j ? j.skills.join(", ") : "Flutter, Dart";
+  $("jfErr").hidden = true; $("jdlg").showModal();
+}
+$("jNew").onclick = () => openJobForm(null);
+$("jForm").addEventListener("submit", async e => {
+  if (e.submitter?.value !== "save") return;
+  e.preventDefault(); $("jfErr").hidden = true; $("jfSave").disabled = true;
+  const v = k => $("jf_" + k).value.trim();
+  const n = k => v(k) === "" ? null : Number(v(k));
+  const body = { companyName: v("companyName"), companyWebsite: v("companyWebsite"), title: v("title"), jobType: v("jobType"), workMode: v("workMode"), level: v("level"),
+    city: v("city"), salaryMin: n("salaryMin"), salaryMax: n("salaryMax"), salaryPeriod: n("salaryMin") != null || n("salaryMax") != null ? v("salaryPeriod") : null,
+    description: $("jf_description").value, skills: v("skills").split(",").map(s => s.trim()).filter(Boolean), applyUrl: v("applyUrl"), applyEmail: v("applyEmail"),
+    contactName: v("contactName"), contactEmail: v("contactEmail") };
+  try {
+    if (jediting) await japi(`/admin/jobs/${jediting.id}`, { method: "PUT", body });
+    else await japi("/admin/jobs", { method: "POST", body });
+    $("jdlg").close(); if (!jediting) $("jStatus").value = "approved"; loadJobs();
+  } catch (x) { $("jfErr").textContent = x.message; $("jfErr").hidden = false; }
+  finally { $("jfSave").disabled = false; }
+});
+$("jReload").onclick = loadJobs; $("jStatus").onchange = loadJobs;
+$("jq").addEventListener("keydown", e => { if (e.key === "Enter") loadJobs(); });
+
+let titems = [];
+async function loadTalent() {
+  const p = new URLSearchParams(); if ($("tVer").value) p.set("verification", $("tVer").value); if ($("tq").value.trim()) p.set("q", $("tq").value.trim());
+  try {
+    titems = (await japi("/admin/candidates?" + p)).items;
+    $("tList").innerHTML = titems.length ? titems.map(c => {
+      const links = [["GitHub", c.githubUrl], ["LinkedIn", c.linkedinUrl], ["Portfolio", c.portfolioUrl]].filter(x => safe(x[1])).map(x => `<a href="${esc(x[1])}" target="_blank" rel="noopener">${x[0]}</a>`).join(" · ");
+      const apps = (c.apps || []).map(a => safe(a.url) ? `<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.name)}</a>${a.role ? " (" + esc(a.role) + ")" : ""}` : `${esc(a.name)}${a.role ? " (" + esc(a.role) + ")" : ""}`).join(", ");
+      return `<div class="ji">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3>${esc(c.fullName)}</h3><span class="pill v-${esc(c.verification)}">${esc(VL[c.verification])}</span></div>
+        <div class="meta"><b style="color:var(--ink)">${esc(c.headline)}</b><span>${c.experienceYears} yrs</span>${c.currentCompany ? `<span>${esc(c.currentCompany)}</span>` : ""}${c.city ? `<span>${esc(c.city)}</span>` : ""}<span>${c.openToWork ? "Open to work" : "Paused"}</span>${c.status === "hidden" ? '<span style="color:var(--bad)">Hidden</span>' : ""}</div>
+        <div class="meta"><a href="mailto:${esc(c.email)}">${esc(c.email)}</a>${c.phone ? `<a href="https://wa.me/${esc(c.phone.replace(/\D/g, ""))}" target="_blank" rel="noopener">${esc(c.phone)}</a>` : ""}${c.expectedSalaryLpa != null ? `<span>Expects ${c.expectedSalaryLpa} LPA</span>` : ""}${c.noticePeriod ? `<span>Notice ${esc(c.noticePeriod.replace("_", " "))}</span>` : ""}</div>
+        ${c.skills.length ? `<div class="tags">${c.skills.map(s => `<span>${esc(s)}</span>`).join("")}</div>` : ""}
+        ${links ? `<div class="meta">${links}</div>` : ""}${apps ? `<div class="meta">Apps: ${apps}</div>` : ""}
+        ${c.hiddenCompanies ? `<div class="small">Never show to: ${esc(c.hiddenCompanies)}</div>` : ""}
+        ${c.about ? `<details><summary>About</summary><p>${esc(c.about)}</p></details>` : ""}
+        <div class="acts" style="align-items:end">
+          <label style="min-width:180px">Verification<select data-ver="${c.id}">${Object.entries(VL).map(([v, t]) => `<option value="${v}"${v === c.verification ? " selected" : ""}>${t}</option>`).join("")}</select></label>
+          <label style="flex:1;min-width:200px">Note (private)<input data-note="${c.id}" maxlength="300" value="${esc(c.verifiedNote || "")}" placeholder="e.g. Call on 20 Oct: strong Bloc, good testing"></label>
+          <button class="btn" data-tsave="${c.id}">Save</button>
+          <button class="btn ghost" data-thide="${c.id}" data-st="${c.status === "hidden" ? "active" : "hidden"}">${c.status === "hidden" ? "Unhide" : "Hide"}</button>
+        </div></div>`;
+    }).join("") : '<p class="small">No profiles yet.</p>';
+    $("tList").querySelectorAll("[data-tsave]").forEach(b => b.onclick = async () => {
+      const id = b.dataset.tsave;
+      try { await japi(`/admin/candidates/${id}`, { method: "PATCH", body: { verification: $("tList").querySelector(`[data-ver="${id}"]`).value, verifiedNote: $("tList").querySelector(`[data-note="${id}"]`).value } }); loadTalent(); loadJobStats(); }
+      catch (x) { alert(x.message); }
+    });
+    $("tList").querySelectorAll("[data-thide]").forEach(b => b.onclick = async () => { try { await japi(`/admin/candidates/${b.dataset.thide}`, { method: "PATCH", body: { status: b.dataset.st } }); loadTalent(); } catch (x) { alert(x.message); } });
+  } catch (x) { $("tList").innerHTML = `<p class="note">${esc(x.message)}</p>`; }
+}
+$("tReload").onclick = loadTalent; $("tVer").onchange = loadTalent;
+$("tq").addEventListener("keydown", e => { if (e.key === "Enter") loadTalent(); });
+
 /* ---------- Tabs ---------- */
 let curTab = "app";
 function showTab(t) {
   curTab = t;
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
   $("app").hidden = t !== "app"; $("mapp").hidden = t !== "mapp"; $("bapp").hidden = t !== "bapp"; $("capp").hidden = t !== "capp";
+  $("japp").hidden = t !== "japp"; $("tapp").hidden = t !== "tapp";
   if (t === "bapp") loadBatch();
+  if (t === "japp") loadJobs();
+  if (t === "tapp") loadTalent();
 }
 document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
 

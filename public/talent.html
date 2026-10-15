@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join the Flutter Talent Network | Widgetry Jobs</title>
+<meta name="description" content="Flutter developer looking for a job? Join the Widgetry Talent Network: free, private, and verified by working Flutter engineers.">
+<link rel="canonical" href="https://widgetryacademy.in/talent.html">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Widgetry Jobs"><meta property="og:title" content="Widgetry Talent Network for Flutter developers">
+<meta property="og:url" content="https://widgetryacademy.in/talent.html"><meta property="og:image" content="https://widgetryacademy.in/og-image.jpg">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@600;700&display=swap">
+<link rel="stylesheet" href="jobs.css">
+</head><body>
+<nav class="jnav"><div class="wrap">
+  <a class="brand" href="jobs.html">Widgetry<span> Jobs</span></a>
+  <div class="jlinks">
+    <a href="jobs.html">Jobs</a>
+    <a href="post-job.html">Post a job</a>
+    <a href="talent.html" class="hide-m" aria-current="page">Talent Network</a>
+    <a href="./" class="hide-m">Academy</a>
+    <span class="who" id="who"></span>
+  </div>
+</div></nav>
+
+<header class="jhero"><div class="wrap">
+  <p class="eyebrow">For Flutter developers · free</p>
+  <h1>Get hired for what <em>you can build.</em></h1>
+  <p>Create one profile with your apps, GitHub and skills. Companies hiring Flutter developers find you through us, never by spamming your phone. Your profile stays private until you say yes.</p>
+</div></header>
+
+<main class="wrap" style="padding-block:28px 60px;display:grid;gap:22px;max-width:860px">
+  <section>
+    <p class="eyebrow">How verification works</p>
+    <div class="levels" style="margin-top:10px">
+      <div class="level"><span class="badge mute">Step 1</span><b>Self-declared</b><span class="muted small">Create your profile. You're in the network straight away.</span></div>
+      <div class="level"><span class="badge ok">Step 2</span><b>✓ Portfolio checked</b><span class="muted small">A Widgetry engineer reviews your Play Store apps and GitHub.</span></div>
+      <div class="level"><span class="badge feat">Step 3</span><b>★ Widgetry verified</b><span class="muted small">A short technical call with a mentor. Companies trust this badge most.</span></div>
+    </div>
+  </section>
+
+  <section class="formcard" id="gate" hidden>
+    <h2>Sign in to create your profile</h2>
+    <p class="muted" style="margin:0">Use the same account as Widgetry Academy. Your email comes from your sign-in.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="gbtn" type="button" id="bGoogle"></button><a class="btn ghost" id="lLogin" href="#">Use email instead</a></div>
+    <p class="err" id="gErr" hidden></p>
+  </section>
+
+  <div id="statusBox" hidden></div>
+
+  <form class="formcard" id="fProfile" novalidate hidden>
+    <fieldset><legend>About you</legend>
+      <div class="row2">
+        <label>Full name<input id="fullName" maxlength="100" required autocomplete="name"></label>
+        <label><span>Phone / WhatsApp <span class="opt">(private)</span></span><input id="phone" type="tel" maxlength="20" autocomplete="tel" placeholder="+91 98765 43210"></label>
+      </div>
+      <label>Headline<input id="headline" maxlength="140" required placeholder="e.g. Flutter Developer · 3 years · Bloc & Firebase"></label>
+      <div class="row3">
+        <label>Flutter experience (years)<input id="experienceYears" type="number" min="0" max="40" step="0.5" required value="0"></label>
+        <label><span>Current company <span class="opt">(optional)</span></span><input id="currentCompany" maxlength="120"></label>
+        <label><span>City <span class="opt">(optional)</span></span><input id="city" maxlength="80" placeholder="e.g. Kolkata"></label>
+      </div>
+      <label><span>About <span class="opt">(optional)</span></span><textarea id="about" maxlength="2000" style="min-height:110px" placeholder="What have you built? What are you looking for next?"></textarea></label>
+    </fieldset>
+    <fieldset><legend>Skills</legend>
+      <div class="chiprow" id="skillChips"></div>
+      <div class="skillin"><input id="skillOther" maxlength="40" placeholder="Add another skill" aria-label="Add another skill"><button class="btn ghost small" type="button" id="bAddSkill">Add</button></div>
+    </fieldset>
+    <fieldset><legend>Proof of work (this is what gets you verified)</legend>
+      <div class="row3">
+        <label><span>GitHub <span class="opt">(optional)</span></span><input id="githubUrl" type="url" maxlength="300" placeholder="https://github.com/you"></label>
+        <label><span>LinkedIn <span class="opt">(optional)</span></span><input id="linkedinUrl" type="url" maxlength="300" placeholder="https://linkedin.com/in/you"></label>
+        <label><span>Portfolio <span class="opt">(optional)</span></span><input id="portfolioUrl" type="url" maxlength="300" placeholder="https://"></label>
+      </div>
+      <div><span style="font-weight:700;font-size:14.5px">Apps you've built or worked on</span>
+        <div id="apps" style="display:grid;gap:10px;margin-top:8px"></div>
+        <button class="btn ghost small" type="button" id="bAddApp" style="margin-top:10px">+ Add an app</button>
+      </div>
+    </fieldset>
+    <fieldset><legend>What you're looking for</legend>
+      <div><span style="font-weight:700;font-size:14.5px">Job type</span><div class="checks" id="jobTypes" style="margin-top:8px"></div></div>
+      <div><span style="font-weight:700;font-size:14.5px">Work mode</span><div class="checks" id="workModes" style="margin-top:8px"></div></div>
+      <div class="row2">
+        <label><span>Notice period <span class="opt">(optional)</span></span><select id="noticePeriod"><option value="">Choose…</option></select></label>
+        <label><span>Expected salary (LPA) <span class="opt">(optional, private)</span></span><input id="expectedSalaryLpa" type="number" min="0" max="500" step="0.5" inputmode="decimal"></label>
+      </div>
+    </fieldset>
+    <fieldset><legend>Privacy</legend>
+      <label class="check"><input type="checkbox" id="openToWork" checked> <span>I'm open to work. Turn off any time to pause your profile.</span></label>
+      <label><span>Never show my profile to these companies <span class="opt">(e.g. your current employer, comma separated)</span></span><input id="hiddenCompanies" maxlength="400"></label>
+      <label class="check" style="font-weight:600"><input type="checkbox" id="consent"> <span>I agree that Widgetry may review my profile and share it with Flutter employers <b>only with my approval</b>, as described in the <a href="privacy.html" target="_blank">privacy policy</a>. I can delete it any time.</span></label>
+    </fieldset>
+    <p class="err" id="err" hidden></p>
+    <p class="okmsg" id="ok" hidden></p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center">
+      <button class="btn" id="bSave" type="submit">Save my profile</button>
+      <button class="btn danger small" id="bDelete" type="button" hidden>Delete my profile</button>
+    </div>
+  </form>
+</main>
+
+<footer class="jfoot"><div class="wrap">
+  <span>© 2026 Widgetry Jobs · a part of <a href="./">Widgetry Academy</a> · Kolkata, India</span>
+  <nav><a href="jobs-terms.html">Posting rules & terms</a><a href="privacy.html">Privacy</a><a href="contact.html">Contact</a></nav>
+</div></footer>
+
+<script type="module">
+import { $, esc, api, LABEL, onUser, googleSignIn, loginLink, GOOGLE_SVG, mountWho, toast } from "./jobs.js";
+mountWho($("who"));
+$("bGoogle").innerHTML = GOOGLE_SVG + "Continue with Google";
+$("lLogin").href = loginLink();
+for (const [v, t] of Object.entries(LABEL.notice)) $("noticePeriod").add(new Option(t, v));
+const checks = (el, obj, name) => { el.innerHTML = Object.entries(obj).map(([v, t]) => `<label class="check"><input type="checkbox" name="${name}" value="${v}"> ${esc(t)}</label>`).join(""); };
+checks($("jobTypes"), LABEL.type, "jt"); checks($("workModes"), LABEL.mode, "wm");
+
+let skills = ["Flutter", "Dart"];
+const suggested = ["Flutter", "Dart", "Firebase", "Bloc", "Provider", "Riverpod", "GetX", "REST APIs", "Clean Architecture", "Testing", "CI/CD", "Google Maps", "Push Notifications", "Animations", "Flame", "Git"];
+function drawSkills() {
+  $("skillChips").innerHTML = [...new Set([...suggested, ...skills])].map(s => `<button class="chipbtn" type="button" data-s="${esc(s)}" aria-pressed="${skills.includes(s)}">${esc(s)}</button>`).join("");
+  $("skillChips").querySelectorAll("button").forEach(b => b.onclick = () => { const s = b.dataset.s; skills = skills.includes(s) ? skills.filter(x => x !== s) : skills.length < 15 ? [...skills, s] : skills; drawSkills(); });
+}
+const addOther = () => { const v = $("skillOther").value.trim(); if (v && skills.length < 15 && !skills.some(s => s.toLowerCase() === v.toLowerCase())) { skills.push(v); drawSkills(); } $("skillOther").value = ""; };
+$("bAddSkill").onclick = addOther;
+$("skillOther").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addOther(); } });
+
+function addApp(a = {}) {
+  if ($("apps").children.length >= 8) return;
+  const row = document.createElement("div"); row.className = "row3 app";
+  row.innerHTML = `<input class="aName" maxlength="80" placeholder="App name" value="${esc(a.name || "")}" aria-label="App name">
+    <input class="aUrl" type="url" maxlength="400" placeholder="Play Store / App Store link" value="${esc(a.url || "")}" aria-label="App link">
+    <div style="display:flex;gap:8px"><input class="aRole" maxlength="80" placeholder="Your role" value="${esc(a.role || "")}" aria-label="Your role"><button class="btn ghost small" type="button" aria-label="Remove app">✕</button></div>`;
+  row.querySelector("button").onclick = () => row.remove();
+  $("apps").appendChild(row);
+}
+$("bAddApp").onclick = () => addApp();
+
+const BADGE = { self: ["mute", "Self-declared"], portfolio: ["ok", "✓ Portfolio checked"], verified: ["feat", "★ Widgetry verified"] };
+function showStatus(p) {
+  if (!p) { $("statusBox").hidden = true; return; }
+  const [cls, txt] = BADGE[p.verification] || BADGE.self;
+  $("statusBox").innerHTML = `<div class="card" style="display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+    <div><b>Your profile is ${p.openToWork ? "active" : "paused"}</b><div class="muted small">Verification: <span class="badge ${cls}">${txt}</span>${p.verification === "self" ? " · Add your apps and GitHub so we can check your portfolio." : ""}</div></div>
+    <span class="badge ${p.openToWork ? "ok" : "mute"}">${p.openToWork ? "Open to work" : "Paused"}</span></div>`;
+  $("statusBox").hidden = false;
+}
+
+function fill(p) {
+  for (const k of ["fullName", "phone", "headline", "currentCompany", "city", "about", "githubUrl", "linkedinUrl", "portfolioUrl", "hiddenCompanies"]) $(k).value = p[k] || "";
+  $("experienceYears").value = p.experienceYears ?? 0;
+  $("noticePeriod").value = p.noticePeriod || "";
+  $("expectedSalaryLpa").value = p.expectedSalaryLpa ?? "";
+  $("openToWork").checked = p.openToWork;
+  document.querySelectorAll('input[name="jt"]').forEach(c => (c.checked = p.jobTypes.includes(c.value)));
+  document.querySelectorAll('input[name="wm"]').forEach(c => (c.checked = p.workModes.includes(c.value)));
+  skills = p.skills.length ? p.skills : skills; drawSkills();
+  $("apps").innerHTML = ""; (p.apps.length ? p.apps : [{}]).forEach(addApp);
+  $("consent").checked = true; $("bDelete").hidden = false; $("bSave").textContent = "Update my profile";
+}
+
+onUser(async u => {
+  $("gate").hidden = !!u; $("fProfile").hidden = !u;
+  if (!u) { $("statusBox").hidden = true; return; }
+  if (!$("fullName").value) $("fullName").value = u.displayName || "";
+  try { const r = await api("/talent/me", { auth: true }); if (r.profile) fill(r.profile); else if (!$("apps").children.length) addApp(); showStatus(r.profile); }
+  catch (e) { $("err").textContent = e.message; $("err").hidden = false; }
+});
+drawSkills();
+$("bGoogle").onclick = async () => { $("gErr").hidden = true; try { await googleSignIn(); } catch (e) { $("gErr").textContent = e.message; $("gErr").hidden = false; } };
+
+$("fProfile").addEventListener("submit", async e => {
+  e.preventDefault(); $("err").hidden = true; $("ok").hidden = true;
+  if (!$("consent").checked) { $("err").textContent = "Please tick the consent box so we can review your profile."; $("err").hidden = false; return; }
+  const apps = [...document.querySelectorAll(".app")].map(r => ({ name: r.querySelector(".aName").value.trim(), url: r.querySelector(".aUrl").value.trim(), role: r.querySelector(".aRole").value.trim() })).filter(a => a.name);
+  const body = {
+    fullName: $("fullName").value, phone: $("phone").value, headline: $("headline").value, currentCompany: $("currentCompany").value,
+    experienceYears: Number($("experienceYears").value || 0), city: $("city").value, about: $("about").value,
+    githubUrl: $("githubUrl").value, linkedinUrl: $("linkedinUrl").value, portfolioUrl: $("portfolioUrl").value, apps, skills,
+    jobTypes: [...document.querySelectorAll('input[name="jt"]:checked')].map(c => c.value),
+    workModes: [...document.querySelectorAll('input[name="wm"]:checked')].map(c => c.value),
+    noticePeriod: $("noticePeriod").value || null, expectedSalaryLpa: $("expectedSalaryLpa").value === "" ? null : Number($("expectedSalaryLpa").value),
+    openToWork: $("openToWork").checked, hiddenCompanies: $("hiddenCompanies").value, consent: true,
+  };
+  const b = $("bSave"); b.disabled = true;
+  try {
+    const r = await api("/talent/me", { method: "PUT", body, auth: true });
+    fill(r.profile); showStatus(r.profile);
+    $("ok").textContent = r.message + " We'll review your portfolio and update your verification."; $("ok").hidden = false;
+    toast("Profile saved"); $("statusBox").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (x) {
+    const f = x.issues?.[0]?.field; if (f && $(f)) $(f).focus();
+    $("err").textContent = x.message; $("err").hidden = false;
+  } finally { b.disabled = false; }
+});
+
+$("bDelete").onclick = async () => {
+  if (!confirm("Delete your Talent Network profile? This removes everything you've added and can't be undone.")) return;
+  try {
+    await api("/talent/me", { method: "DELETE", auth: true });
+    $("fProfile").reset(); $("apps").innerHTML = ""; addApp(); skills = ["Flutter", "Dart"]; drawSkills();
+    $("bDelete").hidden = true; $("bSave").textContent = "Save my profile"; showStatus(null); toast("Your profile has been deleted");
+  } catch (x) { $("err").textContent = x.message; $("err").hidden = false; }
+};
+</script>
+</body></html>

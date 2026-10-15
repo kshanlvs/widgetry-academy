@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Post a Flutter Job for Free | Widgetry Jobs</title>
+<meta name="description" content="Hiring Flutter developers or interns? Post your job free on Widgetry Jobs and reach Flutter developers trained and verified by working engineers.">
+<link rel="canonical" href="https://widgetryacademy.in/post-job.html">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Widgetry Jobs"><meta property="og:title" content="Post a Flutter job, free | Widgetry Jobs">
+<meta property="og:url" content="https://widgetryacademy.in/post-job.html"><meta property="og:image" content="https://widgetryacademy.in/og-image.jpg">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@600;700&display=swap">
+<link rel="stylesheet" href="jobs.css">
+</head><body>
+<nav class="jnav"><div class="wrap">
+  <a class="brand" href="jobs.html">Widgetry<span> Jobs</span></a>
+  <div class="jlinks">
+    <a href="jobs.html">Jobs</a>
+    <a href="post-job.html" aria-current="page">Post a job</a>
+    <a href="talent.html" class="hide-m">Talent Network</a>
+    <a href="./" class="hide-m">Academy</a>
+    <span class="who" id="who"></span>
+  </div>
+</div></nav>
+
+<header class="jhero"><div class="wrap">
+  <p class="eyebrow">For employers · free</p>
+  <h1>Hire Flutter developers <em>who can actually build.</em></h1>
+  <p>Post a Flutter job, internship or freelance project. We review every post, usually within 24 hours, so candidates trust what they see.</p>
+</div></header>
+
+<main class="wrap" style="padding-block:28px 60px;display:grid;gap:22px;max-width:860px">
+  <!-- Signed out -->
+  <section class="formcard" id="gate" hidden>
+    <h2>Sign in to post a job</h2>
+    <p class="muted" style="margin:0">Signing in lets you track your posts and stops spam. It takes 10 seconds.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="gbtn" type="button" id="bGoogle"></button><a class="btn ghost" id="lLogin" href="#">Use email instead</a></div>
+    <p class="err" id="gErr" hidden></p>
+  </section>
+
+  <!-- Form -->
+  <form class="formcard" id="fJob" novalidate hidden>
+    <fieldset><legend>Company</legend>
+      <div class="row2">
+        <label>Company name<input id="companyName" maxlength="120" required placeholder="e.g. Bytewave Technologies"></label>
+        <label><span>Company website <span class="opt">(optional)</span></span><input id="companyWebsite" type="url" maxlength="300" placeholder="https://"></label>
+      </div>
+    </fieldset>
+    <fieldset><legend>The role</legend>
+      <label>Job title<input id="title" maxlength="140" required placeholder="e.g. Junior Flutter Developer"></label>
+      <div class="row3">
+        <label>Job type<select id="jobType" required></select></label>
+        <label>Work mode<select id="workMode" required></select></label>
+        <label>Experience<select id="level" required></select></label>
+      </div>
+      <label id="cityRow"><span>City <span class="hint">(required for on-site and hybrid)</span></span><input id="city" maxlength="80" placeholder="e.g. Kolkata"></label>
+      <label><span>Description <span class="hint">(responsibilities, requirements, what you offer; at least 80 characters)</span></span><textarea id="description" maxlength="8000" required placeholder="What will they build? Which Flutter skills do they need? Team, interview process, perks…"></textarea><span class="hint small" id="descCount">0 / 8000</span></label>
+      <div class="skillbox"><span style="font-weight:700;font-size:14.5px">Skills <span class="opt" style="font-weight:500;color:var(--muted)">(tap to add, up to 15)</span></span>
+        <div class="chiprow" id="skillChips"></div>
+        <div class="skillin"><input id="skillOther" maxlength="40" placeholder="Add another skill" aria-label="Add another skill"><button class="btn ghost small" type="button" id="bAddSkill">Add</button></div>
+      </div>
+    </fieldset>
+    <fieldset><legend>Salary (recommended: jobs with salary get more applicants)</legend>
+      <div class="row3">
+        <label>Min (₹)<input id="salaryMin" type="number" min="0" step="1000" inputmode="numeric" placeholder="25000"></label>
+        <label>Max (₹)<input id="salaryMax" type="number" min="0" step="1000" inputmode="numeric" placeholder="40000"></label>
+        <label>Per<select id="salaryPeriod"><option value="">Choose…</option></select></label>
+      </div>
+    </fieldset>
+    <fieldset><legend>How to apply</legend>
+      <div class="row2">
+        <label><span>Application link <span class="opt">(or email)</span></span><input id="applyUrl" type="url" maxlength="400" placeholder="https://yourcompany.com/careers/flutter"></label>
+        <label><span>Application email <span class="opt">(or link)</span></span><input id="applyEmail" type="email" maxlength="200" placeholder="jobs@yourcompany.com"></label>
+      </div>
+    </fieldset>
+    <fieldset><legend>Your contact (private, only for our review team)</legend>
+      <div class="row2">
+        <label><span>Your name <span class="opt">(optional)</span></span><input id="contactName" maxlength="100" autocomplete="name"></label>
+        <label>Your work email<input id="contactEmail" type="email" maxlength="200" required autocomplete="email"></label>
+      </div>
+    </fieldset>
+    <label class="check" style="font-weight:600"><input type="checkbox" id="agree" required> <span>This is a genuine role, candidates will never be asked to pay, and I accept the <a href="jobs-terms.html" target="_blank">posting rules</a>.</span></label>
+    <p class="err" id="err" hidden></p>
+    <p class="okmsg" id="ok" hidden></p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn" id="bSubmit" type="submit">Submit for review</button><span class="muted small">Free · goes live after a quick review · listed for 30 days</span></div>
+  </form>
+
+  <section class="formcard" id="mineBox" hidden>
+    <h2 style="font-size:20px">Your posted jobs</h2>
+    <div class="mine" id="mine"></div>
+  </section>
+</main>
+
+<footer class="jfoot"><div class="wrap">
+  <span>© 2026 Widgetry Jobs · a part of <a href="./">Widgetry Academy</a> · Kolkata, India</span>
+  <nav><a href="jobs-terms.html">Posting rules & terms</a><a href="privacy.html">Privacy</a><a href="contact.html">Contact</a></nav>
+</div></footer>
+
+<script type="module">
+import { $, esc, api, LABEL, onUser, googleSignIn, loginLink, GOOGLE_SVG, mountWho, timeAgo, toast } from "./jobs.js";
+mountWho($("who"));
+$("bGoogle").innerHTML = GOOGLE_SVG + "Continue with Google";
+$("lLogin").href = loginLink();
+const fill = (el, obj) => { for (const [v, t] of Object.entries(obj)) el.add(new Option(t, v)); };
+fill($("jobType"), LABEL.type); fill($("workMode"), LABEL.mode); fill($("level"), LABEL.level);
+fill($("salaryPeriod"), { month: "per month", year: "per year", project: "per project" });
+$("salaryPeriod").value = "month";
+
+// Skills picker
+let skills = ["Flutter", "Dart"];
+let suggested = ["Flutter", "Dart", "Firebase", "Bloc", "Provider", "Riverpod", "GetX", "REST APIs", "Clean Architecture", "Testing", "CI/CD", "Google Maps", "Push Notifications", "Git"];
+function drawSkills() {
+  const all = [...new Set([...suggested, ...skills])];
+  $("skillChips").innerHTML = all.map(s => `<button class="chipbtn" type="button" data-s="${esc(s)}" aria-pressed="${skills.includes(s)}">${esc(s)}</button>`).join("");
+  $("skillChips").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const s = b.dataset.s; skills = skills.includes(s) ? skills.filter(x => x !== s) : skills.length < 15 ? [...skills, s] : skills; drawSkills();
+  });
+}
+drawSkills();
+const addOther = () => { const v = $("skillOther").value.trim(); if (v && skills.length < 15 && !skills.some(s => s.toLowerCase() === v.toLowerCase())) { skills.push(v); drawSkills(); } $("skillOther").value = ""; };
+$("bAddSkill").onclick = addOther;
+$("skillOther").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addOther(); } });
+$("description").addEventListener("input", () => { $("descCount").textContent = $("description").value.length + " / 8000"; });
+const cityState = () => { const remote = $("workMode").value === "remote"; $("city").required = !remote; };
+$("workMode").onchange = cityState; cityState();
+
+const STATUS = { pending: ["warn", "In review"], approved: ["ok", "Live"], rejected: ["bad", "Not approved"], filled: ["mute", "Filled"], expired: ["mute", "Expired"] };
+async function loadMine() {
+  try {
+    const r = await api("/my/jobs", { auth: true });
+    $("mineBox").hidden = !r.items.length;
+    $("mine").innerHTML = r.items.map(j => {
+      const [cls, txt] = STATUS[j.status] || ["mute", j.status];
+      return `<div class="it"><div style="min-width:0"><b>${esc(j.title)}</b><div class="muted small">${esc(j.company.name)} · submitted ${timeAgo(j.postedAt)}${j.rejectReason ? ` · <span style="color:var(--bad)">${esc(j.rejectReason)}</span>` : ""}</div></div>
+        <div style="display:flex;gap:10px;align-items:center;flex:none"><span class="badge ${cls}">${txt}</span>${j.status === "approved" ? `<a class="small" href="job.html?id=${encodeURIComponent(j.id)}">View</a>` : ""}</div></div>`;
+    }).join("");
+  } catch { /* list is optional */ }
+}
+
+onUser(u => {
+  $("gate").hidden = !!u; $("fJob").hidden = !u;
+  if (u) { if (!$("contactEmail").value) $("contactEmail").value = u.email || ""; if (!$("contactName").value) $("contactName").value = u.displayName || ""; loadMine(); }
+  else $("mineBox").hidden = true;
+});
+$("bGoogle").onclick = async () => { $("gErr").hidden = true; try { await googleSignIn(); } catch (e) { $("gErr").textContent = e.message; $("gErr").hidden = false; } };
+
+const num = id => { const v = $(id).value.trim(); return v === "" ? null : Number(v); };
+$("fJob").addEventListener("submit", async e => {
+  e.preventDefault(); $("err").hidden = true; $("ok").hidden = true;
+  if (!$("agree").checked) { $("err").textContent = "Please confirm the posting rules."; $("err").hidden = false; return; }
+  const body = {
+    companyName: $("companyName").value, companyWebsite: $("companyWebsite").value, title: $("title").value,
+    jobType: $("jobType").value, workMode: $("workMode").value, level: $("level").value, city: $("city").value,
+    salaryMin: num("salaryMin"), salaryMax: num("salaryMax"), salaryPeriod: num("salaryMin") != null || num("salaryMax") != null ? $("salaryPeriod").value || null : null,
+    description: $("description").value, skills, applyUrl: $("applyUrl").value, applyEmail: $("applyEmail").value,
+    contactName: $("contactName").value, contactEmail: $("contactEmail").value, agree: true,
+  };
+  const b = $("bSubmit"); b.disabled = true; b.textContent = "Submitting…";
+  try {
+    const r = await api("/jobs", { method: "POST", body, auth: true });
+    $("ok").textContent = r.message; $("ok").hidden = false;
+    for (const id of ["title", "description", "salaryMin", "salaryMax", "applyUrl", "applyEmail"]) $(id).value = "";
+    $("agree").checked = false; $("descCount").textContent = "0 / 8000";
+    toast("Job submitted for review"); loadMine();
+    $("ok").scrollIntoView({ behavior: "smooth", block: "center" });
+  } catch (x) {
+    const field = x.issues?.[0]?.field; if (field && $(field)) $(field).focus();
+    $("err").textContent = x.message; $("err").hidden = false;
+  } finally { b.disabled = false; b.textContent = "Submit for review"; }
+});
+</script>
+</body></html>

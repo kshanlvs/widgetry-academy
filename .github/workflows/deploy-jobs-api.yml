@@ -1,0 +1,39 @@
+# Deploys the Widgetry Jobs API to Cloud Run. Manual for now: Actions → "Deploy jobs API" → Run workflow.
+# Needs these GitHub secrets: GCP_SA_KEY (service account JSON), and in Google Secret Manager: jobs-db-password, jobs-hash-salt.
+name: Deploy jobs API
+
+on:
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: flutter-in-10-days
+  REGION: asia-south1
+  SERVICE: widgetry-jobs-api
+  SQL_INSTANCE: flutter-in-10-days:asia-south1:widgetry-jobs
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test
+        working-directory: jobs-api
+        run: |
+          npm ci
+          npm run typecheck
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "$SERVICE" \
+            --project "$PROJECT_ID" --region "$REGION" --source jobs-api \
+            --allow-unauthenticated --min-instances 0 --max-instances 3 --memory 512Mi \
+            --add-cloudsql-instances "$SQL_INSTANCE" \
+            --set-env-vars "DB_SOCKET=/cloudsql/$SQL_INSTANCE,DB_USER=jobs,DB_NAME=widgetry_jobs,FIREBASE_PROJECT_ID=$PROJECT_ID,MIGRATE_ON_START=1" \
+            --set-secrets "DB_PASSWORD=jobs-db-password:latest,HASH_SALT=jobs-hash-salt:latest"
