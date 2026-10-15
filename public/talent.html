@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Free ATS Resume + Flutter Talent Network | Widgetry Jobs</title>
-<meta name="description" content="Flutter developer looking for a job? Join the Widgetry Talent Network: free, private, and verified by working Flutter engineers.">
+<title>Free ATS Resume + Mobile Developer Talent Network | Widgetry Jobs</title>
+<meta name="description" content="Flutter, Android or iOS developer looking for a job? Build a free ATS resume and join the Widgetry Talent Network: private and verified by working engineers.">
 <link rel="canonical" href="https://widgetryacademy.in/talent.html">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Widgetry Jobs"><meta property="og:title" content="Widgetry Talent Network for Flutter developers">
 <meta property="og:url" content="https://widgetryacademy.in/talent.html"><meta property="og:image" content="https://widgetryacademy.in/og-image.jpg">
@@ -23,7 +23,7 @@
 </div></nav>
 
 <header class="jhero"><div class="wrap">
-  <p class="eyebrow">For Flutter developers · free</p>
+  <p class="eyebrow">For Flutter, Android &amp; iOS developers · free</p>
   <h1>Your ATS-ready resume, <em>and a way in.</em></h1>
   <p>Fill this once: you get a premium, ATS-friendly resume as a PDF, and a place in the Widgetry Talent Network where Flutter companies find you. Your profile stays private until you say yes.</p>
 </div></header>
@@ -50,13 +50,14 @@
   <a href="my-profile.html" id="backLink" hidden style="font-weight:700;text-decoration:none">← Back to my profile</a>
   <form class="formcard" id="fProfile" novalidate hidden>
     <fieldset><legend>About you</legend>
+      <div><span style="font-weight:700;font-size:14.5px">I work with <span class="opt">(pick all that apply: we use this to match jobs and suggest skills)</span></span><div class="checks" id="roleCats" style="margin-top:8px"></div></div>
       <div class="row2">
         <label>Full name<input id="fullName" maxlength="100" required autocomplete="name"></label>
         <label><span>Phone / WhatsApp <span class="opt">(private)</span></span><input id="phone" type="tel" maxlength="20" autocomplete="tel" placeholder="+91 98765 43210"></label>
       </div>
-      <label>Headline<input id="headline" maxlength="140" required placeholder="e.g. Flutter Developer · 3 years · Bloc & Firebase"></label>
+      <label>Headline<input id="headline" maxlength="140" required placeholder="e.g. Flutter Developer · 3 years · Bloc & Firebase  /  Android Developer · Kotlin & Compose"></label>
       <div class="row3">
-        <label>Flutter experience (years)<input id="experienceYears" type="number" min="0" max="40" step="0.5" required value="0"></label>
+        <label>Mobile development experience (years)<input id="experienceYears" type="number" min="0" max="40" step="0.5" required value="0"></label>
         <label><span>Current company <span class="opt">(optional)</span></span><input id="currentCompany" maxlength="120"></label>
         <label><span>City <span class="opt">(optional)</span></span><input id="city" maxlength="80" placeholder="e.g. Kolkata"></label>
       </div>
@@ -118,7 +119,7 @@
 </div></footer>
 
 <script type="module">
-import { $, esc, api, LABEL, onUser, googleSignIn, loginLink, GOOGLE_SVG, mountWho, toast } from "./jobs.js";
+import { $, esc, api, LABEL, onUser, googleSignIn, loginLink, GOOGLE_SVG, mountWho, toast, getCategories } from "./jobs.js";
 mountWho($("who"));
 $("bGoogle").innerHTML = GOOGLE_SVG + "Continue with Google";
 $("lLogin").href = loginLink();
@@ -127,7 +128,22 @@ const checks = (el, obj, name) => { el.innerHTML = Object.entries(obj).map(([v, 
 checks($("jobTypes"), LABEL.type, "jt"); checks($("workModes"), LABEL.mode, "wm");
 
 let skills = ["Flutter", "Dart"];
-const suggested = ["Flutter", "Dart", "Firebase", "Bloc", "Provider", "Riverpod", "GetX", "REST APIs", "Clean Architecture", "Testing", "CI/CD", "Google Maps", "Push Notifications", "Animations", "Flame", "Git"];
+let suggested = ["Flutter", "Dart", "Firebase", "Bloc", "Provider", "Riverpod", "GetX", "REST APIs", "Clean Architecture", "Testing", "CI/CD", "Google Maps", "Push Notifications", "Animations", "Flame", "Git"];
+
+// Role types (Flutter / Android / iOS …) come from the server; skill suggestions follow the ones ticked
+let cats = [];
+const pickedCats = () => [...document.querySelectorAll('input[name="rc"]:checked')].map(c => c.value);
+function drawRoleCats(selected = ["flutter"]) {
+  $("roleCats").innerHTML = cats.map(c => `<label class="check"><input type="checkbox" name="rc" value="${esc(c.slug)}"${selected.includes(c.slug) ? " checked" : ""}> ${esc(c.name)}</label>`).join("");
+  $("roleCats").querySelectorAll("input").forEach(i => i.onchange = refreshSuggestions);
+  refreshSuggestions();
+}
+function refreshSuggestions() {
+  const sel = cats.filter(c => pickedCats().includes(c.slug));
+  const list = [...new Set(sel.flatMap(c => c.suggestedSkills))];
+  if (list.length) { suggested = list.slice(0, 24); drawSkills(); }
+}
+const catsReady = getCategories().then(list => { cats = list; drawRoleCats(); });
 function drawSkills() {
   $("skillChips").innerHTML = [...new Set([...suggested, ...skills])].map(s => `<button class="chipbtn" type="button" data-s="${esc(s)}" aria-pressed="${skills.includes(s)}">${esc(s)}</button>`).join("");
   $("skillChips").querySelectorAll("button").forEach(b => b.onclick = () => { const s = b.dataset.s; skills = skills.includes(s) ? skills.filter(x => x !== s) : skills.length < 15 ? [...skills, s] : skills; drawSkills(); });
@@ -214,6 +230,7 @@ function fill(p) {
   $("expectedSalaryLpa").value = p.expectedSalaryLpa ?? "";
   $("openToWork").checked = p.openToWork;
   document.querySelectorAll('input[name="jt"]').forEach(c => (c.checked = p.jobTypes.includes(c.value)));
+  catsReady.then(() => drawRoleCats(p.categories?.length ? p.categories : ["flutter"]));
   document.querySelectorAll('input[name="wm"]').forEach(c => (c.checked = p.workModes.includes(c.value)));
   skills = p.skills.length ? p.skills : skills; drawSkills();
   $("apps").innerHTML = ""; (p.apps.length ? p.apps : [{}]).forEach(addApp);
@@ -248,6 +265,7 @@ $("fProfile").addEventListener("submit", async e => {
     githubUrl: $("githubUrl").value, linkedinUrl: $("linkedinUrl").value, portfolioUrl: $("portfolioUrl").value, apps, skills,
     experience: collectWork(), education: collectEdu(), certifications: collectCerts(),
     jobTypes: [...document.querySelectorAll('input[name="jt"]:checked')].map(c => c.value),
+    categories: pickedCats().length ? pickedCats() : ["flutter"],
     workModes: [...document.querySelectorAll('input[name="wm"]:checked')].map(c => c.value),
     noticePeriod: $("noticePeriod").value || null, expectedSalaryLpa: $("expectedSalaryLpa").value === "" ? null : Number($("expectedSalaryLpa").value),
     openToWork: $("openToWork").checked, hiddenCompanies: $("hiddenCompanies").value, consent: true,

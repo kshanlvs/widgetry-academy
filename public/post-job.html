@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Post a Flutter Job for Free | Widgetry Jobs</title>
-<meta name="description" content="Hiring Flutter developers or interns? Post your job free on Widgetry Jobs and reach Flutter developers trained and verified by working engineers.">
+<title>Post a Flutter, Android or iOS Job for Free | Widgetry Jobs</title>
+<meta name="description" content="Hiring Flutter, Android or iOS developers or interns? Post your job free on Widgetry Jobs and reach mobile developers verified by working engineers.">
 <link rel="canonical" href="https://widgetryacademy.in/post-job.html">
-<meta property="og:type" content="website"><meta property="og:site_name" content="Widgetry Jobs"><meta property="og:title" content="Post a Flutter job, free | Widgetry Jobs">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Widgetry Jobs"><meta property="og:title" content="Post a Flutter, Android or iOS job, free | Widgetry Jobs">
 <meta property="og:url" content="https://widgetryacademy.in/post-job.html"><meta property="og:image" content="https://widgetryacademy.in/og-image.jpg">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,8 +24,8 @@
 
 <header class="jhero"><div class="wrap">
   <p class="eyebrow">For employers · free</p>
-  <h1>Hire Flutter developers <em>who can actually build.</em></h1>
-  <p>Post a Flutter job, internship or freelance project. We review every post, usually within 24 hours, so candidates trust what they see.</p>
+  <h1>Hire mobile developers <em>who can actually build.</em></h1>
+  <p>Post a Flutter, Android or iOS job, internship or freelance project. We review every post, usually within 24 hours, so candidates trust what they see.</p>
 </div></header>
 
 <main class="wrap" style="padding-block:28px 60px;display:grid;gap:22px;max-width:860px">
@@ -53,6 +53,7 @@
       </div>
     </fieldset>
     <fieldset><legend>The role</legend>
+      <div><span style="font-weight:700;font-size:14.5px">Category</span><div class="chiprow" id="catPick" role="radiogroup" aria-label="Job category" style="margin-top:8px"></div></div>
       <label>Job title<input id="title" maxlength="140" required placeholder="e.g. Junior Flutter Developer"></label>
       <div class="row3">
         <label>Job type<select id="jobType" required></select></label>
@@ -60,7 +61,7 @@
         <label>Experience<select id="level" required></select></label>
       </div>
       <label id="cityRow"><span>City <span class="hint">(required for on-site and hybrid)</span></span><input id="city" maxlength="80" placeholder="e.g. Kolkata"></label>
-      <label><span>Description <span class="hint">(responsibilities, requirements, what you offer; at least 80 characters)</span></span><textarea id="description" maxlength="8000" required placeholder="What will they build? Which Flutter skills do they need? Team, interview process, perks…"></textarea><span class="hint small" id="descCount">0 / 8000</span></label>
+      <label><span>Description <span class="hint">(responsibilities, requirements, what you offer; at least 80 characters)</span></span><textarea id="description" maxlength="8000" required placeholder="What will they build? Which skills do they need? Team, interview process, perks…"></textarea><span class="hint small" id="descCount">0 / 8000</span></label>
       <div class="skillbox"><span style="font-weight:700;font-size:14.5px">Skills <span class="opt" style="font-weight:500;color:var(--muted)">(tap to add, up to 15)</span></span>
         <div class="chiprow" id="skillChips"></div>
         <div class="skillin"><input id="skillOther" maxlength="40" placeholder="Add another skill" aria-label="Add another skill"><button class="btn ghost small" type="button" id="bAddSkill">Add</button></div>
@@ -99,7 +100,7 @@
 </div></footer>
 
 <script type="module">
-import { $, esc, api, LABEL, onUser, googleSignIn, loginLink, GOOGLE_SVG, mountWho, timeAgo, toast } from "./jobs.js";
+import { $, esc, api, LABEL, onUser, googleSignIn, loginLink, GOOGLE_SVG, mountWho, timeAgo, toast, getCategories } from "./jobs.js";
 let editingId = null;
 mountWho($("who"));
 $("bGoogle").innerHTML = GOOGLE_SVG + "Continue with Google";
@@ -110,6 +111,8 @@ fill($("salaryPeriod"), { month: "per month", year: "per year", project: "per pr
 $("salaryPeriod").value = "month";
 
 // Skills picker
+let category = "flutter", cats = [];
+const DEFAULT_SKILLS = { flutter: ["Flutter", "Dart"], android: ["Kotlin"], ios: ["Swift"] };
 let skills = ["Flutter", "Dart"];
 let suggested = ["Flutter", "Dart", "Firebase", "Bloc", "Provider", "Riverpod", "GetX", "REST APIs", "Clean Architecture", "Testing", "CI/CD", "Google Maps", "Push Notifications", "Git"];
 function drawSkills() {
@@ -120,6 +123,22 @@ function drawSkills() {
   });
 }
 drawSkills();
+
+// Category picker: suggestions follow the category; categories come from the server
+function drawCats() {
+  $("catPick").innerHTML = cats.map(c => `<button class="chipbtn" type="button" role="radio" data-c="${esc(c.slug)}" aria-pressed="${c.slug === category}" aria-checked="${c.slug === category}">${esc(c.name)}</button>`).join("");
+  $("catPick").querySelectorAll("button").forEach(b => b.onclick = () => setCategory(b.dataset.c, true));
+}
+function setCategory(slug, resetSkills) {
+  const prev = category; category = slug;
+  const c = cats.find(x => x.slug === slug);
+  if (c?.suggestedSkills?.length) suggested = c.suggestedSkills.slice(0, 14);
+  // Swap the starter skills when switching category, keep anything the employer added themselves
+  if (resetSkills && prev !== slug) skills = [...new Set([...(DEFAULT_SKILLS[slug] || []), ...skills.filter(s => !(DEFAULT_SKILLS[prev] || []).includes(s))])].slice(0, 15);
+  $("title").placeholder = `e.g. Junior ${c?.name || "Flutter"} Developer`;
+  drawCats(); drawSkills();
+}
+getCategories().then(list => { cats = list; const want = new URLSearchParams(location.search).get("cat"); setCategory(cats.some(c => c.slug === want) ? want : category, !!want); });
 const addOther = () => { const v = $("skillOther").value.trim(); if (v && skills.length < 15 && !skills.some(s => s.toLowerCase() === v.toLowerCase())) { skills.push(v); drawSkills(); } $("skillOther").value = ""; };
 $("bAddSkill").onclick = addOther;
 $("skillOther").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addOther(); } });
@@ -160,7 +179,8 @@ async function startEdit(id) {
     const r = await api("/my/jobs/" + encodeURIComponent(id), { auth: true });
     for (const k of FIELDS) $(k).value = r.form[k] ?? "";
     if (!r.form.salaryPeriod) $("salaryPeriod").value = "month";
-    skills = r.form.skills?.length ? r.form.skills : ["Flutter"]; drawSkills(); cityState();
+    setCategory(r.form.category || "flutter", false);
+    skills = r.form.skills?.length ? r.form.skills : (DEFAULT_SKILLS[category] || []); drawSkills(); cityState();
     $("descCount").textContent = $("description").value.length + " / 8000";
     editingId = id; $("editTitle").textContent = r.form.title; $("editBar").hidden = false;
     $("bSubmit").textContent = "Save changes"; $("agree").checked = false; $("err").hidden = true; $("ok").hidden = true;
@@ -190,7 +210,7 @@ $("fJob").addEventListener("submit", async e => {
     jobType: $("jobType").value, workMode: $("workMode").value, level: $("level").value, city: $("city").value,
     salaryMin: num("salaryMin"), salaryMax: num("salaryMax"), salaryPeriod: num("salaryMin") != null || num("salaryMax") != null ? $("salaryPeriod").value || null : null,
     description: $("description").value, skills, applyUrl: $("applyUrl").value, applyEmail: $("applyEmail").value,
-    contactName: $("contactName").value, contactEmail: $("contactEmail").value, agree: true,
+    contactName: $("contactName").value, contactEmail: $("contactEmail").value, agree: true, category,
   };
   const b = $("bSubmit"), wasEdit = !!editingId; b.disabled = true; b.textContent = wasEdit ? "Saving…" : "Submitting…";
   try {

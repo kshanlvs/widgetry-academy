@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Flutter Jobs & Internships in India | Widgetry Jobs</title>
-<meta name="description" content="Flutter developer jobs, internships and freelance projects in India, checked by working Flutter engineers. Free for job seekers. Post a Flutter job for free.">
+<title>Flutter, Android & iOS Developer Jobs in India | Widgetry Jobs</title>
+<meta name="description" content="Flutter, Android and iOS developer jobs, internships and freelance projects in India, checked by working mobile engineers. Free for job seekers. Post a job for free.">
 <link rel="canonical" href="https://widgetryacademy.in/jobs.html">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Widgetry Jobs">
-<meta property="og:title" content="Widgetry Jobs: Flutter jobs, checked by engineers">
-<meta property="og:description" content="Flutter jobs, internships and freelance projects. Free for job seekers. No fees, ever.">
+<meta property="og:title" content="Widgetry Jobs: Flutter & mobile jobs, checked by engineers">
+<meta property="og:description" content="Flutter, Android and iOS jobs, internships and freelance projects. Free for job seekers. No fees, ever.">
 <meta property="og:url" content="https://widgetryacademy.in/jobs.html"><meta property="og:image" content="https://widgetryacademy.in/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -26,12 +26,12 @@
 </div></nav>
 
 <header class="jhero"><div class="wrap">
-  <p class="eyebrow">Flutter only · India</p>
-  <h1>Flutter jobs, <em>checked by engineers.</em></h1>
-  <p>Jobs, internships and freelance projects for Flutter developers, from freshers to leads. Every listing is reviewed by a working Flutter engineer before it goes live.</p>
+  <p class="eyebrow">Flutter-first · Android · iOS · India</p>
+  <h1 id="heroH1">Flutter &amp; mobile jobs, <em>checked by engineers.</em></h1>
+  <p>Jobs, internships and freelance projects for Flutter, Android and iOS developers, from freshers to leads. Every listing is reviewed by a working mobile engineer before it goes live.</p>
   <form class="search" id="fSearch" role="search">
     <label for="q" class="sr" style="position:absolute;left:-9999px">Search jobs</label>
-    <input id="q" type="search" placeholder="Search: Flutter intern, Bloc, Firebase, company…" autocomplete="off" maxlength="100">
+    <input id="q" type="search" placeholder="Search: Flutter intern, Kotlin, SwiftUI, company…" autocomplete="off" maxlength="100">
     <button class="btn" type="submit">Search</button>
   </form>
   <div class="heroacts">
@@ -42,6 +42,7 @@
 </div></header>
 
 <main class="wrap">
+  <div class="cattabs" id="cats" role="tablist" aria-label="Job category"></div>
   <div class="filters" aria-label="Filters">
     <select id="fType" aria-label="Job type"><option value="">All job types</option></select>
     <select id="fMode" aria-label="Work mode"><option value="">Remote, on-site or hybrid</option></select>
@@ -62,14 +63,16 @@
 </div></footer>
 
 <script type="module">
-import { $, esc, api, LABEL, salaryText, timeAgo, logo, mountWho } from "./jobs.js";
+import { $, esc, api, LABEL, salaryText, timeAgo, logo, mountWho, getMeta, catName } from "./jobs.js";
 mountWho($("who"));
 
 const sel = (el, obj) => { for (const [v, t] of Object.entries(obj)) el.add(new Option(t, v)); };
 sel($("fType"), LABEL.type); sel($("fMode"), LABEL.mode); sel($("fLevel"), LABEL.level);
 
 const params = new URLSearchParams(location.search);
-const state = { q: params.get("q") || "", type: params.get("type") || "", mode: params.get("mode") || "", level: params.get("level") || "", city: params.get("city") || "", skill: params.get("skill") || "", page: 1 };
+let cats = [];
+// cat: "" = not chosen yet (decided after categories load), "all" = every category
+const state = { cat: params.get("cat") || "", q: params.get("q") || "", type: params.get("type") || "", mode: params.get("mode") || "", level: params.get("level") || "", city: params.get("city") || "", skill: params.get("skill") || "", page: 1 };
 $("q").value = state.q; $("fType").value = state.type; $("fMode").value = state.mode; $("fLevel").value = state.level;
 
 let items = [], total = 0;
@@ -79,7 +82,7 @@ function card(j) {
   return `<a class="jcard${j.featured ? " featured" : ""}" href="job.html?id=${encodeURIComponent(j.id)}">
     ${logo(j.company.name)}
     <div style="min-width:0">
-      <h3>${esc(j.title)}</h3>
+      <h3>${esc(j.title)} <span class="catbadge c-${esc(j.category)}">${esc(catName(cats, j.category))}</span></h3>
       <div class="co">${esc(j.company.name)}${j.company.verified ? ' <span class="badge ok" title="Verified company">✓ Verified</span>' : ""}</div>
       <div class="meta"><span class="pill">💼 ${LABEL.type[j.type]}</span><span class="pill">📍 ${where}</span><span class="pill">🎯 ${LABEL.level[j.level]}</span></div>
       ${j.skills.length ? `<div class="tags">${j.skills.slice(0, 6).map(s => `<span class="tag">${esc(s)}</span>`).join("")}</div>` : ""}
@@ -93,7 +96,7 @@ function card(j) {
 
 function syncUrl() {
   const p = new URLSearchParams();
-  for (const k of ["q", "type", "mode", "level", "city", "skill"]) if (state[k]) p.set(k, state[k]);
+  for (const k of ["cat", "q", "type", "mode", "level", "city", "skill"]) if (state[k]) p.set(k, state[k]);
   history.replaceState(null, "", location.pathname + (p.toString() ? "?" + p : ""));
   $("bClear").hidden = !["type", "mode", "level", "city", "skill", "q"].some(k => state[k]);
 }
@@ -103,32 +106,55 @@ async function load(append = false) {
   if (!append) { state.page = 1; $("results").innerHTML = '<div class="skel"></div><div class="skel"></div>'; }
   const p = new URLSearchParams({ page: state.page, pageSize: 20 });
   for (const k of ["q", "type", "mode", "level", "city", "skill"]) if (state[k]) p.set(k, state[k]);
+  if (state.cat && state.cat !== "all") p.set("category", state.cat);
   try {
     const r = await api("/jobs?" + p);
     items = append ? items.concat(r.items) : r.items; total = r.total;
     $("results").innerHTML = items.length ? items.map(card).join("") :
       `<div class="empty"><h3 style="font-family:var(--body);font-size:18px">No jobs match yet</h3><p style="margin:6px 0 14px">Try fewer filters, or join the Talent Network so companies can find you.</p><a class="btn" href="talent.html">Join the Talent Network</a></div>`;
-    $("summary").textContent = total ? `${total} job${total > 1 ? "s" : ""}${state.q ? ` for “${state.q}”` : ""}` : "";
+    const cn = state.cat && state.cat !== "all" ? catName(cats, state.cat) + " " : "";
+    $("summary").textContent = total ? `${total} ${cn}job${total > 1 ? "s" : ""}${state.q ? ` for “${state.q}”` : ""}` : "";
     $("bMore").hidden = items.length >= total;
   } catch (e) {
     $("results").innerHTML = `<p class="err">${esc(e.message)}</p>`;
   }
 }
 
+function drawCats() {
+  const tab = (slug, label, n) => `<button type="button" role="tab" data-cat="${esc(slug)}" aria-selected="${state.cat === slug}">${esc(label)}<span>${n}</span></button>`;
+  $("cats").innerHTML = tab("all", "All", cats.reduce((a, c) => a + c.liveJobs, 0)) + cats.map(c => tab(c.slug, c.name, c.liveJobs)).join("");
+  $("cats").querySelectorAll("button").forEach(b => b.onclick = () => { state.cat = b.dataset.cat; drawCats(); drawSkills(); retitle(); load(); });
+}
+function retitle() {
+  const c = state.cat !== "all" && cats.find(x => x.slug === state.cat);
+  document.title = c ? `${c.name} Developer Jobs in India | Widgetry Jobs` : "Flutter, Android & iOS Developer Jobs in India | Widgetry Jobs";
+}
+let topSkills = [];
+function drawSkills() {
+  const c = cats.find(x => x.slug === state.cat);
+  const base = c && c.suggestedSkills.length ? c.suggestedSkills : topSkills;
+  const skills = [...new Set([...(state.skill ? [state.skill] : []), ...base])].slice(0, 16);
+  $("skills").innerHTML = skills.map(s => `<button class="chipbtn" type="button" data-skill="${esc(s)}" aria-pressed="${s === state.skill}">${esc(s)}</button>`).join("");
+  $("skills").querySelectorAll("button").forEach(b => b.onclick = () => {
+    state.skill = state.skill === b.dataset.skill ? "" : b.dataset.skill;
+    $("skills").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.skill === state.skill));
+    load();
+  });
+}
+
 async function meta() {
   try {
-    const m = await api("/meta");
+    const m = await getMeta();
+    cats = m.categories || [];
+    // First visit: open Flutter if it has jobs, otherwise show everything
+    if (!state.cat || (state.cat !== "all" && !cats.some(c => c.slug === state.cat))) state.cat = cats[0]?.liveJobs ? cats[0].slug : "all";
+    drawCats(); retitle();
+    topSkills = m.skills;
     $("liveCount").textContent = m.liveJobs;
     for (const c of m.cities) $("fCity").add(new Option(c, c));
     if (state.city) $("fCity").value = state.city;
-    const skills = [...new Set([...(state.skill ? [state.skill] : []), ...m.skills])].slice(0, 16);
-    $("skills").innerHTML = skills.map(s => `<button class="chipbtn" type="button" data-skill="${esc(s)}" aria-pressed="${s === state.skill}">${esc(s)}</button>`).join("");
-    $("skills").querySelectorAll("button").forEach(b => b.onclick = () => {
-      state.skill = state.skill === b.dataset.skill ? "" : b.dataset.skill;
-      $("skills").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.skill === state.skill));
-      load();
-    });
-  } catch { $("liveCount").textContent = "–"; }
+    drawSkills();
+  } catch { $("liveCount").textContent = "–"; if (!state.cat) state.cat = "all"; }
 }
 
 $("fSearch").onsubmit = e => { e.preventDefault(); state.q = $("q").value.trim(); load(); };
@@ -140,6 +166,6 @@ $("bClear").onclick = () => {
   load();
 };
 $("bMore").onclick = () => { state.page++; load(true); };
-meta(); load();
+meta().then(() => load());
 </script>
 </body></html>

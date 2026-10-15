@@ -93,7 +93,8 @@
 <input type="file" id="file" accept="image/jpeg,image/png,image/webp" hidden>
 
 <script type="module">
-import { $, esc, api, LABEL, onUser, mountWho, toast } from "./jobs.js";
+import { $, esc, api, LABEL, onUser, mountWho, toast, getCategories, catName } from "./jobs.js";
+const cats = await getCategories();
 import { renderResume, profileScore, RESUME_CSS } from "./resume-render.js";
 $("resumeCss").textContent = RESUME_CSS;
 mountWho($("who"));
@@ -116,7 +117,7 @@ function render() {
   const lvl = sc.score >= 85 ? "All-star profile ⭐" : sc.score >= 65 ? "Strong profile" : sc.score >= 40 ? "Good start" : "Just getting started";
   const rs = p.resumeSettings || {};
   const pic = p.photo ? `<img class="pic" src="${p.photo}" alt="${esc(p.fullName)}">` : `<div class="pic" aria-label="No photo yet">${esc(initials(p.fullName))}</div>`;
-  const meta = [p.city && `📍 ${esc(p.city)}`, `💼 ${p.experienceYears > 0 ? `${p.experienceYears} yr${p.experienceYears == 1 ? "" : "s"} Flutter` : "Fresher"}`, p.currentCompany && `🏢 ${esc(p.currentCompany)}`, `✉️ ${esc(p.email)}`].filter(Boolean);
+  const meta = [p.city && `📍 ${esc(p.city)}`, `💼 ${p.experienceYears > 0 ? `${p.experienceYears} yr${p.experienceYears == 1 ? "" : "s"} experience` : "Fresher"}`, p.currentCompany && `🏢 ${esc(p.currentCompany)}`, `✉️ ${esc(p.email)}`].filter(Boolean);
 
   const exp = (p.experience || []).length ? `<ul class="tl">${p.experience.map(w => `<li><b>${esc(w.role)}</b><div class="sub">${esc(w.company)} · ${ym(w.start)} – ${ym(w.end)}</div>${lines(w.points).length ? `<ul>${lines(w.points).map(l => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul>` : empty("No work experience yet. Add jobs or internships, newest first.", "#work");
   const projects = (p.apps || []).length ? `<div class="projects">${p.apps.map(a => `<div class="proj"><b>${esc(a.name)}</b>${a.role ? `<span class="badge mute" style="justify-self:start">${esc(a.role)}</span>` : ""}${a.about ? `<p>${esc(a.about)}</p>` : ""}${safe(a.url) ? `<a href="${esc(a.url)}" target="_blank" rel="noopener nofollow">${esc(short(a.url).slice(0, 50))} ↗</a>` : ""}</div>`).join("")}</div>` : empty("Show what you've built. A Play Store or GitHub link is the strongest proof.", "#apps");
@@ -124,6 +125,7 @@ function render() {
   const certs = (p.certifications || []).length ? `<ul class="tl">${p.certifications.map(c => `<li><b>${esc(c.name)}</b><div class="sub">${[c.issuer, c.year].filter(Boolean).map(esc).join(" · ")}</div></li>`).join("")}</ul>` : empty("Courses and certificates help freshers stand out.", "#certs");
   const links = [["GitHub", p.githubUrl], ["LinkedIn", p.linkedinUrl], ["Portfolio", p.portfolioUrl]].filter(([, u]) => safe(u));
   const prefs = [
+    ["Roles", (p.categories || ["flutter"]).map(k => catName(cats, k)).join(", ")],
     ["Job type", (p.jobTypes || []).map(t => LABEL.type[t]).join(", ") || "Not set"],
     ["Work mode", (p.workModes || []).map(m => LABEL.mode[m]).join(", ") || "Not set"],
     ["Notice period", p.noticePeriod ? LABEL.notice[p.noticePeriod] : "Not set"],
@@ -140,7 +142,7 @@ function render() {
       <h1>${esc(p.fullName)}</h1>
       <p class="hl">${esc(p.headline)}</p>
       <div class="meta">${meta.map(m => `<span>${m}</span>`).join("")}</div>
-      <div class="badges"><span class="badge ${bc}">${bt}</span><span class="badge ${p.openToWork ? "ok" : "mute"}" id="otwBadge">${p.openToWork ? "● Open to work" : "Paused"}</span></div>
+      <div class="badges">${(p.categories || ["flutter"]).map(k => `<span class="catbadge c-${esc(k)}" style="margin:0">${esc(catName(cats, k))}</span>`).join("")}<span class="badge ${bc}">${bt}</span><span class="badge ${p.openToWork ? "ok" : "mute"}" id="otwBadge">${p.openToWork ? "● Open to work" : "Paused"}</span></div>
     </div>
     <div class="hacts"><a class="btn" href="${EDIT}">✏️ Edit profile</a><a class="btn ghost" href="resume.html">📄 My resume</a></div>
   </div>

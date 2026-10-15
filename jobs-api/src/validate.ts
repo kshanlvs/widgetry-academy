@@ -11,7 +11,10 @@ export const REPORT_REASONS = ["scam", "asks_fees", "fake", "expired", "wrong_in
 export const VERIFICATION = ["self", "portfolio", "verified"] as const;
 
 // Suggested skills (free text is also allowed, normalised below)
+// Canonical spelling for common skills (free text is also allowed, normalised below). Per-category suggestions live in job_categories.
 export const COMMON_SKILLS = ["Flutter", "Dart", "Firebase", "Bloc", "Provider", "Riverpod", "GetX", "REST APIs", "GraphQL",
+  "Kotlin", "Java", "Jetpack Compose", "Android SDK", "Coroutines", "MVVM", "Room", "Hilt", "Retrofit", "Espresso", "Gradle",
+  "Swift", "SwiftUI", "UIKit", "Combine", "Objective-C", "Core Data", "Xcode", "XCTest",
   "Clean Architecture", "Testing", "CI/CD", "Google Maps", "Push Notifications", "Animations", "Flame", "Android", "iOS", "Flutter Web", "Git"];
 
 const trim = (max: number) => z.string().trim().max(max);
@@ -31,7 +34,11 @@ export const skillList = z.array(trim(40).min(1)).max(15).default([])
     return [...seen.values()];
   });
 
+// Category slug (checked against job_categories by the routes)
+export const categorySlug = z.string().trim().toLowerCase().regex(/^[a-z0-9-]{2,30}$/, "Choose a category");
+
 export const jobInput = z.object({
+  category: categorySlug.default("flutter"),
   companyName: trim(120).min(2, "Company name is required"),
   companyWebsite: optUrl,
   title: trim(140).min(4, "Job title is required"),
@@ -61,6 +68,7 @@ export const jobInput = z.object({
 export type JobInput = z.infer<typeof jobInput>;
 
 export const jobSearch = z.object({
+  category: categorySlug.optional(),
   q: trim(100).optional(),
   type: z.enum(JOB_TYPES).optional(),
   mode: z.enum(WORK_MODES).optional(),
@@ -90,6 +98,7 @@ const eduItem = z.object({
 });
 
 export const candidateInput = z.object({
+  categories: z.array(categorySlug).min(1, "Choose at least one role type").max(10).default(["flutter"]).transform(a => [...new Set(a)]),
   fullName: trim(100).min(2, "Your name is required"),
   phone: z.string().trim().regex(/^\+?\d[\d\s-]{7,16}$/, "Enter a valid phone number").optional().or(z.literal("")).transform(v => (v ? v.replace(/[\s-]/g, "") : null)),
   headline: trim(140).min(4, "Add a short headline, e.g. Flutter Developer · 3 years"),

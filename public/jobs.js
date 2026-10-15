@@ -23,6 +23,16 @@ export const LABEL = {
   verification: { self: "Self-declared", portfolio: "✓ Portfolio checked", verified: "★ Widgetry verified" },
 };
 
+/**
+ * Job categories come from the server (job_categories table), so a new one appears everywhere without code changes.
+ * The fallback is only used if the server can't be reached.
+ */
+const FALLBACK_CATS = [{ slug: "flutter", name: "Flutter", liveJobs: 0, suggestedSkills: [] }, { slug: "android", name: "Android", liveJobs: 0, suggestedSkills: [] }, { slug: "ios", name: "iOS", liveJobs: 0, suggestedSkills: [] }];
+let metaP = null;
+export function getMeta() { return (metaP ??= api("/meta").catch(e => { metaP = null; throw e; })); }
+export async function getCategories() { try { return (await getMeta()).categories || FALLBACK_CATS; } catch { return FALLBACK_CATS; } }
+export const catName = (cats, slug) => cats.find(c => c.slug === slug)?.name || (slug ? slug[0].toUpperCase() + slug.slice(1) : "Flutter");
+
 const inr = n => "₹" + Number(n).toLocaleString("en-IN");
 const short = n => (n >= 100000 ? (n / 100000).toFixed(n % 100000 ? 1 : 0) + "L" : n >= 1000 ? Math.round(n / 1000) + "k" : String(n));
 export function salaryText(s, compact = false) {

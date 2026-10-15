@@ -4,6 +4,7 @@ import type mysql from "mysql2/promise";
 import { query, tx } from "../db.js";
 import { HttpError, wrap } from "../errors.js";
 import { requireAuth } from "../auth.js";
+import { assertCategories } from "../categories.js";
 import { candidateInput, publicId, resumeSettingsInput, photoInput, openToWorkInput } from "../validate.js";
 
 export const talentRouter = Router();
@@ -11,7 +12,7 @@ export const talentRouter = Router();
 const csv = (v: string | null) => (v ? v.split(",").filter(Boolean) : []);
 const json = (v: any) => (typeof v === "string" ? JSON.parse(v) : (v ?? []));
 
-export function candidateOut(r: any, skills: string[], forAdmin = false) {
+export function candidateOut(r: any, skills: string[], forAdmin = false, cats: string[] = ["flutter"]) {
   const out: any = {
     id: r.public_id,
     fullName: r.full_name, email: r.email, phone: r.phone ?? null,
@@ -22,7 +23,7 @@ export function candidateOut(r: any, skills: string[], forAdmin = false) {
     expectedSalaryLpa: r.expected_salary_lpa != null ? Number(r.expected_salary_lpa) : null,
     githubUrl: r.github_url ?? null, linkedinUrl: r.linkedin_url ?? null, portfolioUrl: r.portfolio_url ?? null,
     apps: json(r.apps), experience: json(r.experience), education: json(r.education), certifications: json(r.certifications),
-    about: r.about ?? null, skills,
+    about: r.about ?? null, skills, categories: cats,
     resumeSettings: r.resume_settings ? (typeof r.resume_settings === "string" ? JSON.parse(r.resume_settings) : r.resume_settings) : null,
     openToWork: !!r.open_to_work, hiddenCompanies: r.hidden_companies ?? null,
     verification: r.verification, status: r.status,
@@ -36,7 +37,8 @@ async function load(uid: string) {
   const [r] = await query("SELECT * FROM candidates WHERE uid = ?", [uid]);
   if (!r) return null;
   const skills = (await query<{ skill: string }>("SELECT skill FROM candidate_skills WHERE candidate_id = ? ORDER BY skill", [r.id])).map(s => s.skill);
-  const out = candidateOut(r, skills);
+  const cats = (await query<{ category: string }>("SELECT c.category FROM candidate_categories c JOIN job_categories k ON k.slug = c.category WHERE c.candidate_id = ? ORDER BY k.sort_order", [r.id])).map(c => c.category);
+  const out = candidateOut(r, skills, false, cats.length ? cats : ["flutter"]);
   const [ph] = await query<{ mime: string; data: Buffer }>("SELECT mime, data FROM candidate_photos WHERE candidate_id = ?", [r.id]);
   out.photo = ph ? `data:${ph.mime};base64,${Buffer.from(ph.data).toString("base64")}` : null;
   return out;
@@ -52,6 +54,7 @@ talentRouter.put("/talent/me", requireAuth, wrap(async (req, res) => {
   const u = req.user!;
   if (!u.email) throw new HttpError(400, "Your account has no email address. Please sign in with Google or email.");
   const p = candidateInput.parse(req.body);
+  await assertCategories(p.categories);
   await tx(async c => {
     const vals = [p.fullName, u.email, p.phone, p.headline, p.currentCompany, p.experienceYears, p.city,
       p.workModes.join(",") || null, p.jobTypes.join(",") || null, p.noticePeriod ?? null, p.expectedSalaryLpa ?? null,
@@ -72,6 +75,8 @@ talentRouter.put("/talent/me", requireAuth, wrap(async (req, res) => {
       id = (ins as mysql.ResultSetHeader).insertId;
     }
     await c.query("INSERT INTO candidate_skills (candidate_id, skill) VALUES ?", [p.skills.map(s => [id, s])]);
+    await c.query("DELETE FROM candidate_categories WHERE candidate_id = ?", [id]);
+    await c.query("INSERT INTO candidate_categories (candidate_id, category) VALUES ?", [p.categories.map(k => [id, k])]);
   });
   res.json({ profile: await load(u.uid), message: "Your Talent Network profile is saved." });
 }));

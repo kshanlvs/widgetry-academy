@@ -6,6 +6,7 @@ import { query, tx } from "../db.js";
 import { config } from "../config.js";
 import { HttpError, wrap } from "../errors.js";
 import { requireAuth } from "../auth.js";
+import { categories, assertCategories } from "../categories.js";
 import { jobInput, employerJobPatch, jobSearch, reportInput, publicId, hashIp, ftQuery, COMMON_SKILLS, type JobInput } from "../validate.js";
 
 export const jobsRouter = Router();
@@ -26,6 +27,7 @@ export function jobOut(r: any, skills: string[] = [], detail = false) {
   const out: any = {
     id: r.public_id,
     title: r.title,
+    category: r.category ?? "flutter",
     company: { name: r.company_name, website: r.company_website ?? null, verified: !!r.company_verified },
     type: r.job_type, mode: r.work_mode, level: r.level, city: r.city ?? null,
     salary: r.salary_min != null || r.salary_max != null ? { min: r.salary_min, max: r.salary_max, period: r.salary_period } : null,
@@ -65,10 +67,10 @@ export async function createJob(j: JobInput, opts: { uid: string | null; approve
     const cid = await companyId(c, j.companyName, j.companyWebsite);
     const pid = publicId();
     const [res] = await c.query(
-      `INSERT INTO jobs (public_id, company_id, title, job_type, work_mode, level, city, salary_min, salary_max, salary_period,
+      `INSERT INTO jobs (public_id, company_id, category, title, job_type, work_mode, level, city, salary_min, salary_max, salary_period,
         description, apply_url, apply_email, contact_name, contact_email, posted_by_uid, status, approved_at, expires_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-      [pid, cid, j.title, j.jobType, j.workMode, j.level, j.city, j.salaryMin ?? null, j.salaryMax ?? null,
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [pid, cid, j.category, j.title, j.jobType, j.workMode, j.level, j.city, j.salaryMin ?? null, j.salaryMax ?? null,
         j.salaryMin != null || j.salaryMax != null ? j.salaryPeriod ?? null : null,
         j.description, j.applyUrl, j.applyEmail, j.contactName, j.contactEmail, opts.uid,
         opts.approved ? "approved" : "pending",
@@ -85,9 +87,9 @@ export async function updateJob(jobId: number, j: JobInput) {
   return tx(async c => {
     const cid = await companyId(c, j.companyName, j.companyWebsite);
     await c.query(
-      `UPDATE jobs SET company_id=?, title=?, job_type=?, work_mode=?, level=?, city=?, salary_min=?, salary_max=?, salary_period=?,
+      `UPDATE jobs SET company_id=?, category=?, title=?, job_type=?, work_mode=?, level=?, city=?, salary_min=?, salary_max=?, salary_period=?,
         description=?, apply_url=?, apply_email=?, contact_name=?, contact_email=? WHERE id=?`,
-      [cid, j.title, j.jobType, j.workMode, j.level, j.city, j.salaryMin ?? null, j.salaryMax ?? null,
+      [cid, j.category, j.title, j.jobType, j.workMode, j.level, j.city, j.salaryMin ?? null, j.salaryMax ?? null,
         j.salaryMin != null || j.salaryMax != null ? j.salaryPeriod ?? null : null,
         j.description, j.applyUrl, j.applyEmail, j.contactName, j.contactEmail, jobId]);
     await c.query("DELETE FROM job_skills WHERE job_id = ?", [jobId]);
@@ -99,17 +101,21 @@ export async function updateJob(jobId: number, j: JobInput) {
 
 jobsRouter.get("/meta", wrap(async (_req, res) => {
   const [count] = await query<{ n: number }>(`SELECT COUNT(*) AS n FROM jobs j WHERE ${LIVE}`);
+  const perCat = await query<{ category: string; n: number }>(`SELECT j.category, COUNT(*) AS n FROM jobs j WHERE ${LIVE} GROUP BY j.category`);
+  const counts = new Map(perCat.map(c => [c.category, Number(c.n)]));
+  const cats = (await categories()).map(c => ({ slug: c.slug, name: c.name, liveJobs: counts.get(c.slug) ?? 0, suggestedSkills: c.suggestedSkills }));
   const cities = await query<{ city: string }>(`SELECT DISTINCT j.city FROM jobs j WHERE ${LIVE} AND j.city IS NOT NULL ORDER BY j.city LIMIT 50`);
   const top = await query<{ skill: string }>(
     `SELECT s.skill FROM job_skills s JOIN jobs j ON j.id = s.job_id WHERE ${LIVE} GROUP BY s.skill ORDER BY COUNT(*) DESC, s.skill LIMIT 20`);
   res.set("Cache-Control", "public, max-age=60");
-  res.json({ liveJobs: Number(count?.n ?? 0), cities: cities.map(c => c.city), skills: top.length ? top.map(t => t.skill) : COMMON_SKILLS.slice(0, 12), suggestedSkills: COMMON_SKILLS });
+  res.json({ liveJobs: Number(count?.n ?? 0), categories: cats, cities: cities.map(c => c.city), skills: top.length ? top.map(t => t.skill) : COMMON_SKILLS.slice(0, 12), suggestedSkills: COMMON_SKILLS });
 }));
 
 jobsRouter.get("/jobs", wrap(async (req, res) => {
   const f = jobSearch.parse(req.query);
   const where = [LIVE];
   const params: unknown[] = [];
+  if (f.category) { where.push("j.category = ?"); params.push(f.category); }
   if (f.type) { where.push("j.job_type = ?"); params.push(f.type); }
   if (f.mode) { where.push("j.work_mode = ?"); params.push(f.mode); }
   if (f.level) { where.push("j.level = ?"); params.push(f.level); }
@@ -156,6 +162,7 @@ const postLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHead
 
 jobsRouter.post("/jobs", requireAuth, postLimiter, wrap(async (req, res) => {
   const j = jobInput.parse(req.body);
+  await assertCategories([j.category]);
   const [{ n }] = await query<{ n: number }>("SELECT COUNT(*) AS n FROM jobs WHERE posted_by_uid = ? AND status = 'pending'", [req.user!.uid]);
   if (Number(n) >= 10) throw new HttpError(429, "You already have 10 jobs waiting for review. Please wait for them to be reviewed.");
   const { publicId: id } = await createJob(j, { uid: req.user!.uid, approved: false });
@@ -183,7 +190,7 @@ jobsRouter.get("/my/jobs/:id", requireAuth, wrap(async (req, res) => {
   res.set("Cache-Control", "private, no-store");
   const clean = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v != null));   // empty fields left out
   res.json({ id: r.public_id, status: r.status, form: clean({
-    companyName: r.company_name, companyWebsite: r.company_website, title: r.title, jobType: r.job_type, workMode: r.work_mode,
+    category: r.category, companyName: r.company_name, companyWebsite: r.company_website, title: r.title, jobType: r.job_type, workMode: r.work_mode,
     level: r.level, city: r.city, salaryMin: r.salary_min, salaryMax: r.salary_max, salaryPeriod: r.salary_period,
     description: r.description, skills: sk.get(r.id) ?? [], applyUrl: r.apply_url, applyEmail: r.apply_email,
     contactName: r.contact_name, contactEmail: r.contact_email }) });
@@ -193,7 +200,9 @@ jobsRouter.get("/my/jobs/:id", requireAuth, wrap(async (req, res) => {
 jobsRouter.put("/my/jobs/:id", requireAuth, postLimiter, wrap(async (req, res) => {
   const r = await ownJob(req.user!.uid, String(req.params.id));
   if (r.status === "filled" || r.status === "expired") throw new HttpError(409, "This job is closed. Post a new job instead.");
-  await updateJob(r.id, jobInput.parse(req.body));
+  const j = jobInput.parse(req.body);
+  await assertCategories([j.category]);
+  await updateJob(r.id, j);
   await query("UPDATE jobs SET status = 'pending', reject_reason = NULL WHERE id = ?", [r.id]);
   res.json({ ok: true, status: "pending", message: "Changes saved. Your job will be live again after a quick review." });
 }));

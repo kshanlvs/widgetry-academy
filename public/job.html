@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Flutter job | Widgetry Jobs</title>
-<meta name="description" content="Flutter job on Widgetry Jobs, reviewed by a working Flutter engineer.">
+<title>Mobile developer job | Widgetry Jobs</title>
+<meta name="description" content="Flutter, Android and iOS jobs on Widgetry Jobs, reviewed by working mobile engineers.">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Widgetry Jobs">
 <meta property="og:image" content="https://widgetryacademy.in/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -23,7 +23,7 @@
 </div></nav>
 
 <main class="wrap">
-  <p style="margin:18px 0 0"><a href="jobs.html">← All Flutter jobs</a></p>
+  <p style="margin:18px 0 0"><a href="jobs.html">← All jobs</a></p>
   <div id="view"><div class="detail"><div class="skel" style="height:320px"></div><div class="skel" style="height:220px"></div></div></div>
 </main>
 
@@ -42,7 +42,8 @@
 </div></footer>
 
 <script type="module">
-import { $, esc, safeUrl, api, LABEL, salaryText, timeAgo, logo, mountWho, toast } from "./jobs.js";
+import { $, esc, safeUrl, api, LABEL, salaryText, timeAgo, logo, mountWho, toast, getCategories, catName } from "./jobs.js";
+const cats = await getCategories();
 mountWho($("who"));
 const id = (new URLSearchParams(location.search).get("id") || "").replace(/[^a-z0-9]/g, "").slice(0, 12);
 for (const [v, t] of Object.entries(LABEL.report)) $("rReason").add(new Option(t, v));
@@ -56,7 +57,7 @@ function jobPosting(j) {
     datePosted: j.postedAt, validThrough: j.expiresAt || undefined, employmentType: type,
     identifier: { "@type": "PropertyValue", name: "Widgetry Jobs", value: j.id },
     hiringOrganization: { "@type": "Organization", name: j.company.name, ...(safeUrl(j.company.website) ? { sameAs: j.company.website } : {}) },
-    skills: j.skills.join(", "), directApply: false,
+    skills: j.skills.join(", "), directApply: false, occupationalCategory: `${catName(cats, j.category)} Developer`,
   };
   if (j.mode === "remote") { ld.jobLocationType = "TELECOMMUTE"; ld.applicantLocationRequirements = { "@type": "Country", name: "India" }; }
   else ld.jobLocation = { "@type": "Place", address: { "@type": "PostalAddress", addressLocality: j.city, addressCountry: "IN" } };
@@ -74,15 +75,15 @@ function render(j) {
   const where = j.mode === "remote" ? "Remote (India)" : `${j.city || ""} · ${LABEL.mode[j.mode]}`;
   document.title = `${j.title} at ${j.company.name} | Widgetry Jobs`;
   const md = document.querySelector('meta[name="description"]');
-  md.content = `${j.title} at ${j.company.name}: ${LABEL.type[j.type]}, ${where}${j.salary ? ", " + salaryText(j.salary) : ""}. Flutter job reviewed by Widgetry.`;
+  md.content = `${j.title} at ${j.company.name}: ${LABEL.type[j.type]}, ${where}${j.salary ? ", " + salaryText(j.salary) : ""}. ${catName(cats, j.category)} job reviewed by Widgetry.`;
   const canon = document.createElement("link"); canon.rel = "canonical"; canon.href = "https://widgetryacademy.in/job.html?id=" + j.id; document.head.appendChild(canon);
   $("view").innerHTML = `<div class="detail">
     <article class="card">
       <div class="dhead">${logo(j.company.name)}<div style="min-width:0">
-        <h1 style="font-size:clamp(22px,3.4vw,32px)">${esc(j.title)}</h1>
+        <h1 style="font-size:clamp(22px,3.4vw,32px)">${esc(j.title)} <span class="catbadge c-${esc(j.category)}">${esc(catName(cats, j.category))}</span></h1>
         <div class="muted" style="font-weight:700;margin-top:4px">${esc(j.company.name)}${j.company.verified ? ' <span class="badge ok">✓ Verified</span>' : ""}${j.featured ? ' <span class="badge feat">★ Featured</span>' : ""}</div>
       </div></div>
-      ${open ? "" : `<p class="notice" style="margin-top:18px"><span aria-hidden="true">⏸</span><span><b>${j.status === "filled" ? "This position has been filled." : "This job is no longer accepting applications."}</b> <a href="jobs.html">See open Flutter jobs</a></span></p>`}
+      ${open ? "" : `<p class="notice" style="margin-top:18px"><span aria-hidden="true">⏸</span><span><b>${j.status === "filled" ? "This position has been filled." : "This job is no longer accepting applications."}</b> <a href="jobs.html?cat=${encodeURIComponent(j.category)}">See open ${esc(catName(cats, j.category))} jobs</a></span></p>`}
       <div class="meta" style="display:flex;flex-wrap:wrap;gap:8px 16px;margin:18px 0 6px"><span class="pill">💼 ${LABEL.type[j.type]}</span><span class="pill">📍 ${esc(where)}</span><span class="pill">🎯 ${LABEL.level[j.level]}</span>${j.salary ? `<span class="pill">💰 ${esc(salaryText(j.salary))}</span>` : ""}</div>
       ${j.skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px">${j.skills.map(s => `<a class="tag" href="jobs.html?skill=${encodeURIComponent(s)}" style="text-decoration:none">${esc(s)}</a>`).join("")}</div>` : ""}
       <h2 style="font-size:18px;font-family:var(--body);font-weight:800;margin-top:22px">About the role</h2>
@@ -108,13 +109,13 @@ function render(j) {
         <button class="linkbtn" type="button" id="bReport">Report this job</button>
       </div>
       <div class="card" style="background:var(--deep);color:var(--deep-fg);border-color:var(--deep-line)">
-        <b style="color:#fff">Get found by Flutter employers</b>
+        <b style="color:#fff">Get found by mobile employers</b>
         <p style="margin:6px 0 12px;color:var(--deep-muted);font-size:14.5px">Join the Widgetry Talent Network: free, private, and verified by engineers.</p>
         <a class="btn gold small" href="talent.html">Join free</a>
       </div>
     </aside></div>`;
   const link = location.origin + "/job.html?id=" + j.id;
-  $("bWa").href = "https://wa.me/?text=" + encodeURIComponent(`${j.title} at ${j.company.name} (Flutter job): ${link}`);
+  $("bWa").href = "https://wa.me/?text=" + encodeURIComponent(`${j.title} at ${j.company.name} (${catName(cats, j.category)} job): ${link}`);
   $("bShare").onclick = async () => {
     try { if (navigator.share) await navigator.share({ title: j.title, url: link }); else { await navigator.clipboard.writeText(link); toast("Link copied"); } } catch {}
   };
@@ -132,9 +133,9 @@ $("fReport").addEventListener("submit", async e => {
   finally { $("rSend").disabled = false; }
 });
 
-if (!id) $("view").innerHTML = '<div class="empty" style="margin:30px 0">No job selected. <a href="jobs.html">Browse Flutter jobs</a></div>';
+if (!id) $("view").innerHTML = '<div class="empty" style="margin:30px 0">No job selected. <a href="jobs.html">Browse jobs</a></div>';
 else api("/jobs/" + id).then(render).catch(e => {
-  $("view").innerHTML = `<div class="empty" style="margin:30px 0"><h2 style="font-size:20px">${e.status === 404 ? "This job isn't available" : "Couldn't load this job"}</h2><p>${esc(e.message)}</p><a class="btn" href="jobs.html">Browse Flutter jobs</a></div>`;
+  $("view").innerHTML = `<div class="empty" style="margin:30px 0"><h2 style="font-size:20px">${e.status === 404 ? "This job isn't available" : "Couldn't load this job"}</h2><p>${esc(e.message)}</p><a class="btn" href="jobs.html">Browse jobs</a></div>`;
 });
 </script>
 </body></html>

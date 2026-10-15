@@ -44,6 +44,7 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 td.num{text-align:right;font-variant-numeric:tabular-nums}
 tr:hover td{background:#fafcfb}
 .pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.pill.cat{background:#e3efe9;color:#0f6b56;vertical-align:middle;font-size:11px}
 .p-unpaid{background:#eef1ef;color:#56695f}.p-paid{background:#dff4ea;color:#0f6b56}.p-part{background:#fff1d6;color:#8a5a00}.p-refunded{background:#fde6e3;color:#a32d1d}.p-cancelled{background:#eceaea;color:#555}
 .small{font-size:13px;color:var(--muted)}
 a{color:var(--accent)}
@@ -297,6 +298,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
     </div>
     <div class="tools">
       <label>Status<select id="jStatus"><option value="pending">In review</option><option value="approved">Live</option><option value="rejected">Rejected</option><option value="filled">Filled</option><option value="expired">Expired</option><option value="all">All</option></select></label>
+      <label>Category<select id="jCat"><option value="">All</option></select></label>
       <label>Search<input id="jq" placeholder="Title, company, contact email"></label>
       <button class="btn ghost" id="jReload" type="button">Refresh</button>
       <button class="btn ghost" id="jBulk" type="button">Bulk import</button>
@@ -310,6 +312,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
 
   <section id="tapp" hidden>
     <div class="tools">
+      <label>Role<select id="tCat"><option value="">All</option></select></label>
       <label>Verification<select id="tVer"><option value="">All</option><option value="self">Self-declared</option><option value="portfolio">Portfolio checked</option><option value="verified">Widgetry verified</option></select></label>
       <label>Search<input id="tq" placeholder="Name, email, headline, company"></label>
       <button class="btn ghost" id="tReload" type="button">Refresh</button>
@@ -323,7 +326,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
   <h2>Bulk import jobs</h2>
   <p class="small" style="margin:0">Paste the jobs Claude prepares for you (a JSON list). Click <b>Check</b> first: if any job has a problem, nothing is added. Duplicates are skipped. Imported jobs go live immediately for 30 days.</p>
   <textarea id="bText" rows="14" spellcheck="false" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px" placeholder='[ { "companyName": "...", "title": "...", ... } ]'></textarea>
-  <p class="small" style="margin:0"><button class="linkbtn" type="button" id="bTpl">Insert an example</button> · Fields: companyName, companyWebsite, title, jobType (full_time / internship / freelance / contract / part_time), workMode (onsite / hybrid / remote), level (fresher / junior / mid / senior / lead), city, salaryMin, salaryMax, salaryPeriod (month / year / project), description, skills, applyUrl or applyEmail</p>
+  <p class="small" style="margin:0"><button class="linkbtn" type="button" id="bTpl">Insert an example</button> · Fields: category (flutter / android / ios; default flutter), companyName, companyWebsite, title, jobType (full_time / internship / freelance / contract / part_time), workMode (onsite / hybrid / remote), level (fresher / junior / mid / senior / lead), city, salaryMin, salaryMax, salaryPeriod (month / year / project), description, skills, applyUrl or applyEmail</p>
   <div id="bReport" class="jl"></div>
   <p class="err" id="bErr" hidden></p>
   <div class="acts"><button class="btn ghost" value="cancel" formnovalidate>Close</button><button class="btn ghost" type="button" id="bCheck">Check</button><button class="btn" type="button" id="bGo" disabled>Import</button></div>
@@ -333,7 +336,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
   <h2 id="jdTitle">Post a job</h2>
   <p class="small" style="margin:0">Jobs you post here go live immediately.</p>
   <div class="row2"><label>Company<input id="jf_companyName" maxlength="120" required></label><label>Company website<input id="jf_companyWebsite" type="url" maxlength="300" placeholder="https://"></label></div>
-  <label>Job title<input id="jf_title" maxlength="140" required></label>
+  <div class="row2"><label>Category<select id="jf_category"></select></label><label>Job title<input id="jf_title" maxlength="140" required></label></div>
   <div class="row3"><label>Type<select id="jf_jobType"><option value="full_time">Full-time</option><option value="internship">Internship</option><option value="freelance">Freelance</option><option value="contract">Contract</option><option value="part_time">Part-time</option></select></label>
     <label>Mode<select id="jf_workMode"><option value="onsite">On-site</option><option value="hybrid">Hybrid</option><option value="remote">Remote</option></select></label>
     <label>Level<select id="jf_level"><option value="fresher">Fresher</option><option value="junior">Junior (0–2)</option><option value="mid">Mid (2–5)</option><option value="senior">Senior (5+)</option><option value="lead">Lead</option></select></label></div>
@@ -407,6 +410,7 @@ onAuthStateChanged(auth, async u => {
   await loadMentors();
   loadCourses();
   loadJobStats();
+  loadCats();
 });
 
 $("fLogin").addEventListener("submit", async e => {
@@ -715,6 +719,14 @@ async function japi(path, { method = "GET", body } = {}) {
   if (!r.ok) throw new Error(d.error || ("Error " + r.status));
   return d;
 }
+// Job categories come from the jobs server (job_categories table)
+let jcats = [{ slug: "flutter", name: "Flutter" }, { slug: "android", name: "Android" }, { slug: "ios", name: "iOS" }];
+const catLabel = slug => jcats.find(c => c.slug === slug)?.name || slug || "Flutter";
+async function loadCats() {
+  try { const m = await japi("/meta"); if (m.categories?.length) jcats = m.categories; } catch {}
+  for (const id of ["jCat", "tCat"]) { const el = $(id); const v = el.value; el.length = 1; for (const c of jcats) el.add(new Option(c.name, c.slug)); el.value = v; }
+  const f = $("jf_category"); f.length = 0; for (const c of jcats) f.add(new Option(c.name, c.slug));
+}
 function jOffline(x) { $("jOff").textContent = x.message; $("jOff").hidden = false; }
 
 async function loadJobStats() {
@@ -731,7 +743,7 @@ async function loadJobStats() {
 let jitems = [], jediting = null;
 async function loadJobs() {
   loadJobStats();
-  const p = new URLSearchParams({ status: $("jStatus").value }); if ($("jq").value.trim()) p.set("q", $("jq").value.trim());
+  const p = new URLSearchParams({ status: $("jStatus").value }); if ($("jq").value.trim()) p.set("q", $("jq").value.trim()); if ($("jCat").value) p.set("category", $("jCat").value);
   try {
     jitems = (await japi("/admin/jobs?" + p)).items;
     $("jList").innerHTML = jitems.length ? jitems.map(jobCard).join("") : '<p class="small">No jobs here.</p>';
@@ -754,7 +766,7 @@ function jobCard(j) {
   if (j.status === "approved") acts.push(btn("filled", "Mark filled"), btn("extend", "+30 days"), btn(j.featured ? "unfeature" : "feature", j.featured ? "Unfeature" : "★ Feature"));
   acts.push(btn("edit", "Edit"), btn("delete", "Delete"));
   return `<div class="ji">
-    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3>${esc(j.title)}</h3><span class="pill j-${esc(j.status)}">${esc(JS[j.status] || j.status)}</span></div>
+    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3>${esc(j.title)} <span class="pill cat">${esc(catLabel(j.category))}</span></h3><span class="pill j-${esc(j.status)}">${esc(JS[j.status] || j.status)}</span></div>
     <div class="meta"><b style="color:var(--ink)">${esc(j.company.name)}</b>${safe(j.company.website) ? `<a href="${esc(j.company.website)}" target="_blank" rel="noopener">website</a>` : ""}<span>${JT[j.type]} · ${JM[j.mode]}${j.city ? " · " + esc(j.city) : ""} · ${JL[j.level]}</span><span>${esc(sal)}</span>${j.featured ? "<span>★ Featured</span>" : ""}${j.openReports ? `<span style="color:var(--bad)">⚑ ${j.openReports} report(s)</span>` : ""}</div>
     <div class="meta"><span>Contact: ${esc(j.contact.name || "")} <a href="mailto:${esc(j.contact.email)}">${esc(j.contact.email)}</a></span><span>Submitted ${jdate(j.createdAt)}</span>${j.expiresAt ? `<span>Expires ${jdate(j.expiresAt)}</span>` : ""}</div>
     <div class="meta"><span>Apply: ${safe(j.apply.url) ? `<a href="${esc(j.apply.url)}" target="_blank" rel="noopener">${esc(j.apply.url)}</a>` : ""} ${j.apply.email ? esc(j.apply.email) : ""}</span></div>
@@ -777,11 +789,11 @@ async function jobAction(id, act) {
     loadJobs();
   } catch (x) { alert(x.message); }
 }
-const JF = ["companyName", "companyWebsite", "title", "jobType", "workMode", "level", "city", "salaryMin", "salaryMax", "salaryPeriod", "description", "applyUrl", "applyEmail", "contactName", "contactEmail"];
+const JF = ["category", "companyName", "companyWebsite", "title", "jobType", "workMode", "level", "city", "salaryMin", "salaryMax", "salaryPeriod", "description", "applyUrl", "applyEmail", "contactName", "contactEmail"];
 function openJobForm(j) {
   jediting = j || null;
   $("jdTitle").textContent = j ? "Edit job" : "Post a job";
-  const raw = j ? j.raw : { jobType: "full_time", workMode: "onsite", level: "junior", salaryPeriod: "month", contactEmail: auth.currentUser?.email || "" };
+  const raw = j ? j.raw : { category: "flutter", jobType: "full_time", workMode: "onsite", level: "junior", salaryPeriod: "month", contactEmail: auth.currentUser?.email || "" };
   for (const k of JF) $("jf_" + k).value = raw[k] ?? "";
   if (!raw.salaryPeriod) $("jf_salaryPeriod").value = "month";
   $("jf_skills").value = j ? j.skills.join(", ") : "Flutter, Dart";
@@ -790,7 +802,7 @@ function openJobForm(j) {
 $("jNew").onclick = () => openJobForm(null);
 
 // ----- Bulk import -----
-const BULK_EXAMPLE = [{ companyName: "Example Labs", companyWebsite: "https://example.com", title: "Flutter Developer", jobType: "full_time", workMode: "hybrid", level: "junior", city: "Kolkata",
+const BULK_EXAMPLE = [{ category: "flutter", companyName: "Example Labs", companyWebsite: "https://example.com", title: "Flutter Developer", jobType: "full_time", workMode: "hybrid", level: "junior", city: "Kolkata",
   description: "Build and ship features for our Flutter app with Firebase and REST APIs. Work with design and backend teams, write tests and fix bugs. 1-2 years of Flutter experience.",
   skills: "Flutter, Dart, Firebase, REST APIs", applyUrl: "https://example.com/careers/flutter-developer" }];
 let bulkJobs = null;
@@ -832,7 +844,7 @@ $("jForm").addEventListener("submit", async e => {
   e.preventDefault(); $("jfErr").hidden = true; $("jfSave").disabled = true;
   const v = k => $("jf_" + k).value.trim();
   const n = k => v(k) === "" ? null : Number(v(k));
-  const body = { companyName: v("companyName"), companyWebsite: v("companyWebsite"), title: v("title"), jobType: v("jobType"), workMode: v("workMode"), level: v("level"),
+  const body = { category: v("category"), companyName: v("companyName"), companyWebsite: v("companyWebsite"), title: v("title"), jobType: v("jobType"), workMode: v("workMode"), level: v("level"),
     city: v("city"), salaryMin: n("salaryMin"), salaryMax: n("salaryMax"), salaryPeriod: n("salaryMin") != null || n("salaryMax") != null ? v("salaryPeriod") : null,
     description: $("jf_description").value, skills: v("skills").split(",").map(s => s.trim()).filter(Boolean), applyUrl: v("applyUrl"), applyEmail: v("applyEmail"),
     contactName: v("contactName"), contactEmail: v("contactEmail") };
@@ -843,19 +855,19 @@ $("jForm").addEventListener("submit", async e => {
   } catch (x) { $("jfErr").textContent = x.message; $("jfErr").hidden = false; }
   finally { $("jfSave").disabled = false; }
 });
-$("jReload").onclick = loadJobs; $("jStatus").onchange = loadJobs;
+$("jReload").onclick = loadJobs; $("jStatus").onchange = loadJobs; $("jCat").onchange = loadJobs;
 $("jq").addEventListener("keydown", e => { if (e.key === "Enter") loadJobs(); });
 
 let titems = [];
 async function loadTalent() {
-  const p = new URLSearchParams(); if ($("tVer").value) p.set("verification", $("tVer").value); if ($("tq").value.trim()) p.set("q", $("tq").value.trim());
+  const p = new URLSearchParams(); if ($("tVer").value) p.set("verification", $("tVer").value); if ($("tCat").value) p.set("category", $("tCat").value); if ($("tq").value.trim()) p.set("q", $("tq").value.trim());
   try {
     titems = (await japi("/admin/candidates?" + p)).items;
     $("tList").innerHTML = titems.length ? titems.map(c => {
       const links = [["GitHub", c.githubUrl], ["LinkedIn", c.linkedinUrl], ["Portfolio", c.portfolioUrl]].filter(x => safe(x[1])).map(x => `<a href="${esc(x[1])}" target="_blank" rel="noopener">${x[0]}</a>`).join(" · ");
       const apps = (c.apps || []).map(a => safe(a.url) ? `<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.name)}</a>${a.role ? " (" + esc(a.role) + ")" : ""}` : `${esc(a.name)}${a.role ? " (" + esc(a.role) + ")" : ""}`).join(", ");
       return `<div class="ji">
-        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3>${esc(c.fullName)}</h3><span class="pill v-${esc(c.verification)}">${esc(VL[c.verification])}</span></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3>${esc(c.fullName)} ${(c.categories || []).map(k => `<span class="pill cat">${esc(catLabel(k))}</span>`).join(" ")}</h3><span class="pill v-${esc(c.verification)}">${esc(VL[c.verification])}</span></div>
         <div class="meta"><b style="color:var(--ink)">${esc(c.headline)}</b><span>${c.experienceYears} yrs</span>${c.currentCompany ? `<span>${esc(c.currentCompany)}</span>` : ""}${c.city ? `<span>${esc(c.city)}</span>` : ""}<span>${c.openToWork ? "Open to work" : "Paused"}</span>${c.status === "hidden" ? '<span style="color:var(--bad)">Hidden</span>' : ""}</div>
         <div class="meta"><a href="mailto:${esc(c.email)}">${esc(c.email)}</a>${c.phone ? `<a href="https://wa.me/${esc(c.phone.replace(/\D/g, ""))}" target="_blank" rel="noopener">${esc(c.phone)}</a>` : ""}${c.expectedSalaryLpa != null ? `<span>Expects ${c.expectedSalaryLpa} LPA</span>` : ""}${c.noticePeriod ? `<span>Notice ${esc(c.noticePeriod.replace("_", " "))}</span>` : ""}</div>
         ${c.skills.length ? `<div class="tags">${c.skills.map(s => `<span>${esc(s)}</span>`).join("")}</div>` : ""}
@@ -877,7 +889,7 @@ async function loadTalent() {
     $("tList").querySelectorAll("[data-thide]").forEach(b => b.onclick = async () => { try { await japi(`/admin/candidates/${b.dataset.thide}`, { method: "PATCH", body: { status: b.dataset.st } }); loadTalent(); } catch (x) { alert(x.message); } });
   } catch (x) { $("tList").innerHTML = `<p class="note">${esc(x.message)}</p>`; }
 }
-$("tReload").onclick = loadTalent; $("tVer").onchange = loadTalent;
+$("tReload").onclick = loadTalent; $("tVer").onchange = loadTalent; $("tCat").onchange = loadTalent;
 $("tq").addEventListener("keydown", e => { if (e.key === "Enter") loadTalent(); });
 
 /* ---------- Tabs ---------- */

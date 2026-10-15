@@ -139,6 +139,18 @@ textarea{min-height:150px;resize:vertical;line-height:1.5}
 .check input{width:18px;height:18px;margin:0;flex:none}
 .skillbox{display:grid;gap:10px}
 .skillin{display:flex;gap:8px}
+/* Category tabs (Flutter / Android / iOS / …) */
+.cattabs{display:flex;gap:8px;overflow-x:auto;padding:18px 0 4px;scrollbar-width:none}
+.cattabs::-webkit-scrollbar{display:none}
+.cattabs button{flex:none;display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:700;font-size:15px;padding:9px 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
+.cattabs button span{font:700 12px var(--mono);background:var(--soft);color:var(--muted);border-radius:999px;padding:2px 7px}
+.cattabs button[aria-selected="true"]{background:var(--deep);border-color:var(--deep);color:#fff}
+.cattabs button[aria-selected="true"] span{background:rgba(255,255,255,.16);color:#fff}
+.catbadge{display:inline-block;vertical-align:middle;font:700 11px var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:6px;margin-left:6px;background:var(--soft);color:var(--accent)}
+.catbadge.c-android{background:rgba(61,220,132,.16);color:#1f8a4c}
+.catbadge.c-ios{background:rgba(10,132,255,.13);color:#0a64c2}
+:root[data-theme="dark"] .catbadge.c-android{color:#5fe39a} :root[data-theme="dark"] .catbadge.c-ios{color:#6fb3ff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .catbadge.c-android{color:#5fe39a}:root:not([data-theme="light"]) .catbadge.c-ios{color:#6fb3ff}}
 .mine{display:grid;gap:10px}
 .mine .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .editbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:color-mix(in srgb,var(--accent,#0f6b56) 10%,transparent);border-radius:12px;padding:10px 14px}

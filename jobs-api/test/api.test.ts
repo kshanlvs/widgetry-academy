@@ -320,3 +320,33 @@ test("admin bulk import: checks everything first, skips duplicates, posts live",
   const again = await call("POST", "/admin/jobs/import", { jobs: [a] }, ADMIN);
   assert.equal(again.body.created, 0); assert.equal(again.body.report[0].status, "duplicate");
 });
+
+test("categories: Flutter, Android and iOS jobs and seekers", async () => {
+  const meta = (await call("GET", "/meta")).body;
+  assert.deepEqual(meta.categories.map((c: any) => c.slug), ["flutter", "android", "ios"]);
+  assert.ok(meta.categories[1].suggestedSkills.includes("Jetpack Compose"));
+  const desc = "Build our Android app in Kotlin with Jetpack Compose, coroutines and MVVM. Work with design and backend teams and ship every sprint.";
+  const android = { category: "android", companyName: "Droid Co", title: "Android Developer", jobType: "full_time", workMode: "remote", level: "mid", description: desc, skills: ["kotlin", "jetpack compose"], applyUrl: "https://droid.test/careers/android" };
+  assert.equal((await call("POST", "/admin/jobs", { ...android, category: "react-native" }, ADMIN)).status, 400, "unknown category refused");
+  const a = await call("POST", "/admin/jobs", android, ADMIN);
+  assert.equal(a.status, 201);
+  const ios = await call("POST", "/admin/jobs", { ...android, category: "ios", title: "iOS Developer", skills: ["swift", "swiftui"], applyUrl: "https://droid.test/careers/ios" }, ADMIN);
+  const fl = (await call("GET", "/jobs?category=flutter")).body.items;
+  assert.ok(fl.length > 0 && fl.every((j: any) => j.category === "flutter"), "old jobs default to flutter");
+  const an = (await call("GET", "/jobs?category=android")).body.items;
+  assert.deepEqual(an.map((j: any) => j.title), ["Android Developer"]);
+  assert.deepEqual(an[0].skills, ["Jetpack Compose", "Kotlin"]);
+  assert.equal((await call("GET", "/jobs/" + ios.body.id)).body.category, "ios");
+  const m2 = (await call("GET", "/meta")).body.categories;
+  assert.equal(m2.find((c: any) => c.slug === "android").liveJobs, 1);
+  // bulk import reports unknown categories
+  const rep = await call("POST", "/admin/jobs/import", { jobs: [{ ...android, category: "kmp", title: "KMP dev", applyUrl: "https://droid.test/kmp" }], dryRun: true }, ADMIN);
+  assert.equal(rep.body.report[0].status, "invalid");
+  // seekers choose role types
+  const tok = "dev:seekcat:cat@test.dev:Cat";
+  assert.equal((await call("PUT", "/talent/me", { fullName: "Cat Roy", headline: "Android Developer", experienceYears: 2, skills: ["Kotlin"], categories: ["android", "nope"], consent: true }, tok)).status, 400);
+  const s = await call("PUT", "/talent/me", { fullName: "Cat Roy", headline: "Android Developer", experienceYears: 2, skills: ["Kotlin"], categories: ["android", "flutter"], consent: true }, tok);
+  assert.deepEqual(s.body.profile.categories, ["flutter", "android"]);
+  const list = (await call("GET", "/admin/candidates?category=android", undefined, ADMIN)).body.items;
+  assert.ok(list.some((c: any) => c.fullName === "Cat Roy"));
+});

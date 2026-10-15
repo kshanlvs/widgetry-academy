@@ -18,12 +18,23 @@ The academy stays entirely on Firebase (Spark plan). Widgetry Jobs runs on its o
 
 | Area | Endpoints |
 |---|---|
-| Public | `GET /api/jobs` (search `q`, filters `type` `mode` `level` `city` `skill`, paging), `GET /api/jobs/:id`, `GET /api/meta`, `POST /api/jobs/:id/report` |
+| Public | `GET /api/jobs` (search `q`, filters `category` `type` `mode` `level` `city` `skill`, paging), `GET /api/jobs/:id`, `GET /api/meta`, `POST /api/jobs/:id/report` |
 | Employers (signed in) | `POST /api/jobs` (goes to review), `GET /api/my/jobs` |
 | Job seekers (signed in) | `GET/PUT/DELETE /api/talent/me` |
 | Admin (UID in `ADMIN_UIDS`) | `GET /api/admin/stats`, `GET/POST /api/admin/jobs`, `PUT/PATCH/DELETE /api/admin/jobs/:id`, `GET/PATCH /api/admin/reports`, `GET/PATCH /api/admin/candidates` |
 
 Safety built in: every employer post is reviewed before going live; posts that ask candidates for fees are refused; 3 reports from different people send a job back to review; jobs expire after 30 days; contact emails and talent profiles are never public; rate limits on posting and reporting; only `https://` links accepted; all queries parameterised.
+
+## Job categories
+
+Jobs and seekers have categories (Flutter, Android, iOS). They live in the `job_categories` table, and every page reads them from `GET /api/meta`, so adding one needs no code change. Add a new migration file, for example `migrations/008_react_native.sql`:
+
+```sql
+INSERT INTO job_categories (slug, name, sort_order, suggested_skills)
+VALUES ('react-native', 'React Native', 40, '["React Native","JavaScript","TypeScript","Redux","REST APIs","Testing","Git"]');
+```
+
+Push it; the server applies it on start. To hide a category, set `active = 0`. Existing jobs keep their category.
 
 ## Run locally
 

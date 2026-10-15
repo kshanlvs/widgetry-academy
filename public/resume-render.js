@@ -20,11 +20,12 @@ const phone = v => { const d = String(v || "").replace(/\D/g, ""); return /^91\d
 
 // Group skills the way recruiters scan them
 const GROUPS = [
-  ["Languages & Frameworks", ["Flutter", "Dart", "Kotlin", "Swift", "Java", "JavaScript", "TypeScript", "Flutter Web", "Flame"]],
-  ["State Management", ["Bloc", "Provider", "Riverpod", "GetX", "MobX", "Redux"]],
-  ["Backend & Integrations", ["Firebase", "REST APIs", "GraphQL", "Google Maps", "Push Notifications", "Supabase", "Node.js", "SQLite", "Hive"]],
-  ["Architecture & Practices", ["Clean Architecture", "Testing", "CI/CD", "Git", "Animations", "Dependency Injection", "MVVM"]],
-  ["Platforms", ["Android", "iOS"]],
+  ["Languages & Frameworks", ["Flutter", "Dart", "Kotlin", "Swift", "Java", "Objective-C", "JavaScript", "TypeScript", "Flutter Web", "Flame"]],
+  ["UI", ["Jetpack Compose", "SwiftUI", "UIKit", "XML Layouts", "Material Design", "Animations"]],
+  ["State & Concurrency", ["Bloc", "Provider", "Riverpod", "GetX", "MobX", "Redux", "Coroutines", "Flow", "Combine", "RxJava", "RxSwift"]],
+  ["Data & Integrations", ["Firebase", "REST APIs", "GraphQL", "Retrofit", "Room", "Core Data", "SQLite", "Hive", "Google Maps", "Push Notifications", "Supabase", "Node.js"]],
+  ["Architecture & Practices", ["Clean Architecture", "MVVM", "MVI", "Dependency Injection", "Hilt", "Dagger", "Testing", "Espresso", "XCTest", "CI/CD", "Gradle", "Xcode", "Git"]],
+  ["Platforms", ["Android", "Android SDK", "iOS"]],
 ];
 export function groupSkills(skills = []) {
   const left = [...skills], out = [];
@@ -39,9 +40,13 @@ export function groupSkills(skills = []) {
 /** Written for people who leave "About" empty, so every resume has a summary. */
 export function autoSummary(p) {
   const yrs = Number(p.experienceYears) || 0;
-  const top = (p.skills || []).filter(s => !/^(flutter|dart)$/i.test(s)).slice(0, 4);
+  const top = (p.skills || []).filter(s => !/^(flutter|dart|kotlin|swift)$/i.test(s)).slice(0, 4);
+  // Role comes from what they work with: Flutter, Android or iOS (several = "Mobile")
+  const ROLE = { flutter: ["Flutter developer", "cross-platform Android and iOS apps"], android: ["Android developer", "native Android apps"], ios: ["iOS developer", "native iOS apps"] };
+  const cats = (p.categories || ["flutter"]).filter(c => ROLE[c]);
+  const [role, what] = cats.length === 1 ? ROLE[cats[0]] : cats.length > 1 ? ["Mobile developer", `apps with ${cats.map(c => ROLE[c][0].split(" ")[0]).join(" and ")}`] : ROLE.flutter;
   const names = (p.apps || []).map(a => a.name).filter(Boolean).slice(0, 2);
-  const who = yrs >= 1 ? `Flutter developer with ${yrs} year${yrs === 1 ? "" : "s"} of experience building cross-platform Android and iOS apps` : "Flutter developer building cross-platform Android and iOS apps";
+  const who = yrs >= 1 ? `${role} with ${yrs} year${yrs === 1 ? "" : "s"} of experience building ${what}` : `${role} building ${what}`;
   const builds = names.length ? `, including ${names.join(" and ")}` : "";
   const stack = top.length ? ` Skilled in ${top.slice(0, -1).join(", ")}${top.length > 1 ? " and " : ""}${top[top.length - 1]}.` : "";
   return `${who}${builds}.${stack} Focused on clean, maintainable code and smooth user experiences.`;

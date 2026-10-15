@@ -122,7 +122,7 @@ onUser(async u => {
     st = { ...st, ...(profile.resumeSettings || {}) };
     st.title = st.title || "";
     if (!TEMPLATES[st.template]) st.template = "modern";
-    document.title = `${profile.fullName} - Flutter Developer Resume`;   // becomes the PDF file name
+    document.title = `${profile.fullName} - Resume`;   // becomes the PDF file name
     $("root").innerHTML = `<div class="layout"><div class="paper" id="paper"></div>
       <aside class="side"><div class="card" id="custom"></div><div class="card" id="strength"></div>
         <div class="card"><h3>Saving the PDF</h3><p class="small">Click <b>Download PDF</b>, choose <b>Save as PDF</b>, and turn off <b>Headers and footers</b> under More settings. ATS-friendly: one column, real text, standard headings.</p></div></aside></div>`;

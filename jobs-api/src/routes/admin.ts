@@ -8,6 +8,7 @@ import { requireAdmin } from "../auth.js";
 import { jobInput, adminJobPatch, adminCandidatePatch, VERIFICATION } from "../validate.js";
 import { jobOut, skillsFor, createJob, updateJob } from "./jobs.js";
 import { candidateOut } from "./talent.js";
+import { categories, assertCategories } from "../categories.js";
 
 export const adminRouter = Router();
 adminRouter.use(requireAdmin, (_req, res, next) => { res.set("Cache-Control", "private, no-store"); next(); });
@@ -34,6 +35,7 @@ adminRouter.get("/stats", wrap(async (_req, res) => {
 
 const listQ = z.object({
   status: z.enum(["pending", "approved", "rejected", "filled", "expired", "all"]).default("pending"),
+  category: z.string().trim().max(30).optional(),
   q: z.string().trim().max(100).optional(),
   page: z.coerce.number().int().min(1).default(1),
 });
@@ -43,6 +45,7 @@ adminRouter.get("/jobs", wrap(async (req, res) => {
   const f = listQ.parse(req.query);
   const where: string[] = [], params: unknown[] = [];
   if (f.status !== "all") { where.push("j.status = ?"); params.push(f.status); }
+  if (f.category) { where.push("j.category = ?"); params.push(f.category); }
   if (f.q) { where.push("(j.title LIKE ? OR c.name LIKE ? OR j.contact_email LIKE ?)"); const l = `%${f.q.replace(/[\\%_]/g, m => "\\" + m)}%`; params.push(l, l, l); }
   const rows = await query(`SELECT j.*, c.name AS company_name, c.website AS company_website, c.verified AS company_verified,
       (SELECT COUNT(*) FROM job_reports r WHERE r.job_id = j.id AND r.status = 'open') AS open_reports
@@ -53,7 +56,7 @@ adminRouter.get("/jobs", wrap(async (req, res) => {
     ...jobOut(r, sk.get(r.id), true),
     contact: { name: r.contact_name, email: r.contact_email }, postedByUid: r.posted_by_uid,
     rejectReason: r.reject_reason, createdAt: r.created_at, openReports: Number(r.open_reports),
-    raw: { companyName: r.company_name, companyWebsite: r.company_website, title: r.title, jobType: r.job_type, workMode: r.work_mode,
+    raw: { category: r.category, companyName: r.company_name, companyWebsite: r.company_website, title: r.title, jobType: r.job_type, workMode: r.work_mode,
       level: r.level, city: r.city, salaryMin: r.salary_min, salaryMax: r.salary_max, salaryPeriod: r.salary_period,
       description: r.description, applyUrl: r.apply_url, applyEmail: r.apply_email, contactName: r.contact_name, contactEmail: r.contact_email },
   })) });
@@ -66,12 +69,14 @@ adminRouter.post("/jobs/import", wrap(async (req, res) => {
   const report: { index: number; title: string; status: "ok" | "invalid" | "duplicate"; message?: string }[] = [];
   const valid: { index: number; job: ReturnType<typeof jobInput.parse> }[] = [];
   const seen = new Set<string>();
+  const known = new Set((await categories()).map(c => c.slug));
   for (const [i, raw] of jobs.entries()) {
     const input: any = { ...raw };
     if (typeof input.skills === "string") input.skills = input.skills.split(",").map((x: string) => x.trim()).filter(Boolean);
     if (!input.contactEmail) input.contactEmail = req.user!.email;
     const title = String(input.title ?? `Job ${i + 1}`).slice(0, 140);
     const r = jobInput.safeParse(input);
+    if (r.success && !known.has(r.data.category)) { report.push({ index: i, title, status: "invalid", message: `category: unknown "${r.data.category}" (use ${[...known].join(", ")})` }); continue; }
     if (!r.success) { const iss = r.error.issues[0]; report.push({ index: i, title, status: "invalid", message: `${iss.path.join(".") || "job"}: ${iss.message}` }); continue; }
     const key = (r.data.applyUrl || r.data.applyEmail || "").toLowerCase() + "|" + r.data.title.toLowerCase();
     const [dup] = await query("SELECT 1 FROM jobs j JOIN companies c ON c.id = j.company_id WHERE j.status IN ('pending','approved') AND ((j.apply_url IS NOT NULL AND j.apply_url = ?) OR (c.name = ? AND j.title = ?)) LIMIT 1",
@@ -88,14 +93,17 @@ adminRouter.post("/jobs/import", wrap(async (req, res) => {
 
 // Admin posts go live immediately
 adminRouter.post("/jobs", wrap(async (req, res) => {
-  const j = jobInput.parse(req.body);
+  const j = jobInput.parse({ contactEmail: req.user!.email, ...req.body });   // admin's own email unless another is given
+  await assertCategories([j.category]);
   const { publicId } = await createJob(j, { uid: req.user!.uid, approved: true });
   res.status(201).json({ id: publicId, status: "approved" });
 }));
 
 adminRouter.put("/jobs/:id", wrap(async (req, res) => {
   const job = await jobByPid(String(req.params.id));
-  await updateJob(job.id, jobInput.parse(req.body));
+  const j = jobInput.parse(req.body);
+  await assertCategories([j.category]);
+  await updateJob(job.id, j);
   res.json({ ok: true });
 }));
 
@@ -145,19 +153,23 @@ adminRouter.patch("/reports/:id", wrap(async (req, res) => {
   res.json({ ok: true });
 }));
 
-const candQ = z.object({ verification: z.enum(VERIFICATION).optional(), q: z.string().trim().max(100).optional(), page: z.coerce.number().int().min(1).default(1) });
+const candQ = z.object({ verification: z.enum(VERIFICATION).optional(), category: z.string().trim().max(30).optional(), q: z.string().trim().max(100).optional(), page: z.coerce.number().int().min(1).default(1) });
 
 adminRouter.get("/candidates", wrap(async (req, res) => {
   const f = candQ.parse(req.query);
   const where: string[] = [], params: unknown[] = [];
   if (f.verification) { where.push("verification = ?"); params.push(f.verification); }
+  if (f.category) { where.push("EXISTS (SELECT 1 FROM candidate_categories cc WHERE cc.candidate_id = candidates.id AND cc.category = ?)"); params.push(f.category); }
   if (f.q) { const l = `%${f.q.replace(/[\\%_]/g, m => "\\" + m)}%`; where.push("(full_name LIKE ? OR email LIKE ? OR headline LIKE ? OR current_company LIKE ?)"); params.push(l, l, l, l); }
   const rows = await query(`SELECT * FROM candidates ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY updated_at DESC LIMIT 50 OFFSET ?`, [...params, (f.page - 1) * 50]);
   const ids = rows.map(r => r.id);
   const skills = new Map<number, string[]>();
   if (ids.length) for (const s of await query<{ candidate_id: number; skill: string }>("SELECT candidate_id, skill FROM candidate_skills WHERE candidate_id IN (?) ORDER BY skill", [ids]))
     (skills.get(s.candidate_id) ?? skills.set(s.candidate_id, []).get(s.candidate_id)!).push(s.skill);
-  res.json({ items: rows.map(r => candidateOut(r, skills.get(r.id) ?? [], true)) });
+  const cats = new Map<number, string[]>();
+  if (ids.length) for (const c of await query<{ candidate_id: number; category: string }>("SELECT candidate_id, category FROM candidate_categories WHERE candidate_id IN (?)", [ids]))
+    (cats.get(c.candidate_id) ?? cats.set(c.candidate_id, []).get(c.candidate_id)!).push(c.category);
+  res.json({ items: rows.map(r => candidateOut(r, skills.get(r.id) ?? [], true, cats.get(r.id) ?? ["flutter"])) });
 }));
 
 adminRouter.patch("/candidates/:id", wrap(async (req, res) => {
