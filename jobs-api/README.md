@@ -4,12 +4,15 @@ Flutter-only jobs board and Talent Network for widgetryacademy.in.
 Node.js 22 + TypeScript + Express, **MySQL 8**. Sign-in reuses the website's Firebase Auth (Google or email); the API verifies the Firebase ID token.
 
 ```
-Browser (jobs.html, job.html, post-job.html, talent.html, admin.html)
-   │  /api/...   (same domain: Firebase Hosting rewrite)
+Academy website (Firebase Hosting, free Spark plan)
+  jobs.html, job.html, post-job.html, talent.html, admin.html
+   │  https://api.widgetryacademy.in/api/...   (CORS: only the academy's domains)
    ▼
-Cloud Run: widgetry-jobs-api ──▶ TiDB Cloud Starter (MySQL-compatible) or any MySQL 8
-                             └──▶ Firebase Auth (token check, admin UID)
+Railway (Singapore): widgetry-jobs-api ──▶ TiDB Cloud Starter, Singapore (MySQL-compatible)
+                                       └──▶ Firebase Auth token check (free, no Blaze needed)
 ```
+
+The academy stays entirely on Firebase (Spark plan). Widgetry Jobs runs on its own host and only *checks* Firebase sign-in tokens, which is free.
 
 ## What it does
 
@@ -39,27 +42,26 @@ Tests (need a local MySQL 8 database):
 DB_PORT=3306 DB_PASSWORD=... ALLOW_DEV_AUTH=1 npm test
 ```
 
-`ALLOW_DEV_AUTH` accepts fake tokens like `Bearer dev:<uid>:<email>` for testing. It is refused automatically on Cloud Run and when `NODE_ENV=production`.
+`ALLOW_DEV_AUTH` accepts fake tokens like `Bearer dev:<uid>:<email>` for testing. It is refused automatically on the live host and when `NODE_ENV=production`.
 
-## Hosting (pay only for use)
+## Hosting
 
-| Piece | Where | Cost when nobody visits |
+| Piece | Where | Cost |
 |---|---|---|
-| API | Cloud Run, `asia-southeast1` (Singapore), min instances 0, max 2 | ₹0 (scales to zero; 2M requests/month free) |
-| Database | TiDB Cloud **Starter** (MySQL-compatible), Singapore, port 4000, TLS | ₹0 (free quota: 5 GiB rows + 50M request units/month; spending limit caps anything above) |
-| Images | Artifact Registry | a few rupees/month for stored images at most |
-
-The first request after an idle period takes ~1–2 s (cold start); later ones are fast.
+| Jobs API | Railway, Hobby plan, region Southeast Asia (Singapore), always on, auto-restart | $5/month, which includes $5 of usage; this small server fits inside it |
+| Database | TiDB Cloud Starter, Singapore, port 4000, TLS | Free quota; set a spending limit (e.g. ₹500) so it never slows down on busy days |
+| Pages | Firebase Hosting (same as the academy) | Free |
 
 ## Go live (one-time setup)
 
-1. **Firebase → Blaze plan** (needed for Cloud Run). Then Google Cloud console → Billing → **Budgets & alerts** → budget ₹500/month with email alerts.
-2. **TiDB Cloud** (tidbcloud.com) → create a **Starter** cluster in **Singapore (ap-southeast-1)**, set a monthly spending limit (₹0 = free quota only). Connect → "General" → note **host**, **user** (looks like `xxxx.root`) and generate a **password**.
-3. **GitHub → repo Settings → Secrets and variables → Actions** → add `JOBS_DB_HOST`, `JOBS_DB_USER`, `JOBS_DB_PASSWORD`.
-4. **Google Cloud console → IAM** → on `firebase-adminsdk-fbsvc@flutter-in-10-days.iam.gserviceaccount.com` (already the `FIREBASE_SERVICE_ACCOUNT` secret) add roles: Cloud Run Admin, Artifact Registry Administrator, Service Account User, Service Usage Admin.
-5. GitHub → Actions → **Deploy jobs API** → Run workflow (or push to `jobs-api/`). It builds, deploys and creates the tables on first start, then checks `/api/health`.
-6. Merge `widgetry-jobs` into `main`. The Hosting rewrite in `firebase.json` connects `/api/**` to the service.
+1. **TiDB Cloud** (tidbcloud.com) → create a **Starter** cluster in **Singapore**, set a monthly spending limit. Connect → note **host**, **user** (`xxxx.root`), **password**.
+2. **Railway** (railway.com) → sign in with GitHub → Hobby plan → New Project → Deploy from GitHub repo → `kshanlvs/widgetry-academy`.
+   - Service Settings → **Root Directory** `jobs-api`; **Branch** `main` (or `widgetry-jobs` to test first); **Region** Southeast Asia (Singapore).
+   - **Variables**: `DB_HOST`, `DB_PORT=4000`, `DB_USER`, `DB_PASSWORD`, `DB_NAME=widgetry_jobs`, `DB_SSL=1`, `NODE_ENV=production`, `MIGRATE_ON_START=1`.
+   - Settings → Networking → **Custom Domain** `api.widgetryacademy.in`, port 8080. Railway shows a CNAME (and a TXT) record.
+3. **GoDaddy DNS** → add the records Railway shows (CNAME `api` → `xxxx.up.railway.app`).
+4. Check `https://api.widgetryacademy.in/api/health` returns `{"ok":true}`, then merge `widgetry-jobs` into `main`.
 
-Without the secrets the workflow skips itself harmlessly.
+Railway redeploys automatically on every push that touches `jobs-api/` (build settings are in `railway.json`, health check `/api/health`). The server address used by the pages is in `public/jobs-api-url.js`.
 
-> Merge to `main` only **after** the Cloud Run service exists: the Hosting deploy fails if the `/api/**` rewrite points to a service that isn't there yet.
+> Until the API is live the jobs pages show "Can't reach the jobs server"; the academy is unaffected.

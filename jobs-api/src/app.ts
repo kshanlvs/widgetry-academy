@@ -13,10 +13,24 @@ import { adminRouter } from "./routes/admin.js";
 export function createApp() {
   const app = express();
   app.disable("x-powered-by");
-  app.set("trust proxy", 1);   // behind Firebase Hosting / Cloud Run: use the real client IP for rate limits
+  app.set("trust proxy", 1);   // behind the host's load balancer: use the real client IP for rate limits
 
   const api = express.Router();
-  api.use(helmet());
+  // CORS: only the academy's own websites may call the API from a browser.
+  const allowed = new Set(config.corsOrigins);
+  api.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && allowed.has(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+      res.setHeader("Access-Control-Allow-Headers", "authorization, content-type");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE");
+      res.setHeader("Access-Control-Max-Age", "86400");
+    }
+    if (req.method === "OPTIONS") return res.status(origin && allowed.has(origin) ? 204 : 403).end();
+    next();
+  });
+  api.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
   api.use(express.json({ limit: "64kb" }));
   api.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 600, standardHeaders: "draft-7", legacyHeaders: false,
     handler: (_req, res) => res.status(429).json({ error: "Too many requests. Please slow down." }) }));

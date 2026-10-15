@@ -25,16 +25,7 @@
         ]
       }
     ],
-    "site": "widgetry-academy",
-    "rewrites": [
-      {
-        "source": "/api/**",
-        "run": {
-          "serviceId": "widgetry-jobs-api",
-          "region": "asia-southeast1"
-        }
-      }
-    ]
+    "site": "widgetry-academy"
   },
   "firestore": {
     "rules": "firestore.rules"

@@ -2,6 +2,7 @@
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { firebaseConfig } from "./firebase-config.js";
+import { JOBS_API } from "./jobs-api-url.js";
 
 const app = getApps()[0] || initializeApp(firebaseConfig);
 export const auth = getAuth(app);
@@ -50,7 +51,7 @@ export async function api(path, { method = "GET", body, auth: needAuth = false }
   if (u) headers.authorization = "Bearer " + (await u.getIdToken());
   else if (needAuth) throw Object.assign(new Error("Please sign in first."), { status: 401 });
   let r;
-  try { r = await fetch("/api" + path, { method, headers, body: body ? JSON.stringify(body) : undefined }); }
+  try { r = await fetch(JOBS_API + path, { method, headers, body: body ? JSON.stringify(body) : undefined }); }
   catch { throw Object.assign(new Error("Network problem. Check your connection and try again."), { status: 0 }); }
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw Object.assign(new Error(data.error || "Something went wrong. Please try again."), { status: r.status, issues: data.issues });

@@ -10,7 +10,7 @@ declare global { namespace Express { interface Request { user?: AuthUser } } }
 
 function admin() {
   if (!getApps().length) {
-    // On Cloud Run the service account is picked up automatically; only the project id is needed to verify tokens.
+    // Only the project id is needed to verify sign-in tokens (no service account, no Blaze plan).
     initializeApp({ projectId: config.firebaseProjectId, ...(process.env.GOOGLE_APPLICATION_CREDENTIALS ? { credential: applicationDefault() } : {}) });
   }
   return getAuth();

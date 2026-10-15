@@ -210,3 +210,14 @@ test("unknown routes and bad JSON return clean errors", async () => {
   const r = await fetch(base + "/jobs", { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer " + EMP2 }, body: "{bad" });
   assert.equal(r.status, 400);
 });
+
+test("CORS: academy website allowed, other sites refused", async () => {
+  const ok = await fetch(base + "/jobs", { method: "OPTIONS", headers: { origin: "https://widgetryacademy.in", "access-control-request-method": "POST", "access-control-request-headers": "authorization, content-type" } });
+  assert.equal(ok.status, 204);
+  assert.equal(ok.headers.get("access-control-allow-origin"), "https://widgetryacademy.in");
+  const get = await fetch(base + "/meta", { headers: { origin: "https://widgetry-academy.web.app" } });
+  assert.equal(get.headers.get("access-control-allow-origin"), "https://widgetry-academy.web.app");
+  const bad = await fetch(base + "/jobs", { method: "OPTIONS", headers: { origin: "https://evil.test", "access-control-request-method": "POST" } });
+  assert.equal(bad.status, 403);
+  assert.equal(bad.headers.get("access-control-allow-origin"), null);
+});

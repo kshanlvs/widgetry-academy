@@ -1,12 +1,13 @@
 import { createHash } from "node:crypto";
-// All settings come from environment variables (Cloud Run / .env). Nothing secret is hard-coded.
+// All settings come from environment variables (Railway variables / .env). Nothing secret is hard-coded.
 const env = process.env;
 
-const onCloudRun = !!env.K_SERVICE;
+// Hosted (Railway / Cloud Run): dev shortcuts are always refused there.
+const onHost = !!(env.K_SERVICE || env.RAILWAY_ENVIRONMENT || env.RAILWAY_PROJECT_ID);
 
 export const config = {
   port: Number(env.PORT || 8080),
-  isProduction: env.NODE_ENV === "production" || onCloudRun,
+  isProduction: env.NODE_ENV === "production" || onHost,
 
   db: {
     // Either a TCP host (local MySQL, TiDB, Aiven…) or a Cloud SQL unix socket (/cloudsql/PROJECT:REGION:INSTANCE)
@@ -20,11 +21,15 @@ export const config = {
     connectionLimit: Number(env.DB_POOL || 5),
   },
 
+  // Websites allowed to call the API from the browser (the academy stays on Firebase Hosting).
+  corsOrigins: (env.CORS_ORIGINS || "https://widgetryacademy.in,https://www.widgetryacademy.in,https://widgetry-academy.web.app,https://widgetry-academy.firebaseapp.com")
+    .split(",").map(s => s.trim()).filter(Boolean),
+
   firebaseProjectId: env.FIREBASE_PROJECT_ID || "flutter-in-10-days",
   adminUids: (env.ADMIN_UIDS || "E4edbAvcdwTdkTdNwcdWneVWe572").split(",").map(s => s.trim()).filter(Boolean),
 
-  // Local testing only: accept "Bearer dev:<uid>:<email>" tokens. Refused on Cloud Run / production.
-  allowDevAuth: env.ALLOW_DEV_AUTH === "1" && !onCloudRun && env.NODE_ENV !== "production",
+  // Local testing only: accept "Bearer dev:<uid>:<email>" tokens. Refused on the live host / production.
+  allowDevAuth: env.ALLOW_DEV_AUTH === "1" && !onHost && env.NODE_ENV !== "production",
   // Local testing only: serve ../public so the site and /api share one origin.
   serveStatic: env.SERVE_STATIC_DIR || "",
 

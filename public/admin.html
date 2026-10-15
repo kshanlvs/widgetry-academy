@@ -368,6 +368,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/fireba
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
+import { JOBS_API } from "./jobs-api-url.js";
 
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
 const $ = id => document.getElementById(id);
@@ -694,9 +695,9 @@ const jdate = d => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit",
 async function japi(path, { method = "GET", body } = {}) {
   const token = await auth.currentUser.getIdToken();
   let r;
-  try { r = await fetch("/api" + path, { method, headers: { "content-type": "application/json", authorization: "Bearer " + token }, body: body ? JSON.stringify(body) : undefined }); }
+  try { r = await fetch(JOBS_API + path, { method, headers: { "content-type": "application/json", authorization: "Bearer " + token }, body: body ? JSON.stringify(body) : undefined }); }
   catch { throw new Error("Can't reach the jobs server."); }
-  if (r.status === 404 && !(r.headers.get("content-type") || "").includes("json")) throw new Error("The jobs server isn't connected to this website yet.");
+  if (!(r.headers.get("content-type") || "").includes("json")) throw new Error("The jobs server isn't connected to this website yet.");
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(d.error || ("Error " + r.status));
   return d;
