@@ -16,29 +16,61 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Profile'), actions: [IconButton(tooltip: 'Settings', icon: const Icon(Icons.settings_outlined), onPressed: () => context.push('/settings'))]),
+        appBar: AppBar(
+          title: const Text('Profile'),
+          actions: [IconButton(tooltip: 'Settings', icon: const Icon(Icons.settings_outlined), onPressed: () => context.push('/settings')), const SizedBox(width: Space.xs)],
+        ),
         body: BlocConsumer<ProfileCubit, ProfileState>(
           listenWhen: (a, b) => b.message != null || (b.error != null && b.status != ProfileStatus.failure),
           listener: (context, s) => showMessage(context, s.message ?? s.error!),
           builder: (context, s) => switch (s.status) {
-            ProfileStatus.signedOut => EmptyView(
-                icon: Icons.badge_outlined,
-                title: 'Your profile and resume',
-                message: 'Sign in to build an ATS-friendly resume and join the Widgetry Talent Network, where mobile employers find you.',
-                action: FilledButton(onPressed: () => context.push('/sign-in?from=/profile'), child: const Text('Sign in')),
-              ),
-            ProfileStatus.loading => const LoadingView(),
+            ProfileStatus.signedOut => const _Intro(signedIn: false),
+            ProfileStatus.loading => const SkeletonList(count: 3, leading: false),
             ProfileStatus.failure => ErrorView(message: s.error ?? 'Could not load your profile.', onRetry: context.read<ProfileCubit>().load),
-            ProfileStatus.empty => EmptyView(
-                icon: Icons.rocket_launch_outlined,
-                title: 'Create your profile',
-                message: 'Takes 5 minutes. You get a premium ATS resume and a place in the Talent Network. Private until you say yes.',
-                action: FilledButton(onPressed: () => context.push('/profile/edit'), child: const Text('Create my profile')),
-              ),
+            ProfileStatus.empty => const _Intro(signedIn: true),
             ProfileStatus.ready => _ProfileView(p: s.profile!, score: s.score!, saving: s.saving),
           },
         ),
       );
+}
+
+/// Shown before there is a profile: what you get, then one clear action.
+class _Intro extends StatelessWidget {
+  const _Intro({required this.signedIn});
+  final bool signedIn;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final p = Palette.of(context);
+    Widget point(IconData icon, String title, String text) => Padding(
+          padding: const EdgeInsets.only(bottom: Space.lg),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(color: p.soft, borderRadius: BorderRadius.circular(Radii.md)),
+              child: Icon(icon, size: 20, color: p.accent),
+            ),
+            const SizedBox(width: Space.md + 2),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: t.titleSmall), const SizedBox(height: 2), Text(text, style: t.bodySmall)])),
+          ]),
+        );
+    return ListView(padding: const EdgeInsets.fromLTRB(Space.page, Space.sm, Space.page, Space.xxxl), children: [
+      Text(signedIn ? 'Create your profile' : 'Your profile and resume', style: t.headlineSmall),
+      const SizedBox(height: 6),
+      Text('About 5 minutes. Private until you say yes.', style: t.bodyMedium?.copyWith(color: p.muted)),
+      const SizedBox(height: Space.xxl),
+      point(Icons.description_outlined, 'ATS-friendly resume', 'A clean PDF in three styles, built from your profile. Share or print it any time.'),
+      point(Icons.insights_outlined, 'Profile score', 'See exactly what to add to stand out to recruiters.'),
+      point(Icons.groups_2_outlined, 'Talent Network', 'Mobile teams find you. We share your profile only with your approval.'),
+      const SizedBox(height: Space.md),
+      FilledButton(
+        onPressed: () => signedIn ? context.push('/profile/edit') : context.push('/sign-in?from=/profile'),
+        child: Text(signedIn ? 'Create my profile' : 'Sign in to start'),
+      ),
+    ]);
+  }
 }
 
 class _ProfileView extends StatelessWidget {
@@ -50,6 +82,7 @@ class _ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
+    final pal = Palette.of(context);
     final cubit = context.read<ProfileCubit>();
     const meta = JobsMeta.fallback;
 
@@ -58,137 +91,174 @@ class _ProfileView extends StatelessWidget {
       if (bytes != null) await cubit.uploadPhoto(bytes);
     }
 
+    void onTip(ScoreTip tip) => switch (tip.action) {
+          'photo' => changePhoto(),
+          'edit' => context.push('/profile/edit'),
+          _ => null,
+        };
+
     return RefreshIndicator(
       onRefresh: cubit.load,
-      child: ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 30), children: [
-        // Header
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(children: [
-              GestureDetector(
-                onTap: saving ? null : changePhoto,
-                child: Stack(children: [
-                  Opacity(opacity: saving ? 0.5 : 1, child: Avatar(name: p.fullName, photo: p.photo, size: 104)),
-                  Positioned(
-                    right: 0,
-                    bottom: 2,
-                    child: CircleAvatar(radius: 17, backgroundColor: Theme.of(context).colorScheme.primary, child: const Icon(Icons.photo_camera, size: 17, color: Colors.white)),
+      child: ListView(padding: const EdgeInsets.only(bottom: Space.xxxl), children: [
+        // Identity
+        Padding(
+          padding: const EdgeInsets.fromLTRB(Space.page, Space.sm, Space.page, 0),
+          child: Row(children: [
+            GestureDetector(
+              onTap: saving ? null : changePhoto,
+              child: Stack(clipBehavior: Clip.none, children: [
+                AnimatedOpacity(duration: const Duration(milliseconds: 200), opacity: saving ? 0.5 : 1, child: Avatar(name: p.fullName, photo: p.photo, size: 76)),
+                Positioned(
+                  right: -2,
+                  bottom: -2,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(color: pal.surface, shape: BoxShape.circle, border: Border.all(color: pal.line)),
+                    child: Icon(Icons.photo_camera_outlined, size: 14, color: pal.ink),
                   ),
-                ]),
-              ),
-              const SizedBox(height: 12),
-              Text(p.fullName, textAlign: TextAlign.center, style: t.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-              const SizedBox(height: 4),
-              Text(p.headline, textAlign: TextAlign.center, style: t.titleSmall),
-              const SizedBox(height: 10),
-              Wrap(alignment: WrapAlignment.center, spacing: 6, runSpacing: 6, children: [
-                for (final c in p.categories) CategoryBadge(slug: c, name: meta.categoryName(c)),
-                Pill(text: Labels.verification[p.verification] ?? 'Self-declared', color: p.verification == 'self' ? null : AppColors.ok),
-                Pill(text: p.openToWork ? '● Open to work' : 'Paused', color: p.openToWork ? AppColors.ok : null),
-              ]),
-              const SizedBox(height: 14),
-              Row(children: [
-                Expanded(child: FilledButton.icon(onPressed: () => context.push('/profile/edit'), icon: const Icon(Icons.edit_outlined), label: const Text('Edit'))),
-                const SizedBox(width: 10),
-                Expanded(child: OutlinedButton.icon(onPressed: () => context.push('/profile/resume'), icon: const Icon(Icons.description_outlined), label: const Text('Resume'))),
-              ]),
-            ]),
-          ),
-        ),
-        const SizedBox(height: 14),
-        // Score
-        SectionCard(
-          title: 'Profile score',
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            SizedBox(
-              width: 92,
-              height: 92,
-              child: Stack(alignment: Alignment.center, children: [
-                SizedBox.expand(child: CircularProgressIndicator(value: score.score / 100, strokeWidth: 9, backgroundColor: AppColors.soft, strokeCap: StrokeCap.round)),
-                Text('${score.score}', style: t.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
+                ),
               ]),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: Space.lg),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(score.level, style: t.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
-                const SizedBox(height: 6),
-                if (score.tips.isEmpty) const Text('Your profile is complete. Recruiters love this.'),
-                for (final tip in score.tips.take(4))
-                  InkWell(
-                    onTap: tip.action == 'photo' ? changePhoto : (tip.action == 'edit' ? () => context.push('/profile/edit') : null),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const Icon(Icons.radio_button_unchecked, size: 16),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text(tip.text, style: t.bodySmall?.copyWith(fontWeight: FontWeight.w600))),
-                      ]),
-                    ),
-                  ),
+                Text(p.fullName, style: t.titleLarge),
+                const SizedBox(height: 2),
+                Text(p.headline, maxLines: 2, overflow: TextOverflow.ellipsis, style: t.bodyMedium?.copyWith(color: pal.muted)),
+                const SizedBox(height: Space.sm),
+                Wrap(spacing: Space.md, runSpacing: 4, children: [
+                  for (final c in p.categories) CategoryBadge(slug: c, name: meta.categoryName(c)),
+                  if (p.verification != 'self')
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.verified_rounded, size: 14, color: pal.accent),
+                      const SizedBox(width: 4),
+                      Text(p.verification == 'verified' ? 'Widgetry verified' : 'Portfolio checked', style: t.bodySmall?.copyWith(color: pal.accent, fontWeight: FontWeight.w600)),
+                    ]),
+                ]),
               ]),
             ),
           ]),
         ),
-        const SizedBox(height: 14),
-        Card(
-          child: SwitchListTile(
-            title: const Text('Open to work', style: TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: const Text('Turn off to pause your profile.'),
-            value: p.openToWork,
-            onChanged: cubit.setOpenToWork,
+        const SizedBox(height: Space.xl),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Space.lg),
+          child: Row(children: [
+            Expanded(child: FilledButton(onPressed: () => context.push('/profile/resume'), child: const Text('View resume'))),
+            const SizedBox(width: Space.sm),
+            Expanded(child: OutlinedButton(onPressed: () => context.push('/profile/edit'), child: const Text('Edit profile'))),
+          ]),
+        ),
+
+        // Score
+        const SectionLabel('Profile strength'),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Space.lg),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(Space.lg),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                  Text('${score.score}', style: t.headlineMedium?.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+                  Padding(padding: const EdgeInsets.only(bottom: 5, left: 2), child: Text('/100', style: t.bodySmall)),
+                  const Spacer(),
+                  Padding(padding: const EdgeInsets.only(bottom: 5), child: Text(score.level, style: t.bodySmall?.copyWith(color: pal.ink, fontWeight: FontWeight.w700))),
+                ]),
+                const SizedBox(height: Space.sm),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(99),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: score.score / 100),
+                    duration: const Duration(milliseconds: 700),
+                    curve: Curves.easeOutCubic,
+                    builder: (_, v, __) => LinearProgressIndicator(value: v, minHeight: 7, color: score.score >= 65 ? pal.accent : AppColors.gold),
+                  ),
+                ),
+                if (score.tips.isEmpty) ...[
+                  const SizedBox(height: Space.md),
+                  Text('Your profile is complete. Recruiters notice that.', style: t.bodySmall),
+                ] else ...[
+                  const SizedBox(height: Space.md),
+                  for (final tip in score.tips.take(3))
+                    InkWell(
+                      onTap: tip.action == 'verify' ? null : () => onTip(tip),
+                      borderRadius: BorderRadius.circular(Radii.sm),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 7),
+                        child: Row(children: [
+                          Icon(Icons.add_circle_outline_rounded, size: 17, color: pal.accent),
+                          const SizedBox(width: 10),
+                          Expanded(child: Text(tip.text, style: t.bodyMedium)),
+                          if (tip.action != 'verify') Icon(Icons.chevron_right_rounded, size: 20, color: pal.faint),
+                        ]),
+                      ),
+                    ),
+                ],
+              ]),
+            ),
           ),
         ),
-        const SizedBox(height: 14),
-        if ((p.about ?? '').isNotEmpty) ...[SectionCard(title: 'About', child: Text(p.about!)), const SizedBox(height: 14)],
+
+        // Visibility
+        const SectionLabel('Visibility'),
+        Group(children: [
+          SwitchListTile(
+            title: const Text('Open to work'),
+            subtitle: Text(p.openToWork ? 'Recruiters can request your profile' : 'Your profile is paused'),
+            value: p.openToWork,
+            onChanged: saving ? null : cubit.setOpenToWork,
+          ),
+        ]),
+
+        if ((p.about ?? '').isNotEmpty) ...[
+          const SectionLabel('About'),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: Space.page), child: Text(p.about!, style: t.bodyMedium)),
+        ],
         if (p.skills.isNotEmpty) ...[
-          SectionCard(title: 'Skills', child: Wrap(spacing: 6, runSpacing: 6, children: [for (final s in p.skills) Chip(label: Text(s), visualDensity: VisualDensity.compact)])),
-          const SizedBox(height: 14),
+          const SectionLabel('Skills'),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: Space.page), child: Wrap(spacing: 6, runSpacing: 6, children: [for (final s in p.skills) Pill(text: s)])),
         ],
         if (p.experience.isNotEmpty) ...[
-          SectionCard(
-            title: 'Experience',
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              for (final w in p.experience)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(w.role, style: t.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
-                    Text('${w.company} · ${Fmt.yearMonth(w.start)} – ${Fmt.yearMonth(w.end)}', style: t.bodySmall),
-                    for (final b in w.bullets) Padding(padding: const EdgeInsets.only(top: 3), child: Text('• $b')),
-                  ]),
-                ),
-            ]),
-          ),
-          const SizedBox(height: 14),
+          const SectionLabel('Experience'),
+          Group(children: [
+            for (final w in p.experience)
+              Padding(
+                padding: const EdgeInsets.all(Space.lg),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(w.role, style: t.titleSmall),
+                  Text('${w.company}  ·  ${Fmt.yearMonth(w.start)} – ${Fmt.yearMonth(w.end)}', style: t.bodySmall),
+                  for (final b in w.bullets)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Padding(padding: const EdgeInsets.only(top: 8, right: 8), child: Container(width: 4, height: 4, decoration: BoxDecoration(color: pal.faint, shape: BoxShape.circle))),
+                        Expanded(child: Text(b, style: t.bodyMedium)),
+                      ]),
+                    ),
+                ]),
+              ),
+          ]),
         ],
         if (p.apps.isNotEmpty) ...[
-          SectionCard(
-            title: 'Apps & projects',
-            child: Column(children: [
-              for (final a in p.apps)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.apps_rounded),
-                  title: Text(a.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  subtitle: Text([a.role, a.about].whereType<String>().where((x) => x.isNotEmpty).join(' · ')),
-                ),
-            ]),
-          ),
-          const SizedBox(height: 14),
+          const SectionLabel('Apps & projects'),
+          Group(children: [
+            for (final a in p.apps)
+              ListTile(
+                leading: CompanyLogo(name: a.name, size: 38),
+                title: Text(a.name),
+                subtitle: Text([a.role, a.about].whereType<String>().where((x) => x.isNotEmpty).join(' · '), maxLines: 2, overflow: TextOverflow.ellipsis),
+              ),
+          ]),
         ],
-        if (p.education.isNotEmpty)
-          SectionCard(
-            title: 'Education',
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              for (final e in p.education)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text('${e.degree}\n${e.institute}${e.year != null ? ' · ${e.year}' : ''}', style: t.bodyMedium),
-                ),
-            ]),
-          ),
+        if (p.education.isNotEmpty) ...[
+          const SectionLabel('Education'),
+          Group(children: [
+            for (final e in p.education)
+              ListTile(
+                title: Text(e.degree),
+                subtitle: Text([e.institute, if (e.year != null) '${e.year}', if ((e.score ?? '').isNotEmpty) e.score!].join(' · ')),
+              ),
+          ]),
+        ],
       ]),
     );
   }

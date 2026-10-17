@@ -30,10 +30,10 @@ class _ReportSheetState extends State<_ReportSheet> {
   Widget build(BuildContext context) => Padding(
         padding: EdgeInsets.fromLTRB(20, 0, 20, MediaQuery.of(context).viewInsets.bottom + 20),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Report this job', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+          Text('Report this job', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 4),
-          const Text('Reports are private. Jobs reported by several people are taken down for review.'),
-          const SizedBox(height: 8),
+          Text('Reports are private. Jobs reported by several people are taken down for review.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 16),
           // Simple chips instead of radio buttons: works the same on every Flutter version
           Wrap(spacing: 8, runSpacing: 8, children: [
             for (final e in Labels.report.entries)

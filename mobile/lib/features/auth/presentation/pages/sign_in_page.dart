@@ -61,42 +61,57 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
+    final p = Palette.of(context);
     return Scaffold(
-      appBar: AppBar(),
+      backgroundColor: p.surface,
+      appBar: AppBar(backgroundColor: p.surface),
       body: BlocConsumer<AuthCubit, AuthState>(
         listenWhen: (a, b) => b.error != null || b.info != null,
         listener: (context, s) => showMessage(context, s.error ?? s.info!),
         builder: (context, s) => SafeArea(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(22, 0, 22, 30),
+            padding: const EdgeInsets.fromLTRB(Space.page + 4, 0, Space.page + 4, Space.xxxl),
             children: [
-              Text(_creating ? 'Create your account' : 'Welcome back', style: t.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+              const Align(alignment: Alignment.centerLeft, child: BrandMark(size: 40)),
+              const SizedBox(height: Space.xl),
+              Text(_creating ? 'Create your account' : 'Sign in to Widgetry', style: t.headlineSmall),
               const SizedBox(height: 6),
-              Text('Use the same account as widgetryacademy.in. Your jobs, profile and course registration stay in sync.', style: t.bodyMedium),
-              const SizedBox(height: 22),
-              OutlinedButton.icon(
+              Text('One account for the app and widgetryacademy.in. Your saved jobs, profile and course seat stay in sync.', style: t.bodyMedium?.copyWith(color: p.muted)),
+              const SizedBox(height: Space.xxl),
+              OutlinedButton(
                 onPressed: s.busy ? null : () async => _done(await context.read<AuthCubit>().signInWithGoogle()),
-                icon: const Icon(Icons.g_mobiledata_rounded, size: 30),
-                label: const Text('Continue with Google'),
+                child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [GoogleLogo(size: 19), SizedBox(width: 12), Text('Continue with Google')]),
               ),
-              const Padding(padding: EdgeInsets.symmetric(vertical: 18), child: Row(children: [Expanded(child: Divider()), Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: Text('or')), Expanded(child: Divider())])),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: Space.xl),
+                child: Row(children: [
+                  Expanded(child: Divider(color: p.line)),
+                  Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text('or with email', style: t.bodySmall?.copyWith(color: p.faint))),
+                  Expanded(child: Divider(color: p.line)),
+                ]),
+              ),
               Form(
                 key: _form,
                 child: AutofillGroup(
                   child: Column(children: [
                     if (_creating) ...[
-                      TextFormField(controller: _name, textCapitalization: TextCapitalization.words, autofillHints: const [AutofillHints.name], decoration: const InputDecoration(labelText: 'Full name'), validator: (v) => Validators.required(v, 'Name')),
-                      const SizedBox(height: 12),
+                      TextFormField(controller: _name, textCapitalization: TextCapitalization.words, textInputAction: TextInputAction.next, autofillHints: const [AutofillHints.name], decoration: const InputDecoration(labelText: 'Full name'), validator: (v) => Validators.required(v, 'Name')),
+                      const SizedBox(height: Space.md),
                     ],
-                    TextFormField(controller: _email, keyboardType: TextInputType.emailAddress, autofillHints: const [AutofillHints.email], decoration: const InputDecoration(labelText: 'Email'), validator: Validators.email),
-                    const SizedBox(height: 12),
+                    TextFormField(controller: _email, keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.next, autofillHints: const [AutofillHints.email], decoration: const InputDecoration(labelText: 'Email'), validator: Validators.email),
+                    const SizedBox(height: Space.md),
                     TextFormField(
                       controller: _password,
                       obscureText: !_showPassword,
                       autofillHints: [_creating ? AutofillHints.newPassword : AutofillHints.password],
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        suffixIcon: IconButton(icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility), onPressed: () => setState(() => _showPassword = !_showPassword)),
+                        helperText: _creating ? 'At least 8 characters' : null,
+                        suffixIcon: IconButton(
+                          tooltip: _showPassword ? 'Hide password' : 'Show password',
+                          icon: Icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
+                          onPressed: () => setState(() => _showPassword = !_showPassword),
+                        ),
                       ),
                       validator: _creating ? Validators.password : (v) => Validators.required(v, 'Password'),
                       onFieldSubmitted: (_) => _submit(),
@@ -104,22 +119,24 @@ class _SignInPageState extends State<SignInPage> {
                   ]),
                 ),
               ),
-              if (!_creating) Align(alignment: Alignment.centerRight, child: TextButton(onPressed: s.busy ? null : _forgot, child: const Text('Forgot password?'))),
-              const SizedBox(height: 10),
-              FilledButton(
-                onPressed: s.busy ? null : _submit,
-                child: s.busy ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5)) : Text(_creating ? 'Create account' : 'Sign in'),
+              if (!_creating) Align(alignment: Alignment.centerRight, child: TextButton(onPressed: s.busy ? null : _forgot, child: const Text('Forgot password?'))) else const SizedBox(height: Space.lg),
+              const SizedBox(height: Space.xs),
+              FilledButton(onPressed: s.busy ? null : _submit, child: BusyLabel(busy: s.busy, label: _creating ? 'Create account' : 'Sign in')),
+              const SizedBox(height: Space.md),
+              Center(
+                child: TextButton(
+                  onPressed: s.busy ? null : () => setState(() => _creating = !_creating),
+                  child: Text.rich(TextSpan(children: [
+                    TextSpan(text: _creating ? 'Already have an account? ' : 'New to Widgetry? ', style: TextStyle(color: p.muted, fontWeight: FontWeight.w500)),
+                    TextSpan(text: _creating ? 'Sign in' : 'Create an account'),
+                  ])),
+                ),
               ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: s.busy ? null : () => setState(() => _creating = !_creating),
-                child: Text(_creating ? 'Already have an account? Sign in' : 'New here? Create an account'),
-              ),
-              const SizedBox(height: 18),
+              const SizedBox(height: Space.xl),
               Text(
-                'By continuing you agree to our terms and privacy policy (${AppConfig.siteUrl.replaceFirst('https://', '')}).',
+                'By continuing you agree to the Terms and Privacy Policy at ${AppConfig.siteUrl.replaceFirst('https://', '')}.',
                 textAlign: TextAlign.center,
-                style: t.bodySmall?.copyWith(color: AppColors.muted),
+                style: t.bodySmall?.copyWith(color: p.faint),
               ),
             ],
           ),
@@ -127,4 +144,35 @@ class _SignInPageState extends State<SignInPage> {
       ),
     );
   }
+}
+
+/// The multicolour Google "G", drawn so no image asset is needed.
+class GoogleLogo extends StatelessWidget {
+  const GoogleLogo({super.key, this.size = 18});
+  final double size;
+  @override
+  Widget build(BuildContext context) => CustomPaint(size: Size.square(size), painter: _GPainter());
+}
+
+class _GPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final stroke = w * 0.2;
+    final rect = Rect.fromLTWH(stroke / 2, stroke / 2, w - stroke, w - stroke);
+    Paint pen(Color c) => Paint()
+      ..color = c
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke;
+    const deg = 3.1415926535 / 180;
+    // Clockwise from 3 o'clock; the opening of the G is the upper-right quarter.
+    canvas.drawArc(rect, 0, 45 * deg, false, pen(const Color(0xFF4285F4))); // blue
+    canvas.drawArc(rect, 45 * deg, 90 * deg, false, pen(const Color(0xFF34A853))); // green
+    canvas.drawArc(rect, 135 * deg, 90 * deg, false, pen(const Color(0xFFFBBC05))); // yellow
+    canvas.drawArc(rect, 225 * deg, 90 * deg, false, pen(const Color(0xFFEA4335))); // red
+    canvas.drawRect(Rect.fromLTWH(w * 0.52, (w - stroke) / 2, w * 0.48, stroke), Paint()..color = const Color(0xFF4285F4));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

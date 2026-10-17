@@ -165,6 +165,25 @@ How the design follows SOLID:
 5. Run `dart run build_runner build --delete-conflicting-outputs`.
 6. Add tests in `test/features/<name>/`.
 
+## Widgetry Assistant (chat)
+
+The app's chat gives the same answers as the website chatbot. The answers live in one place, `public/chatbot.js`, and are copied into the app's `assets/chatbot/intents.json`.
+
+After editing answers on the website, run this from the repo root, then rebuild the app:
+
+```bash
+node mobile/tool/sync_chatbot.mjs
+```
+
+In the app, buttons that scroll to a section on the website (fees, syllabus, next batch, and so on) open the course screen instead. Website pages open in the in-app browser, and WhatsApp buttons open WhatsApp with the question filled in. The chat opens from the Courses tab ("Ask a question"), the course screen and Settings → Help.
+
+## Design system
+
+- **Colours:** in `core/theme/app_colors.dart`. `AppColors` holds the brand values from the website. `Palette.of(context)` gives the light/dark tokens (bg, surface, ink, muted, line, accent, hero).
+- **Fonts:** DM Sans for text and Unbounded for the brand, via `google_fonts`. Use `AppTheme.display()` sparingly, for the wordmark, hero titles and prices.
+- **Spacing and corners:** `Space` (4-point grid, 20 px page gutter) and `Radii`.
+- **Shared widgets:** in `core/widgets/`. These include `BrandMark`, `Wordmark`, `Group` (settings-style lists), `SectionLabel`, `Fact`, `BottomActionBar`, `BusyLabel`, `SkeletonList` and the empty/error states. Use these instead of new one-off styles.
+
 ## Troubleshooting
 
 | Problem | Fix |

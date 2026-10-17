@@ -29,7 +29,7 @@ class CoursesFirestoreDataSource implements CoursesDataSource {
     outcome: 'An installable Android app, a GitHub portfolio and a certificate.',
     status: 'open',
     flagship: true,
-    badge: '★ Flagship course',
+    badge: 'Flagship course',
     showBatch: true,
     order: 0,
   );

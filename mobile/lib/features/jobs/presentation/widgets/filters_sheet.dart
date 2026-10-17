@@ -28,7 +28,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
   Widget _group(String title, Map<String, String> options, String? selected, void Function(String?) onPick) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(padding: const EdgeInsets.only(top: 14, bottom: 8), child: Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800))),
+          Padding(padding: const EdgeInsets.only(top: 22, bottom: 10), child: Text(title.toUpperCase(), style: Theme.of(context).textTheme.labelSmall)),
           Wrap(spacing: 8, runSpacing: 8, children: [
             for (final e in options.entries)
               ChoiceChip(label: Text(e.value), selected: selected == e.key, onSelected: (on) => setState(() => onPick(on ? e.key : null))),
@@ -47,7 +47,10 @@ class _FiltersSheetState extends State<_FiltersSheet> {
       builder: (context, scroll) => Column(children: [
         Expanded(
           child: ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(20, 0, 20, 20), children: [
-            Text('Filters', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+            Row(children: [
+              Expanded(child: Text('Filters', style: Theme.of(context).textTheme.titleLarge)),
+              if (f.activeCount > 0) TextButton(onPressed: () => setState(() => f = f.clearedFilters()), child: const Text('Reset')),
+            ]),
             _group('Job type', Labels.jobType, f.type, (v) => f = f.copyWith(type: () => v)),
             _group('Work mode', Labels.workMode, f.mode, (v) => f = f.copyWith(mode: () => v)),
             _group('Experience', Labels.level, f.level, (v) => f = f.copyWith(level: () => v)),
@@ -60,9 +63,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
             child: Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context, f.clearedFilters()), child: const Text('Clear all'))),
-              const SizedBox(width: 12),
-              Expanded(child: FilledButton(onPressed: () => Navigator.pop(context, f), child: const Text('Show jobs'))),
+              Expanded(child: FilledButton(onPressed: () => Navigator.pop(context, f), child: Text(f.activeCount == 0 ? 'Show all jobs' : 'Show jobs (${f.activeCount} ${f.activeCount == 1 ? 'filter' : 'filters'})'))),
             ]),
           ),
         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:widgetry_academy/core/di/injection.dart';
+import 'package:widgetry_academy/core/theme/app_colors.dart';
 import 'package:widgetry_academy/core/usecase/usecase.dart';
 import 'package:widgetry_academy/core/utils/formatters.dart';
 import 'package:widgetry_academy/core/utils/validators.dart';
@@ -209,20 +210,22 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         child: TextFormField(controller: c, decoration: InputDecoration(labelText: label, hintText: hint), validator: validator, keyboardType: keyboard, maxLines: maxLines, minLines: 1, maxLength: maxLength),
       );
 
-  Widget _section(String title, List<Widget> children, {String? hint}) => Padding(
-        padding: const EdgeInsets.only(bottom: 14),
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-              if (hint != null) Padding(padding: const EdgeInsets.only(top: 2), child: Text(hint, style: Theme.of(context).textTheme.bodySmall)),
-              const SizedBox(height: 12),
-              ...children,
-            ]),
-          ),
+  Widget _section(String title, List<Widget> children, {String? hint}) {
+    final t = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Space.xl),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, Space.sm),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: t.titleSmall),
+            if (hint != null) Padding(padding: const EdgeInsets.only(top: 2), child: Text(hint, style: t.bodySmall)),
+          ]),
         ),
-      );
+        Card(child: Padding(padding: const EdgeInsets.fromLTRB(Space.lg, Space.lg, Space.lg, Space.xs), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children))),
+      ]),
+    );
+  }
 
   Widget _chips(Map<String, String> options, List<String> selected, void Function(List<String>) onChange) => Wrap(spacing: 8, runSpacing: 8, children: [
         for (final e in options.entries)
@@ -235,8 +238,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
   Widget _rowCard(_Row r, List<Widget> fields, VoidCallback onRemove) => Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-        decoration: BoxDecoration(border: Border.all(color: Theme.of(context).dividerColor), borderRadius: BorderRadius.circular(14)),
+        padding: const EdgeInsets.fromLTRB(12, 14, 12, 0),
+        decoration: BoxDecoration(color: Palette.of(context).bg, borderRadius: BorderRadius.circular(Radii.md)),
         child: Column(children: [...fields, Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: onRemove, icon: const Icon(Icons.delete_outline, size: 18), label: const Text('Remove')))]),
       );
 
@@ -247,10 +250,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       listenWhen: (a, b) => b.error != null,
       listener: (context, s) => showMessage(context, s.error!),
       child: Scaffold(
-        appBar: AppBar(title: Text(_existing ? 'Edit profile' : 'Create profile')),
+        appBar: AppBar(title: Text(_existing ? 'Edit profile' : 'Create profile'), titleSpacing: 0),
         body: Form(
           key: _form,
-          child: ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 110), children: [
+          child: ListView(padding: const EdgeInsets.fromLTRB(Space.lg, Space.sm, Space.lg, Space.xxxl), children: [
             _section('I work with', [
               _chips({for (final c in _meta.categories) c.slug: c.name}, _cats, (v) => _cats = v),
             ], hint: 'Pick all that apply. We use this to match jobs and suggest skills.'),
@@ -366,13 +369,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             ]),
           ]),
         ),
-        bottomNavigationBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: FilledButton(
-              onPressed: saving ? null : _save,
-              child: saving ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5)) : Text(_existing ? 'Save changes' : 'Create my profile'),
-            ),
+        bottomNavigationBar: BottomActionBar(
+          child: FilledButton(
+            onPressed: saving ? null : _save,
+            child: BusyLabel(busy: saving, label: _existing ? 'Save changes' : 'Create my profile'),
           ),
         ),
       ),

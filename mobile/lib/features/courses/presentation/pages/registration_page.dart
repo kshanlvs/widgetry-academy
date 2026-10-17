@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:widgetry_academy/core/theme/app_colors.dart';
 import 'package:widgetry_academy/core/utils/validators.dart';
 import 'package:widgetry_academy/core/widgets/common.dart';
 import 'package:widgetry_academy/features/auth/presentation/cubit/auth_cubit.dart';
@@ -43,16 +44,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
         builder: (context, s) {
           final course = s.byId(widget.courseId);
           return Scaffold(
-            appBar: AppBar(title: const Text('Reserve your seat')),
+            appBar: AppBar(title: const Text('Reserve your seat'), titleSpacing: 0),
             body: course == null
                 ? const SizedBox.shrink()
                 : Form(
                     key: _form,
-                    child: ListView(padding: const EdgeInsets.all(18), children: [
-                      Text(course.title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                      const SizedBox(height: 4),
-                      const Text('Register first, then pay to confirm your seat. We use your number only to send batch details on WhatsApp.'),
-                      const SizedBox(height: 18),
+                    child: ListView(padding: const EdgeInsets.fromLTRB(Space.page, Space.sm, Space.page, Space.xxl), children: [
+                      Text(course.title, style: Theme.of(context).textTheme.headlineSmall),
+                      const SizedBox(height: 6),
+                      Text('Takes under a minute. Then pay to confirm your seat. We use your number only to send batch details on WhatsApp.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Palette.of(context).muted)),
+                      const SizedBox(height: Space.xxl),
                       TextFormField(controller: _name, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'Full name'), validator: (v) => Validators.required(v, 'Name')),
                       const SizedBox(height: 12),
                       TextFormField(controller: _phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'WhatsApp number', prefixText: '+91 '), validator: Validators.indianMobile),
@@ -75,13 +76,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   ),
             bottomNavigationBar: course == null
                 ? null
-                : SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                      child: FilledButton(
-                        onPressed: s.submitting ? null : () => _submit(course),
-                        child: s.submitting ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5)) : const Text('Register & continue'),
-                      ),
+                : BottomActionBar(
+                    child: FilledButton(
+                      onPressed: s.submitting ? null : () => _submit(course),
+                      child: BusyLabel(busy: s.submitting, label: 'Register & continue'),
                     ),
                   ),
           );

@@ -4,6 +4,7 @@ import 'package:widgetry_academy/core/utils/formatters.dart';
 import 'package:widgetry_academy/core/widgets/common.dart';
 import 'package:widgetry_academy/features/jobs/domain/entities/job.dart';
 
+/// One job in a list: logo, title, company, a single line of facts, salary and age.
 class JobCard extends StatelessWidget {
   const JobCard({super.key, required this.job, required this.categoryName, required this.onTap, this.trailing});
   final Job job;
@@ -11,47 +12,55 @@ class JobCard extends StatelessWidget {
   final VoidCallback onTap;
   final Widget? trailing;
 
+  static String whereText(Job j) => j.mode == 'remote' ? 'Remote' : [if ((j.city ?? '').isNotEmpty) j.city!, Labels.workMode[j.mode] ?? j.mode].join(' · ');
+
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final where = job.mode == 'remote' ? 'Remote' : '${job.city ?? ''} · ${Labels.workMode[job.mode] ?? job.mode}';
+    final p = Palette.of(context);
     final salary = job.salary == null ? '' : Fmt.salary(min: job.salary!.min, max: job.salary!.max, period: job.salary!.period, short: true);
-    return Card(
-      shape: job.featured
-          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(18), side: const BorderSide(color: AppColors.gold, width: 1.6))
-          : null,
+    final facts = [whereText(job), Labels.jobType[job.type] ?? job.type, (Labels.level[job.level] ?? job.level).split(' (').first].join('  ·  ');
+
+    return Material(
+      color: p.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Radii.lg),
+        side: BorderSide(color: job.featured ? AppColors.gold.withValues(alpha: 0.7) : p.line, width: job.featured ? 1.3 : 1),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(Space.lg, Space.lg, Space.md, Space.lg),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            CompanyLogo(name: job.company.name),
-            const SizedBox(width: 14),
+            Hero(tag: 'logo-${job.id}', child: CompanyLogo(name: job.company.name, size: 44)),
+            const SizedBox(width: Space.md + 2),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Expanded(child: Text(job.title, style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800, height: 1.25))),
+                  Expanded(child: Text(job.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: t.titleMedium?.copyWith(height: 1.28))),
                   if (trailing != null) trailing!,
                 ]),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Row(children: [
-                  Flexible(child: Text(job.company.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w600))),
-                  if (job.company.verified) const Padding(padding: EdgeInsets.only(left: 4), child: Icon(Icons.verified, size: 16, color: AppColors.ok)),
+                  Flexible(child: Text(job.company.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.bodyMedium?.copyWith(color: p.muted, fontWeight: FontWeight.w500))),
+                  if (job.company.verified) Padding(padding: const EdgeInsets.only(left: 4), child: Icon(Icons.verified_rounded, size: 15, color: p.accent)),
                 ]),
-                const SizedBox(height: 10),
-                Wrap(spacing: 6, runSpacing: 6, children: [
+                const SizedBox(height: Space.sm + 2),
+                Text(facts, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.bodySmall?.copyWith(color: p.ink.withValues(alpha: 0.72), fontWeight: FontWeight.w500)),
+                const SizedBox(height: Space.md),
+                Row(children: [
                   CategoryBadge(slug: job.category, name: categoryName),
-                  Pill(text: Labels.jobType[job.type] ?? job.type, icon: Icons.work_outline),
-                  Pill(text: where, icon: Icons.place_outlined),
-                  Pill(text: Labels.level[job.level] ?? job.level, icon: Icons.trending_up),
-                ]),
-                const SizedBox(height: 10),
-                Row(children: [
-                  if (salary.isNotEmpty) Text(salary, style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w800, color: AppColors.green)),
+                  if (salary.isNotEmpty) ...[
+                    _dot(p),
+                    Flexible(child: Text(salary, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.bodySmall?.copyWith(color: p.ink, fontWeight: FontWeight.w700, fontFeatures: const [FontFeature.tabularFigures()]))),
+                  ],
                   const Spacer(),
-                  if (job.featured) const Padding(padding: EdgeInsets.only(right: 8), child: Text('★ Featured', style: TextStyle(color: AppColors.warn, fontWeight: FontWeight.w700, fontSize: 12))),
-                  Text(Fmt.timeAgo(job.postedAt), style: t.bodySmall),
+                  if (job.featured) ...[
+                    Text('Featured', style: t.bodySmall?.copyWith(color: AppColors.warn, fontWeight: FontWeight.w700)),
+                    _dot(p),
+                  ],
+                  Text(Fmt.timeAgo(job.postedAt), style: t.bodySmall?.copyWith(color: p.faint)),
                 ]),
               ]),
             ),
@@ -60,4 +69,9 @@ class JobCard extends StatelessWidget {
       ),
     );
   }
+
+  static Widget _dot(Palette p) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Container(width: 3, height: 3, decoration: BoxDecoration(color: p.faint, shape: BoxShape.circle)),
+      );
 }

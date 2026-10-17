@@ -61,7 +61,7 @@ abstract final class Labels {
   static const workMode = {'remote': 'Remote', 'onsite': 'On-site', 'hybrid': 'Hybrid'};
   static const level = {'fresher': 'Fresher', 'junior': 'Junior (0–2 yrs)', 'mid': 'Mid (2–5 yrs)', 'senior': 'Senior (5+ yrs)', 'lead': 'Lead'};
   static const notice = {'immediate': 'Immediate', '15_days': '15 days', '30_days': '30 days', '60_days': '60 days', '90_days': '90 days'};
-  static const verification = {'self': 'Self-declared', 'portfolio': '✓ Portfolio checked', 'verified': '★ Widgetry verified'};
+  static const verification = {'self': 'Self-declared', 'portfolio': 'Portfolio checked', 'verified': 'Widgetry verified'};
   static const report = {
     'scam': 'Looks like a scam',
     'asks_fees': 'Asks candidates to pay',

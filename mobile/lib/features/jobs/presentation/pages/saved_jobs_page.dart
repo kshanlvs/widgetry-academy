@@ -17,13 +17,13 @@ class SavedJobsPage extends StatelessWidget {
           appBar: AppBar(title: const Text('Saved jobs')),
           body: BlocBuilder<SavedJobsCubit, SavedJobsState>(
             builder: (context, s) {
-              if (s.loading) return const LoadingView();
+              if (s.loading) return const SkeletonList(count: 3);
               if (s.error != null) return ErrorView(message: s.error!);
               if (s.jobs.isEmpty) {
-                return const EmptyView(icon: Icons.bookmark_outline, title: 'No saved jobs yet', message: 'Tap the bookmark on any job to keep it here.');
+                return const EmptyView(icon: Icons.bookmark_border_rounded, title: 'Nothing saved yet', message: 'Tap the bookmark on a job to keep it here. Saved jobs stay on this phone.');
               }
               return ListView.separated(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                 itemCount: s.jobs.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (context, i) {
@@ -35,7 +35,7 @@ class SavedJobsPage extends StatelessWidget {
                       await context.push('/jobs/${j.id}');
                       if (context.mounted) await context.read<SavedJobsCubit>().load();
                     },
-                    trailing: IconButton(tooltip: 'Remove', visualDensity: VisualDensity.compact, icon: const Icon(Icons.bookmark_remove_outlined), onPressed: () => context.read<SavedJobsCubit>().remove(j)),
+                    trailing: IconButton(tooltip: 'Remove from saved', visualDensity: VisualDensity.compact, icon: const Icon(Icons.bookmark_rounded), onPressed: () => context.read<SavedJobsCubit>().remove(j)),
                   );
                 },
               );

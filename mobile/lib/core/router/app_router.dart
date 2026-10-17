@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
+import 'package:widgetry_academy/features/assistant/presentation/assistant_page.dart';
 import 'package:widgetry_academy/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:widgetry_academy/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:widgetry_academy/features/blog/presentation/blog_page.dart';
@@ -80,6 +82,7 @@ class AppRouter {
       ),
       GoRoute(path: '/sign-in', parentNavigatorKey: rootKey, builder: (_, s) => SignInPage(redirectTo: s.uri.queryParameters['from'])),
       GoRoute(path: '/settings', parentNavigatorKey: rootKey, builder: (_, __) => const SettingsPage()),
+      GoRoute(path: '/assistant', parentNavigatorKey: rootKey, builder: (_, __) => const AssistantPage()),
     ],
   );
 }
@@ -91,15 +94,21 @@ class _Shell extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
         body: shell,
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: shell.currentIndex,
-          onDestinationSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
-          destinations: const [
-            NavigationDestination(icon: Icon(Icons.work_outline), selectedIcon: Icon(Icons.work), label: 'Jobs'),
-            NavigationDestination(icon: Icon(Icons.school_outlined), selectedIcon: Icon(Icons.school), label: 'Courses'),
-            NavigationDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book), label: 'Guides'),
-            NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
-          ],
+        bottomNavigationBar: DecoratedBox(
+          decoration: BoxDecoration(border: Border(top: BorderSide(color: Theme.of(context).dividerColor))),
+          child: NavigationBar(
+            selectedIndex: shell.currentIndex,
+            onDestinationSelected: (i) {
+              if (i != shell.currentIndex) HapticFeedback.selectionClick();
+              shell.goBranch(i, initialLocation: i == shell.currentIndex);
+            },
+            destinations: const [
+              NavigationDestination(icon: Icon(Icons.work_outline_rounded), selectedIcon: Icon(Icons.work_rounded), label: 'Jobs'),
+              NavigationDestination(icon: Icon(Icons.school_outlined), selectedIcon: Icon(Icons.school_rounded), label: 'Courses'),
+              NavigationDestination(icon: Icon(Icons.auto_stories_outlined), selectedIcon: Icon(Icons.auto_stories_rounded), label: 'Guides'),
+              NavigationDestination(icon: Icon(Icons.account_circle_outlined), selectedIcon: Icon(Icons.account_circle_rounded), label: 'Profile'),
+            ],
+          ),
         ),
       );
 }

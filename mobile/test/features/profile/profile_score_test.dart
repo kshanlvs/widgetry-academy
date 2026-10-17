@@ -39,7 +39,7 @@ void main() {
     final s = ProfileScorer.score(full);
     expect(s.score, 100);
     expect(s.tips, isEmpty);
-    expect(s.level, 'All-star profile ⭐');
+    expect(s.level, 'All-star profile');
   });
 
   test('an app without a link does not count', () {

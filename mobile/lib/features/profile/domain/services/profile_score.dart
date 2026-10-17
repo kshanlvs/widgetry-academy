@@ -12,7 +12,7 @@ class ProfileScore {
   final int score;
   final List<ScoreTip> tips;
 
-  String get level => score >= 85 ? 'All-star profile ⭐' : score >= 65 ? 'Strong profile' : score >= 40 ? 'Good start' : 'Just getting started';
+  String get level => score >= 85 ? 'All-star profile' : score >= 65 ? 'Strong profile' : score >= 40 ? 'Good start' : 'Just getting started';
 }
 
 /// Same scoring as the website's profile page, so the number matches everywhere.
