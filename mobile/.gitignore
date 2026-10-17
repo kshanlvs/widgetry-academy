@@ -1,0 +1,17 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+.vscode/
+coverage/
+# Firebase config files contain project keys; generate them with `flutterfire configure`
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+# Signing
+android/key.properties
+*.jks
+*.keystore

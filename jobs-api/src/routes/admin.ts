@@ -9,6 +9,22 @@ import { jobInput, adminJobPatch, adminCandidatePatch, VERIFICATION } from "../v
 import { jobOut, skillsFor, createJob, updateJob } from "./jobs.js";
 import { candidateOut } from "./talent.js";
 import { categories, assertCategories } from "../categories.js";
+import { notifyTopic, notifyUser, SITE } from "../notify.js";
+
+/** Tell subscribers of the job's category that a new job is live. */
+async function announceJobs(jobIds: number[]) {
+  if (!jobIds.length) return;
+  const rows = await query<any>(`SELECT j.public_id, j.title, j.category, c.name AS company FROM jobs j JOIN companies c ON c.id = j.company_id WHERE j.id IN (?) ORDER BY j.id`, [jobIds]);
+  const names = new Map((await categories()).map(c => [c.slug, c.name]));
+  const byCat = new Map<string, any[]>();
+  for (const r of rows) (byCat.get(r.category) ?? byCat.set(r.category, []).get(r.category)!).push(r);
+  for (const [cat, list] of byCat) {
+    const name = names.get(cat) ?? "mobile", first = list[0];
+    await notifyTopic(`jobs-${cat}`, list.length === 1
+      ? { title: `New ${name} job`, body: `${first.title} at ${first.company}`, link: `${SITE}/job.html?id=${first.public_id}`, data: { type: "job", jobId: first.public_id } }
+      : { title: `${list.length} new ${name} jobs`, body: `Including ${first.title} at ${first.company}`, link: `${SITE}/jobs.html?cat=${cat}`, data: { type: "jobs", category: cat } });
+  }
+}
 
 export const adminRouter = Router();
 adminRouter.use(requireAdmin, (_req, res, next) => { res.set("Cache-Control", "private, no-store"); next(); });
@@ -16,7 +32,7 @@ adminRouter.use(requireAdmin, (_req, res, next) => { res.set("Cache-Control", "p
 const expireOld = () => query("UPDATE jobs SET status = 'expired' WHERE status = 'approved' AND expires_at IS NOT NULL AND expires_at <= UTC_TIMESTAMP()");
 
 async function jobByPid(pid: string) {
-  const [r] = await query("SELECT id, status, expires_at FROM jobs WHERE public_id = ?", [pid.slice(0, 12)]);
+  const [r] = await query("SELECT id, public_id, title, status, expires_at, approved_at, posted_by_uid FROM jobs WHERE public_id = ?", [pid.slice(0, 12)]);
   if (!r) throw new HttpError(404, "Job not found.");
   return r;
 }
@@ -86,8 +102,9 @@ adminRouter.post("/jobs/import", wrap(async (req, res) => {
   }
   const invalid = report.filter(r => r.status === "invalid").length;
   if (dryRun || invalid) return res.status(invalid && !dryRun ? 400 : 200).json({ created: 0, report, error: invalid && !dryRun ? `${invalid} job(s) need fixing. Nothing was added.` : undefined });
-  const created: string[] = [];
-  for (const v of valid) created.push((await createJob(v.job, { uid: req.user!.uid, approved: true })).publicId);
+  const created: string[] = [], createdIds: number[] = [];
+  for (const v of valid) { const c = await createJob(v.job, { uid: req.user!.uid, approved: true }); created.push(c.publicId); createdIds.push(c.id); }
+  void announceJobs(createdIds);   // one notification per category, not one per job
   res.status(201).json({ created: created.length, ids: created, report });
 }));
 
@@ -95,7 +112,8 @@ adminRouter.post("/jobs/import", wrap(async (req, res) => {
 adminRouter.post("/jobs", wrap(async (req, res) => {
   const j = jobInput.parse({ contactEmail: req.user!.email, ...req.body });   // admin's own email unless another is given
   await assertCategories([j.category]);
-  const { publicId } = await createJob(j, { uid: req.user!.uid, approved: true });
+  const { id, publicId } = await createJob(j, { uid: req.user!.uid, approved: true });
+  void announceJobs([id]);
   res.status(201).json({ id: publicId, status: "approved" });
 }));
 
@@ -129,6 +147,14 @@ adminRouter.patch("/jobs/:id", wrap(async (req, res) => {
   }
   if (!sets.length) throw new HttpError(400, "Nothing to change.");
   await query(`UPDATE jobs SET ${sets.join(", ")} WHERE id = ?`, [...params, job.id]);
+  // Notifications: first time live goes to subscribers; the employer hears about approval or rejection
+  const employer = job.posted_by_uid && job.posted_by_uid !== req.user!.uid ? job.posted_by_uid : null;
+  if (p.status === "approved" && job.status !== "approved") {
+    if (!job.approved_at) void announceJobs([job.id]);
+    void notifyUser(employer, { title: "Your job is live 🎉", body: `${job.title} is now on Widgetry Jobs.`, link: `${SITE}/job.html?id=${job.public_id}`, data: { type: "job", jobId: job.public_id } });
+  }
+  if (p.status === "rejected" && job.status !== "rejected")
+    void notifyUser(employer, { title: "Your job needs changes", body: p.rejectReason ? `${job.title}: ${p.rejectReason}` : `${job.title} wasn't approved. Open it to see why.`, link: `${SITE}/post-job.html`, data: { type: "myjobs" } });
   res.json({ ok: true });
 }));
 
@@ -179,7 +205,24 @@ adminRouter.patch("/candidates/:id", wrap(async (req, res) => {
   if (p.verifiedNote !== undefined) { sets.push("verified_note = ?"); params.push(p.verifiedNote); }
   if (p.status) { sets.push("status = ?"); params.push(p.status); }
   if (!sets.length) throw new HttpError(400, "Nothing to change.");
-  const r = await query<any>(`UPDATE candidates SET ${sets.join(", ")} WHERE public_id = ?`, [...params, String(req.params.id).slice(0, 12)]);
-  if (!(r as any).affectedRows) throw new HttpError(404, "Profile not found.");
+  const [before] = await query<any>("SELECT uid, verification FROM candidates WHERE public_id = ?", [String(req.params.id).slice(0, 12)]);
+  if (!before) throw new HttpError(404, "Profile not found.");
+  await query<any>(`UPDATE candidates SET ${sets.join(", ")} WHERE public_id = ?`, [...params, String(req.params.id).slice(0, 12)]);
+  if (p.verification && p.verification !== before.verification && p.verification !== "self")
+    void notifyUser(before.uid, p.verification === "verified"
+      ? { title: "You're Widgetry verified ★", body: "Your profile now carries the Widgetry verified badge. Employers trust it most.", link: `${SITE}/my-profile.html`, data: { type: "profile" } }
+      : { title: "Portfolio checked ✓", body: "A Widgetry engineer reviewed your apps and GitHub. Your badge is updated.", link: `${SITE}/my-profile.html`, data: { type: "profile" } });
   res.json({ ok: true });
+}));
+
+// Send a push notification to app users: everyone, academy subscribers, or one job category
+const notifyBody = z.object({
+  audience: z.string().trim().regex(/^(all|academy|jobs-[a-z0-9-]{2,30})$/, "Audience must be all, academy or jobs-<category>"),
+  title: z.string().trim().min(3).max(100), body: z.string().trim().min(3).max(240),
+  link: z.string().trim().url().refine(u => u.startsWith(SITE) || u.startsWith("https://"), "Use an https link").optional(),
+});
+adminRouter.post("/notify", wrap(async (req, res) => {
+  const n = notifyBody.parse(req.body);
+  await notifyTopic(n.audience, { title: n.title, body: n.body, link: n.link, data: { type: "announcement" } });
+  res.json({ ok: true, message: `Sent to ${n.audience}.` });
 }));

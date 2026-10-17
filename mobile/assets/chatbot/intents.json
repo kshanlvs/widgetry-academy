@@ -1,0 +1,839 @@
+{
+ "source": "public/chatbot.js",
+ "course": "Flutter in 10 Days",
+ "starters": [
+  "fee",
+  "batch",
+  "beginner",
+  "demo",
+  "build",
+  "certificate"
+ ],
+ "generic": [
+  "when",
+  "time",
+  "where",
+  "can i join",
+  "start",
+  "starting",
+  "join",
+  "apply",
+  "need",
+  "learn",
+  "make",
+  "try",
+  "experience",
+  "future",
+  "system",
+  "content",
+  "covered",
+  "google",
+  "phone",
+  "number",
+  "help me",
+  "working",
+  "busy",
+  "days",
+  "weeks",
+  "sessions",
+  "basic",
+  "app will",
+  "build",
+  "date",
+  "great",
+  "cool",
+  "pc",
+  "age",
+  "mobile",
+  "device",
+  "software",
+  "install",
+  "reach",
+  "person",
+  "call",
+  "sir",
+  "hire",
+  "return",
+  "card",
+  "offer",
+  "project",
+  "outcome",
+  "flutter",
+  "weekend",
+  "weekends",
+  "saturday",
+  "sunday"
+ ],
+ "intents": [
+  {
+   "id": "fee",
+   "q": "What's the fee?",
+   "k": [
+    "fee",
+    "fees",
+    "price",
+    "cost",
+    "charges",
+    "how much",
+    "kitna",
+    "kitne",
+    "paisa",
+    "paise",
+    "rupees",
+    "rs ",
+    "₹",
+    "amount",
+    "early bird",
+    "discount",
+    "offer",
+    "coupon",
+    "scholarship"
+   ],
+   "a": "You can pay in full, or book your seat with a part payment and pay the rest later. The current fee and any early-bird offer are always shown in the Fees section.",
+   "act": [
+    {
+     "label": "See fees",
+     "type": "go",
+     "target": "fees"
+    },
+    {
+     "label": "Reserve my seat",
+     "type": "go",
+     "target": "register"
+    }
+   ],
+   "rel": [
+    "pay",
+    "refund",
+    "batch"
+   ]
+  },
+  {
+   "id": "pay",
+   "q": "How do I pay?",
+   "k": [
+    "pay",
+    "payment",
+    "upi",
+    "card",
+    "net banking",
+    "netbanking",
+    "razorpay",
+    "gpay",
+    "phonepe",
+    "paytm",
+    "emi",
+    "installment",
+    "instalment"
+   ],
+   "a": "Payments go through Razorpay, so you can pay securely with UPI, debit or credit card, or net banking. Fill in the short registration form first, then pay to confirm your seat.",
+   "act": [
+    {
+     "label": "See payment options",
+     "type": "go",
+     "target": "fees"
+    }
+   ],
+   "rel": [
+    "refund",
+    "register"
+   ]
+  },
+  {
+   "id": "refund",
+   "q": "Is there a refund?",
+   "k": [
+    "refund",
+    "money back",
+    "cancel",
+    "cancellation",
+    "return"
+   ],
+   "a": "Yes. If the course isn't right for you, you can get a refund within the first sessions. The exact rules are in our refund policy.",
+   "act": [
+    {
+     "label": "Read refund policy",
+     "type": "link",
+     "target": "refund.html"
+    }
+   ],
+   "rel": [
+    "demo",
+    "fee"
+   ]
+  },
+  {
+   "id": "batch",
+   "q": "When does the next batch start?",
+   "k": [
+    "when",
+    "start",
+    "starting",
+    "next batch",
+    "batch",
+    "date",
+    "dates",
+    "timing",
+    "timings",
+    "time",
+    "schedule",
+    "kab",
+    "online",
+    "offline",
+    "mode",
+    "google meet",
+    "zoom",
+    "location",
+    "where",
+    "venue",
+    "class time"
+   ],
+   "a": "Classes are live online on Saturdays and Sundays, so you join from home and nothing clashes with school or college. The next batch's start date, timing and format are on the batch card, kept up to date.",
+   "act": [
+    {
+     "label": "See next batch",
+     "type": "go",
+     "target": "nextBatch"
+    },
+    {
+     "label": "Ask on WhatsApp",
+     "type": "wa",
+     "target": "Hi! I'd like details of the next batch of Flutter in 10 Days."
+    }
+   ],
+   "rel": [
+    "duration",
+    "missed",
+    "demo"
+   ]
+  },
+  {
+   "id": "duration",
+   "q": "How long is the course?",
+   "k": [
+    "how long",
+    "duration",
+    "how many sessions",
+    "how many classes",
+    "sessions",
+    "weeks",
+    "days",
+    "10 days",
+    "ten days",
+    "length"
+   ],
+   "a": "It's 10 live online sessions spread over 5 weekends: one every Saturday and Sunday, 2 hours each (20 hours in total). Each session is mostly hands-on building, with time for doubts.",
+   "act": [
+    {
+     "label": "See the syllabus",
+     "type": "go",
+     "target": "schedule"
+    }
+   ],
+   "rel": [
+    "batch",
+    "build",
+    "missed"
+   ]
+  },
+  {
+   "id": "missed",
+   "q": "What if I miss a class?",
+   "k": [
+    "miss",
+    "missed",
+    "absent",
+    "skip",
+    "can't attend",
+    "cant attend",
+    "not able to attend",
+    "recording",
+    "recorded"
+   ],
+   "a": "No problem. Message us and we'll help you catch up before the next class, so you don't fall behind.",
+   "act": [
+    {
+     "label": "Message on WhatsApp",
+     "type": "wa",
+     "target": "Hi! I may miss a class of Flutter in 10 Days. How can I catch up?"
+    }
+   ],
+   "rel": [
+    "batchsize",
+    "certificate"
+   ]
+  },
+  {
+   "id": "batchsize",
+   "q": "How many students per batch?",
+   "k": [
+    "batch size",
+    "how many students",
+    "students per",
+    "class size",
+    "crowd",
+    "individual attention",
+    "personal attention"
+   ],
+   "a": "We keep batches small, so every student gets individual attention and doubts are solved in class.",
+   "act": [],
+   "rel": [
+    "mentor",
+    "beginner"
+   ]
+  },
+  {
+   "id": "beginner",
+   "q": "I've never coded. Can I join?",
+   "k": [
+    "never coded",
+    "no coding",
+    "beginner",
+    "beginners",
+    "zero",
+    "no experience",
+    "new to coding",
+    "don't know coding",
+    "dont know coding",
+    "non coder",
+    "non-coder",
+    "from scratch",
+    "basic",
+    "programming knowledge",
+    "coding knowledge"
+   ],
+   "a": "Yes. The course starts from zero: Day 1 is setup and your first app, and Day 2 covers the Dart basics you need. If you can use a computer comfortably, you can follow along.",
+   "act": [
+    {
+     "label": "See the syllabus",
+     "type": "go",
+     "target": "schedule"
+    }
+   ],
+   "rel": [
+    "eligibility",
+    "need",
+    "build"
+   ]
+  },
+  {
+   "id": "eligibility",
+   "q": "Who can join?",
+   "k": [
+    "who can join",
+    "can i join",
+    "eligible",
+    "eligibility",
+    "class 10",
+    "class 11",
+    "class 12",
+    "10th",
+    "11th",
+    "12th",
+    "school student",
+    "college",
+    "graduate",
+    "btech",
+    "b.tech",
+    "bca",
+    "bsc",
+    "bcom",
+    "age",
+    "stream",
+    "commerce",
+    "arts",
+    "non it",
+    "non-it"
+   ],
+   "a": "Anyone from Class 10 through graduation, in any stream: science, commerce or arts. Recent graduates are welcome too.",
+   "act": [
+    {
+     "label": "Reserve my seat",
+     "type": "go",
+     "target": "register"
+    }
+   ],
+   "rel": [
+    "beginner",
+    "school",
+    "need"
+   ]
+  },
+  {
+   "id": "need",
+   "q": "What do I need?",
+   "k": [
+    "need",
+    "laptop",
+    "computer",
+    "pc",
+    "ram",
+    "requirement",
+    "requirements",
+    "system",
+    "windows",
+    "linux",
+    "phone",
+    "android",
+    "mobile",
+    "device",
+    "software",
+    "install"
+   ],
+   "a": "A laptop with Windows, macOS or Linux (8 GB RAM recommended) and an Android phone if you have one. We help you install everything on Day 1, and all the tools are free.",
+   "act": [],
+   "rel": [
+    "mac",
+    "beginner"
+   ]
+  },
+  {
+   "id": "mac",
+   "q": "Do I need a Mac or iPhone?",
+   "k": [
+    "mac",
+    "macbook",
+    "iphone",
+    "ios",
+    "apple"
+   ],
+   "a": "No. Any Windows, macOS or Linux laptop works. We build and test on Android, and the same Flutter code runs on iOS too.",
+   "act": [],
+   "rel": [
+    "need",
+    "flutter"
+   ]
+  },
+  {
+   "id": "school",
+   "q": "Can I do this alongside school or college?",
+   "k": [
+    "alongside",
+    "with school",
+    "with college",
+    "exams",
+    "exam",
+    "weekdays",
+    "weekend",
+    "weekends",
+    "saturday",
+    "sunday",
+    "busy",
+    "working"
+   ],
+   "a": "Yes. Classes are only on weekends, so they don't clash with school, college or exams on weekdays.",
+   "act": [
+    {
+     "label": "See next batch",
+     "type": "go",
+     "target": "nextBatch"
+    }
+   ],
+   "rel": [
+    "batch",
+    "missed"
+   ]
+  },
+  {
+   "id": "build",
+   "q": "What will I build?",
+   "k": [
+    "build",
+    "what will i build",
+    "will i build",
+    "will we build",
+    "project",
+    "make",
+    "app will",
+    "what app",
+    "e-commerce",
+    "ecommerce",
+    "shopping",
+    "portfolio project",
+    "capstone",
+    "outcome",
+    "learn",
+    "what will i learn"
+   ],
+   "a": "One real app, built step by step: designed screens, a product list with live data from the internet, wishlist and cart, a checkout form, and login with cloud data using Firebase. On Day 10 you install it on your phone and put the code on GitHub.",
+   "act": [
+    {
+     "label": "See the syllabus",
+     "type": "go",
+     "target": "schedule"
+    }
+   ],
+   "rel": [
+    "certificate",
+    "career",
+    "syllabus"
+   ]
+  },
+  {
+   "id": "syllabus",
+   "q": "What's in the syllabus?",
+   "k": [
+    "syllabus",
+    "curriculum",
+    "topics",
+    "modules",
+    "content",
+    "covered",
+    "cover",
+    "brochure",
+    "pdf",
+    "firebase",
+    "api",
+    "github",
+    "state management",
+    "setstate"
+   ],
+   "a": "Five modules, two sessions each: 1) Getting started and Dart basics, 2) Designing screens, 3) Lists, navigation and live data, 4) Saving data and Firebase login, 5) Polish, build the app and demo day.",
+   "act": [
+    {
+     "label": "See the syllabus",
+     "type": "go",
+     "target": "schedule"
+    },
+    {
+     "label": "Download brochure",
+     "type": "link",
+     "target": "Widgetry-Academy-Flutter-Brochure.pdf"
+    }
+   ],
+   "rel": [
+    "build",
+    "duration"
+   ]
+  },
+  {
+   "id": "certificate",
+   "q": "Do I get a certificate?",
+   "k": [
+    "certificate",
+    "certification",
+    "certified",
+    "certify"
+   ],
+   "a": "Yes, a Widgetry Academy certificate with a unique ID you can add to your resume and LinkedIn. To earn it, attend at least 8 of the 10 sessions, try the practice tasks, and present your app on demo day.",
+   "act": [
+    {
+     "label": "See the certificate",
+     "type": "go",
+     "target": "certificate"
+    }
+   ],
+   "rel": [
+    "career",
+    "build"
+   ]
+  },
+  {
+   "id": "career",
+   "q": "Will this help my career?",
+   "k": [
+    "career",
+    "job",
+    "jobs",
+    "get a job",
+    "getting job",
+    "getting a job",
+    "placement",
+    "placements",
+    "internship",
+    "salary",
+    "resume",
+    "cv",
+    "linkedin",
+    "hire",
+    "hiring",
+    "future"
+   ],
+   "a": "You leave with a real app, a GitHub portfolio and guidance on presenting them in your resume and LinkedIn. We don't promise placements, but you'll have proof you can build, which is what recruiters look for. The Professional Flutter Program (coming soon) goes further for job-readiness.",
+   "act": [],
+   "rel": [
+    "build",
+    "certificate",
+    "flutter"
+   ]
+  },
+  {
+   "id": "mentor",
+   "q": "Who teaches the course?",
+   "k": [
+    "who teaches",
+    "teacher",
+    "trainer",
+    "mentor",
+    "instructor",
+    "faculty",
+    "kishan",
+    "sir",
+    "tutor",
+    "taught by",
+    "experience"
+   ],
+   "a": "Kishan Kumar Sharma, a Senior Software Engineer at Relevance Lab with an MCA and 5+ years of building Flutter apps. He has worked on apps with 50M+ downloads, including Tata Neu, and teaches the way real teams build apps.",
+   "act": [
+    {
+     "label": "Meet your mentor",
+     "type": "go",
+     "target": "mentor"
+    },
+    {
+     "label": "See apps he's built",
+     "type": "link",
+     "target": "apps.html"
+    }
+   ],
+   "rel": [
+    "batchsize",
+    "demo"
+   ]
+  },
+  {
+   "id": "demo",
+   "q": "Is there a free demo class?",
+   "k": [
+    "demo",
+    "trial",
+    "free class",
+    "try",
+    "sample class",
+    "free session",
+    "first class free"
+   ],
+   "a": "Yes. You can join a free demo class first, with no commitment. Message us on WhatsApp and we'll share the next demo slot.",
+   "act": [
+    {
+     "label": "Book demo on WhatsApp",
+     "type": "wa",
+     "target": "Hi! I'd like to book the free demo class for Flutter in 10 Days."
+    }
+   ],
+   "rel": [
+    "fee",
+    "batch"
+   ]
+  },
+  {
+   "id": "parents",
+   "q": "Can parents attend?",
+   "k": [
+    "parent",
+    "parents",
+    "mother",
+    "father",
+    "mom",
+    "dad",
+    "guardian",
+    "my son",
+    "my daughter",
+    "my child",
+    "my kid"
+   ],
+   "a": "Yes. Parents can follow the curriculum and are warmly invited to demo day to see the app their child built.",
+   "act": [
+    {
+     "label": "Ask on WhatsApp",
+     "type": "wa",
+     "target": "Hi! I'm a parent and have a question about Flutter in 10 Days."
+    }
+   ],
+   "rel": [
+    "eligibility",
+    "school"
+   ]
+  },
+  {
+   "id": "register",
+   "q": "How do I register?",
+   "k": [
+    "register",
+    "registration",
+    "enroll",
+    "enrol",
+    "join",
+    "sign up",
+    "signup",
+    "admission",
+    "book seat",
+    "reserve",
+    "apply"
+   ],
+   "a": "Tap Reserve my seat, fill in the short form (it takes under a minute), then pay to confirm. You'll get batch details on WhatsApp.",
+   "act": [
+    {
+     "label": "Reserve my seat",
+     "type": "go",
+     "target": "register"
+    }
+   ],
+   "rel": [
+    "fee",
+    "pay"
+   ]
+  },
+  {
+   "id": "flutter",
+   "q": "What is Flutter?",
+   "k": [
+    "what is flutter",
+    "flutter",
+    "dart",
+    "why flutter",
+    "google",
+    "cross platform",
+    "cross-platform"
+   ],
+   "a": "Flutter is Google's free toolkit for building Android, iOS and web apps from one codebase. Apps like Google Pay use it, and it's beginner-friendly: hot reload shows every change on your phone instantly.",
+   "act": [],
+   "rel": [
+    "build",
+    "career"
+   ]
+  },
+  {
+   "id": "courses",
+   "q": "Do you have other courses?",
+   "k": [
+    "other course",
+    "other courses",
+    "more courses",
+    "full stack",
+    "fullstack",
+    "web development",
+    "react",
+    ".net",
+    "javascript",
+    "advanced",
+    "next course",
+    "professional"
+   ],
+   "a": "Flutter in 10 Days is open now. A Full-Stack Web Development course and the Professional Flutter Program are coming soon.",
+   "act": [
+    {
+     "label": "See courses",
+     "type": "go",
+     "target": "courses"
+    }
+   ],
+   "rel": [
+    "career",
+    "build"
+   ]
+  },
+  {
+   "id": "teach",
+   "q": "Can I teach at Widgetry?",
+   "k": [
+    "i want to teach",
+    "want to teach",
+    "teach at",
+    "teach with",
+    "teach here",
+    "become mentor",
+    "become a mentor",
+    "mentor apply",
+    "part time teaching",
+    "trainer job",
+    "work with you",
+    "collaborate"
+   ],
+   "a": "If you're a working IT professional who enjoys teaching, apply to become a mentor. We handle students, payments and marketing; you teach.",
+   "act": [
+    {
+     "label": "Apply as a mentor",
+     "type": "link",
+     "target": "pages/apply-mentor.html"
+    }
+   ],
+   "rel": [
+    "mentor"
+   ]
+  },
+  {
+   "id": "contact",
+   "q": "How do I contact you?",
+   "k": [
+    "contact",
+    "call",
+    "phone number",
+    "number",
+    "whatsapp",
+    "email",
+    "talk to",
+    "speak",
+    "human",
+    "person",
+    "support",
+    "help me",
+    "reach"
+   ],
+   "a": "The quickest way is WhatsApp. We usually reply within a few hours. You can also use the contact page.",
+   "act": [
+    {
+     "label": "Chat on WhatsApp",
+     "type": "wa",
+     "target": "Hi! I have a question about Flutter in 10 Days."
+    },
+    {
+     "label": "Contact page",
+     "type": "link",
+     "target": "contact.html"
+    }
+   ],
+   "rel": [
+    "demo",
+    "register"
+   ]
+  },
+  {
+   "id": "hello",
+   "q": "Hi",
+   "k": [
+    "hi",
+    "hello",
+    "hey",
+    "hii",
+    "namaste",
+    "good morning",
+    "good evening",
+    "good afternoon"
+   ],
+   "a": "Hi! Ask me anything about Flutter in 10 Days, or pick a question below.",
+   "act": [],
+   "rel": [
+    "fee",
+    "batch",
+    "beginner"
+   ]
+  },
+  {
+   "id": "thanks",
+   "q": "Thanks",
+   "k": [
+    "thank",
+    "thanks",
+    "thank you",
+    "thx",
+    "ok thanks",
+    "great",
+    "awesome",
+    "cool"
+   ],
+   "a": "You're welcome! If anything else comes up, I'm right here.",
+   "act": [
+    {
+     "label": "Reserve my seat",
+     "type": "go",
+     "target": "register"
+    }
+   ],
+   "rel": [
+    "demo",
+    "contact"
+   ]
+  }
+ ]
+}

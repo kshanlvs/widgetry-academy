@@ -6,6 +6,9 @@ import type { Server } from "node:http";
 import { createApp } from "../src/app.js";
 import { pool } from "../src/db.js";
 import { migrate } from "../src/migrate.js";
+import { setSender } from "../src/notify.js";
+import { createHmac } from "node:crypto";
+import { setPaymentServices, type Registration } from "../src/payments.js";
 
 const ADMIN = "dev:E4edbAvcdwTdkTdNwcdWneVWe572:admin@widgetry.test:Admin";
 const EMP = "dev:emp1:hr@acme.test:Acme HR";
@@ -349,4 +352,146 @@ test("categories: Flutter, Android and iOS jobs and seekers", async () => {
   assert.deepEqual(s.body.profile.categories, ["flutter", "android"]);
   const list = (await call("GET", "/admin/candidates?category=android", undefined, ADMIN)).body.items;
   assert.ok(list.some((c: any) => c.fullName === "Cat Roy"));
+});
+
+test("push: devices, new-job topic, employer and verification messages, admin announcements", async () => {
+  const sent: { to: string; title: string; body: string; link?: string }[] = [];
+  setSender({
+    async topic(topic, p) { sent.push({ to: "topic:" + topic, title: p.title, body: p.body, link: p.link }); },
+    async tokens(tokens, p) { for (const t of tokens) sent.push({ to: "token:" + t, title: p.title, body: p.body }); return tokens.filter(t => t.startsWith("dead")); },
+  });
+  const wait = () => new Promise(r => setTimeout(r, 150));
+  const emp = "dev:pushemp:hr@push.test:Push HR", seek = "dev:pushseek:s@push.test:Seeker";
+  const tokA = "a".repeat(40), tokDead = "dead" + "x".repeat(40);
+  assert.equal((await call("POST", "/me/devices", { token: tokA, platform: "android" })).status, 401);
+  assert.equal((await call("POST", "/me/devices", { token: "short" }, emp)).status, 400);
+  assert.equal((await call("POST", "/me/devices", { token: tokA, platform: "android" }, emp)).status, 201);
+  assert.equal((await call("POST", "/me/devices", { token: tokDead, platform: "ios" }, emp)).status, 201);
+
+  // Employer job approved: category topic + employer's phones; the dead token is cleaned up
+  const j = await call("POST", "/jobs", goodJob({ title: "Push Flutter Dev", applyUrl: "https://push.test/careers/1" }), emp);
+  await call("PATCH", "/admin/jobs/" + j.body.id, { status: "approved" }, ADMIN); await wait();
+  assert.ok(sent.some(m => m.to === "topic:jobs-flutter" && m.body === "Push Flutter Dev at Acme Apps"), JSON.stringify(sent));
+  assert.ok(sent.some(m => m.to === "token:" + tokA && m.title.startsWith("Your job is live")));
+  const [{ n }] = await pool.query("SELECT COUNT(*) AS n FROM device_tokens WHERE token = ?", [tokDead]).then(([r]) => r as any[]);
+  assert.equal(Number(n), 0, "invalid tokens removed");
+  // Re-approving doesn't announce again
+  sent.length = 0;
+  await call("PATCH", "/admin/jobs/" + j.body.id, { status: "pending" }, ADMIN);
+  await call("PATCH", "/admin/jobs/" + j.body.id, { status: "approved" }, ADMIN); await wait();
+  assert.ok(!sent.some(m => m.to.startsWith("topic:")));
+
+  // Bulk import: one message per category
+  sent.length = 0;
+  const desc = "Build features in Kotlin with Jetpack Compose and coroutines for our Android app, and ship to the Play Store every sprint.";
+  const base = { category: "android", companyName: "Push Droid", jobType: "full_time", workMode: "remote", level: "mid", description: desc };
+  await call("POST", "/admin/jobs/import", { jobs: [{ ...base, title: "Android A", applyUrl: "https://pd.test/a" }, { ...base, title: "Android B", applyUrl: "https://pd.test/b" }] }, ADMIN); await wait();
+  const topicMsgs = sent.filter(m => m.to === "topic:jobs-android");
+  assert.equal(topicMsgs.length, 1); assert.equal(topicMsgs[0]!.title, "2 new Android jobs");
+
+  // Verification change reaches the seeker
+  sent.length = 0;
+  await call("PUT", "/talent/me", { fullName: "Push Seeker", headline: "Flutter Developer", experienceYears: 1, skills: ["Flutter"], consent: true }, seek);
+  await call("POST", "/me/devices", { token: "s".repeat(40), platform: "android" }, seek);
+  const cid = (await call("GET", "/talent/me", undefined, seek)).body.profile.id;
+  await call("PATCH", "/admin/candidates/" + cid, { verification: "verified" }, ADMIN); await wait();
+  assert.ok(sent.some(m => m.to === "token:" + "s".repeat(40) && m.title.includes("verified")));
+
+  // Admin announcements
+  assert.equal((await call("POST", "/admin/notify", { audience: "academy", title: "Batch 2", body: "Starts Saturday" }, EMP)).status, 403);
+  assert.equal((await call("POST", "/admin/notify", { audience: "nobody", title: "Hi there", body: "Test" }, ADMIN)).status, 400);
+  assert.equal((await call("POST", "/admin/notify", { audience: "academy", title: "Batch 2 starts", body: "Saturday 11 AM, see you there" }, ADMIN)).status, 200);
+  assert.ok(sent.some(m => m.to === "topic:academy"));
+  setSender(null);
+});
+
+test("course payments: plans from the server, order, signature check, idempotent fulfil, balance, webhook", async () => {
+  process.env.RAZORPAY_KEY_ID = "rzp_test_abc"; process.env.RAZORPAY_KEY_SECRET = "test_secret"; process.env.RAZORPAY_WEBHOOK_SECRET = "hook_secret";
+  await pool.query("DELETE FROM payments");
+  // Fakes for Razorpay and the Firestore registration
+  const regs = new Map<string, Registration>();
+  const payments = new Map<string, { id: string; order_id: string; amount: number; status: string }>();
+  let n = 0;
+  let earlyBird = true;
+  setPaymentServices(
+    {
+      async createOrder(o) { n++; return { id: "order_T" + n, amount: o.amount, currency: "INR" }; },
+      async fetchPayment(id) { const p = payments.get(id); if (!p) throw new Error("no payment"); return p; },
+    },
+    {
+      async get(uid) { return regs.get(uid) ?? null; },
+      async addPayment(uid, p) {
+        const r = regs.get(uid)!; const plan = p.plan === "balance" ? (r.plan || "booking") : p.plan;
+        r.plan = plan; r.amountPaid = (r.amountPaid ?? 0) + p.amount; r.payStatus = r.amountPaid >= (plan === "early-bird" ? 3499 : 4999) ? "paid" : "part-paid";
+        return r.payStatus;
+      },
+      async earlyBirdOpen() { return earlyBird; },
+    });
+  const STU = "dev:stu1:stu@test.dev:Stu", OTHER = "dev:stu2:other@test.dev:Other";
+  const sign = (o: string, p: string) => createHmac("sha256", "test_secret").update(`${o}|${p}`).digest("hex");
+
+  // Not registered yet: nothing to pay, and no order
+  let r = await call("GET", "/payments/plans", undefined, STU);
+  assert.equal(r.body.status, "unregistered"); assert.deepEqual(r.body.plans, []);
+  assert.equal((await call("POST", "/payments/order", { plan: "regular" }, STU)).status, 409);
+  assert.equal((await call("GET", "/payments/plans")).status, 401);
+
+  regs.set("stu1", { name: "Stu", email: "stu@test.dev", phone: "+919876543210", payStatus: "pending", amountPaid: 0, plan: null });
+  r = await call("GET", "/payments/plans", undefined, STU);
+  assert.deepEqual(r.body.plans.map((p: any) => [p.id, p.amount]), [["early-bird", 3499], ["regular", 4999], ["booking", 2500]]);
+  earlyBird = false;
+  r = await call("GET", "/payments/plans", undefined, STU);
+  assert.deepEqual(r.body.plans.map((p: any) => p.id), ["regular", "booking"], "early bird hidden when seats run out");
+  assert.equal((await call("POST", "/payments/order", { plan: "early-bird" }, STU)).status, 400, "can't buy a plan that isn't offered");
+  earlyBird = true;
+
+  // Book with a part payment: the server decides the amount
+  r = await call("POST", "/payments/order", { plan: "booking" }, STU);
+  assert.equal(r.status, 201); assert.equal(r.body.amount, 250000); assert.equal(r.body.keyId, "rzp_test_abc");
+  assert.equal(r.body.prefill.contact, "+919876543210");
+  const order1 = r.body.orderId;
+  payments.set("pay_A1", { id: "pay_A1", order_id: order1, amount: 250000, status: "captured" });
+
+  // Forged or mismatched confirmations are refused
+  assert.equal((await call("POST", "/payments/verify", { orderId: order1, paymentId: "pay_A1", signature: "0".repeat(64) }, STU)).status, 400);
+  assert.equal((await call("POST", "/payments/verify", { orderId: order1, paymentId: "pay_A1", signature: sign(order1, "pay_A1") }, OTHER)).status, 404, "someone else's order");
+  payments.set("pay_LOW", { id: "pay_LOW", order_id: order1, amount: 100, status: "captured" });
+  assert.equal((await call("POST", "/payments/verify", { orderId: order1, paymentId: "pay_LOW", signature: sign(order1, "pay_LOW") }, STU)).status, 400, "amount must match");
+  assert.equal(regs.get("stu1")!.amountPaid, 0);
+
+  r = await call("POST", "/payments/verify", { orderId: order1, paymentId: "pay_A1", signature: sign(order1, "pay_A1") }, STU);
+  assert.equal(r.status, 200); assert.equal(r.body.status, "part-paid");
+  assert.deepEqual([regs.get("stu1")!.plan, regs.get("stu1")!.amountPaid], ["booking", 2500]);
+  // Confirming twice (app retry, or the webhook too) doesn't count the money twice
+  r = await call("POST", "/payments/verify", { orderId: order1, paymentId: "pay_A1", signature: sign(order1, "pay_A1") }, STU);
+  assert.equal(r.status, 200); assert.equal(regs.get("stu1")!.amountPaid, 2500);
+
+  // Now only the balance can be paid
+  r = await call("GET", "/payments/plans", undefined, STU);
+  assert.equal(r.body.status, "part-paid"); assert.deepEqual(r.body.plans.map((p: any) => [p.id, p.amount]), [["balance", 2499]]);
+  assert.equal((await call("POST", "/payments/order", { plan: "regular" }, STU)).status, 400);
+  r = await call("POST", "/payments/order", { plan: "balance" }, STU);
+  const order2 = r.body.orderId; assert.equal(r.body.amount, 249900);
+
+  // The webhook confirms it even if the app closed: bad signature first, then a real one
+  const event = JSON.stringify({ event: "payment.captured", payload: { payment: { entity: { id: "pay_B2", order_id: order2, amount: 249900, status: "captured", method: "upi" } } } });
+  const hook = (body: string, sig: string) => fetch(base + "/payments/webhook", { method: "POST", headers: { "content-type": "application/json", "x-razorpay-signature": sig }, body });
+  assert.equal((await hook(event, "bad")).status, 400);
+  assert.equal((await hook(event, createHmac("sha256", "hook_secret").update(event).digest("hex"))).status, 200);
+  assert.deepEqual([regs.get("stu1")!.payStatus, regs.get("stu1")!.amountPaid], ["paid", 4999]);
+  const [row] = await pool.query("SELECT status, method FROM payments WHERE order_id = ?", [order2]) as any;
+  assert.deepEqual([row[0].status, row[0].method], ["paid", "upi"]);
+
+  // Paid in full: nothing more to pay; the student sees their receipts
+  r = await call("GET", "/payments/plans", undefined, STU);
+  assert.equal(r.body.status, "paid"); assert.deepEqual(r.body.plans, []);
+  assert.equal((await call("POST", "/payments/order", { plan: "balance" }, STU)).status, 409);
+  assert.equal((await call("GET", "/payments/mine", undefined, STU)).body.items.length, 2);
+
+  // Without Razorpay keys the app is told payments are opening soon
+  delete process.env.RAZORPAY_KEY_SECRET;
+  regs.set("stu2", { name: "Other", payStatus: "pending", amountPaid: 0 });
+  assert.equal((await call("POST", "/payments/order", { plan: "regular" }, OTHER)).status, 503);
+  assert.equal((await call("GET", "/payments/plans", undefined, OTHER)).body.enabled, false);
+  setPaymentServices(null, null);
 });

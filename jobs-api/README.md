@@ -21,6 +21,7 @@ The academy stays entirely on Firebase (Spark plan). Widgetry Jobs runs on its o
 | Public | `GET /api/jobs` (search `q`, filters `category` `type` `mode` `level` `city` `skill`, paging), `GET /api/jobs/:id`, `GET /api/meta`, `POST /api/jobs/:id/report` |
 | Employers (signed in) | `POST /api/jobs` (goes to review), `GET /api/my/jobs` |
 | Job seekers (signed in) | `GET/PUT/DELETE /api/talent/me` |
+| Course payments (app) | `GET /api/payments/plans`, `POST /api/payments/order`, `POST /api/payments/verify`, `POST /api/payments/webhook` (Razorpay), `GET /api/payments/mine`. See mobile/README.md → Payments |
 | Admin (UID in `ADMIN_UIDS`) | `GET /api/admin/stats`, `GET/POST /api/admin/jobs`, `PUT/PATCH/DELETE /api/admin/jobs/:id`, `GET/PATCH /api/admin/reports`, `GET/PATCH /api/admin/candidates` |
 
 Safety built in: every employer post is reviewed before going live; posts that ask candidates for fees are refused; 3 reports from different people send a job back to review; jobs expire after 30 days; contact emails and talent profiles are never public; rate limits on posting and reporting; only `https://` links accepted; all queries parameterised.
@@ -68,7 +69,7 @@ DB_PORT=3306 DB_PASSWORD=... ALLOW_DEV_AUTH=1 npm test
 1. **TiDB Cloud** (tidbcloud.com) → create a **Starter** cluster in **Singapore**, set a monthly spending limit. Connect → note **host**, **user** (`xxxx.root`), **password**.
 2. **Railway** (railway.com) → sign in with GitHub → Hobby plan → New Project → Deploy from GitHub repo → `kshanlvs/widgetry-academy`.
    - Service Settings → **Root Directory** `jobs-api`; **Branch** `main` (or `widgetry-jobs` to test first); **Region** Southeast Asia (Singapore).
-   - **Variables**: `DB_HOST`, `DB_PORT=4000`, `DB_USER`, `DB_PASSWORD`, `DB_NAME=widgetry_jobs`, `DB_SSL=1`, `NODE_ENV=production`, `MIGRATE_ON_START=1`.
+   - **Variables**: `DB_HOST`, `DB_PORT=4000`, `DB_USER`, `DB_PASSWORD`, `DB_NAME=widgetry_jobs`, `DB_SSL=1`, `NODE_ENV=production`, `MIGRATE_ON_START=1`, and for app push notifications and payments `FIREBASE_SERVICE_ACCOUNT` (the whole JSON key from Firebase → Project settings → Service accounts → Generate new private key). For in-app course payments also add `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET`.
    - Settings → Networking → **Custom Domain** `api.widgetryacademy.in`, port 8080. Railway shows a CNAME (and a TXT) record.
 3. **GoDaddy DNS** → add the records Railway shows (CNAME `api` → `xxxx.up.railway.app`).
 4. Check `https://api.widgetryacademy.in/api/health` returns `{"ok":true}`, then merge `widgetry-jobs` into `main`.

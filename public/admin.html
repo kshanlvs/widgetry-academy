@@ -301,6 +301,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
       <label>Category<select id="jCat"><option value="">All</option></select></label>
       <label>Search<input id="jq" placeholder="Title, company, contact email"></label>
       <button class="btn ghost" id="jReload" type="button">Refresh</button>
+      <button class="btn ghost" id="jPush" type="button">📣 App notification</button>
       <button class="btn ghost" id="jBulk" type="button">Bulk import</button>
       <button class="btn" id="jNew" type="button">+ Post a job</button>
     </div>
@@ -321,6 +322,17 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
     <p class="small" style="margin-top:12px">Profiles are private: only you can see them. Verify: check their apps and GitHub (Portfolio checked), then a 20–30 min technical call (Widgetry verified).</p>
   </section>
 </main>
+
+<dialog id="ndlg"><form class="dlg" id="nForm" method="dialog" novalidate>
+  <h2>Send an app notification</h2>
+  <p class="small" style="margin:0">Goes to everyone with the Widgetry app who chose this topic. New jobs are announced automatically when they go live.</p>
+  <label>Send to<select id="nAud"></select></label>
+  <label>Title<input id="nTitle" maxlength="100" placeholder="e.g. Batch 2 starts this Saturday"></label>
+  <label>Message<textarea id="nBody" rows="3" maxlength="240" placeholder="e.g. Live class at 11 AM. Seats are almost full: reserve yours today."></textarea></label>
+  <label>Link (optional)<input id="nLink" type="url" maxlength="300" placeholder="https://widgetryacademy.in/#courses"></label>
+  <p class="err" id="nErr" hidden></p><p class="small" id="nOk" hidden style="color:#0f6b56;font-weight:700"></p>
+  <div class="acts"><button class="btn ghost" value="cancel" formnovalidate>Close</button><button class="btn" type="button" id="nSend">Send</button></div>
+</form></dialog>
 
 <dialog id="bdlg"><form class="dlg" id="bForm" method="dialog" novalidate>
   <h2>Bulk import jobs</h2>
@@ -806,6 +818,21 @@ const BULK_EXAMPLE = [{ category: "flutter", companyName: "Example Labs", compan
   description: "Build and ship features for our Flutter app with Firebase and REST APIs. Work with design and backend teams, write tests and fix bugs. 1-2 years of Flutter experience.",
   skills: "Flutter, Dart, Firebase, REST APIs", applyUrl: "https://example.com/careers/flutter-developer" }];
 let bulkJobs = null;
+$("jPush").onclick = () => {
+  const a = $("nAud"); a.length = 0;
+  a.add(new Option("Everyone with the app", "all")); a.add(new Option("Academy updates (batches, offers)", "academy"));
+  for (const c of jcats) a.add(new Option(`${c.name} job alerts`, "jobs-" + c.slug));
+  $("nErr").hidden = true; $("nOk").hidden = true; $("ndlg").showModal();
+};
+$("nSend").onclick = async () => {
+  $("nErr").hidden = true; $("nOk").hidden = true;
+  const body = { audience: $("nAud").value, title: $("nTitle").value.trim(), body: $("nBody").value.trim(), ...($("nLink").value.trim() ? { link: $("nLink").value.trim() } : {}) };
+  if (!confirm(`Send "${body.title}" to ${$("nAud").selectedOptions[0].text}?`)) return;
+  $("nSend").disabled = true;
+  try { const r = await japi("/admin/notify", { method: "POST", body }); $("nOk").textContent = "✓ " + r.message; $("nOk").hidden = false; $("nTitle").value = ""; $("nBody").value = ""; $("nLink").value = ""; }
+  catch (x) { $("nErr").textContent = x.message; $("nErr").hidden = false; }
+  finally { $("nSend").disabled = false; }
+};
 $("jBulk").onclick = () => { $("bErr").hidden = true; $("bReport").innerHTML = ""; $("bGo").disabled = true; $("bdlg").showModal(); };
 $("bTpl").onclick = () => { $("bText").value = JSON.stringify(BULK_EXAMPLE, null, 2); $("bGo").disabled = true; };
 $("bText").addEventListener("input", () => { $("bGo").disabled = true; $("bReport").innerHTML = ""; });
