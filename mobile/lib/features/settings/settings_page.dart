@@ -8,6 +8,7 @@ import 'package:widgetry_academy/core/theme/app_colors.dart';
 import 'package:widgetry_academy/core/usecase/usecase.dart';
 import 'package:widgetry_academy/core/utils/link_launcher.dart';
 import 'package:widgetry_academy/core/widgets/common.dart';
+import 'package:widgetry_academy/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:widgetry_academy/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:widgetry_academy/features/jobs/domain/entities/jobs_meta.dart';
 import 'package:widgetry_academy/features/jobs/domain/usecases/jobs_usecases.dart';
@@ -49,6 +50,42 @@ class _SettingsPageState extends State<SettingsPage> {
         onTap: onTap,
       );
 
+  Future<void> _deleteAccount() async {
+    final router = GoRouter.of(context);
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete your account?'),
+        content: const Text(
+          'This permanently deletes your sign-in, Talent Network profile and resume, jobs you posted, your course registration and saved jobs on this phone. It can\'t be undone.\n\n'
+          'If you paid a course fee, we keep the payment record because tax law requires it.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.bad),
+            child: const Text('Delete account'),
+          ),
+        ],
+      ),
+    );
+    if (sure != true || !mounted) return;
+    setState(() => _deleting = true);
+    final r = await getIt<DeleteAccount>()(const NoParams());
+    if (!mounted) return;
+    setState(() => _deleting = false);
+    r.fold(
+      (f) => showMessage(context, f.message),
+      (msg) {
+        showMessage(context, msg);
+        router.go('/jobs');
+      },
+    );
+  }
+
+  bool _deleting = false;
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthCubit>().state;
@@ -77,6 +114,17 @@ class _SettingsPageState extends State<SettingsPage> {
               },
             ),
           ]),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Space.sm, Space.sm, Space.sm, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: _deleting ? null : _deleteAccount,
+                style: TextButton.styleFrom(foregroundColor: Palette.of(context).muted),
+                child: BusyLabel(busy: _deleting, label: 'Delete account'),
+              ),
+            ),
+          ),
         ] else ...[
           const SectionLabel('Account', padding: EdgeInsets.fromLTRB(Space.page, Space.sm, Space.page, Space.sm)),
           Group(children: [_link(Icons.login_rounded, 'Sign in', () => context.push('/sign-in'))]),

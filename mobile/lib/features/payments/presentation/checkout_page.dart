@@ -14,7 +14,8 @@ import 'package:widgetry_academy/features/courses/presentation/pages/course_deta
 import 'package:widgetry_academy/features/payments/domain/payments.dart';
 import 'package:widgetry_academy/features/payments/presentation/checkout_cubit.dart';
 
-/// Pay the course fee in the app with Razorpay (UPI, cards, net banking, wallets).
+/// Pay the course fee in the app. Android: Google's screen offers Google Play or Razorpay.
+/// Elsewhere: Razorpay (UPI, cards, net banking, wallets).
 class CheckoutPage extends StatelessWidget {
   const CheckoutPage({super.key, required this.courseId});
   final String courseId;
@@ -57,8 +58,15 @@ class CheckoutPage extends StatelessWidget {
                     ? null
                     : BottomActionBar(
                         child: FilledButton(
-                          onPressed: s.paying || s.selected == null ? null : context.read<CheckoutCubit>().pay,
-                          child: BusyLabel(busy: s.paying, label: s.selected == null ? 'Choose an option' : 'Pay ${Fmt.rupees(s.selected!.amount)}'),
+                          onPressed: context.read<CheckoutCubit>().canPay ? context.read<CheckoutCubit>().pay : null,
+                          child: BusyLabel(
+                            busy: s.paying,
+                            label: s.selected == null
+                                ? 'Choose an option'
+                                : context.read<CheckoutCubit>().needsState && s.taxState == null
+                                    ? 'Choose your state'
+                                    : 'Pay ${Fmt.rupees(s.selected!.amount)}',
+                          ),
                         ),
                       ),
               ),
@@ -91,12 +99,21 @@ class _Plans extends StatelessWidget {
         }),
         const SizedBox(height: Space.md),
       ],
+      if (cubit.needsState) ...[
+        const SizedBox(height: Space.sm),
+        _StateField(value: state.taxState, states: o.android?.states ?? const [], enabled: !state.paying, onChanged: cubit.chooseState),
+      ],
       const SizedBox(height: Space.lg),
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(Icons.lock_outline_rounded, size: 18, color: p.accent),
         const SizedBox(width: Space.md),
         Expanded(
-          child: Text('Secure payment by Razorpay. Pay with UPI, debit or credit card, net banking or wallets. You get a receipt by email.', style: t.bodySmall),
+          child: Text(
+            cubit.needsState
+                ? 'Next, Google asks how you want to pay: Google Play, or Razorpay (UPI, debit or credit card, net banking, wallets). Both are secure, and you get a receipt either way.'
+                : 'Secure payment by Razorpay. Pay with UPI, debit or credit card, net banking or wallets. You get a receipt by email.',
+            style: t.bodySmall,
+          ),
         ),
       ]),
       const SizedBox(height: Space.md),
@@ -106,6 +123,105 @@ class _Plans extends StatelessWidget {
         Expanded(child: Text('Full refund if the course isn\'t right for you before Session 2.', style: t.bodySmall)),
       ]),
     ]);
+  }
+}
+
+/// "WEST BENGAL" → "West Bengal", "JAMMU AND KASHMIR" → "Jammu and Kashmir".
+String stateLabel(String s) => s
+    .toLowerCase()
+    .split(' ')
+    .map((w) => w == 'and' || w.isEmpty ? w : w[0].toUpperCase() + w.substring(1))
+    .join(' ');
+
+/// The student's state. Google needs it for tax when the payment goes through Razorpay.
+class _StateField extends StatelessWidget {
+  const _StateField({required this.value, required this.states, required this.enabled, required this.onChanged});
+  final String? value;
+  final List<String> states;
+  final bool enabled;
+  final ValueChanged<String> onChanged;
+
+  Future<void> _pick(BuildContext context) async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (_) => _StateSheet(states: states, selected: value),
+    );
+    if (picked != null) onChanged(picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final p = Palette.of(context);
+    return Material(
+      color: p.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.lg), side: BorderSide(color: p.line)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: enabled ? () => _pick(context) : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.md + 2),
+          child: Row(children: [
+            Icon(Icons.place_outlined, size: 20, color: p.muted),
+            const SizedBox(width: Space.md),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Your state', style: t.bodySmall),
+                const SizedBox(height: 2),
+                Text(value == null ? 'Choose' : stateLabel(value!), style: t.bodyLarge?.copyWith(fontWeight: FontWeight.w600, color: value == null ? p.faint : p.ink)),
+              ]),
+            ),
+            Icon(Icons.expand_more_rounded, color: p.faint),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+class _StateSheet extends StatefulWidget {
+  const _StateSheet({required this.states, this.selected});
+  final List<String> states;
+  final String? selected;
+  @override
+  State<_StateSheet> createState() => _StateSheetState();
+}
+
+class _StateSheetState extends State<_StateSheet> {
+  String _q = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final p = Palette.of(context);
+    final list = widget.states.where((s) => s.contains(_q.toUpperCase().trim())).toList();
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.75,
+      child: Column(children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(Space.page, 0, Space.page, Space.sm),
+          child: TextField(
+            autofocus: false,
+            decoration: const InputDecoration(hintText: 'Search your state', prefixIcon: Icon(Icons.search_rounded)),
+            onChanged: (v) => setState(() => _q = v),
+          ),
+        ),
+        Expanded(
+          child: list.isEmpty
+              ? Center(child: Text('No match', style: TextStyle(color: p.muted)))
+              : ListView.builder(
+                  itemCount: list.length,
+                  itemBuilder: (_, i) => ListTile(
+                    title: Text(stateLabel(list[i])),
+                    trailing: list[i] == widget.selected ? Icon(Icons.check_rounded, color: p.accent) : null,
+                    onTap: () => Navigator.pop(context, list[i]),
+                  ),
+                ),
+        ),
+      ]),
+    );
   }
 }
 

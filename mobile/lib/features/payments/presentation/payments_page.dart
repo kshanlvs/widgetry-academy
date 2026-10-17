@@ -136,7 +136,7 @@ class _Body extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: Space.page),
           child: Text(
             h.amountPaid > 0
-                ? 'Your payment was recorded by our team. Razorpay emailed you the receipt; for a copy, message us on WhatsApp.'
+                ? 'Your payment was recorded by our team. You got a receipt by email; for a copy, message us on WhatsApp.'
                 : 'No payments yet. Receipts for payments made in the app appear here.',
             style: t.bodyMedium?.copyWith(color: p.muted),
           ),
@@ -166,7 +166,7 @@ class _Body extends StatelessWidget {
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Icon(Icons.lock_outline_rounded, size: 16, color: p.faint),
           const SizedBox(width: Space.sm),
-          Expanded(child: Text('Payments are processed securely by Razorpay. We never see or store your card or UPI details.', style: t.bodySmall?.copyWith(color: p.faint))),
+          Expanded(child: Text('Payments are processed securely by Razorpay or Google Play. We never see or store your card or UPI details.', style: t.bodySmall?.copyWith(color: p.faint))),
         ]),
       ),
     ]);
@@ -241,7 +241,7 @@ class _ReceiptSheetState extends State<_ReceiptSheet> {
         const SizedBox(height: Space.lg),
         Fact(label: 'Payment ID', value: r.paymentId),
         const SizedBox(height: Space.md),
-        Fact(label: 'Paid on', value: [if (r.paidAt != null) Fmt.date(r.paidAt!), '${r.methodLabel} via Razorpay'].join(' · ')),
+        Fact(label: 'Paid on', value: [if (r.paidAt != null) Fmt.date(r.paidAt!), r.paidWith].join(' · ')),
         const SizedBox(height: Space.xl),
         Row(children: [
           Expanded(

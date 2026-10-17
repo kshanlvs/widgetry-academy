@@ -5,7 +5,16 @@ import { z } from "zod";
 import { query } from "../db.js";
 import { wrap, HttpError } from "../errors.js";
 import { requireAuth } from "../auth.js";
-import { COURSE, PLAN_TITLE, coursePrice, fulfil, gateway, paymentsEnabled, plansFor, razorpayConfig, reconcile, store, validPaymentSignature, validWebhookSignature } from "../payments.js";
+import { INDIA_STATES, PLAY_PRODUCTS, planForProduct, playAccountId, playApi, playConfig } from "../play.js";
+import { COURSE, PLAN_TITLE, bookingAmount, coursePrice, fulfil, gateway, paymentsEnabled, plansFor, razorpayConfig, reconcile, store, validPaymentSignature, validWebhookSignature } from "../payments.js";
+
+/**
+ * Google Play products have fixed prices (set once in Play Console). A plan is offered through Google's
+ * choice screen only when its amount is that standard price; an amount adjusted by hand (rare) is paid with Razorpay.
+ */
+export const playPrice = (plan: string) =>
+  ({ "early-bird": coursePrice("early-bird"), regular: coursePrice("regular"), booking: bookingAmount(), balance: coursePrice("booking") - bookingAmount() } as Record<string, number>)[plan];
+const playProductFor = (pl: { id: string; amount: number }) => (pl.amount === playPrice(pl.id) ? PLAY_PRODUCTS[pl.id] : undefined);
 
 export const paymentsRouter = Router();
 
@@ -19,14 +28,24 @@ paymentsRouter.get("/payments/plans", requireAuth, wrap(async (req, res) => {
   await reconcile(req.user!.uid);
   const reg = await store().get(req.user!.uid);
   const p = await plansFor(reg);
-  res.json({ enabled: paymentsEnabled(), course: COURSE, status: p.status, plans: p.plans, amountPaid: reg?.amountPaid ?? 0 });
+  res.json({
+    enabled: paymentsEnabled(), course: COURSE, status: p.status, amountPaid: reg?.amountPaid ?? 0,
+    plans: p.plans.map(pl => ({ ...pl, playProductId: playProductFor(pl) })),
+    // Android: Google's choice screen (Google Play or Razorpay); see src/play.ts
+    android: { billing: playConfig().androidBilling, accountId: playAccountId(req.user!.uid), states: INDIA_STATES },
+  });
 }));
 
-const orderBody = z.object({ plan: z.enum(["early-bird", "regular", "booking", "balance"]) });
+const orderBody = z.object({
+  plan: z.enum(["early-bird", "regular", "booking", "balance"]),
+  // Set when the student picked Razorpay on Google Play's choice screen (Android)
+  externalTransactionToken: z.string().trim().min(10).max(4000).optional(),
+  state: z.enum(INDIA_STATES).optional(),
+}).refine(b => !b.externalTransactionToken || b.state, { path: ["state"], message: "Choose your state" });
 
 paymentsRouter.post("/payments/order", requireAuth, orderLimit, wrap(async (req, res) => {
   needsPayments();
-  const { plan } = orderBody.parse(req.body);
+  const { plan, externalTransactionToken, state } = orderBody.parse(req.body);
   const u = req.user!;
   // An earlier attempt may have gone through without being confirmed: never charge twice
   await reconcile(u.uid);
@@ -43,7 +62,8 @@ paymentsRouter.post("/payments/order", requireAuth, orderLimit, wrap(async (req,
     receipt: `wa_${u.uid.slice(0, 20)}_${Date.now().toString(36)}`.slice(0, 40),
     notes: { uid: u.uid, plan, course: COURSE, email: u.email ?? "" },
   });
-  await query("INSERT INTO payments (order_id, uid, email, plan, amount, currency) VALUES (?,?,?,?,?,?)", [order.id, u.uid, u.email, plan, order.amount, order.currency || "INR"]);
+  await query("INSERT INTO payments (order_id, uid, email, plan, amount, currency, channel, ext_token, tax_state) VALUES (?,?,?,?,?,?,?,?,?)",
+    [order.id, u.uid, u.email, plan, order.amount, order.currency || "INR", "razorpay", externalTransactionToken ?? null, state ?? null]);
 
   res.status(201).json({
     orderId: order.id,
@@ -130,4 +150,42 @@ paymentsRouter.get("/payments/mine", requireAuth, wrap(async (req, res) => {
       paidAt: r.paid_at,
     })),
   });
+}));
+
+const playBody = z.object({ productId: z.string().trim().min(3).max(100), purchaseToken: z.string().trim().min(10).max(600) });
+
+/**
+ * The student paid with Google Play on the choice screen. We check the purchase with Google,
+ * record it exactly like a Razorpay payment (same receipts, same admin view), then consume it.
+ */
+paymentsRouter.post("/payments/play/verify", requireAuth, wrap(async (req, res) => {
+  const { productId, purchaseToken } = playBody.parse(req.body);
+  const uid = req.user!.uid;
+  const plan = planForProduct(productId);
+  if (!plan) throw new HttpError(400, "Unknown product.");
+  const p = await playApi().getPurchase(productId, purchaseToken);
+  if (p.obfuscatedExternalAccountId && p.obfuscatedExternalAccountId !== playAccountId(uid)) throw new HttpError(403, "This purchase belongs to another account.");
+  if (p.purchaseState === 2) return res.status(202).json({ ok: true, status: "pending" });
+  if (p.purchaseState !== 0 || !p.orderId) throw new HttpError(400, "This purchase was not completed.");
+  const orderId = p.orderId.slice(0, 40);
+
+  const [existing] = await query<{ uid: string }>("SELECT uid FROM payments WHERE order_id = ?", [orderId]);
+  if (existing && existing.uid !== uid) throw new HttpError(403, "This purchase belongs to another account.");
+  if (!existing) {
+    const reg = await store().get(uid);
+    if (!reg) throw new HttpError(409, "Please register for the course first.");
+    const offered = (await plansFor(reg)).plans.find(x => x.id === plan && playProductFor(x) === productId);
+    if (!offered) {
+      // Paid for something no longer due (e.g. paid twice from two phones): keep a record for a refund
+      // Not consumed or acknowledged, so Google refunds it automatically after 3 days
+      console.warn(`[play] ${uid} bought ${productId} but it is not due; order ${orderId} is left for Google to refund`);
+      throw new HttpError(409, "This payment isn't due any more, so Google refunds it to you automatically within 3 days.");
+    }
+    await query("INSERT IGNORE INTO payments (order_id, uid, email, plan, amount, currency, channel, purchase_token) VALUES (?,?,?,?,?,?,?,?)",
+      [orderId, uid, req.user!.email, plan, offered.amount * 100, "INR", "google_play", purchaseToken]);
+  }
+  const r = await fulfil(orderId, orderId, "google_play");
+  // Consuming also acknowledges the purchase (unacknowledged purchases are refunded by Google after 3 days)
+  if (p.consumptionState !== 1) await playApi().consume(productId, purchaseToken).catch(e => console.warn(`[play] consume ${orderId} failed: ${e?.message}`));
+  res.json({ ok: true, status: r?.status ?? "paid", paymentId: orderId });
 }));

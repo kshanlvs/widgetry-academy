@@ -55,6 +55,14 @@ class SendPasswordReset implements UseCase<Unit, String> {
 }
 
 @injectable
+class DeleteAccount implements UseCase<String, NoParams> {
+  const DeleteAccount(this._repo);
+  final AuthRepository _repo;
+  @override
+  Future<Result<String>> call(NoParams params) => _repo.deleteAccount();
+}
+
+@injectable
 class SignOut implements UseCase<Unit, NoParams> {
   const SignOut(this._repo);
   final AuthRepository _repo;

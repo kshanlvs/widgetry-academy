@@ -9,6 +9,8 @@ import { migrate } from "../src/migrate.js";
 import { setSender } from "../src/notify.js";
 import { createHmac } from "node:crypto";
 import { setPaymentServices, type Registration } from "../src/payments.js";
+import { setPlayApi, playAccountId } from "../src/play.js";
+import { setAccountServices } from "../src/routes/account.js";
 
 const ADMIN = "dev:E4edbAvcdwTdkTdNwcdWneVWe572:admin@widgetry.test:Admin";
 const EMP = "dev:emp1:hr@acme.test:Acme HR";
@@ -514,4 +516,119 @@ test("course payments: plans from the server, order, signature check, idempotent
   assert.equal((await call("POST", "/payments/order", { plan: "regular" }, OTHER)).status, 503);
   assert.equal((await call("GET", "/payments/plans", undefined, OTHER)).body.enabled, false);
   setPaymentServices(null, null);
+});
+
+test("Google Play user choice: Play purchases verified and consumed; Razorpay choices reported to Google with state", async () => {
+  process.env.RAZORPAY_KEY_ID = "rzp_test_abc"; process.env.RAZORPAY_KEY_SECRET = "test_secret"; process.env.RAZORPAY_WEBHOOK_SECRET = "hook_secret";
+  const regs = new Map<string, Registration>();
+  const rzpPayments = new Map<string, { id: string; order_id: string; amount: number; status: string; method?: string }>();
+  let n = 100;
+  setPaymentServices(
+    {
+      async createOrder(o) { n++; return { id: "order_P" + n, amount: o.amount, currency: "INR" }; },
+      async fetchPayment(id) { return rzpPayments.get(id)!; },
+      async orderPayments(orderId) { return [...rzpPayments.values()].filter(p => p.order_id === orderId); },
+    },
+    {
+      async get(uid) { return regs.get(uid) ?? null; },
+      async addPayment(uid, p) {
+        const r = regs.get(uid)!; const plan = p.plan === "balance" ? (r.plan || "booking") : p.plan;
+        r.plan = plan; r.amountPaid = (r.amountPaid ?? 0) + p.amount; r.payStatus = r.amountPaid >= 4999 ? "paid" : "part-paid";
+        return r.payStatus;
+      },
+      async earlyBirdOpen() { return false; },
+    });
+  const purchases = new Map<string, any>(), consumed: string[] = [], reported: { id: string; body: any }[] = [];
+  setPlayApi({
+    async getPurchase(_productId, token) { const p = purchases.get(token); if (!p) throw new Error("not found"); return p; },
+    async consume(_productId, token) { consumed.push(token); },
+    async reportExternal(id, body) { reported.push({ id, body }); return true; },
+  });
+  const P1 = "dev:play1:p1@test.dev:P1", P2 = "dev:play2:p2@test.dev:P2";
+  regs.set("play1", { name: "P1", payStatus: "pending", amountPaid: 0 });
+
+  // Plans tell the app which Play product matches each plan, and the account id to pass to Google
+  let r = await call("GET", "/payments/plans", undefined, P1);
+  assert.deepEqual(r.body.plans.map((p: any) => p.playProductId), ["course_fee_full", "course_fee_booking"]);
+  assert.equal(r.body.android.billing, "user_choice");
+  assert.equal(r.body.android.accountId, playAccountId("play1"));
+  assert.ok(r.body.android.states.includes("WEST BENGAL"));
+
+  // Paying with Google Play
+  purchases.set("tok-booking-123", { purchaseState: 0, consumptionState: 0, orderId: "GPA.1234-5678-9012-34567", obfuscatedExternalAccountId: playAccountId("play1") });
+  assert.equal((await call("POST", "/payments/play/verify", { productId: "course_fee_booking", purchaseToken: "tok-booking-123" }, P2)).status, 403, "someone else's purchase");
+  r = await call("POST", "/payments/play/verify", { productId: "course_fee_booking", purchaseToken: "tok-booking-123" }, P1);
+  assert.equal(r.status, 200); assert.equal(r.body.status, "part-paid");
+  assert.deepEqual([regs.get("play1")!.plan, regs.get("play1")!.amountPaid], ["booking", 2500]);
+  assert.deepEqual(consumed, ["tok-booking-123"]);
+  r = await call("POST", "/payments/play/verify", { productId: "course_fee_booking", purchaseToken: "tok-booking-123" }, P1);
+  assert.equal(regs.get("play1")!.amountPaid, 2500, "verifying twice doesn't count twice");
+  const mine = await call("GET", "/payments/mine", undefined, P1);
+  assert.equal(mine.body.items[0].method, "google_play");
+
+  // Pending (e.g. cash at a shop) isn't counted yet
+  purchases.set("tok-pending-456", { purchaseState: 2, orderId: "GPA.2", obfuscatedExternalAccountId: playAccountId("play1") });
+  assert.equal((await call("POST", "/payments/play/verify", { productId: "course_fee_balance", purchaseToken: "tok-pending-456" }, P1)).status, 202);
+
+  // A balance adjusted by hand isn't Google Play's fixed price, so it's Razorpay-only
+  regs.set("play3", { name: "P3", payStatus: "part-paid", plan: "booking", amountPaid: 2000 });
+  r = await call("GET", "/payments/plans", undefined, "dev:play3:p3@test.dev:P3");
+  assert.deepEqual(r.body.plans.map((p: any) => [p.id, p.amount, p.playProductId ?? null]), [["balance", 2999, null]]);
+  r = await call("GET", "/payments/plans", undefined, P1);
+  assert.deepEqual(r.body.plans.map((p: any) => [p.id, p.amount, p.playProductId]), [["balance", 2499, "course_fee_balance"]]);
+
+  // Paying the balance with Razorpay chosen on Google's screen: state is required and the payment is reported
+  assert.equal((await call("POST", "/payments/order", { plan: "balance", externalTransactionToken: "ext-token-abcdef" }, P1)).status, 400, "state needed");
+  assert.equal((await call("POST", "/payments/order", { plan: "balance", externalTransactionToken: "ext-token-abcdef", state: "WESTBENGAL" }, P1)).status, 400, "only Google's state names");
+  r = await call("POST", "/payments/order", { plan: "balance", externalTransactionToken: "ext-token-abcdef", state: "WEST BENGAL" }, P1);
+  assert.equal(r.status, 201);
+  const oid = r.body.orderId;
+  rzpPayments.set("pay_Q1", { id: "pay_Q1", order_id: oid, amount: 249900, status: "captured", method: "upi" });
+  r = await call("POST", "/payments/verify", { orderId: oid, paymentId: "pay_Q1", signature: createHmac("sha256", "test_secret").update(`${oid}|pay_Q1`).digest("hex") }, P1);
+  assert.equal(r.body.status, "paid");
+  await new Promise(res => setTimeout(res, 50));
+  assert.equal(reported.length, 1);
+  assert.equal(reported[0]!.id, oid);
+  assert.deepEqual(reported[0]!.body.originalPreTaxAmount, { priceMicros: "2499000000", currency: "INR" });
+  assert.deepEqual(reported[0]!.body.userTaxAddress, { regionCode: "IN", administrativeArea: "WEST BENGAL" });
+  assert.equal(reported[0]!.body.oneTimeTransaction.externalTransactionToken, "ext-token-abcdef");
+  const [rows] = await pool.query("SELECT reported_at FROM payments WHERE order_id = ?", [oid]) as any;
+  assert.ok(rows[0].reported_at, "marked as reported");
+
+  setPlayApi(null); setPaymentServices(null, null);
+});
+
+test("delete account: removes profile, devices, jobs and sign-in; keeps paid payment records", async () => {
+  const GONE = "dev:gone1:gone@test.dev:Gone";
+  const calls: string[] = [];
+  let paid = false;
+  setAccountServices({
+    async removeRegistration(uid) { calls.push("reg:" + uid); return paid; },
+    async removeMentorApplications(uid) { calls.push("mentor:" + uid); },
+    async deleteSignIn(uid) { calls.push("auth:" + uid); },
+  });
+  assert.equal((await call("DELETE", "/me")).status, 401);
+  assert.equal((await call("PUT", "/talent/me", profile(), GONE)).status, 200);
+  assert.equal((await call("POST", "/me/devices", { token: "tok-gone-0123456789abcdef" }, GONE)).status, 201);
+  await pool.query("INSERT INTO payments (order_id, uid, plan, amount, status) VALUES ('order_gone_1','gone1','booking',250000,'created')");
+
+  let r = await call("DELETE", "/me", undefined, GONE);
+  assert.equal(r.status, 200);
+  assert.equal(r.body.keptPaymentRecords, false);
+  assert.deepEqual(calls, ["reg:gone1", "mentor:gone1", "auth:gone1"]);
+  assert.equal((await call("GET", "/talent/me", undefined, GONE)).body.profile, null);
+  const [devs] = await pool.query("SELECT COUNT(*) AS n FROM device_tokens WHERE uid = 'gone1'") as any;
+  assert.equal(Number(devs[0].n), 0);
+  const [pays] = await pool.query("SELECT COUNT(*) AS n FROM payments WHERE uid = 'gone1'") as any;
+  assert.equal(Number(pays[0].n), 0, "unpaid attempts are removed");
+
+  // With a paid payment, the record stays (tax law) and the person is told
+  await pool.query("INSERT INTO payments (order_id, uid, plan, amount, status, paid_at) VALUES ('order_gone_2','gone1','booking',250000,'paid',NOW())");
+  paid = true;
+  r = await call("DELETE", "/me", undefined, GONE);
+  assert.equal(r.body.keptPaymentRecords, true);
+  assert.match(r.body.message, /tax law/);
+  const [kept] = await pool.query("SELECT COUNT(*) AS n FROM payments WHERE uid = 'gone1'") as any;
+  assert.equal(Number(kept[0].n), 1);
+  setAccountServices(null);
 });

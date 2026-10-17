@@ -4,8 +4,9 @@ publish_to: none
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.8.0 <4.0.0"
-  flutter: ">=3.35.0"
+  sdk: ">=3.12.0 <4.0.0"
+  # Play requires Billing Library 8: in_app_purchase_android 0.5, which needs Flutter 3.44
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
@@ -32,6 +33,9 @@ dependencies:
   google_sign_in: ^7.2.0
   google_fonts: ^6.2.1
   razorpay_flutter: ^1.4.7
+  # Google Play Billing with user choice (Google Play or Razorpay, India)
+  in_app_purchase: ^3.3.1
+  in_app_purchase_android: ^0.5.4
   firebase_messaging: ^15.2.5
 
   # Device features and UI
@@ -52,6 +56,9 @@ dev_dependencies:
   json_serializable: ^6.9.5
   bloc_test: ^10.0.0
   mocktail: ^1.0.4
+  # App icon and launch screen: dart run flutter_launcher_icons && dart run flutter_native_splash:create
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
 
 # image 4.11 (used by pdf/printing) calls archive's decodeLazy, which only exists in newer archive 4.x.
 # Another package holds archive back at 4.0.x, so force a version that has it.
@@ -62,3 +69,20 @@ flutter:
   uses-material-design: true
   assets:
     - assets/chatbot/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon/icon.png
+  remove_alpha_ios: true
+  adaptive_icon_background: "#0C2A23"
+  adaptive_icon_foreground: assets/icon/icon-foreground.png
+  adaptive_icon_monochrome: assets/icon/icon-monochrome.png
+
+flutter_native_splash:
+  color: "#0C2A23"
+  image: assets/icon/splash.png
+  android_12:
+    color: "#0C2A23"
+    image: assets/icon/splash.png
+  web: false

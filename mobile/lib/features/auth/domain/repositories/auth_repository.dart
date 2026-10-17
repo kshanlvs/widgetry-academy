@@ -10,4 +10,7 @@ abstract interface class AuthRepository {
   Future<Result<AppUser>> signUpWithEmail({required String name, required String email, required String password});
   Future<Result<Unit>> sendPasswordReset(String email);
   Future<Result<Unit>> signOut();
+  /// Deletes the account and its data on our server (payment records stay, as tax law requires),
+  /// signs out and clears what the app saved on this phone. Returns the server's message.
+  Future<Result<String>> deleteAccount();
 }

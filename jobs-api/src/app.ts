@@ -11,6 +11,7 @@ import { talentRouter } from "./routes/talent.js";
 import { adminRouter } from "./routes/admin.js";
 import { devicesRouter } from "./routes/devices.js";
 import { paymentsRouter } from "./routes/payments.js";
+import { accountRouter } from "./routes/account.js";
 
 export function createApp() {
   const app = express();
@@ -53,6 +54,7 @@ export function createApp() {
   api.use(talentRouter);
   api.use(devicesRouter);
   api.use(paymentsRouter);
+  api.use(accountRouter);
   api.use("/admin", adminRouter);
   api.use((_req, res) => res.status(404).json({ error: "Not found." }));
   api.use(errorHandler);

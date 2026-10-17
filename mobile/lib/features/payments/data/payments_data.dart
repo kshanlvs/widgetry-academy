@@ -1,5 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/billing_client_wrappers.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:injectable/injectable.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:widgetry_academy/core/error/guard.dart';
@@ -46,7 +51,15 @@ class PaymentsRepositoryImpl implements PaymentsRepository {
   @override
   Future<Result<PaymentOptions>> options() => guard(() async {
         final j = await _api.get('/payments/plans');
+        final a = j['android'] as Map?;
         return PaymentOptions(
+          android: a == null
+              ? null
+              : AndroidBilling(
+                  userChoice: a['billing'] == 'user_choice',
+                  accountId: '${a['accountId'] ?? ''}',
+                  states: [for (final x in (a['states'] as List? ?? const [])) '$x'],
+                ),
           enabled: j['enabled'] == true,
           course: '${j['course'] ?? 'Flutter in 10 Days'}',
           status: '${j['status'] ?? 'unpaid'}',
@@ -60,14 +73,19 @@ class PaymentsRepositoryImpl implements PaymentsRepository {
                 amount: (p['amount'] as num?)?.round() ?? 0,
                 fullPrice: (p['fullPrice'] as num?)?.round() ?? 0,
                 recommended: p['recommended'] == true,
+                playProductId: p['playProductId'] == null ? null : '${p['playProductId']}',
               ),
           ],
         );
       });
 
   @override
-  Future<Result<CheckoutOrder>> createOrder(String planId) => guard(() async {
-        final j = await _api.post('/payments/order', body: {'plan': planId});
+  Future<Result<CheckoutOrder>> createOrder(String planId, {String? externalToken, String? state}) => guard(() async {
+        final j = await _api.post('/payments/order', body: {
+          'plan': planId,
+          if (externalToken != null) 'externalTransactionToken': externalToken,
+          if (externalToken != null && state != null) 'state': state,
+        });
         final pre = (j['prefill'] as Map?) ?? const {};
         return CheckoutOrder(
           orderId: '${j['orderId']}',
@@ -87,6 +105,109 @@ class PaymentsRepositoryImpl implements PaymentsRepository {
         final j = await _api.post('/payments/verify', body: {'orderId': orderId, 'paymentId': paymentId, 'signature': signature});
         return '${j['status'] ?? 'paid'}';
       });
+
+  @override
+  Future<Result<String>> verifyStorePurchase({required String productId, required String token}) => guard(() async {
+        final j = await _api.post('/payments/play/verify', body: {'productId': productId, 'purchaseToken': token});
+        return '${j['status'] ?? 'pending'}';
+      });
+}
+
+/// Google Play Billing with user choice (India alternative billing): Google shows the
+/// student Google Play and Razorpay side by side. Purchases are not consumed here;
+/// the server consumes them after counting the payment, so nothing is lost if the app closes.
+@LazySingleton(as: StoreBilling)
+class PlayStoreBilling implements StoreBilling {
+  final InAppPurchase _iap = InAppPurchase.instance;
+  InAppPurchaseAndroidPlatformAddition get _android => _iap.getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
+  Future<void>? _ready;
+
+  @override
+  bool get supported => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  Future<void> _init() => _ready ??= _android.setBillingChoice(BillingChoiceMode.userChoiceBilling).catchError((Object e) {
+        _ready = null;
+        throw e;
+      });
+
+  static const _unavailable = StoreFailed("Google Play payments aren't available on this phone. Update the Play Store app, sign in to it, and try again.");
+  static const _owned = '_owned';
+
+  @override
+  Future<StoreResult> buy({required String productId, required String accountId}) async {
+    try {
+      await _init();
+      if (!await _iap.isAvailable()) return _unavailable;
+      final q = await _iap.queryProductDetails({productId});
+      final product = q.productDetails.where((p) => p.id == productId).firstOrNull;
+      if (product == null) return const StoreFailed("This payment option isn't available right now. Please try again in a while, or message us on WhatsApp.");
+
+      final done = Completer<StoreResult>();
+      void finish(StoreResult r) {
+        if (!done.isCompleted) done.complete(r);
+      }
+
+      final purchases = _iap.purchaseStream.listen((list) {
+        for (final p in list) {
+          if (p.productID.isNotEmpty && p.productID != productId) continue;
+          final token = p.verificationData.serverVerificationData;
+          switch (p.status) {
+            case PurchaseStatus.purchased || PurchaseStatus.restored when token.isNotEmpty:
+              finish(StorePurchased(productId: productId, token: token));
+            case PurchaseStatus.pending:
+              finish(const StorePending());
+            case PurchaseStatus.canceled:
+              finish(const StoreCancelled());
+            case PurchaseStatus.error:
+              final owned = (p.error?.message ?? '').contains('itemAlreadyOwned');
+              finish(owned ? const StoreFailed(_owned) : StoreFailed(_message(p.error?.message)));
+            default:
+              break;
+          }
+        }
+      }, onError: (Object _) => finish(const StoreFailed("The payment didn't go through. No money was taken. Please try again.")));
+      final choice = _android.userChoiceDetailsStream.listen((d) => finish(StoreChoseRazorpay(d.externalTransactionToken)));
+
+      try {
+        final started = await _iap.buyConsumable(
+          purchaseParam: GooglePlayPurchaseParam(productDetails: product, applicationUserName: accountId),
+          autoConsume: false,
+        );
+        if (!started) finish(_unavailable);
+        var r = await done.future;
+        // Bought earlier but never confirmed (e.g. the app closed): hand that purchase to the server.
+        if (r is StoreFailed && r.message == _owned) {
+          final mine = (await unfinished(accountId: accountId)).where((p) => p.productId == productId).firstOrNull;
+          r = mine ?? const StoreFailed('A previous payment is still being processed. Please try again in a few minutes.');
+        }
+        return r;
+      } finally {
+        await purchases.cancel();
+        await choice.cancel();
+      }
+    } on PlatformException {
+      return _unavailable;
+    }
+  }
+
+  @override
+  Future<List<StorePurchased>> unfinished({required String accountId}) async {
+    await _init();
+    final r = await _android.queryPastPurchases();
+    return [
+      for (final p in r.pastPurchases)
+        if (p.productID.startsWith('course_fee_') &&
+            p.status == PurchaseStatus.purchased &&
+            (p.billingClientPurchase.obfuscatedAccountId == null || p.billingClientPurchase.obfuscatedAccountId == accountId))
+          StorePurchased(productId: p.productID, token: p.verificationData.serverVerificationData),
+    ];
+  }
+
+  static String _message(String? code) => switch (code ?? '') {
+        final c when c.contains('serviceUnavailable') || c.contains('networkError') => 'No connection to Google Play. No money was taken. Please try again.',
+        final c when c.contains('billingUnavailable') => _unavailable.message,
+        _ => "The payment didn't go through. No money was taken. Please try again.",
+      };
 }
 
 /// Razorpay Standard Checkout (UPI, cards, net banking, wallets) through the official plugin.

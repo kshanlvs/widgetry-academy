@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delete your account | Widgetry Academy</title><meta name="description" content="Delete your Widgetry Academy account and data, from the app or from this page.">
+<link rel="canonical" href="https://widgetryacademy.in/delete-account.html">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=DM+Sans:wght@400;600;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="legal.css">
+<style>
+.btn{display:inline-flex;align-items:center;gap:10px;border:0;border-radius:12px;padding:13px 20px;font:inherit;font-weight:700;font-size:16px;cursor:pointer}
+.btn[disabled]{opacity:.55;cursor:default}
+.google{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.danger{background:#b3261e;color:#fff}
+.ghost{background:none;color:var(--accent);padding:13px 6px}
+.note{color:var(--muted);font-size:15px}
+.err{color:#b3261e;font-weight:600}
+.done{border-color:#9fd3bf;background:#eef8f3}
+label.ck{display:flex;gap:10px;align-items:flex-start;margin:14px 0 18px;font-size:16px}
+label.ck input{margin-top:5px;width:18px;height:18px;accent-color:#b3261e}
+</style></head><body>
+<header><div class="w"><a href="./">Widgetry Academy</a><nav><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="contact.html">Contact</a></nav></div></header>
+<main>
+<h1>Delete your account</h1><p class="upd">Widgetry Academy app and website</p>
+
+<p>You can delete your Widgetry Academy account at any time. It takes effect immediately.</p>
+
+<h2>In the app</h2>
+<p>Open the Widgetry Academy app, go to <b>Profile → Settings → Delete account</b>, and confirm.</p>
+
+<h2>On this page</h2>
+<div class="card" id="box">
+  <p class="note" id="loading">Loading…</p>
+  <div id="signedOut" hidden>
+    <p>Sign in with the Google account you use in the app.</p>
+    <button class="btn google" id="signIn" type="button"></button>
+  </div>
+  <div id="signedIn" hidden>
+    <p>Signed in as <b style="display:inline;text-transform:none;letter-spacing:0;font-size:inherit;color:inherit" id="email"></b>.</p>
+    <label class="ck"><input type="checkbox" id="sure"> I understand my account and data will be permanently deleted and can't be recovered.</label>
+    <button class="btn danger" id="del" type="button" disabled>Delete my account</button>
+    <button class="btn ghost" id="other" type="button">Use another account</button>
+  </div>
+  <p class="err" id="err" hidden></p>
+</div>
+
+<h2>What is deleted</h2>
+<ul>
+  <li>Your sign-in account (name, email and photo from Google).</li>
+  <li>Your Talent Network profile and resume, photo, skills and job preferences.</li>
+  <li>Jobs you posted as an employer.</li>
+  <li>Your course registration, unless you paid for it (see below).</li>
+  <li>Your mentor application, if you sent one.</li>
+  <li>Notification tokens for your phones.</li>
+</ul>
+<p class="note">Jobs you saved in the app are stored only on your phone and are removed when you uninstall the app.</p>
+
+<h2>What we keep, and for how long</h2>
+<p>If you paid a course fee, we keep the payment record (name, email, amount, date and payment ID) because Indian tax law (GST) requires businesses to keep billing records, currently for about 6 years. It is used only for tax, accounting and refunds, and is deleted when that period ends. Job reports you made stay, without anything that identifies you.</p>
+
+<p>Can't sign in, or need help? Email us from the <a href="contact.html">Contact page</a> with the email address of your account and we'll delete it within 7 days.</p>
+</main>
+<footer><div class="w">© 2026 Widgetry Academy · Registered MSME (Udyam): UDYAM-WB-22-0009252</div></footer>
+<script type="module">
+import { $, api, onUser, googleSignIn, logOut, GOOGLE_SVG } from "./jobs.js";
+const show = (id, on) => ($(id).hidden = !on);
+const err = m => { $("err").textContent = m || ""; show("err", !!m); };
+$("signIn").innerHTML = GOOGLE_SVG + " Continue with Google";
+$("signIn").onclick = () => googleSignIn().catch(e => err(e.message));
+$("other").onclick = () => logOut();
+$("sure").onchange = () => ($("del").disabled = !$("sure").checked);
+let deleted = false;
+onUser(u => {
+  if (deleted) return;
+  show("loading", false); err("");
+  show("signedOut", !u); show("signedIn", !!u);
+  if (u) { $("email").textContent = u.email || ""; $("sure").checked = false; $("del").disabled = true; }
+});
+$("del").onclick = async () => {
+  $("del").disabled = true; $("del").textContent = "Deleting…"; err("");
+  try {
+    const r = await api("/me", { method: "DELETE", auth: true });
+    deleted = true;
+    $("box").classList.add("done");
+    $("box").innerHTML = "<p><b style='color:#0f6b56'>Account deleted</b></p><p></p>";
+    $("box").querySelectorAll("p")[1].textContent = r.message || "Your account is deleted.";
+    await logOut().catch(() => {});
+  } catch (e) {
+    err(e.message); $("del").textContent = "Delete my account"; $("del").disabled = !$("sure").checked;
+  }
+};
+</script>
+</body></html>

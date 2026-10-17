@@ -10,6 +10,7 @@ import { adminApp } from "./firebase.js";
 import { query, exec } from "./db.js";
 import { HttpError } from "./errors.js";
 import { notifyUser, SITE } from "./notify.js";
+import { reportExternal } from "./play.js";
 
 const env = process.env;
 export const razorpayConfig = () => ({
@@ -160,6 +161,8 @@ export async function fulfil(orderId: string, paymentId: string, method?: string
     await exec("UPDATE payments SET status = 'created', payment_id = NULL, method = NULL, paid_at = NULL WHERE order_id = ?", [orderId]);
     throw e;
   }
+  // Razorpay chosen on Google's choice screen: Google must be told within 24 hours (retried if this fails)
+  void reportExternal(orderId).catch(e => console.warn(`[play] report ${orderId} failed: ${e?.message}`));
   void notifyUser(order.uid, {
     title: status === "paid" ? "Payment received. Your seat is confirmed" : "Booking received. Your seat is held",
     body: status === "paid" ? `Thank you! You're all set for ${COURSE}. Batch details come on WhatsApp.` : `We received ₹${Math.round(order.amount / 100).toLocaleString("en-IN")}. Pay the balance from the app before the course starts.`,
@@ -179,7 +182,7 @@ export async function reconcile(uid: string): Promise<number> {
   let fixed = 0;
   try {
     const rows = await query<{ order_id: string; amount: number }>(
-      "SELECT order_id, amount FROM payments WHERE uid = ? AND status = 'created' AND created_at > (CURRENT_TIMESTAMP - INTERVAL 3 DAY) ORDER BY created_at DESC LIMIT 3", [uid]);
+      "SELECT order_id, amount FROM payments WHERE uid = ? AND status = 'created' AND channel = 'razorpay' AND created_at > (CURRENT_TIMESTAMP - INTERVAL 3 DAY) ORDER BY created_at DESC LIMIT 3", [uid]);
     for (const r of rows) {
       const items = await gateway().orderPayments(r.order_id);
       const paid = items.find(p => p.status === "captured" && p.amount === r.amount && (p.order_id ?? r.order_id) === r.order_id);

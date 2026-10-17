@@ -8,7 +8,9 @@ The Android and iOS app for widgetryacademy.in. It covers:
 - **Guides:** the blog, read from `blog/feed.json`.
 - **Push notifications:** new jobs by category, academy news, and personal alerts such as "your job is live" or "you're verified".
 
-Package / bundle ID: `in.widgetryacademy.app` · Flutter 3.35 or newer · Dart 3.8 or newer
+Package / bundle ID: `in.widgetryacademy.app` · Flutter 3.44 or newer · Dart 3.12 or newer
+
+**Publishing on Google Play:** see [RELEASE.md](RELEASE.md).
 
 ---
 
@@ -110,7 +112,7 @@ flutter build appbundle --release              # Play Store (.aab)
 flutter build ipa --release                    # App Store
 ```
 
-For a Play Store release, set up a signing key first. Flutter's guide covers it: "Build and release an Android app" → "Signing the app". Keep the keystore and passwords out of git.
+For a Play Store release (signing key, target SDK, products, testers, listing), follow [RELEASE.md](RELEASE.md).
 
 Whenever you change a class with `@injectable`, `@lazySingleton` or `@JsonSerializable`, run build_runner again. To regenerate on every save while developing, use `dart run build_runner watch --delete-conflicting-outputs`.
 
@@ -165,9 +167,17 @@ How the design follows SOLID:
 5. Run `dart run build_runner build --delete-conflicting-outputs`.
 6. Add tests in `test/features/<name>/`.
 
-## Payments (Razorpay)
+## Payments (Razorpay and Google Play)
 
-Students pay the course fee inside the app with Razorpay Checkout: UPI, cards, net banking and wallets. Prices are set on the server, never in the app.
+Students pay the course fee inside the app. Prices are set on the server, never in the app.
+
+- **Android (Play build):** Google's user choice screen comes first. The student picks **Google Play** or **Razorpay** (UPI, cards, net banking, wallets), as Play's India alternative billing rules require.
+  - **Google Play:** the app sends the purchase token to `POST /api/payments/play/verify`. The server checks it with Google, records it like any other payment and then consumes it. Unfinished Google Play purchases are confirmed the next time the pay screen opens.
+  - **Razorpay:** the flow below runs. The order carries Google's external transaction token and the student's state (asked on the pay screen and remembered). The server reports the sale to Google within minutes, retrying every 10 minutes.
+  - **Setup:** products, enrolment, the service account and `ANDROID_BILLING` are covered in [RELEASE.md](RELEASE.md) steps 4 to 6.
+- **iOS, and Android while `ANDROID_BILLING=razorpay`:** Razorpay only.
+
+The Razorpay flow:
 
 How a payment works:
 

@@ -7,7 +7,7 @@ import 'package:widgetry_academy/core/utils/formatters.dart';
 import 'package:widgetry_academy/features/payments/domain/payments.dart';
 
 /// A one-page payment receipt (acknowledgement) the student can save or share.
-/// Razorpay also emails its own receipt for every payment.
+/// Razorpay or Google Play also email their own receipt.
 @LazySingleton(as: ReceiptBuilder)
 class PdfReceiptBuilder implements ReceiptBuilder {
   static final _green = PdfColor.fromInt(0xFF0F6B56);
@@ -80,8 +80,8 @@ class PdfReceiptBuilder implements ReceiptBuilder {
             pw.Container(height: 1, color: _line),
             pw.SizedBox(height: 6),
             row('Payment ID', r.paymentId),
-            row('Order ID', r.orderId),
-            row('Paid by', '${r.methodLabel} via Razorpay'),
+            if (r.orderId != r.paymentId) row('Order ID', r.orderId),
+            row('Paid by', r.paidWith),
             row('Date', Fmt.date(paid)),
           ]),
         ),
@@ -96,7 +96,7 @@ class PdfReceiptBuilder implements ReceiptBuilder {
         pw.Container(height: 1, color: _line),
         pw.SizedBox(height: 8),
         pw.Text(
-          'This is a payment acknowledgement from ${AppConfig.businessName}. Razorpay also emails a receipt for every payment. '
+          'This is a payment acknowledgement from ${AppConfig.businessName}. ${r.viaGooglePlay ? 'Google Play' : 'Razorpay'} also emails a receipt for every payment. '
           'Refunds follow our refund policy at ${AppConfig.refundUrl.replaceFirst('https://', '')}. Questions: WhatsApp +${AppConfig.whatsappNumber}.',
           style: st(size: 8.5, color: _muted),
         ),

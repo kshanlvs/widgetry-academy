@@ -6,7 +6,7 @@ import 'package:widgetry_academy/core/usecase/usecase.dart';
 
 /// A way to pay, decided by the server (prices never live in the app).
 class PayPlan extends Equatable {
-  const PayPlan({required this.id, required this.title, required this.note, required this.amount, required this.fullPrice, this.recommended = false});
+  const PayPlan({required this.id, required this.title, required this.note, required this.amount, required this.fullPrice, this.recommended = false, this.playProductId});
   /// "early-bird", "regular", "booking" or "balance"
   final String id;
   final String title;
@@ -16,12 +16,29 @@ class PayPlan extends Equatable {
   /// Full course price for this plan.
   final int fullPrice;
   final bool recommended;
+  /// The matching one-time product in Google Play ("course_fee_full"…), same price.
+  final String? playProductId;
   @override
-  List<Object?> get props => [id, title, note, amount, fullPrice, recommended];
+  List<Object?> get props => [id, title, note, amount, fullPrice, recommended, playProductId];
+}
+
+/// How the Android app takes payments, decided by the server.
+/// With user choice billing, Google shows its screen first and the student picks
+/// Google Play or Razorpay (India alternative billing).
+class AndroidBilling extends Equatable {
+  const AndroidBilling({required this.userChoice, required this.accountId, this.states = const []});
+  /// False during internal testing (server ANDROID_BILLING=razorpay): Razorpay only.
+  final bool userChoice;
+  /// Anonymous id passed to Google so a purchase can be matched to this account.
+  final String accountId;
+  /// Indian states and union territories as Google expects them ("WEST BENGAL").
+  final List<String> states;
+  @override
+  List<Object?> get props => [userChoice, accountId, states];
 }
 
 class PaymentOptions extends Equatable {
-  const PaymentOptions({required this.enabled, required this.course, required this.status, this.plans = const [], this.amountPaid = 0});
+  const PaymentOptions({required this.enabled, required this.course, required this.status, this.plans = const [], this.amountPaid = 0, this.android});
   /// False until Razorpay keys are set on the server.
   final bool enabled;
   final String course;
@@ -29,9 +46,10 @@ class PaymentOptions extends Equatable {
   final String status;
   final List<PayPlan> plans;
   final int amountPaid;
+  final AndroidBilling? android;
   bool get isPaid => status == 'paid';
   @override
-  List<Object?> get props => [enabled, course, status, plans, amountPaid];
+  List<Object?> get props => [enabled, course, status, plans, amountPaid, android];
 }
 
 /// A Razorpay order created by the server, ready for Checkout.
@@ -93,6 +111,52 @@ abstract interface class PaymentGateway {
   Future<GatewayResult> open(CheckoutOrder order);
 }
 
+/// What Google Play's purchase screen returned.
+sealed class StoreResult {
+  const StoreResult();
+}
+
+/// Paid with Google Play. The server checks the token with Google, then consumes it.
+final class StorePurchased extends StoreResult {
+  const StorePurchased({required this.productId, required this.token});
+  final String productId;
+  final String token;
+  @override
+  bool operator ==(Object other) => other is StorePurchased && other.productId == productId && other.token == token;
+  @override
+  int get hashCode => Object.hash(productId, token);
+}
+
+/// The student picked Razorpay on Google's choice screen. The token goes with the
+/// Razorpay order so the server can report the sale to Google.
+final class StoreChoseRazorpay extends StoreResult {
+  const StoreChoseRazorpay(this.externalToken);
+  final String externalToken;
+}
+
+final class StoreCancelled extends StoreResult {
+  const StoreCancelled();
+}
+
+/// Started but not finished (e.g. pay cash at a shop). Google tells us when it's done.
+final class StorePending extends StoreResult {
+  const StorePending();
+}
+
+final class StoreFailed extends StoreResult {
+  const StoreFailed(this.message);
+  final String message;
+}
+
+/// Google Play Billing, behind an interface so the flow can be tested without a phone.
+abstract interface class StoreBilling {
+  /// True on Android, where Play Billing exists.
+  bool get supported;
+  Future<StoreResult> buy({required String productId, required String accountId});
+  /// Course purchases Google has but our server hasn't confirmed (app closed mid-way, pending finished…).
+  Future<List<StorePurchased>> unfinished({required String accountId});
+}
+
 /// One payment made in the app, for the receipts list.
 class Receipt extends Equatable {
   const Receipt({required this.orderId, required this.paymentId, required this.plan, required this.title, required this.amount, this.method, this.paidAt});
@@ -112,9 +176,14 @@ class Receipt extends Equatable {
         'netbanking' => 'Net banking',
         'wallet' => 'Wallet',
         'emi' => 'EMI',
+        'google_play' => 'Google Play',
         null || '' => 'Online',
         final String m => m[0].toUpperCase() + m.substring(1),
       };
+
+  bool get viaGooglePlay => method == 'google_play';
+  /// "UPI via Razorpay", "Google Play"
+  String get paidWith => viaGooglePlay ? methodLabel : '$methodLabel via Razorpay';
 
   @override
   List<Object?> get props => [orderId, paymentId, plan, title, amount, method, paidAt];
@@ -148,9 +217,12 @@ abstract interface class ReceiptBuilder {
 abstract interface class PaymentsRepository {
   Future<Result<PaymentHistory>> history();
   Future<Result<PaymentOptions>> options();
-  Future<Result<CheckoutOrder>> createOrder(String planId);
+  /// [externalToken] and [state] are set when the student chose Razorpay on Google's screen.
+  Future<Result<CheckoutOrder>> createOrder(String planId, {String? externalToken, String? state});
   /// Returns the new pay status ("paid" or "part-paid").
   Future<Result<String>> verify({required String orderId, required String paymentId, required String signature});
+  /// Google Play purchase → "paid", "part-paid" or "pending" (Google is still waiting for the money).
+  Future<Result<String>> verifyStorePurchase({required String productId, required String token});
 }
 
 @injectable
@@ -169,18 +241,66 @@ class GetPaymentOptions implements UseCase<PaymentOptions, NoParams> {
   Future<Result<PaymentOptions>> call(NoParams p) => _repo.options();
 }
 
-/// The whole payment: server order → Razorpay Checkout → server confirmation.
-/// If Checkout succeeded but the confirmation can't reach the server, the result is "pending":
-/// the money is safe and Razorpay's webhook confirms it on the server.
+/// What to pay, and (on Android) how Google Play is set up and the student's state.
+class PayRequest extends Equatable {
+  const PayRequest(this.plan, {this.android, this.state});
+  final PayPlan plan;
+  final AndroidBilling? android;
+  /// Needed for Google's tax report when the student chooses Razorpay.
+  final String? state;
+  @override
+  List<Object?> get props => [plan, android, state];
+}
+
+/// The whole payment.
+///
+/// Android with user choice billing: Google's screen first, where the student picks
+/// Google Play (server checks the purchase) or Razorpay (server order → Razorpay
+/// Checkout → server confirmation, then reported to Google). Elsewhere: Razorpay only.
+///
+/// If money was taken but the confirmation can't reach the server, the result is
+/// "pending", never an error: the server confirms it on its own (webhook / recovery).
 @injectable
-class PayForCourse implements UseCase<PaymentOutcome, PayPlan> {
-  const PayForCourse(this._repo, this._gateway);
+class PayForCourse implements UseCase<PaymentOutcome, PayRequest> {
+  const PayForCourse(this._repo, this._gateway, this._store);
   final PaymentsRepository _repo;
   final PaymentGateway _gateway;
+  final StoreBilling _store;
+
+  /// Whether this request goes through Google's screen first.
+  static bool usesStore(PayRequest r, StoreBilling store) => store.supported && (r.android?.userChoice ?? false) && (r.plan.playProductId ?? '').isNotEmpty;
 
   @override
-  Future<Result<PaymentOutcome>> call(PayPlan plan) async {
-    final order = await _repo.createOrder(plan.id);
+  Future<Result<PaymentOutcome>> call(PayRequest r) async {
+    final plan = r.plan;
+    if (!usesStore(r, _store)) return _razorpay(plan);
+    if ((r.state ?? '').isEmpty) return const Err(ValidationFailure('Choose your state to continue.'));
+
+    final s = await _store.buy(productId: plan.playProductId!, accountId: r.android!.accountId);
+    switch (s) {
+      case StoreCancelled():
+        return const Success(PaymentOutcome(PaymentOutcomeKind.cancelled));
+      case StorePending():
+        return Success(PaymentOutcome(PaymentOutcomeKind.pending, amount: plan.amount));
+      case StoreFailed(:final message):
+        return Err(ServerFailure(message));
+      case StoreChoseRazorpay(:final externalToken):
+        return _razorpay(plan, externalToken: externalToken, state: r.state);
+      case StorePurchased(:final productId, :final token):
+        final v = await _repo.verifyStorePurchase(productId: productId, token: token);
+        // Refused by the server (not due, someone else's purchase): say why. Anything else
+        // (no connection…) is "confirming": the purchase stays with Google and is confirmed next time.
+        if (v case Err(failure: ServerFailure(statusCode: final int code)) when code >= 400 && code < 500) return Err(v.failureOrNull!);
+        return Success(switch (v) {
+          Success(value: 'paid') => PaymentOutcome(PaymentOutcomeKind.paid, amount: plan.amount),
+          Success(value: 'part-paid') => PaymentOutcome(PaymentOutcomeKind.partPaid, amount: plan.amount),
+          _ => PaymentOutcome(PaymentOutcomeKind.pending, amount: plan.amount),
+        });
+    }
+  }
+
+  Future<Result<PaymentOutcome>> _razorpay(PayPlan plan, {String? externalToken, String? state}) async {
+    final order = await _repo.createOrder(plan.id, externalToken: externalToken, state: state);
     switch (order) {
       case Err(:final failure):
         return Err(failure);
@@ -201,6 +321,30 @@ class PayForCourse implements UseCase<PaymentOutcome, PayPlan> {
               Err() => PaymentOutcome(PaymentOutcomeKind.pending, amount: plan.amount, paymentId: paymentId),
             });
         }
+    }
+  }
+}
+
+/// Confirms Google Play purchases the server hasn't seen yet. Returns how many were confirmed.
+/// Safe to run any time: the server ignores purchases it already counted.
+@injectable
+class RecoverStorePurchases implements UseCase<int, AndroidBilling> {
+  const RecoverStorePurchases(this._repo, this._store);
+  final PaymentsRepository _repo;
+  final StoreBilling _store;
+
+  @override
+  Future<Result<int>> call(AndroidBilling a) async {
+    if (!_store.supported || !a.userChoice) return const Success(0);
+    try {
+      var n = 0;
+      for (final p in await _store.unfinished(accountId: a.accountId)) {
+        final v = await _repo.verifyStorePurchase(productId: p.productId, token: p.token);
+        if (v case Success(value: 'paid' || 'part-paid')) n++;
+      }
+      return Success(n);
+    } catch (_) {
+      return const Success(0); // tried again next time
     }
   }
 }
