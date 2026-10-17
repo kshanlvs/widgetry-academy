@@ -50,5 +50,10 @@ dev_dependencies:
   bloc_test: ^10.0.0
   mocktail: ^1.0.4
 
+# image 4.11 (used by pdf/printing) calls archive's decodeLazy, which only exists in newer archive 4.x.
+# Another package holds archive back at 4.0.x, so force a version that has it.
+dependency_overrides:
+  archive: ^4.5.0
+
 flutter:
   uses-material-design: true
