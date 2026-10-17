@@ -52,9 +52,12 @@ class ProfileCubit extends Cubit<ProfileState> {
   final DeleteProfile _delete;
   StreamSubscription<AppUser?>? _authSub;
   String? _uid;
+  bool _authKnown = false;
 
   void _onAuth(AppUser? user) {
-    if (user?.uid == _uid) return;
+    // The first event always counts: a signed-out start (null == null) must leave the loading state
+    if (_authKnown && user?.uid == _uid) return;
+    _authKnown = true;
     _uid = user?.uid;
     if (user == null) {
       emit(const ProfileState(status: ProfileStatus.signedOut));
