@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Icon font used by Flutter's iOS-style widgets (back arrows, adaptive controls)
+  cupertino_icons: ^1.0.8
 
   # State management and architecture
   flutter_bloc: ^9.1.0
