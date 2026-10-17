@@ -6,7 +6,7 @@ Write posts as Markdown in blog-src/posts/<slug>.md with a front-matter block, t
 
     python3 blog-src/build.py
 
-It writes public/blog/<slug>.html, public/blog/index.html, public/blog/feed.xml and refreshes the
+It writes public/blog/<slug>.html, public/blog/index.html, public/blog/feed.xml (RSS), public/blog/feed.json (for the app) and refreshes the
 blog entries in public/sitemap.xml. Commit the generated files; pushing to main publishes them.
 
 Front matter (between --- lines, one "key: value" per line):
@@ -240,6 +240,12 @@ def main():
         print(f"  ✓ blog/{p['slug']}.html")
     (OUT / "index.html").write_text(index_page(posts), encoding="utf-8")
     (OUT / "feed.xml").write_text(rss(posts), encoding="utf-8")
+    # JSON feed for the mobile app (newest first)
+    feed = {"version": "https://jsonfeed.org/version/1.1", "title": "Widgetry Blog", "home_page_url": f"{SITE}/blog/",
+            "items": [{"id": p["slug"], "url": f"{SITE}/blog/{p['slug']}.html", "title": p["title"], "summary": p["description"],
+                       "date_published": p["date"], "date_modified": p["updated"], "tags": [p["tag"]],
+                       "reading_minutes": render_body(p["body_md"])[2]} for p in posts]}
+    (OUT / "feed.json").write_text(json.dumps(feed, ensure_ascii=False, indent=1), encoding="utf-8")
     update_sitemap(posts)
     print(f"Built {len(posts)} posts, index, feed and sitemap.")
 
