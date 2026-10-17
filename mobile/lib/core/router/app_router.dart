@@ -14,6 +14,7 @@ import 'package:widgetry_academy/features/courses/presentation/pages/registratio
 import 'package:widgetry_academy/features/jobs/presentation/pages/job_detail_page.dart';
 import 'package:widgetry_academy/features/jobs/presentation/pages/jobs_page.dart';
 import 'package:widgetry_academy/features/jobs/presentation/pages/saved_jobs_page.dart';
+import 'package:widgetry_academy/features/payments/presentation/checkout_page.dart';
 import 'package:widgetry_academy/features/profile/presentation/pages/profile_edit_page.dart';
 import 'package:widgetry_academy/features/profile/presentation/pages/profile_page.dart';
 import 'package:widgetry_academy/features/profile/presentation/pages/resume_page.dart';
@@ -35,7 +36,7 @@ class AppRouter {
     refreshListenable: _StreamListenable(_auth.stream),
     redirect: (context, state) {
       final path = state.uri.path;
-      final needs = _needsAccount.contains(path) || RegExp(r'^/courses/[^/]+/register$').hasMatch(path);
+      final needs = _needsAccount.contains(path) || RegExp(r'^/courses/[^/]+/(register|pay)$').hasMatch(path);
       if (needs && _auth.state.status == AuthStatus.signedOut) return '/sign-in?from=${Uri.encodeComponent(state.uri.toString())}';
       return null;
     },
@@ -62,7 +63,10 @@ class AppRouter {
                   path: ':id',
                   parentNavigatorKey: rootKey,
                   builder: (_, s) => CourseDetailPage(courseId: s.pathParameters['id']!),
-                  routes: [GoRoute(path: 'register', parentNavigatorKey: rootKey, builder: (_, s) => RegistrationPage(courseId: s.pathParameters['id']!))],
+                  routes: [
+                    GoRoute(path: 'register', parentNavigatorKey: rootKey, builder: (_, s) => RegistrationPage(courseId: s.pathParameters['id']!)),
+                    GoRoute(path: 'pay', parentNavigatorKey: rootKey, builder: (_, s) => CheckoutPage(courseId: s.pathParameters['id']!)),
+                  ],
                 ),
               ],
             ),

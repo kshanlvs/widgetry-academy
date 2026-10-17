@@ -74,7 +74,7 @@ class BatchInfo extends Equatable {
 }
 
 class Registration extends Equatable {
-  const Registration({required this.name, required this.email, required this.phone, required this.level, required this.experience, required this.course, this.payStatus = 'pending', this.status = 'registered'});
+  const Registration({required this.name, required this.email, required this.phone, required this.level, required this.experience, required this.course, this.payStatus = 'pending', this.status = 'registered', this.amountPaid = 0, this.plan});
   final String name;
   final String email;
   final String phone;
@@ -82,13 +82,20 @@ class Registration extends Equatable {
   final String experience;
   /// Course of interest (stored as "batch" on the website)
   final String course;
+  /// "pending" (or "unpaid"), "part-paid", "paid", "refunded", "cancelled" (same values as Admin → Registrations).
   final String payStatus;
   final String status;
+  /// Rupees paid so far.
+  final int amountPaid;
+  /// "early-bird", "regular" or "booking", once chosen.
+  final String? plan;
 
-  bool get isPaid => payStatus == 'paid' || payStatus == 'full' || payStatus == 'part';
+  bool get isPaid => payStatus == 'paid' || payStatus == 'full' || payStatus == 'completed';
+  bool get isPartPaid => !isPaid && (payStatus == 'part-paid' || amountPaid > 0);
+  bool get isClosed => payStatus == 'refunded' || payStatus == 'cancelled';
 
   @override
-  List<Object?> get props => [name, email, phone, level, experience, course, payStatus, status];
+  List<Object?> get props => [name, email, phone, level, experience, course, payStatus, status, amountPaid, plan];
 }
 
 /// Options shared with the website's registration form.

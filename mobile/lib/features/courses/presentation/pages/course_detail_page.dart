@@ -82,7 +82,11 @@ class CourseDetailPage extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(Space.page, Space.xl, Space.page, Space.xxxl),
                 sliver: SliverList.list(children: [
                   if (registered) ...[
-                    _Note(icon: Icons.check_circle_rounded, color: AppColors.ok, title: "You're registered", text: s.registration!.isPaid ? 'Payment received. See you in class.' : 'Pay to confirm your seat. Seats are held for a short time.'),
+                    _Note(icon: Icons.check_circle_rounded, color: AppColors.ok, title: "You're registered", text: s.registration!.isPaid
+                            ? 'Payment received. See you in class.'
+                            : s.registration!.isPartPaid
+                                ? 'Seat booked with ${Fmt.rupees(s.registration!.amountPaid)}. Pay the balance before the course starts.'
+                                : 'Pay to confirm your seat. Seats are held for a short time.'),
                     const SizedBox(height: Space.xl),
                   ],
                   if (showBatch) ...[
@@ -149,7 +153,10 @@ class CourseDetailPage extends StatelessWidget {
                               ConstrainedBox(constraints: const BoxConstraints(maxWidth: 120), child: Text(c.priceNote!, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.bodySmall)),
                           ]),
                     child: registered
-                        ? FilledButton(onPressed: () => links.openInApp(paymentLink(c)), child: const Text('Pay & confirm seat'))
+                        ? FilledButton(
+                            onPressed: s.registration!.isPaid || s.registration!.isClosed ? null : () => context.push('/courses/${c.id}/pay'),
+                            child: Text(s.registration!.isPaid ? 'Seat confirmed' : s.registration!.isPartPaid ? 'Pay the balance' : 'Pay & confirm seat'),
+                          )
                         : FilledButton(
                             onPressed: () => s.signedIn ? context.push('/courses/${c.id}/register') : context.push('/sign-in?from=${Uri.encodeComponent('/courses/${c.id}/register')}'),
                             child: const Text('Reserve my seat'),

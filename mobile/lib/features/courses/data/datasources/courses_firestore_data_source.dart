@@ -96,6 +96,8 @@ class CoursesFirestoreDataSource implements CoursesDataSource {
         course: '${d['batch'] ?? ''}',
         payStatus: '${d['payStatus'] ?? 'pending'}',
         status: '${d['status'] ?? 'registered'}',
+        amountPaid: (d['amountPaid'] as num?)?.round() ?? 0,
+        plan: d['plan'] as String?,
       );
 
   @override

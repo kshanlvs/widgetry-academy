@@ -10,6 +10,7 @@ import { jobsRouter } from "./routes/jobs.js";
 import { talentRouter } from "./routes/talent.js";
 import { adminRouter } from "./routes/admin.js";
 import { devicesRouter } from "./routes/devices.js";
+import { paymentsRouter } from "./routes/payments.js";
 
 export function createApp() {
   const app = express();
@@ -34,7 +35,12 @@ export function createApp() {
   api.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
   // Small bodies everywhere; only the photo upload and bulk job import may be larger
   const smallJson = express.json({ limit: "64kb" }), photoJson = express.json({ limit: "400kb" });
-  api.use((req, res, next) => (req.path === "/talent/me/photo" || req.path === "/admin/jobs/import" ? photoJson : smallJson)(req, res, next));
+  // The Razorpay webhook keeps its raw body: its signature is computed over the exact bytes
+  const webhookRaw = express.raw({ type: "*/*", limit: "256kb" });
+  api.use((req, res, next) => {
+    if (req.path === "/payments/webhook") return webhookRaw(req, res, err => { (req as any).rawBody = req.body; next(err); });
+    return (req.path === "/talent/me/photo" || req.path === "/admin/jobs/import" ? photoJson : smallJson)(req, res, next);
+  });
   api.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 600, standardHeaders: "draft-7", legacyHeaders: false,
     handler: (_req, res) => res.status(429).json({ error: "Too many requests. Please slow down." }) }));
   api.use(optionalAuth);
@@ -46,6 +52,7 @@ export function createApp() {
   api.use(jobsRouter);
   api.use(talentRouter);
   api.use(devicesRouter);
+  api.use(paymentsRouter);
   api.use("/admin", adminRouter);
   api.use((_req, res) => res.status(404).json({ error: "Not found." }));
   api.use(errorHandler);

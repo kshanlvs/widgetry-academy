@@ -165,6 +165,47 @@ How the design follows SOLID:
 5. Run `dart run build_runner build --delete-conflicting-outputs`.
 6. Add tests in `test/features/<name>/`.
 
+## Payments (Razorpay)
+
+Students pay the course fee inside the app with Razorpay Checkout: UPI, cards, net banking and wallets. Prices are set on the server, never in the app.
+
+How a payment works:
+
+1. **Order:** the app asks `POST /api/payments/order` for a plan. The server checks the student's registration and creates a Razorpay order for the right amount.
+2. **Checkout:** the app opens Razorpay Checkout with that order.
+3. **Confirmation, two ways:**
+   - The app sends the result to `POST /api/payments/verify`. The server checks the signature and asks Razorpay that the money arrived.
+   - Razorpay also calls `POST /api/payments/webhook`.
+
+   Whichever arrives first updates the registration in Firestore. It uses the same fields as Admin → Registrations: `plan`, `amountPaid`, `payStatus` (`part-paid` / `paid`) and `paymentId`. It also sends a push notification.
+
+| Plan | Pay now | Shown when |
+|---|---|---|
+| Early bird | ₹3,499 | until `seatsLeft` in Admin → Next batch is 0 (or `EARLY_BIRD=off`) |
+| Pay in full | ₹4,999 | always |
+| Book with a part payment | ₹2,500, then the balance | always; after it, only "Pay the balance" is offered |
+
+To change prices, set `PRICE_EARLY_BIRD`, `PRICE_REGULAR` and `PRICE_BOOKING` on Railway. If they change, update Admin → Registrations too.
+
+**One-time setup**
+
+1. **API keys:** in the Razorpay Dashboard → Account & Settings → API Keys, generate keys. Test keys start with `rzp_test_` and live keys with `rzp_live_`.
+2. **Railway variables:** add these to the jobs API service. Type the secrets in Railway yourself, never in chat or in code.
+   - `RAZORPAY_KEY_ID`
+   - `RAZORPAY_KEY_SECRET`
+   - `RAZORPAY_WEBHOOK_SECRET` (any long random text; you choose it in step 3)
+   - `FIREBASE_SERVICE_ACCOUNT`, which is required here, because the server updates the registration in Firestore
+3. **Webhook:** in the Razorpay Dashboard → Webhooks → Add new webhook:
+   - URL: `https://api.widgetryacademy.in/api/payments/webhook`
+   - Secret: the same `RAZORPAY_WEBHOOK_SECRET`
+   - Events: `payment.captured`, `order.paid` and `payment.failed`
+4. **Automatic capture:** in Razorpay → Payment capture, keep it on.
+5. **Testing:** use test keys first. Razorpay's test UPI ID `success@razorpay` succeeds and `failure@razorpay` fails. Then switch both keys to live.
+
+Until the keys are set, the app shows "In-app payment is coming soon" with a link to pay on the website.
+
+**Android release builds:** `android/app/proguard-rules.pro` (in this repo) keeps Razorpay's classes. Flutter picks it up automatically.
+
 ## Widgetry Assistant (chat)
 
 The app's chat gives the same answers as the website chatbot. The answers live in one place, `public/chatbot.js`, and are copied into the app's `assets/chatbot/intents.json`.

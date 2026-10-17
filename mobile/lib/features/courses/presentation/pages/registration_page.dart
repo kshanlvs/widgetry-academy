@@ -34,7 +34,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
     if (!(_form.currentState?.validate() ?? false)) return;
     final email = context.read<AuthCubit>().state.user?.email ?? '';
     final ok = await context.read<CoursesCubit>().register(Registration(name: _name.text, email: email, phone: _phone.text, level: _level ?? '', experience: _experience, course: course.title));
-    if (ok && mounted) context.pop();
+    // Registered: go straight to payment
+    if (ok && mounted) context.pushReplacement('/courses/${widget.courseId}/pay');
   }
 
   @override

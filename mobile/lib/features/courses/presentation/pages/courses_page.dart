@@ -79,7 +79,7 @@ class _RegisteredBanner extends StatelessWidget {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text("You're registered for ${reg.course.isEmpty ? 'Flutter in 10 Days' : reg.course}", style: t.titleSmall),
             const SizedBox(height: 2),
-            Text(reg.isPaid ? 'Payment received. Batch details come on WhatsApp.' : 'Next step: pay to confirm your seat.', style: t.bodySmall),
+            Text(reg.isPaid ? 'Payment received. Batch details come on WhatsApp.' : reg.isPartPaid ? 'Seat booked. Pay the balance before the course starts.' : 'Next step: pay to confirm your seat.', style: t.bodySmall),
           ]),
         ),
       ]),

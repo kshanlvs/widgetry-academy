@@ -48,8 +48,13 @@ void main() {
         'Please choose your class / course.',
       ));
 
-  test('isPaid covers full and part payments', () {
-    expect(const Registration(name: '', email: '', phone: '', level: '', experience: '', course: '', payStatus: 'part').isPaid, isTrue);
+  test('pay status matches Admin → Registrations', () {
+    const base = Registration(name: '', email: '', phone: '', level: '', experience: '', course: '', payStatus: 'paid');
+    expect(base.isPaid, isTrue);
+    const part = Registration(name: '', email: '', phone: '', level: '', experience: '', course: '', payStatus: 'part-paid', amountPaid: 2500, plan: 'booking');
+    expect(part.isPaid, isFalse);
+    expect(part.isPartPaid, isTrue);
     expect(valid.isPaid, isFalse);
+    expect(valid.isPartPaid, isFalse);
   });
 }
