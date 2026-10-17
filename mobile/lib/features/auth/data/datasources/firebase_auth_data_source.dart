@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:injectable/injectable.dart';
+import 'package:widgetry_academy/core/config/app_config.dart';
 import 'package:widgetry_academy/core/error/exceptions.dart';
 import 'package:widgetry_academy/features/auth/domain/entities/app_user.dart';
 
@@ -28,11 +30,25 @@ class FirebaseAuthDataSource implements AuthDataSource {
   @override
   AppUser? get currentUser => _map(_auth.currentUser);
 
+  Future<void>? _googleReady;
+
+  /// Native Google account picker (shows "Widgetry Academy", not the Firebase domain).
+  /// Needs the app's SHA-1/SHA-256 in Firebase and the OAuth consent screen app name set to Widgetry Academy.
   @override
   Future<AppUser> signInWithGoogle() => _run(() async {
-        // Uses Firebase's built-in Google flow (no extra plugin). Needs the app's SHA-1/SHA-256 in Firebase settings.
-        final provider = GoogleAuthProvider()..setCustomParameters({'prompt': 'select_account'});
-        final cred = await _auth.signInWithProvider(provider);
+        final google = GoogleSignIn.instance;
+        _googleReady ??= google.initialize(serverClientId: AppConfig.googleWebClientId.isEmpty ? null : AppConfig.googleWebClientId);
+        await _googleReady;
+        final GoogleSignInAccount account;
+        try {
+          account = await google.authenticate();
+        } on GoogleSignInException catch (e) {
+          if (e.code == GoogleSignInExceptionCode.canceled) throw const AuthException('Sign-in was cancelled.', code: 'canceled');
+          throw AuthException('Google sign-in failed (${e.code.name}). Please try again or use email.', code: e.code.name);
+        }
+        final idToken = account.authentication.idToken;
+        if (idToken == null) throw const AuthException('Google sign-in failed. Please try again or use email.');
+        final cred = await _auth.signInWithCredential(GoogleAuthProvider.credential(idToken: idToken));
         return _map(cred.user)!;
       });
 
@@ -53,7 +69,13 @@ class FirebaseAuthDataSource implements AuthDataSource {
   Future<void> sendPasswordReset(String email) => _run(() => _auth.sendPasswordResetEmail(email: email));
 
   @override
-  Future<void> signOut() => _auth.signOut();
+  Future<void> signOut() async {
+    // Also forget the Google account, so the picker appears next time
+    try {
+      await GoogleSignIn.instance.signOut();
+    } catch (_) {}
+    await _auth.signOut();
+  }
 
   Future<T> _run<T>(Future<T> Function() f) async {
     try {

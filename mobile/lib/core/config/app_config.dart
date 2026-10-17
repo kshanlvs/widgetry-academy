@@ -5,6 +5,8 @@ abstract final class AppConfig {
 
   /// Jobs and profile API (Railway). Override for local testing with
   /// `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api`.
+  /// Optional: the OAuth *Web* client ID for native Google sign-in. Usually read automatically from google-services.json.
+  static const String googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
   static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://api.widgetryacademy.in/api');
 
   static const String blogFeedUrl = '$siteUrl/blog/feed.json';
