@@ -46,7 +46,6 @@ class JobModel {
 
   final String id;
   final String title;
-  @JsonKey(defaultValue: 'flutter')
   final String category;
   final CompanyModel company;
   final String type;
@@ -54,9 +53,7 @@ class JobModel {
   final String level;
   final String? city;
   final SalaryModel? salary;
-  @JsonKey(defaultValue: <String>[])
   final List<String> skills;
-  @JsonKey(defaultValue: false)
   final bool featured;
   final DateTime? postedAt;
   final DateTime? expiresAt;
@@ -93,7 +90,6 @@ class CompanyModel {
   factory CompanyModel.fromJson(Map<String, dynamic> json) => _$CompanyModelFromJson(json);
   final String name;
   final String? website;
-  @JsonKey(defaultValue: false)
   final bool verified;
   Map<String, dynamic> toJson() => _$CompanyModelToJson(this);
 }

@@ -17,11 +17,9 @@ class BlogPostModel {
   final String id;
   final String url;
   final String title;
-  @JsonKey(defaultValue: '')
   final String summary;
   @JsonKey(name: 'date_published')
   final String? datePublished;
-  @JsonKey(defaultValue: <String>[])
   final List<String> tags;
   @JsonKey(name: 'reading_minutes')
   final int? readingMinutes;

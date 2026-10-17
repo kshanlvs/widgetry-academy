@@ -44,35 +44,24 @@ class CandidateModel {
   final String? phone;
   final String headline;
   final String? currentCompany;
-  @JsonKey(defaultValue: 0.0)
   final double experienceYears;
   final String? city;
-  @JsonKey(defaultValue: <String>['flutter'])
   final List<String> categories;
-  @JsonKey(defaultValue: <String>[])
   final List<String> workModes;
-  @JsonKey(defaultValue: <String>[])
   final List<String> jobTypes;
   final String? noticePeriod;
   final double? expectedSalaryLpa;
   final String? githubUrl;
   final String? linkedinUrl;
   final String? portfolioUrl;
-  @JsonKey(defaultValue: <AppItemModel>[])
   final List<AppItemModel> apps;
-  @JsonKey(defaultValue: <WorkItemModel>[])
   final List<WorkItemModel> experience;
-  @JsonKey(defaultValue: <EduItemModel>[])
   final List<EduItemModel> education;
-  @JsonKey(defaultValue: <CertItemModel>[])
   final List<CertItemModel> certifications;
   final String? about;
-  @JsonKey(defaultValue: <String>[])
   final List<String> skills;
-  @JsonKey(defaultValue: true)
   final bool openToWork;
   final String? hiddenCompanies;
-  @JsonKey(defaultValue: 'self')
   final String verification;
   final String? photo;
   final ResumeSettingsModel? resumeSettings;
@@ -182,14 +171,10 @@ class ResumeSettingsModel {
   factory ResumeSettingsModel.fromEntity(ResumeSettings s) =>
       ResumeSettingsModel(template: s.template, accent: s.accent, title: s.title ?? '', showPhoto: s.showPhoto, hide: s.hide);
 
-  @JsonKey(defaultValue: 'modern')
   final String template;
-  @JsonKey(defaultValue: 'green')
   final String accent;
   final String? title;
-  @JsonKey(defaultValue: false)
   final bool showPhoto;
-  @JsonKey(defaultValue: <String>[])
   final List<String> hide;
 
   Map<String, dynamic> toJson() => _$ResumeSettingsModelToJson(this);

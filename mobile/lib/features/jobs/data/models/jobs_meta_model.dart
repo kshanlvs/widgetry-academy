@@ -8,13 +8,9 @@ class JobsMetaModel {
   const JobsMetaModel({this.liveJobs = 0, this.categories = const [], this.cities = const [], this.skills = const []});
   factory JobsMetaModel.fromJson(Map<String, dynamic> json) => _$JobsMetaModelFromJson(json);
 
-  @JsonKey(defaultValue: 0)
   final int liveJobs;
-  @JsonKey(defaultValue: <CategoryModel>[])
   final List<CategoryModel> categories;
-  @JsonKey(defaultValue: <String>[])
   final List<String> cities;
-  @JsonKey(defaultValue: <String>[])
   final List<String> skills;
 
   JobsMeta toEntity() => JobsMeta(
@@ -31,9 +27,7 @@ class CategoryModel {
   factory CategoryModel.fromJson(Map<String, dynamic> json) => _$CategoryModelFromJson(json);
   final String slug;
   final String name;
-  @JsonKey(defaultValue: 0)
   final int liveJobs;
-  @JsonKey(defaultValue: <String>[])
   final List<String> suggestedSkills;
 
   JobCategory toEntity() => JobCategory(slug: slug, name: name, liveJobs: liveJobs, suggestedSkills: suggestedSkills);
