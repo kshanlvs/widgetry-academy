@@ -93,11 +93,72 @@ abstract interface class PaymentGateway {
   Future<GatewayResult> open(CheckoutOrder order);
 }
 
+/// One payment made in the app, for the receipts list.
+class Receipt extends Equatable {
+  const Receipt({required this.orderId, required this.paymentId, required this.plan, required this.title, required this.amount, this.method, this.paidAt});
+  final String orderId;
+  final String paymentId;
+  final String plan;
+  final String title;
+  /// Rupees.
+  final int amount;
+  /// "upi", "card", "netbanking", "wallet"…
+  final String? method;
+  final DateTime? paidAt;
+
+  String get methodLabel => switch (method) {
+        'upi' => 'UPI',
+        'card' => 'Card',
+        'netbanking' => 'Net banking',
+        'wallet' => 'Wallet',
+        'emi' => 'EMI',
+        null || '' => 'Online',
+        final String m => m[0].toUpperCase() + m.substring(1),
+      };
+
+  @override
+  List<Object?> get props => [orderId, paymentId, plan, title, amount, method, paidAt];
+}
+
+/// Fee summary plus receipts, from the server (it also recovers payments that weren't confirmed).
+class PaymentHistory extends Equatable {
+  const PaymentHistory({required this.course, required this.status, this.plan, this.amountPaid = 0, this.total, this.due, this.name, this.email, this.phone, this.items = const []});
+  final String course;
+  /// "unregistered", "unpaid", "part-paid", "paid", "refunded", "cancelled"
+  final String status;
+  final String? plan;
+  final int amountPaid;
+  /// Full fee for the chosen plan, once chosen.
+  final int? total;
+  /// Balance still to pay (0 when paid; null when no plan yet).
+  final int? due;
+  final String? name;
+  final String? email;
+  final String? phone;
+  final List<Receipt> items;
+  @override
+  List<Object?> get props => [course, status, plan, amountPaid, total, due, name, email, phone, items];
+}
+
+/// Makes a PDF receipt the student can save or share.
+abstract interface class ReceiptBuilder {
+  Future<List<int>> build(PaymentHistory history, Receipt receipt);
+}
+
 abstract interface class PaymentsRepository {
+  Future<Result<PaymentHistory>> history();
   Future<Result<PaymentOptions>> options();
   Future<Result<CheckoutOrder>> createOrder(String planId);
   /// Returns the new pay status ("paid" or "part-paid").
   Future<Result<String>> verify({required String orderId, required String paymentId, required String signature});
+}
+
+@injectable
+class GetPaymentHistory implements UseCase<PaymentHistory, NoParams> {
+  const GetPaymentHistory(this._repo);
+  final PaymentsRepository _repo;
+  @override
+  Future<Result<PaymentHistory>> call(NoParams p) => _repo.history();
 }
 
 @injectable

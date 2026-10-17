@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:widgetry_academy/core/theme/app_colors.dart';
 import 'package:widgetry_academy/core/utils/validators.dart';
 import 'package:widgetry_academy/core/widgets/common.dart';
+import 'package:widgetry_academy/core/widgets/state_views.dart';
 import 'package:widgetry_academy/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:widgetry_academy/features/courses/domain/entities/course.dart';
 import 'package:widgetry_academy/features/courses/presentation/cubit/courses_cubit.dart';
@@ -22,6 +23,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _phone = TextEditingController();
   String? _level;
   String _experience = RegistrationOptions.experience.first;
+  bool _submitted = false;
 
   @override
   void dispose() {
@@ -32,6 +34,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   Future<void> _submit(Course course) async {
     if (!(_form.currentState?.validate() ?? false)) return;
+    _submitted = true;
     final email = context.read<AuthCubit>().state.user?.email ?? '';
     final ok = await context.read<CoursesCubit>().register(Registration(name: _name.text, email: email, phone: _phone.text, level: _level ?? '', experience: _experience, course: course.title));
     // Registered: go straight to payment
@@ -44,6 +47,20 @@ class _RegistrationPageState extends State<RegistrationPage> {
         listener: (context, s) => showMessage(context, s.error ?? s.message!),
         builder: (context, s) {
           final course = s.byId(widget.courseId);
+          // Already registered (e.g. on the website): no second form, go to payment instead
+          if (s.registration != null && !s.submitting && !_submitted) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Reserve your seat'), titleSpacing: 0),
+              body: EmptyView(
+                icon: Icons.how_to_reg_rounded,
+                title: "You're already registered",
+                message: s.registration!.isPaid ? 'Your seat is confirmed.' : 'Next step: pay to confirm your seat.',
+                action: s.registration!.isPaid
+                    ? OutlinedButton(onPressed: () => context.go('/courses'), child: const Text('Go to my course'))
+                    : FilledButton(onPressed: () => context.pushReplacement('/courses/${widget.courseId}/pay'), child: const Text('Continue to payment')),
+              ),
+            );
+          }
           return Scaffold(
             appBar: AppBar(title: const Text('Reserve your seat'), titleSpacing: 0),
             body: course == null

@@ -8,6 +8,7 @@ import 'package:widgetry_academy/core/widgets/common.dart';
 import 'package:widgetry_academy/core/widgets/state_views.dart';
 import 'package:widgetry_academy/features/courses/domain/entities/course.dart';
 import 'package:widgetry_academy/features/courses/presentation/cubit/courses_cubit.dart';
+import 'package:widgetry_academy/features/courses/presentation/widgets/my_course.dart';
 
 class CoursesPage extends StatelessWidget {
   const CoursesPage({super.key});
@@ -25,7 +26,10 @@ class CoursesPage extends StatelessWidget {
             final cubit = context.read<CoursesCubit>();
             final t = Theme.of(context).textTheme;
             final p = Palette.of(context);
-            final open = s.courses.where((c) => c.isOpen).toList()..sort((a, b) => (b.flagship ? 1 : 0) - (a.flagship ? 1 : 0));
+            final mine = s.myCourse;
+            final reg = s.registration;
+            // Once registered, the course's sales card is replaced by "My course"
+            final open = s.courses.where((c) => c.isOpen && c.id != mine?.id).toList()..sort((a, b) => (b.flagship ? 1 : 0) - (a.flagship ? 1 : 0));
             final soon = s.courses.where((c) => !c.isOpen).toList();
             return RefreshIndicator(
               onRefresh: cubit.load,
@@ -35,9 +39,12 @@ class CoursesPage extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(Space.page, Space.xs, Space.page, Space.xl),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('Learn to build real apps', style: t.headlineSmall),
+                      Text(mine != null ? 'Your learning' : 'Learn to build real apps', style: t.headlineSmall),
                       const SizedBox(height: 4),
-                      Text('Live weekend classes, taught by engineers who ship apps for a living.', style: t.bodyMedium?.copyWith(color: p.muted)),
+                      Text(
+                        mine != null ? 'Everything for your batch in one place.' : 'Live weekend classes, taught by engineers who ship apps for a living.',
+                        style: t.bodyMedium?.copyWith(color: p.muted),
+                      ),
                     ]),
                   ),
                 ),
@@ -49,7 +56,12 @@ class CoursesPage extends StatelessWidget {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(Space.lg, 0, Space.lg, 110),
                     sliver: SliverList.list(children: [
-                      if (s.registration != null) ...[_RegisteredBanner(reg: s.registration!), const SizedBox(height: Space.lg)],
+                      if (mine != null && reg != null) ...[
+                        MyCourseCard(course: mine, reg: reg, batch: s.batch),
+                        const SizedBox(height: Space.md),
+                        if (stageOf(reg) != EnrolmentStage.registered) ...[StartChecklist(course: mine, reg: reg, batch: s.batch), const SizedBox(height: Space.md)],
+                        if (open.isNotEmpty || soon.isNotEmpty) const SectionLabel('Explore more courses', padding: EdgeInsets.fromLTRB(4, Space.lg, 4, Space.sm)),
+                      ],
                       for (final c in open) ...[_FeaturedCourse(course: c, batch: c.showBatch || c.flagship ? s.batch : const BatchInfo()), const SizedBox(height: Space.lg)],
                       if (soon.isNotEmpty) const SectionLabel('Coming soon', padding: EdgeInsets.fromLTRB(4, Space.sm, 4, Space.sm)),
                       for (final c in soon) ...[_CourseRow(course: c), const SizedBox(height: Space.md)],
@@ -60,31 +72,6 @@ class CoursesPage extends StatelessWidget {
           },
         ),
       );
-}
-
-class _RegisteredBanner extends StatelessWidget {
-  const _RegisteredBanner({required this.reg});
-  final Registration reg;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(Space.lg),
-      decoration: BoxDecoration(color: AppColors.ok.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(Radii.lg), border: Border.all(color: AppColors.ok.withValues(alpha: 0.25))),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Icon(Icons.check_circle_rounded, color: AppColors.ok, size: 22),
-        const SizedBox(width: Space.md),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text("You're registered for ${reg.course.isEmpty ? 'Flutter in 10 Days' : reg.course}", style: t.titleSmall),
-            const SizedBox(height: 2),
-            Text(reg.isPaid ? 'Payment received. Batch details come on WhatsApp.' : reg.isPartPaid ? 'Seat booked. Pay the balance before the course starts.' : 'Next step: pay to confirm your seat.', style: t.bodySmall),
-          ]),
-        ),
-      ]),
-    );
-  }
 }
 
 /// Open course: deep green card like the website hero, with batch and price.

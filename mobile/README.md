@@ -185,6 +185,12 @@ How a payment works:
 | Pay in full | ₹4,999 | always |
 | Book with a part payment | ₹2,500, then the balance | always; after it, only "Pay the balance" is offered |
 
+**After paying**
+
+- **Courses tab:** the course's sales card is replaced by **My course**. It shows the status (payment pending, seat booked with balance due, or seat confirmed), the batch start with a countdown, and a "Before Day 1" checklist (WhatsApp group, Flutter setup, first class).
+- **Payments & receipts** (Settings, My course, or a tap on the payment notification): fee paid against total, balance due, and every in-app payment. Each payment opens a receipt with a shareable PDF.
+- **Recovery:** if the app closed after paying, or the webhook was late, the server asks Razorpay about the student's recent unconfirmed orders whenever they open payments or try to pay again. A payment that went through is recorded, so nobody pays twice.
+
 To change prices, set `PRICE_EARLY_BIRD`, `PRICE_REGULAR` and `PRICE_BOOKING` on Railway. If they change, update Admin → Registrations too.
 
 **One-time setup**

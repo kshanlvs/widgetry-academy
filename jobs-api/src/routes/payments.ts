@@ -5,7 +5,7 @@ import { z } from "zod";
 import { query } from "../db.js";
 import { wrap, HttpError } from "../errors.js";
 import { requireAuth } from "../auth.js";
-import { COURSE, fulfil, gateway, paymentsEnabled, plansFor, razorpayConfig, store, validPaymentSignature, validWebhookSignature } from "../payments.js";
+import { COURSE, PLAN_TITLE, coursePrice, fulfil, gateway, paymentsEnabled, plansFor, razorpayConfig, reconcile, store, validPaymentSignature, validWebhookSignature } from "../payments.js";
 
 export const paymentsRouter = Router();
 
@@ -16,6 +16,7 @@ const needsPayments = () => { if (!paymentsEnabled()) throw new HttpError(503, "
 
 /** What the signed-in student can pay. */
 paymentsRouter.get("/payments/plans", requireAuth, wrap(async (req, res) => {
+  await reconcile(req.user!.uid);
   const reg = await store().get(req.user!.uid);
   const p = await plansFor(reg);
   res.json({ enabled: paymentsEnabled(), course: COURSE, status: p.status, plans: p.plans, amountPaid: reg?.amountPaid ?? 0 });
@@ -27,6 +28,8 @@ paymentsRouter.post("/payments/order", requireAuth, orderLimit, wrap(async (req,
   needsPayments();
   const { plan } = orderBody.parse(req.body);
   const u = req.user!;
+  // An earlier attempt may have gone through without being confirmed: never charge twice
+  await reconcile(u.uid);
   const reg = await store().get(u.uid);
   if (!reg) throw new HttpError(409, "Please register for the course first.");
   const { plans, status } = await plansFor(reg);
@@ -96,8 +99,35 @@ paymentsRouter.post("/payments/webhook", wrap(async (req, res) => {
   res.json({ ok: true }); // always 200 for events we don't use, so Razorpay doesn't retry them
 }));
 
-/** The signed-in student's own payments, newest first. */
+/** The signed-in student's fee summary and receipts (payments made in the app), newest first. */
 paymentsRouter.get("/payments/mine", requireAuth, wrap(async (req, res) => {
-  const rows = await query<any>("SELECT order_id, plan, amount, status, payment_id, created_at, paid_at FROM payments WHERE uid = ? AND status = 'paid' ORDER BY paid_at DESC LIMIT 20", [req.user!.uid]);
-  res.json({ items: rows.map(r => ({ orderId: r.order_id, plan: r.plan, amount: r.amount, paymentId: r.payment_id, paidAt: r.paid_at })) });
+  const uid = req.user!.uid;
+  await reconcile(uid);
+  const reg = await store().get(uid);
+  const { status, plans } = await plansFor(reg);
+  const total = reg?.plan && coursePrice(reg.plan) ? coursePrice(reg.plan) : null;
+  const rows = await query<any>("SELECT order_id, plan, amount, currency, payment_id, method, created_at, paid_at FROM payments WHERE uid = ? AND status = 'paid' ORDER BY paid_at DESC LIMIT 50", [uid]);
+  res.json({
+    course: COURSE,
+    summary: {
+      status,
+      plan: reg?.plan ?? null,
+      amountPaid: reg?.amountPaid ?? 0,
+      total,
+      due: plans[0]?.id === "balance" ? plans[0].amount : status === "paid" ? 0 : null,
+      name: reg?.name ?? null,
+      email: reg?.email ?? req.user!.email,
+      phone: reg?.phone ?? null,
+    },
+    items: rows.map(r => ({
+      orderId: r.order_id,
+      paymentId: r.payment_id,
+      plan: r.plan,
+      title: PLAN_TITLE[r.plan] ?? r.plan,
+      amount: Math.round(r.amount / 100),
+      currency: r.currency,
+      method: r.method,
+      paidAt: r.paid_at,
+    })),
+  });
 }));

@@ -12,6 +12,8 @@ void main() {
 
   test('verification opens the profile', () => expect(PushService.targetFor({'type': 'profile'}).route, '/profile'));
 
+  test('payment confirmation opens receipts', () => expect(PushService.targetFor({'type': 'payment', 'link': 'https://widgetryacademy.in/#fees'}).route, '/payments'));
+
   test('academy links map to app screens', () {
     expect(PushService.targetFor({'type': 'announcement', 'link': 'https://widgetryacademy.in/#courses'}).route, '/courses');
     expect(PushService.targetFor({'type': 'announcement', 'link': 'https://widgetryacademy.in/blog/flutter-developer-salary-india.html'}).route, '/blog');

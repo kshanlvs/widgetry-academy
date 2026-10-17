@@ -13,6 +13,37 @@ class PaymentsRepositoryImpl implements PaymentsRepository {
   final ApiClient _api;
 
   @override
+  Future<Result<PaymentHistory>> history() => guard(() async {
+        final j = await _api.get('/payments/mine');
+        final s = (j['summary'] as Map?) ?? const {};
+        int? n(Object? v) => (v as num?)?.round();
+        String? str(Object? v) => v == null || '$v'.isEmpty ? null : '$v';
+        return PaymentHistory(
+          course: '${j['course'] ?? 'Flutter in 10 Days'}',
+          status: '${s['status'] ?? 'unpaid'}',
+          plan: str(s['plan']),
+          amountPaid: n(s['amountPaid']) ?? 0,
+          total: n(s['total']),
+          due: n(s['due']),
+          name: str(s['name']),
+          email: str(s['email']),
+          phone: str(s['phone']),
+          items: [
+            for (final r in (j['items'] as List? ?? const []).whereType<Map<String, dynamic>>())
+              Receipt(
+                orderId: '${r['orderId']}',
+                paymentId: '${r['paymentId'] ?? ''}',
+                plan: '${r['plan'] ?? ''}',
+                title: '${r['title'] ?? 'Course fee'}',
+                amount: n(r['amount']) ?? 0,
+                method: str(r['method']),
+                paidAt: DateTime.tryParse('${r['paidAt'] ?? ''}')?.toLocal(),
+              ),
+          ],
+        );
+      });
+
+  @override
   Future<Result<PaymentOptions>> options() => guard(() async {
         final j = await _api.get('/payments/plans');
         return PaymentOptions(

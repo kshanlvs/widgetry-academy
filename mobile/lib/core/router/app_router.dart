@@ -15,6 +15,7 @@ import 'package:widgetry_academy/features/jobs/presentation/pages/job_detail_pag
 import 'package:widgetry_academy/features/jobs/presentation/pages/jobs_page.dart';
 import 'package:widgetry_academy/features/jobs/presentation/pages/saved_jobs_page.dart';
 import 'package:widgetry_academy/features/payments/presentation/checkout_page.dart';
+import 'package:widgetry_academy/features/payments/presentation/payments_page.dart';
 import 'package:widgetry_academy/features/profile/presentation/pages/profile_edit_page.dart';
 import 'package:widgetry_academy/features/profile/presentation/pages/profile_page.dart';
 import 'package:widgetry_academy/features/profile/presentation/pages/resume_page.dart';
@@ -28,7 +29,7 @@ class AppRouter {
   final AuthCubit _auth;
 
   static final rootKey = GlobalKey<NavigatorState>();
-  static const _needsAccount = ['/profile/edit', '/profile/resume'];
+  static const _needsAccount = ['/profile/edit', '/profile/resume', '/payments'];
 
   late final GoRouter router = GoRouter(
     navigatorKey: rootKey,
@@ -87,6 +88,7 @@ class AppRouter {
       GoRoute(path: '/sign-in', parentNavigatorKey: rootKey, builder: (_, s) => SignInPage(redirectTo: s.uri.queryParameters['from'])),
       GoRoute(path: '/settings', parentNavigatorKey: rootKey, builder: (_, __) => const SettingsPage()),
       GoRoute(path: '/assistant', parentNavigatorKey: rootKey, builder: (_, __) => const AssistantPage()),
+      GoRoute(path: '/payments', parentNavigatorKey: rootKey, builder: (_, __) => const PaymentsPage()),
     ],
   );
 }

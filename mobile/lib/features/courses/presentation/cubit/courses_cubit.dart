@@ -22,6 +22,13 @@ class CoursesState extends Equatable {
 
   Course? byId(String id) => courses.where((c) => c.id == id).firstOrNull;
 
+  /// The course this student registered for (registrations store its title), if any.
+  Course? get myCourse {
+    final r = registration;
+    if (r == null || r.isClosed) return null;
+    return courses.where((c) => c.title == r.course).firstOrNull ?? courses.where((c) => c.flagship).firstOrNull ?? courses.where((c) => c.isOpen).firstOrNull;
+  }
+
   CoursesState copyWith({bool? loading, List<Course>? courses, BatchInfo? batch, Registration? registration, bool clearRegistration = false, bool? signedIn, String? error, bool? submitting, String? message}) => CoursesState(
         loading: loading ?? this.loading,
         courses: courses ?? this.courses,

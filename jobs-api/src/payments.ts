@@ -55,6 +55,8 @@ export async function plansFor(reg: Registration | null): Promise<{ plans: Plan[
 export interface Gateway {
   createOrder(o: { amount: number; receipt: string; notes: Record<string, string> }): Promise<{ id: string; amount: number; currency: string }>;
   fetchPayment(id: string): Promise<{ id: string; order_id: string | null; amount: number; status: string; method?: string }>;
+  /** All payment attempts on an order (used to recover payments the app couldn't confirm). */
+  orderPayments(orderId: string): Promise<{ id: string; order_id: string | null; amount: number; status: string; method?: string }[]>;
 }
 export interface RegistrationStore {
   get(uid: string): Promise<Registration | null>;
@@ -69,6 +71,10 @@ const razorpayGateway: Gateway = {
   },
   async fetchPayment(id) {
     return rzp("GET", `/v1/payments/${encodeURIComponent(id)}`);
+  },
+  async orderPayments(orderId) {
+    const r = await rzp("GET", `/v1/orders/${encodeURIComponent(orderId)}/payments`);
+    return Array.isArray(r?.items) ? r.items : [];
   },
 };
 
@@ -162,3 +168,27 @@ export async function fulfil(orderId: string, paymentId: string, method?: string
   });
   return { status, first: true };
 }
+
+/**
+ * Recovers payments that went through but were never confirmed (app closed, network dropped,
+ * webhook delayed): asks Razorpay about this student's recent unconfirmed orders.
+ * Runs before showing what is due and before creating a new order, so nobody pays twice.
+ */
+export async function reconcile(uid: string): Promise<number> {
+  if (!paymentsEnabled()) return 0;
+  let fixed = 0;
+  try {
+    const rows = await query<{ order_id: string; amount: number }>(
+      "SELECT order_id, amount FROM payments WHERE uid = ? AND status = 'created' AND created_at > (CURRENT_TIMESTAMP - INTERVAL 3 DAY) ORDER BY created_at DESC LIMIT 3", [uid]);
+    for (const r of rows) {
+      const items = await gateway().orderPayments(r.order_id);
+      const paid = items.find(p => p.status === "captured" && p.amount === r.amount && (p.order_id ?? r.order_id) === r.order_id);
+      if (paid) { const res = await fulfil(r.order_id, paid.id, paid.method); if (res?.first) fixed++; }
+    }
+  } catch (e: any) {
+    console.warn(`[payments] reconcile ${uid} failed: ${e?.message}`);
+  }
+  return fixed;
+}
+
+export const PLAN_TITLE: Record<string, string> = { "early-bird": "Early bird (full fee)", regular: "Full fee", booking: "Booking (part payment)", balance: "Balance payment" };

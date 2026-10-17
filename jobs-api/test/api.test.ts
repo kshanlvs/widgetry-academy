@@ -417,6 +417,7 @@ test("course payments: plans from the server, order, signature check, idempotent
     {
       async createOrder(o) { n++; return { id: "order_T" + n, amount: o.amount, currency: "INR" }; },
       async fetchPayment(id) { const p = payments.get(id); if (!p) throw new Error("no payment"); return p; },
+      async orderPayments(orderId) { return [...payments.values()].filter(p => p.order_id === orderId); },
     },
     {
       async get(uid) { return regs.get(uid) ?? null; },
@@ -486,7 +487,26 @@ test("course payments: plans from the server, order, signature check, idempotent
   r = await call("GET", "/payments/plans", undefined, STU);
   assert.equal(r.body.status, "paid"); assert.deepEqual(r.body.plans, []);
   assert.equal((await call("POST", "/payments/order", { plan: "balance" }, STU)).status, 409);
-  assert.equal((await call("GET", "/payments/mine", undefined, STU)).body.items.length, 2);
+  const mine = await call("GET", "/payments/mine", undefined, STU);
+  assert.equal(mine.body.items.length, 2);
+  assert.deepEqual(mine.body.summary, { status: "paid", plan: "booking", amountPaid: 4999, total: 4999, due: 0, name: "Stu", email: "stu@test.dev", phone: "+919876543210" });
+  assert.deepEqual(mine.body.items.map((i: any) => [i.title, i.amount]).sort(), [["Balance payment", 2499], ["Booking (part payment)", 2500]]);
+
+  // Recovery: the app closed after paying and the webhook never came. The next visit finds the payment, so nobody pays twice.
+  const STU3 = "dev:stu3:three@test.dev:Three";
+  regs.set("stu3", { name: "Three", payStatus: "pending", amountPaid: 0 });
+  const o3 = (await call("POST", "/payments/order", { plan: "regular" }, STU3)).body.orderId;
+  payments.set("pay_C3", { id: "pay_C3", order_id: o3, amount: 499900, status: "captured" });
+  r = await call("GET", "/payments/plans", undefined, STU3);
+  assert.equal(r.body.status, "paid", "unconfirmed payment recovered");
+  assert.equal(regs.get("stu3")!.amountPaid, 4999);
+  assert.equal((await call("POST", "/payments/order", { plan: "regular" }, STU3)).status, 409, "can't pay twice");
+  // A failed attempt is not counted
+  const STU4 = "dev:stu4:four@test.dev:Four";
+  regs.set("stu4", { name: "Four", payStatus: "pending", amountPaid: 0 });
+  const o4 = (await call("POST", "/payments/order", { plan: "booking" }, STU4)).body.orderId;
+  payments.set("pay_D4", { id: "pay_D4", order_id: o4, amount: 250000, status: "failed" });
+  assert.equal((await call("GET", "/payments/plans", undefined, STU4)).body.status, "unpaid");
 
   // Without Razorpay keys the app is told payments are opening soon
   delete process.env.RAZORPAY_KEY_SECRET;

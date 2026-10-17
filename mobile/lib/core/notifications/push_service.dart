@@ -155,6 +155,8 @@ class PushService {
         return PushTarget(route: cat.isEmpty ? '/jobs' : '/jobs?cat=$cat');
       case 'profile':
         return const PushTarget(route: '/profile');
+      case 'payment':
+        return const PushTarget(route: '/payments');
     }
     if (link.startsWith(AppConfig.siteUrl)) {
       final path = link.substring(AppConfig.siteUrl.length);

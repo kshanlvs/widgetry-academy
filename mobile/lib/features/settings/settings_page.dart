@@ -64,6 +64,7 @@ class _SettingsPageState extends State<SettingsPage> {
               title: Text(auth.user?.displayName ?? 'Signed in'),
               subtitle: Text(auth.user?.email ?? ''),
             ),
+            _link(Icons.receipt_long_outlined, 'Payments & receipts', () => context.push('/payments')),
             ListTile(
               leading: const Icon(Icons.logout_rounded, size: 22, color: AppColors.bad),
               title: const Text('Sign out', style: TextStyle(color: AppColors.bad)),

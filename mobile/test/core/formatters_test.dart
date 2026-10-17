@@ -40,4 +40,21 @@ void main() {
     expect(Fmt.initials('  '), '?');
     expect(Fmt.shortUrl('https://www.github.com/kishan/'), 'github.com/kishan');
   });
+
+  test('looseDate reads the dates admins type', () {
+    expect(Fmt.looseDate('Saturday, 17 October 2026'), DateTime(2026, 10, 17));
+    expect(Fmt.looseDate('17 Oct 2026'), DateTime(2026, 10, 17));
+    expect(Fmt.looseDate('17th October 2026'), DateTime(2026, 10, 17));
+    expect(Fmt.looseDate('2026-10-17'), DateTime(2026, 10, 17));
+    expect(Fmt.looseDate('soon'), isNull);
+    expect(Fmt.looseDate(null), isNull);
+  });
+
+  test('countdown', () {
+    final now = DateTime(2026, 10, 14, 20);
+    expect(Fmt.countdown(DateTime(2026, 10, 14), now: now), 'Today');
+    expect(Fmt.countdown(DateTime(2026, 10, 15), now: now), 'Tomorrow');
+    expect(Fmt.countdown(DateTime(2026, 10, 17), now: now), 'In 3 days');
+    expect(Fmt.countdown(DateTime(2026, 10, 1), now: now), isNull);
+  });
 }

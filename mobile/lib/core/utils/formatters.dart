@@ -37,6 +37,30 @@ abstract final class Fmt {
 
   static String date(DateTime d) => '${d.day} ${_months[d.month - 1]} ${d.year}';
 
+  /// Reads dates typed by the admin, like "Saturday, 17 October 2026", "17 Oct 2026" or "2026-10-17".
+  static DateTime? looseDate(String? s) {
+    final v = (s ?? '').trim();
+    if (v.isEmpty) return null;
+    final iso = DateTime.tryParse(v);
+    if (iso != null) return DateTime(iso.year, iso.month, iso.day);
+    final cleaned = v.replaceAllMapped(RegExp(r'(\d)(st|nd|rd|th)\b'), (m) => m[1]!).replaceAll(RegExp(r'\s+'), ' ');
+    for (final f in const ['EEEE, d MMMM y', 'EEEE d MMMM y', 'EEE, d MMM y', 'd MMMM y', 'd MMM y', 'MMMM d, y', 'MMM d, y', 'EEEE, MMMM d, y']) {
+      try {
+        final d = DateFormat(f, 'en_US').parseStrict(cleaned);
+        return DateTime(d.year, d.month, d.day);
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  /// "Today", "Tomorrow", "In 5 days"; null once the date has passed.
+  static String? countdown(DateTime day, {DateTime? now}) {
+    final n = now ?? DateTime.now();
+    final days = DateTime(day.year, day.month, day.day).difference(DateTime(n.year, n.month, n.day)).inDays;
+    if (days < 0) return null;
+    return days == 0 ? 'Today' : days == 1 ? 'Tomorrow' : 'In $days days';
+  }
+
   /// "2023-06" → "Jun 2023"; null/empty → "Present".
   static String yearMonth(String? ym) {
     if (ym == null || ym.isEmpty) return 'Present';
