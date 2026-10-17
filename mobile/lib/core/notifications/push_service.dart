@@ -39,7 +39,7 @@ class PushTopic {
 }
 
 /// Firebase Cloud Messaging: permission, topics, device registration and taps.
-/// Topics: "all" (always), "academy", "jobs-<category>". The server sends to these.
+/// Topics: `all` (always), `academy`, `jobs-<category>`. The server sends to these.
 @lazySingleton
 class PushService {
   PushService(this._fcm, this._api, this._prefs);

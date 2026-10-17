@@ -55,9 +55,11 @@ class _SettingsPageState extends State<SettingsPage> {
             title: const Text('Sign out'),
             subtitle: Text(auth.user?.email ?? ''),
             onTap: () async {
+              final authCubit = context.read<AuthCubit>();
+              final router = GoRouter.of(context);
               await _push.unregisterDevice();
-              await context.read<AuthCubit>().signOut();
-              if (context.mounted) context.go('/jobs');
+              await authCubit.signOut();
+              router.go('/jobs');
             },
           )
         else

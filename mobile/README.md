@@ -8,7 +8,7 @@ The Android and iOS app for widgetryacademy.in. It covers:
 - **Guides:** the blog, read from `blog/feed.json`.
 - **Push notifications:** new jobs by category, academy news, and personal alerts such as "your job is live" or "you're verified".
 
-Package / bundle ID: `in.widgetryacademy.app` · Flutter 3.32 or newer · Dart 3.8 or newer
+Package / bundle ID: `in.widgetryacademy.app` · Flutter 3.35 or newer · Dart 3.8 or newer
 
 ---
 

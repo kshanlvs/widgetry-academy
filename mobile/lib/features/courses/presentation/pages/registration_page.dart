@@ -58,7 +58,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       TextFormField(controller: _phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'WhatsApp number', prefixText: '+91 '), validator: Validators.indianMobile),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _level,
+                        initialValue: _level,
                         decoration: const InputDecoration(labelText: 'Class / course'),
                         items: [for (final l in RegistrationOptions.levels) DropdownMenuItem(value: l, child: Text(l))],
                         onChanged: (v) => setState(() => _level = v),
@@ -66,7 +66,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _experience,
+                        initialValue: _experience,
                         decoration: const InputDecoration(labelText: 'Coding experience'),
                         items: [for (final e in RegistrationOptions.experience) DropdownMenuItem(value: e, child: Text(e))],
                         onChanged: (v) => setState(() => _experience = v ?? _experience),

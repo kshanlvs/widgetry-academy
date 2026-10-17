@@ -344,7 +344,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               _chips(Labels.workMode, _modes, (v) => _modes = v),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
-                value: _notice,
+                initialValue: _notice,
                 decoration: const InputDecoration(labelText: 'Notice period'),
                 items: [for (final e in Labels.notice.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
                 onChanged: (v) => setState(() => _notice = v),

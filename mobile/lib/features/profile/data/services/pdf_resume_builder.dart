@@ -13,12 +13,12 @@ import 'package:widgetry_academy/features/profile/domain/repositories/profile_re
 @LazySingleton(as: ResumeBuilder)
 class PdfResumeBuilder implements ResumeBuilder {
   static final _accents = <String, PdfColor>{
-    'green': PdfColor.fromInt(0xFF0F6B56),
-    'navy': PdfColor.fromInt(0xFF1D3557),
-    'black': PdfColor.fromInt(0xFF111111),
-    'maroon': PdfColor.fromInt(0xFF7A1F2B),
-    'teal': PdfColor.fromInt(0xFF0E6D7A),
-    'purple': PdfColor.fromInt(0xFF53389E),
+    'green': const PdfColor.fromInt(0xFF0F6B56),
+    'navy': const PdfColor.fromInt(0xFF1D3557),
+    'black': const PdfColor.fromInt(0xFF111111),
+    'maroon': const PdfColor.fromInt(0xFF7A1F2B),
+    'teal': const PdfColor.fromInt(0xFF0E6D7A),
+    'purple': const PdfColor.fromInt(0xFF53389E),
   };
 
   static const _groups = <String, List<String>>{
