@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
+import 'package:widgetry_academy/features/workshops/presentation/workshop_page.dart';
 import 'package:widgetry_academy/features/assistant/presentation/assistant_page.dart';
 import 'package:widgetry_academy/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:widgetry_academy/features/auth/presentation/pages/sign_in_page.dart';
@@ -95,6 +96,7 @@ class AppRouter {
       GoRoute(path: '/settings', parentNavigatorKey: rootKey, builder: (_, __) => const SettingsPage()),
       GoRoute(path: '/assistant', parentNavigatorKey: rootKey, builder: (_, __) => const AssistantPage()),
       GoRoute(path: '/payments', parentNavigatorKey: rootKey, builder: (_, __) => const PaymentsPage()),
+      GoRoute(path: '/short-courses/:slug', parentNavigatorKey: rootKey, builder: (_, s) => WorkshopPage(slug: s.pathParameters['slug']!)),
       GoRoute(
         path: '/interviews',
         parentNavigatorKey: rootKey,

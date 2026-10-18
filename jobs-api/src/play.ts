@@ -112,6 +112,24 @@ export async function reportExternal(orderId: string): Promise<boolean> {
   return true;
 }
 
+/** Same as reportExternal, for a short course (workshop) paid with Razorpay from Google's choice screen. */
+export async function reportExternalWorkshop(orderId: string): Promise<boolean> {
+  const [r] = await query<{ amount: number; ext_token: string | null; tax_state: string | null; paid_at: Date | null; reported_at: Date | null; status: string }>(
+    "SELECT amount, ext_token, tax_state, paid_at, reported_at, status FROM workshop_enrollments WHERE order_id = ?", [orderId]);
+  if (!r || !r.ext_token || r.reported_at || !["confirmed", "refunded"].includes(r.status) || !r.paid_at) return false;
+  const gst = playConfig().gstPercent;
+  const preTax = gst > 0 ? Math.round(r.amount / (1 + gst / 100)) : r.amount;
+  await playApi().reportExternal(orderId.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 63), {
+    originalPreTaxAmount: { priceMicros: micros(preTax), currency: "INR" },
+    originalTaxAmount: { priceMicros: micros(r.amount - preTax), currency: "INR" },
+    transactionTime: r.paid_at.toISOString(),
+    oneTimeTransaction: { externalTransactionToken: r.ext_token },
+    userTaxAddress: { regionCode: "IN", administrativeArea: r.tax_state || "WEST BENGAL" },
+  });
+  await exec("UPDATE workshop_enrollments SET reported_at = CURRENT_TIMESTAMP WHERE order_id = ?", [orderId]);
+  return true;
+}
+
 /** Retries any reports that failed (runs every few minutes on the server). Google needs them within 24 hours. */
 export async function reportPendingExternal(): Promise<number> {
   let n = 0;
@@ -120,5 +138,19 @@ export async function reportPendingExternal(): Promise<number> {
     try { if (await reportExternal(r.order_id)) n++; }
     catch (e: any) { console.warn(`[play] report ${r.order_id} failed: ${e?.message}`); }
   }
+  const ws = await query<{ order_id: string }>("SELECT order_id FROM workshop_enrollments WHERE paid_at IS NOT NULL AND ext_token IS NOT NULL AND reported_at IS NULL AND order_id IS NOT NULL ORDER BY paid_at LIMIT 50");
+  for (const r of ws) {
+    try { if (await reportExternalWorkshop(r.order_id)) n++; }
+    catch (e: any) { console.warn(`[play] report ${r.order_id} failed: ${e?.message}`); }
+  }
   return n;
 }
+
+/**
+ * Short courses on Google Play: one one-time product per price, named short_course_<rupees>
+ * (short_course_799, short_course_999…). Only the prices listed in WORKSHOP_PLAY_PRICES are offered
+ * through Google Play; any other price is paid with Razorpay (still from Google's choice screen).
+ */
+export const workshopPlayPrices = () => (env.WORKSHOP_PLAY_PRICES ?? "799,999").split(",").map(s => Number(s.trim())).filter(n => n > 0);
+export const workshopPlayProduct = (rupees: number) => (workshopPlayPrices().includes(rupees) ? `short_course_${rupees}` : null);
+export const workshopProductPrice = (productId: string) => { const m = /^short_course_(\d+)$/.exec(productId); return m ? Number(m[1]) : null; };

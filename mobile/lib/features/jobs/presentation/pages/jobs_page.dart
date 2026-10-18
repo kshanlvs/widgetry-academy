@@ -9,6 +9,7 @@ import 'package:widgetry_academy/core/theme/app_colors.dart';
 import 'package:widgetry_academy/core/utils/link_launcher.dart';
 import 'package:widgetry_academy/core/widgets/common.dart';
 import 'package:widgetry_academy/core/widgets/state_views.dart';
+import 'package:widgetry_academy/features/workshops/presentation/short_course_tiles.dart';
 import 'package:widgetry_academy/features/jobs/domain/entities/job.dart';
 import 'package:widgetry_academy/features/jobs/domain/entities/jobs_meta.dart';
 import 'package:widgetry_academy/features/jobs/presentation/bloc/jobs_bloc.dart';
@@ -105,6 +106,7 @@ class _JobsViewState extends State<_JobsView> {
                   ),
                 ),
                 if (browsing) const SliverToBoxAdapter(child: CourseBanners()),
+                if (browsing) const SliverToBoxAdapter(child: ShortCourseTiles()),
                 if (browsing) const SliverToBoxAdapter(child: MockInterviewTile()),
                 SliverPersistentHeader(
                   pinned: true,

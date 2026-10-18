@@ -177,7 +177,7 @@ class PlayStoreBilling implements StoreBilling {
         var r = await done.future;
         // Bought earlier but never confirmed (e.g. the app closed): hand that purchase to the server.
         if (r is StoreFailed && r.message == _owned) {
-          final mine = (await unfinished(accountId: accountId)).where((p) => p.productId == productId).firstOrNull;
+          final mine = (await unfinished(accountId: accountId, prefix: productId)).where((p) => p.productId == productId).firstOrNull;
           r = mine ?? const StoreFailed('A previous payment is still being processed. Please try again in a few minutes.');
         }
         return r;
@@ -191,12 +191,12 @@ class PlayStoreBilling implements StoreBilling {
   }
 
   @override
-  Future<List<StorePurchased>> unfinished({required String accountId}) async {
+  Future<List<StorePurchased>> unfinished({required String accountId, String prefix = 'course_fee_'}) async {
     await _init();
     final r = await _android.queryPastPurchases();
     return [
       for (final p in r.pastPurchases)
-        if (p.productID.startsWith('course_fee_') &&
+        if (p.productID.startsWith(prefix) &&
             p.status == PurchaseStatus.purchased &&
             (p.billingClientPurchase.obfuscatedAccountId == null || p.billingClientPurchase.obfuscatedAccountId == accountId))
           StorePurchased(productId: p.productID, token: p.verificationData.serverVerificationData),

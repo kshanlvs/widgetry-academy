@@ -101,7 +101,7 @@ class _Plans extends StatelessWidget {
       ],
       if (cubit.needsState) ...[
         const SizedBox(height: Space.sm),
-        _StateField(value: state.taxState, states: o.android?.states ?? const [], enabled: !state.paying, onChanged: cubit.chooseState),
+        TaxStateField(value: state.taxState, states: o.android?.states ?? const [], enabled: !state.paying, onChanged: cubit.chooseState),
       ],
       const SizedBox(height: Space.lg),
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -134,8 +134,8 @@ String stateLabel(String s) => s
     .join(' ');
 
 /// The student's state. Google needs it for tax when the payment goes through Razorpay.
-class _StateField extends StatelessWidget {
-  const _StateField({required this.value, required this.states, required this.enabled, required this.onChanged});
+class TaxStateField extends StatelessWidget {
+  const TaxStateField({super.key, required this.value, required this.states, required this.enabled, required this.onChanged});
   final String? value;
   final List<String> states;
   final bool enabled;

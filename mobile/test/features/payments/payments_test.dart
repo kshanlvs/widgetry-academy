@@ -36,7 +36,7 @@ class FakeStore implements StoreBilling {
   }
 
   @override
-  Future<List<StorePurchased>> unfinished({required String accountId}) async => left;
+  Future<List<StorePurchased>> unfinished({required String accountId, String prefix = 'course_fee_'}) async => left.where((p) => p.productId.startsWith(prefix)).toList();
 }
 
 final noStore = FakeStore(const StoreCancelled(), supported: false);

@@ -10,6 +10,7 @@ import { wrap, HttpError } from "../errors.js";
 import { requireAuth } from "../auth.js";
 import { gateway, paymentsEnabled, razorpayConfig, validPaymentSignature } from "../payments.js";
 import { notifyUser } from "../notify.js";
+import { INDIA_STATES, playAccountId, playApi, playConfig, reportExternalWorkshop, workshopPlayProduct, workshopProductPrice } from "../play.js";
 
 const HOLD_MINUTES = 15;   // an unpaid enrolment keeps a seat this long
 const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000);
@@ -53,7 +54,7 @@ const workshopOut = (w: any, s: { seatsLeft: number; earlySold: number }) => {
 
 // ---------- Confirming a payment (idempotent) ----------
 export async function fulfilWorkshop(orderId: string, paymentId: string, method?: string): Promise<{ status: string; first: boolean } | null> {
-  const [e] = await query<any>("SELECT e.*, w.title, w.schedule FROM workshop_enrollments e JOIN workshops w ON w.id = e.workshop_id WHERE e.order_id = ?", [orderId]);
+  const [e] = await query<any>("SELECT e.*, w.title, w.schedule, w.slug FROM workshop_enrollments e JOIN workshops w ON w.id = e.workshop_id WHERE e.order_id = ?", [orderId]);
   if (!e) return null;
   // A late payment for an enrolment we'd already let go is still honoured: the student paid
   const r = await exec("UPDATE workshop_enrollments SET status = 'confirmed', payment_id = ?, method = ?, paid_at = CURRENT_TIMESTAMP WHERE id = ? AND status IN ('created','cancelled') AND paid_at IS NULL",
@@ -61,7 +62,8 @@ export async function fulfilWorkshop(orderId: string, paymentId: string, method?
   if (r.affectedRows === 0) return { status: e.status, first: false };
   // Any other unpaid attempts by the same person for this course are no longer needed
   await exec("UPDATE workshop_enrollments SET status = 'cancelled' WHERE workshop_id = ? AND uid = ? AND status = 'created' AND id <> ?", [e.workshop_id, e.uid, e.id]);
-  void notifyUser(e.uid, { title: "You're enrolled 🎉", body: `${e.title}${e.schedule ? " · " + e.schedule : ""}. The joining link will be on the course page.`, data: { type: "workshop" } });
+  if (e.ext_token) void reportExternalWorkshop(orderId).catch(x => console.warn(`[play] report ${orderId} failed: ${x?.message}`));
+  void notifyUser(e.uid, { title: "You're enrolled 🎉", body: `${e.title}${e.schedule ? " · " + e.schedule : ""}. The joining link will be on the course page.`, data: { type: "workshop", slug: e.slug } });
   return { status: "confirmed", first: true };
 }
 
@@ -81,6 +83,15 @@ export async function reconcileWorkshops(uid: string): Promise<void> {
 
 export const workshopsRouter = Router();
 
+/** Short courses to show in the app: open ones first, then ones with dates coming soon. */
+workshopsRouter.get("/workshops", wrap(async (_req, res) => {
+  const rows = await query<any>("SELECT * FROM workshops WHERE status IN ('open','draft') ORDER BY (status = 'open') DESC, COALESCE(starts_at, '2999-01-01'), id");
+  const items = [];
+  for (const w of rows) items.push(workshopOut(w, await seatInfo(w)));
+  res.set("Cache-Control", "public, max-age=60");
+  res.json({ items });
+}));
+
 /** Course details for the course page. Signed in: also your enrolment, and the joining link once paid. */
 workshopsRouter.get("/workshops/:slug", wrap(async (req, res) => {
   const w = await bySlug(String(req.params.slug));
@@ -91,8 +102,14 @@ workshopsRouter.get("/workshops/:slug", wrap(async (req, res) => {
     if (e) mine = { status: e.status, amount: rupees(e.amount), paidAt: e.paid_at ? new Date(e.paid_at).toISOString() : null, paymentId: e.payment_id,
       meetingLink: e.status === "confirmed" ? w.meeting_link ?? null : null };
   }
+  const out = workshopOut(w, await seatInfo(w));
   res.set("Cache-Control", "private, no-store");
-  res.json({ workshop: workshopOut(w, await seatInfo(w)), mine, paymentsOpen: paymentsEnabled() });
+  res.json({
+    workshop: out, mine, paymentsOpen: paymentsEnabled(),
+    // Android app: Google's choice screen (Google Play or Razorpay), as for the main course
+    android: req.user ? { billing: playConfig().androidBilling, accountId: playAccountId(req.user.uid), states: INDIA_STATES,
+      playProductId: workshopPlayProduct(out.earlyPrice ?? out.price ?? 0) } : null,
+  });
 }));
 
 const enrollLimit = rateLimit({ windowMs: 60 * 60 * 1000, limit: 15, standardHeaders: "draft-7", legacyHeaders: false,
@@ -102,7 +119,12 @@ const enrollBody = z.object({
   name: z.string().trim().min(2, "Please enter your full name").max(99),
   phone: z.string().trim().transform(v => v.replace(/[\s()-]/g, "")).transform(v => (/^[6-9]\d{9}$/.test(v) ? "+91" + v : /^91[6-9]\d{9}$/.test(v) ? "+" + v : v))
     .refine(v => /^\+[1-9]\d{9,14}$/.test(v), "Enter your WhatsApp number, e.g. 98765 43210"),
-});
+  // Android app: "play" holds a seat before Google's purchase screen; "razorpay" (default) creates a Razorpay order
+  mode: z.enum(["razorpay", "play"]).default("razorpay"),
+  // Set when the student picked Razorpay on Google Play's choice screen
+  externalTransactionToken: z.string().trim().min(10).max(4000).optional(),
+  state: z.enum(INDIA_STATES).optional(),
+}).refine(b => !b.externalTransactionToken || b.state, { path: ["state"], message: "Choose your state" });
 
 workshopsRouter.post("/workshops/:slug/enroll", requireAuth, enrollLimit, wrap(async (req, res) => {
   if (!paymentsEnabled()) throw new HttpError(503, "Online payment opens soon. Message us on WhatsApp to enrol meanwhile.");
@@ -120,8 +142,16 @@ workshopsRouter.post("/workshops/:slug/enroll", requireAuth, enrollLimit, wrap(a
   if (s.seatsLeft <= 0) throw new HttpError(409, "All seats are taken. Message us on WhatsApp to join the waiting list.");
   const early = earlyActive(w, s.earlySold);
   const amount = Number(early ? w.early_price : w.price);
-  const ins = await exec("INSERT INTO workshop_enrollments (workshop_id, uid, email, name, phone, amount, early) VALUES (?,?,?,?,?,?,?)",
-    [w.id, u.uid, u.email, b.name, b.phone, amount, early ? 1 : 0]);
+  if (b.mode === "play") {
+    // Google Play: hold the seat now; /workshops/play/verify confirms it after Google's purchase screen
+    const productId = workshopPlayProduct(amount / 100);
+    if (playConfig().androidBilling !== "user_choice" || !productId) throw new HttpError(409, "Google Play isn't available for this price. Please pay with Razorpay.");
+    const ins = await exec("INSERT INTO workshop_enrollments (workshop_id, uid, email, name, phone, amount, early, channel) VALUES (?,?,?,?,?,?,?,'google_play')",
+      [w.id, u.uid, u.email, b.name, b.phone, amount, early ? 1 : 0]);
+    return res.status(201).json({ enrollmentId: Number(ins.insertId), productId, amount });
+  }
+  const ins = await exec("INSERT INTO workshop_enrollments (workshop_id, uid, email, name, phone, amount, early, ext_token, tax_state) VALUES (?,?,?,?,?,?,?,?,?)",
+    [w.id, u.uid, u.email, b.name, b.phone, amount, early ? 1 : 0, b.externalTransactionToken ?? null, b.state ?? null]);
   const id = Number(ins.insertId);
   let order;
   try {
@@ -152,6 +182,53 @@ workshopsRouter.post("/workshops/verify", requireAuth, wrap(async (req, res) => 
   if (pay.order_id !== orderId || pay.amount !== e.amount || !["captured", "authorized"].includes(pay.status))
     throw new HttpError(400, "This payment hasn't completed yet. If money was taken, it will be confirmed automatically within a few minutes.");
   const r = await fulfilWorkshop(orderId, paymentId, pay.method);
+  res.json({ ok: true, status: r?.status ?? "confirmed" });
+}));
+
+/** Lets go of your unpaid seat (closed Google's purchase screen or the payment sheet). */
+workshopsRouter.post("/workshops/:slug/release", requireAuth, wrap(async (req, res) => {
+  const w = await bySlug(String(req.params.slug));
+  await exec("UPDATE workshop_enrollments SET status = 'cancelled' WHERE workshop_id = ? AND uid = ? AND status = 'created'", [w.id, req.user!.uid]);
+  res.json({ ok: true });
+}));
+
+const playBody = z.object({
+  productId: z.string().trim().regex(/^short_course_\d+$/, "Unknown product."),
+  purchaseToken: z.string().trim().min(10).max(500),
+});
+
+/**
+ * Paid with Google Play in the app. Matched to the seat this person held for that price, checked with
+ * Google, then consumed. A purchase we can't match is left unconsumed, so Google refunds it after 3 days.
+ */
+workshopsRouter.post("/workshops/play/verify", requireAuth, wrap(async (req, res) => {
+  const { productId, purchaseToken } = playBody.parse(req.body);
+  const uid = req.user!.uid;
+  const rupeesPaid = workshopProductPrice(productId)!;
+  const p = await playApi().getPurchase(productId, purchaseToken);
+  if (p.obfuscatedExternalAccountId && p.obfuscatedExternalAccountId !== playAccountId(uid)) throw new HttpError(403, "This purchase belongs to another account.");
+  if (p.purchaseState === 2) return res.status(202).json({ ok: true, status: "pending" });
+  if (p.purchaseState !== 0 || !p.orderId) throw new HttpError(400, "This purchase was not completed.");
+  const orderId = p.orderId.slice(0, 64);
+  const consume = () => (p.consumptionState === 1 ? Promise.resolve() : playApi().consume(productId, purchaseToken).catch(e => console.warn(`[play] consume ${orderId} failed: ${e?.message}`)));
+
+  const [done] = await query<any>("SELECT uid, status FROM workshop_enrollments WHERE order_id = ?", [orderId]);
+  if (done) {
+    if (done.uid !== uid) throw new HttpError(403, "This purchase belongs to another account.");
+    await consume();
+    return res.json({ ok: true, status: done.status });
+  }
+  const [e] = await query<any>(
+    `SELECT * FROM workshop_enrollments WHERE uid = ? AND channel = 'google_play' AND paid_at IS NULL AND amount = ? AND status IN ('created','cancelled') AND created_at > ?
+     ORDER BY id DESC LIMIT 1`, [uid, rupeesPaid * 100, minutesAgo(3 * 24 * 60)]);
+  const [already] = e ? await query("SELECT id FROM workshop_enrollments WHERE workshop_id = ? AND uid = ? AND status = 'confirmed'", [e.workshop_id, uid]) : [];
+  if (!e || already) {
+    console.warn(`[play] ${uid} bought ${productId} (${orderId}) with no seat to match; left for Google to refund`);
+    throw new HttpError(409, "We couldn't match this payment to a seat, so Google refunds it to you automatically within 3 days.");
+  }
+  await exec("UPDATE workshop_enrollments SET order_id = ?, purchase_token = ? WHERE id = ?", [orderId, purchaseToken, e.id]);
+  const r = await fulfilWorkshop(orderId, orderId, "google_play");
+  await consume();
   res.json({ ok: true, status: r?.status ?? "confirmed" });
 }));
 
@@ -214,7 +291,7 @@ workshopsAdminRouter.put("/workshops/:id", wrap(async (req, res) => {
 
 workshopsAdminRouter.get("/workshops/:id/enrollments", wrap(async (req, res) => {
   const rows = await query<any>("SELECT * FROM workshop_enrollments WHERE workshop_id = ? AND status IN ('confirmed','refunded') ORDER BY paid_at DESC", [Number(req.params.id) || 0]);
-  res.json({ items: rows.map(e => ({ id: Number(e.id), name: e.name, email: e.email, phone: e.phone, amount: rupees(e.amount), early: !!e.early, status: e.status, paymentId: e.payment_id, paidAt: e.paid_at })) });
+  res.json({ items: rows.map(e => ({ id: Number(e.id), name: e.name, email: e.email, phone: e.phone, amount: rupees(e.amount), early: !!e.early, status: e.status, paymentId: e.payment_id, paidAt: e.paid_at, channel: e.channel })) });
 }));
 
 workshopsAdminRouter.patch("/workshop-enrollments/:id", wrap(async (req, res) => {

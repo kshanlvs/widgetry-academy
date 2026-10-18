@@ -20,6 +20,8 @@ void main() {
     expect(PushService.targetFor({'type': 'mock-interviewer'}).route, '/interviewer');
   });
 
+  test('short course messages open that course', () => expect(PushService.targetFor({'type': 'workshop', 'slug': 'bloc-crash-course'}).route, '/short-courses/bloc-crash-course'));
+
   test('academy links map to app screens', () {
     expect(PushService.targetFor({'type': 'announcement', 'link': 'https://widgetryacademy.in/#courses'}).route, '/courses');
     expect(PushService.targetFor({'type': 'announcement', 'link': 'https://widgetryacademy.in/blog/flutter-developer-salary-india.html'}).route, '/blog');

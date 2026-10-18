@@ -10,7 +10,7 @@ import { migrate } from "../src/migrate.js";
 import { setSender } from "../src/notify.js";
 import { createHmac } from "node:crypto";
 import { setPaymentServices, type Registration } from "../src/payments.js";
-import { setPlayApi, playAccountId } from "../src/play.js";
+import { setPlayApi, playAccountId, reportPendingExternal } from "../src/play.js";
 import { setAccountServices } from "../src/routes/account.js";
 import { setUserLookup, sendReminders } from "../src/mock.js";
 import { setMentorStore } from "../src/routes/mentors.js";
@@ -993,4 +993,80 @@ test("short courses: Bloc crash course enrolment, early-bird price, seats, Razor
     assert.equal(c.status, 201);
     assert.equal((await call("POST", "/admin/workshops", { slug: "riverpod-crash-course", title: "Riverpod Crash Course", price: 999, seats: 30 }, ADMIN)).status, 409);
   } finally { setPaymentServices(null, null); }
+});
+
+test("short courses in the Android app: Google Play purchase, Razorpay from Google's choice screen reported to Google", async () => {
+  process.env.RAZORPAY_KEY_ID = "rzp_test_abc"; process.env.RAZORPAY_KEY_SECRET = "test_secret"; process.env.RAZORPAY_WEBHOOK_SECRET = "hook_secret";
+  const rzp = new Map<string, { id: string; order_id: string; amount: number; status: string; method?: string }>();
+  let n = 950;
+  setPaymentServices({
+    async createOrder(o) { n++; return { id: "order_A" + n, amount: o.amount, currency: "INR" }; },
+    async fetchPayment(id) { return rzp.get(id)!; },
+    async orderPayments(orderId) { return [...rzp.values()].filter(p => p.order_id === orderId); },
+  }, { async get() { return null; }, async addPayment() { return "paid"; }, async earlyBirdOpen() { return false; } });
+  const purchases = new Map<string, any>(); const consumed: string[] = []; const reported: any[] = [];
+  setPlayApi({
+    async getPurchase(_p, token) { return purchases.get(token); },
+    async consume(_p, token) { consumed.push(token); },
+    async reportExternal(id, body) { reported.push({ id, body }); return true; },
+  });
+  const sign = (o: string, p: string) => createHmac("sha256", "test_secret").update(`${o}|${p}`).digest("hex");
+  const A1 = "dev:app1:a1@test.dev:App One", A2 = "dev:app2:a2@test.dev:App Two";
+  try {
+    await pool.query("DELETE FROM workshop_enrollments");
+    const id = (await call("GET", "/admin/workshops", undefined, ADMIN)).body.items.find((w: any) => w.slug === "bloc-crash-course").id;
+    const start = new Date(Date.now() + 7 * 86_400_000).toISOString();
+    await call("PUT", `/admin/workshops/${id}`, { title: "Bloc State Management Crash Course", startsAt: start, schedule: "Sat & Sun", durationMin: 300, price: 999, earlyPrice: 799, earlySeats: 1, seats: 10, meetingLink: "https://meet.google.com/x", status: "open" }, ADMIN);
+
+    // The app's list and detail (with Google Play details for signed-in users)
+    const list = await call("GET", "/workshops");
+    assert.equal(list.body.items[0].slug, "bloc-crash-course");
+    let d = await call("GET", "/workshops/bloc-crash-course", undefined, A1);
+    assert.equal(d.body.android.playProductId, "short_course_799");
+    assert.equal(d.body.android.billing, "user_choice");
+    assert.equal((await call("GET", "/workshops/bloc-crash-course")).body.android, null);
+
+    // Google Play: hold the seat, buy, verify
+    const hold = await call("POST", "/workshops/bloc-crash-course/enroll", { name: "App One", phone: "9876543210", mode: "play" }, A1);
+    assert.deepEqual([hold.status, hold.body.productId, hold.body.amount], [201, "short_course_799", 79900]);
+    purchases.set("tok-someone-else", { purchaseState: 0, orderId: "GPA.1111", obfuscatedExternalAccountId: "not-me" });
+    assert.equal((await call("POST", "/workshops/play/verify", { productId: "short_course_799", purchaseToken: "tok-someone-else" }, A1)).status, 403);
+    purchases.set("tok-pending-1234", { purchaseState: 2 });
+    assert.equal((await call("POST", "/workshops/play/verify", { productId: "short_course_799", purchaseToken: "tok-pending-1234" }, A1)).status, 202);
+    purchases.set("tok-a1-purchase", { purchaseState: 0, consumptionState: 0, orderId: "GPA.2222", obfuscatedExternalAccountId: playAccountId("app1") });
+    let v = await call("POST", "/workshops/play/verify", { productId: "short_course_799", purchaseToken: "tok-a1-purchase" }, A1);
+    assert.deepEqual([v.status, v.body.status], [200, "confirmed"]);
+    assert.ok(consumed.includes("tok-a1-purchase"));
+    v = await call("POST", "/workshops/play/verify", { productId: "short_course_799", purchaseToken: "tok-a1-purchase" }, A1);
+    assert.equal(v.status, 200, "repeat is safe");
+    d = await call("GET", "/workshops/bloc-crash-course", undefined, A1);
+    assert.deepEqual([d.body.mine.status, d.body.mine.meetingLink], ["confirmed", "https://meet.google.com/x"]);
+    // A second purchase with no seat to match is left for Google to refund (not consumed)
+    purchases.set("tok-a1-again-00", { purchaseState: 0, consumptionState: 0, orderId: "GPA.3333", obfuscatedExternalAccountId: playAccountId("app1") });
+    assert.equal((await call("POST", "/workshops/play/verify", { productId: "short_course_999", purchaseToken: "tok-a1-again-00" }, A1)).status, 409);
+    assert.ok(!consumed.includes("tok-a1-again-00"));
+
+    // Razorpay chosen on Google's screen: needs a state; reported to Google once paid
+    assert.equal((await call("POST", "/workshops/bloc-crash-course/enroll", { name: "App Two", phone: "9123456789", externalTransactionToken: "ext-token-abcdefgh" }, A2)).status, 400);
+    const o = await call("POST", "/workshops/bloc-crash-course/enroll", { name: "App Two", phone: "9123456789", externalTransactionToken: "ext-token-abcdefgh", state: "WEST BENGAL" }, A2);
+    assert.equal(o.body.amount, 99900, "early-bird seat already taken");
+    rzp.set("pay_A2", { id: "pay_A2", order_id: o.body.orderId, amount: 99900, status: "captured", method: "upi" });
+    v = await call("POST", "/workshops/verify", { orderId: o.body.orderId, paymentId: "pay_A2", signature: sign(o.body.orderId, "pay_A2") }, A2);
+    assert.equal(v.body.status, "confirmed");
+    await new Promise(r => setTimeout(r, 50));
+    await reportPendingExternal();
+    const rep = reported.find(r => r.body.oneTimeTransaction.externalTransactionToken === "ext-token-abcdefgh");
+    assert.ok(rep, "reported to Google");
+    assert.equal(rep.body.originalPreTaxAmount.priceMicros, "999000000");
+    assert.equal(reported.filter(r => r.body.oneTimeTransaction.externalTransactionToken === "ext-token-abcdefgh").length, 1, "reported once");
+
+    // Releasing a hold frees the seat
+    const h2 = await call("POST", "/workshops/bloc-crash-course/enroll", { name: "App Two", phone: "9123456789", mode: "play" }, "dev:app3:a3@test.dev:Three");
+    assert.equal(h2.status, 201);
+    const before = (await call("GET", "/workshops/bloc-crash-course")).body.workshop.seatsLeft;
+    await call("POST", "/workshops/bloc-crash-course/release", {}, "dev:app3:a3@test.dev:Three");
+    assert.equal((await call("GET", "/workshops/bloc-crash-course")).body.workshop.seatsLeft, before + 1);
+    const people = (await call("GET", `/admin/workshops/${id}/enrollments`, undefined, ADMIN)).body.items;
+    assert.deepEqual(people.map((p: any) => p.channel).sort(), ["google_play", "razorpay"]);
+  } finally { setPaymentServices(null, null); setPlayApi(null); }
 });

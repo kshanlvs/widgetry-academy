@@ -160,6 +160,9 @@ class PushService {
       case 'mock':
         final id = '${data['id'] ?? ''}';
         return PushTarget(route: id.isEmpty ? '/interviews' : '/interviews/$id');
+      case 'workshop':
+        final slug = '${data['slug'] ?? ''}';
+        if (slug.isNotEmpty) return PushTarget(route: '/short-courses/$slug');
       case 'mock-interviewer':
         final id = '${data['id'] ?? ''}';
         return PushTarget(route: id.isEmpty ? '/interviewer' : '/interviews/$id');

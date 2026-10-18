@@ -12,6 +12,7 @@ import 'package:widgetry_academy/core/widgets/common.dart';
 import 'package:widgetry_academy/core/widgets/state_views.dart';
 import 'package:widgetry_academy/features/courses/domain/entities/course.dart';
 import 'package:widgetry_academy/features/courses/presentation/cubit/courses_cubit.dart';
+import 'package:widgetry_academy/features/workshops/presentation/workshop_page.dart' show shortCourseSlug;
 
 class CourseDetailPage extends StatelessWidget {
   const CourseDetailPage({super.key, required this.courseId});
@@ -156,7 +157,9 @@ class CourseDetailPage extends StatelessWidget {
                             else if (c.priceNote != null)
                               ConstrainedBox(constraints: const BoxConstraints(maxWidth: 120), child: Text(c.priceNote!, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.bodySmall)),
                           ]),
-                    child: registered
+                    child: shortCourseSlug(c.ctaLink) != null
+                        ? FilledButton(onPressed: () => context.push('/short-courses/${shortCourseSlug(c.ctaLink)}'), child: const Text('See dates & enrol'))
+                        : registered
                         ? (s.registration!.isPaid || s.registration!.isClosed
                             ? OutlinedButton.icon(
                                 onPressed: () => context.push('/payments'),

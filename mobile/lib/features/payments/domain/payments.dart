@@ -153,8 +153,9 @@ abstract interface class StoreBilling {
   /// True on Android, where Play Billing exists.
   bool get supported;
   Future<StoreResult> buy({required String productId, required String accountId});
-  /// Course purchases Google has but our server hasn't confirmed (app closed mid-way, pending finished…).
-  Future<List<StorePurchased>> unfinished({required String accountId});
+  /// Purchases Google has but our server hasn't confirmed (app closed mid-way, pending finished…),
+  /// for products whose id starts with [prefix] ("course_fee_" for the main course, "short_course_" for crash courses).
+  Future<List<StorePurchased>> unfinished({required String accountId, String prefix = 'course_fee_'});
 }
 
 /// One payment made in the app, for the receipts list.

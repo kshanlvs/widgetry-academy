@@ -148,6 +148,15 @@ Play's rules require Google Play Billing for selling a course inside the app. Wi
 
    If you change `PRICE_*` on Railway, change the Play prices on the same day. The server offers a Play product only when its price matches the server's amount. Otherwise that payment goes through Razorpay.
 
+   **Short courses (crash courses like the Bloc one):** create one product per price, named `short_course_<price>`:
+
+   | Product ID | Name | Price (INR) |
+   |---|---|---|
+   | `short_course_799` | Crash course (early bird) | 799 |
+   | `short_course_999` | Crash course | 999 |
+
+   One product per price serves every short course, so the next crash course at ₹999 needs nothing new here. If you set a new price in Admin (say ₹1,299), create `short_course_1299` with that price and add it to `WORKSHOP_PLAY_PRICES` on Railway (default `799,999`). Until then, that price is paid with Razorpay from Google's screen.
+
 5. **Licence testers:** go to Settings → License testing and add the Gmail addresses you test with, so test purchases are free.
 
 **Fees:** Google takes its service fee on Google Play purchases. On Razorpay payments chosen on Google's screen, the fee is 4 percentage points lower. The server reports each Razorpay sale to Google automatically within minutes, and Google bills that fee monthly.
