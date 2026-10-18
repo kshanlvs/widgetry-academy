@@ -673,11 +673,16 @@ test("mock interviews: interviewer slots, booking with a 15-minute hold, payment
   assert.equal((await call("POST", "/admin/interviewers", person, C1)).status, 403);
   assert.equal((await call("POST", "/admin/interviewers", { ...person, email: "nobody@x.dev" }, ADMIN)).status, 404, "must have signed in once");
   assert.equal((await call("POST", "/admin/interviewers", person, ADMIN)).status, 201);
+  let again = await call("POST", "/admin/interviewers", { ...person, title: "Staff Engineer" }, ADMIN);
+  assert.deepEqual([again.status, again.body.updated], [200, true], "same email updates, never duplicates");
+  assert.equal((await call("GET", "/admin/interviewers", undefined, ADMIN)).body.items.length, 1);
   assert.equal((await call("GET", "/mock/interviewer/me", undefined, C1)).body.interviewer, null);
 
   // Slots need a meeting link; too soon and overlapping ones are refused/skipped
   assert.equal((await call("POST", "/mock/interviewer/slots", { starts: [inDays(3)] }, ENG)).status, 400);
   assert.equal((await call("PUT", "/mock/interviewer/me", { title: "Senior Flutter Engineer", company: "Swiggy", years: 7, tracks: ["flutter", "android"], meetingLink: "https://meet.google.com/abc-defg-hij" }, ENG)).status, 200);
+  again = await call("POST", "/admin/interviewers", person, ADMIN);
+  assert.equal((await call("GET", "/admin/interviewers", undefined, ADMIN)).body.items[0].meetingLink, "https://meet.google.com/abc-defg-hij", "re-adding keeps the saved link");
   assert.equal((await call("POST", "/mock/interviewer/slots", { starts: [new Date(Date.now() + 30 * 60_000).toISOString()] }, ENG)).status, 400);
   let r = await call("POST", "/mock/interviewer/slots", { starts: [inDays(3), inDays(3, 18).replace("18:00:00", "18:30:00"), inDays(4), inDays(5), inDays(6)], durationMin: 60 }, ENG);
   assert.equal(r.status, 201);

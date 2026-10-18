@@ -374,13 +374,17 @@ mockAdminRouter.post("/interviewers", wrap(async (req, res) => {
   const p = addBody.parse(req.body);
   const uid = p.uid ?? (await users().uidForEmail(p.email));
   if (!uid) throw new HttpError(404, "No Widgetry account uses this email yet. Ask them to sign in to the app or website once, then add them.");
+  // One interviewer per account: the same email again updates their details instead of adding a duplicate
+  const [existing] = await query<{ uid: string }>("SELECT uid FROM interviewers WHERE uid = ? OR email = ?", [uid, p.email]);
+  if (existing && existing.uid !== uid) throw new HttpError(409, "This email is already used by another interviewer.");
   await exec(
     `INSERT INTO interviewers (uid, email, name, title, company, years, tracks, bio, linkedin_url, meeting_link) VALUES (?,?,?,?,?,?,?,?,?,?)
      ON DUPLICATE KEY UPDATE email = VALUES(email), name = VALUES(name), title = VALUES(title), company = VALUES(company), years = VALUES(years),
-       tracks = VALUES(tracks), bio = VALUES(bio), linkedin_url = VALUES(linkedin_url), meeting_link = VALUES(meeting_link), active = 1`,
+       tracks = VALUES(tracks), bio = COALESCE(VALUES(bio), bio), linkedin_url = COALESCE(VALUES(linkedin_url), linkedin_url),
+       meeting_link = COALESCE(VALUES(meeting_link), meeting_link), active = 1`,
     [uid, p.email, p.name, p.title, p.company, p.years, JSON.stringify(p.tracks), p.bio, p.linkedinUrl, p.meetingLink]);
-  void notifyUser(uid, { title: "You're a Widgetry interviewer", body: "Open the app → Profile → Interviewer to add your free time slots.", data: { type: "mock-interviewer" } });
-  res.status(201).json({ ok: true, uid });
+  if (!existing) void notifyUser(uid, { title: "You're a Widgetry interviewer", body: "Open the app → Mock interviews → Interviewer dashboard to see your slots and bookings.", data: { type: "mock-interviewer" } });
+  res.status(existing ? 200 : 201).json({ ok: true, uid, updated: !!existing });
 }));
 
 const adminEdit = z.object({

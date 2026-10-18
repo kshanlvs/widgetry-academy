@@ -1045,11 +1045,11 @@ $("iForm").onsubmit = async e => {
   const url = v => { v = v.trim(); return !v ? "" : /^https?:\/\//i.test(v) ? v : "https://" + v; };
   $("iMsg").textContent = "Adding…";
   try {
-    await japi("/admin/interviewers", { method: "POST", body: {
+    const r = await japi("/admin/interviewers", { method: "POST", body: {
       email: $("iEmail").value, name: $("iName").value, title: $("iTitle").value, company: $("iCompany").value,
       years: Number($("iYears").value || 0), tracks, meetingLink: url($("iMeet").value), linkedinUrl: url($("iLi").value),
     } });
-    $("iMsg").textContent = "Added. They'll get a notification in the app."; $("iForm").reset(); $("iTf").checked = true; loadInterviews();
+    $("iMsg").textContent = r.updated ? "This email was already an interviewer, so their details were updated (no duplicate added)." : "Added. They'll get a notification in the app."; $("iForm").reset(); $("iTf").checked = true; loadInterviews();
   } catch (x) { $("iMsg").textContent = x.message; }
 };
 $("iReload").onclick = loadInterviews; $("bStatus").onchange = loadMockBookings;
