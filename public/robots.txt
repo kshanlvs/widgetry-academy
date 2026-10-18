@@ -3,3 +3,4 @@ Allow: /
 Disallow: /admin.html
 Disallow: /thank-you.html
 Sitemap: https://widgetryacademy.in/sitemap.xml
+Sitemap: https://api.widgetryacademy.in/api/sitemap-jobs.xml

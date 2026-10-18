@@ -10,6 +10,7 @@ import { jobOut, skillsFor, createJob, updateJob } from "./jobs.js";
 import { candidateOut } from "./talent.js";
 import { categories, assertCategories } from "../categories.js";
 import { notifyTopic, notifyUser, SITE } from "../notify.js";
+import { pingJob } from "../indexing.js";
 
 /** Tell subscribers of the job's category that a new job is live. */
 async function announceJobs(jobIds: number[]) {
@@ -104,6 +105,7 @@ adminRouter.post("/jobs/import", wrap(async (req, res) => {
   if (dryRun || invalid) return res.status(invalid && !dryRun ? 400 : 200).json({ created: 0, report, error: invalid && !dryRun ? `${invalid} job(s) need fixing. Nothing was added.` : undefined });
   const created: string[] = [], createdIds: number[] = [];
   for (const v of valid) { const c = await createJob(v.job, { uid: req.user!.uid, approved: true }); created.push(c.publicId); createdIds.push(c.id); }
+  for (const pid of created) pingJob(pid, "URL_UPDATED");
   void announceJobs(createdIds);   // one notification per category, not one per job
   res.status(201).json({ created: created.length, ids: created, report });
 }));
@@ -114,6 +116,7 @@ adminRouter.post("/jobs", wrap(async (req, res) => {
   await assertCategories([j.category]);
   const { id, publicId } = await createJob(j, { uid: req.user!.uid, approved: true });
   void announceJobs([id]);
+  pingJob(publicId, "URL_UPDATED");
   res.status(201).json({ id: publicId, status: "approved" });
 }));
 
@@ -122,6 +125,7 @@ adminRouter.put("/jobs/:id", wrap(async (req, res) => {
   const j = jobInput.parse(req.body);
   await assertCategories([j.category]);
   await updateJob(job.id, j);
+  if (job.status === "approved") pingJob(job.public_id, "URL_UPDATED");
   res.json({ ok: true });
 }));
 
@@ -147,6 +151,10 @@ adminRouter.patch("/jobs/:id", wrap(async (req, res) => {
   }
   if (!sets.length) throw new HttpError(400, "Nothing to change.");
   await query(`UPDATE jobs SET ${sets.join(", ")} WHERE id = ?`, [...params, job.id]);
+  // Tell Google when the job goes live or stops being live
+  const nowLive = p.status ? p.status === "approved" : (job.status === "approved" || (job.status === "expired" && !!p.extendDays));
+  if (nowLive && (job.status !== "approved" || p.extendDays)) pingJob(job.public_id, "URL_UPDATED");
+  else if (!nowLive && job.status === "approved") pingJob(job.public_id, "URL_DELETED");
   // Notifications: first time live goes to subscribers; the employer hears about approval or rejection
   const employer = job.posted_by_uid && job.posted_by_uid !== req.user!.uid ? job.posted_by_uid : null;
   if (p.status === "approved" && job.status !== "approved") {
@@ -161,6 +169,7 @@ adminRouter.patch("/jobs/:id", wrap(async (req, res) => {
 adminRouter.delete("/jobs/:id", wrap(async (req, res) => {
   const job = await jobByPid(String(req.params.id));
   await query("DELETE FROM jobs WHERE id = ?", [job.id]);
+  if (job.status === "approved") pingJob(job.public_id, "URL_DELETED");
   res.json({ ok: true });
 }));
 

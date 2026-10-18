@@ -6,6 +6,8 @@ import { query, tx } from "../db.js";
 import { config } from "../config.js";
 import { HttpError, wrap } from "../errors.js";
 import { requireAuth } from "../auth.js";
+import { pingJob } from "../indexing.js";
+import { SITE } from "../notify.js";
 import { categories, assertCategories } from "../categories.js";
 import { jobInput, employerJobPatch, jobSearch, reportInput, publicId, hashIp, ftQuery, COMMON_SKILLS, type JobInput } from "../validate.js";
 
@@ -98,6 +100,15 @@ export async function updateJob(jobId: number, j: JobInput) {
 }
 
 // ---------- Public ----------
+
+// Every live job, for Google (listed in the website's robots.txt). Cached for an hour.
+const xmlEsc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+jobsRouter.get("/sitemap-jobs.xml", wrap(async (_req, res) => {
+  const rows = await query<{ public_id: string; updated_at: Date }>(`SELECT j.public_id, j.updated_at FROM jobs j WHERE ${LIVE} ORDER BY j.featured DESC, j.approved_at DESC LIMIT 10000`);
+  const urls = rows.map(r => `  <url><loc>${xmlEsc(`${SITE}/job.html?id=${r.public_id}`)}</loc><lastmod>${new Date(r.updated_at).toISOString()}</lastmod></url>`);
+  res.set("Cache-Control", "public, max-age=3600").type("application/xml").send(
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}${urls.length ? "\n" : ""}</urlset>\n`);
+}));
 
 jobsRouter.get("/meta", wrap(async (_req, res) => {
   const [count] = await query<{ n: number }>(`SELECT COUNT(*) AS n FROM jobs j WHERE ${LIVE}`);
@@ -212,12 +223,14 @@ jobsRouter.patch("/my/jobs/:id", requireAuth, wrap(async (req, res) => {
   const r = await ownJob(req.user!.uid, String(req.params.id));
   employerJobPatch.parse(req.body);
   await query("UPDATE jobs SET status = 'filled' WHERE id = ?", [r.id]);
+  if (r.status === "approved") pingJob(r.public_id, "URL_DELETED");
   res.json({ ok: true, status: "filled", message: "Marked as filled. Candidates can no longer apply." });
 }));
 
 jobsRouter.delete("/my/jobs/:id", requireAuth, wrap(async (req, res) => {
   const r = await ownJob(req.user!.uid, String(req.params.id));
   await query("DELETE FROM jobs WHERE id = ?", [r.id]);
+  if (r.status === "approved") pingJob(r.public_id, "URL_DELETED");
   res.json({ ok: true, message: "Job deleted." });
 }));
 

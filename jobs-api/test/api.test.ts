@@ -3,6 +3,7 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import type { Server } from "node:http";
+import { setIndexer } from "../src/indexing.js";
 import { createApp } from "../src/app.js";
 import { pool } from "../src/db.js";
 import { migrate } from "../src/migrate.js";
@@ -885,4 +886,32 @@ test("admin overview: counts this period vs the previous one, daily series, to-d
   assert.ok(r.body.kpis.mockRevenue.value >= 499);
   assert.equal(r.body.daily.reduce((a: number, d: any) => a + d.revenue, 0), r.body.kpis.mockRevenue.value + r.body.kpis.courseRevenue.value);
   setOverviewSources(null);
+});
+
+test("Google: live jobs sitemap, and Google is told when a job goes live or closes", async () => {
+  const pings: string[] = [];
+  setIndexer({ async notify(url, type) { pings.push(`${type} ${url.split("id=")[1]}`); } });
+  try {
+    const a = await call("POST", "/admin/jobs", goodJob({ title: "Senior Flutter Engineer", applyUrl: "https://acme.test/careers/seo-1" }), ADMIN);
+    const id = a.body.id;
+    assert.ok(pings.includes(`URL_UPDATED ${id}`), "admin post pings Google");
+    const sm = await fetch(`${base}/sitemap-jobs.xml`);
+    assert.equal(sm.status, 200);
+    assert.match(sm.headers.get("content-type") ?? "", /xml/);
+    const xml = await sm.text();
+    assert.match(xml, new RegExp(`job\\.html\\?id=${id}</loc>`));
+    // featured-only change: no ping
+    pings.length = 0;
+    await call("PATCH", `/admin/jobs/${id}`, { featured: true }, ADMIN);
+    assert.deepEqual(pings, []);
+    // taken down: Google is told and it leaves the sitemap
+    await call("PATCH", `/admin/jobs/${id}`, { status: "rejected", rejectReason: "Duplicate" }, ADMIN);
+    assert.deepEqual(pings, [`URL_DELETED ${id}`]);
+    assert.doesNotMatch(await (await fetch(`${base}/sitemap-jobs.xml`)).text(), new RegExp(id));
+    // live again, then deleted
+    pings.length = 0;
+    await call("PATCH", `/admin/jobs/${id}`, { status: "approved" }, ADMIN);
+    await call("DELETE", `/admin/jobs/${id}`, undefined, ADMIN);
+    assert.deepEqual(pings, [`URL_UPDATED ${id}`, `URL_DELETED ${id}`]);
+  } finally { setIndexer(null); }
 });

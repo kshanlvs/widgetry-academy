@@ -68,6 +68,9 @@ function jobPosting(j) {
   document.head.appendChild(s);
 }
 
+// Closed or missing jobs shouldn't stay in Google
+function noindex() { const m = document.createElement("meta"); m.name = "robots"; m.content = "noindex"; document.head.appendChild(m); }
+
 function render(j) {
   const open = j.status === "open";
   const url = safeUrl(j.apply.url), mail = j.apply.email;
@@ -120,7 +123,7 @@ function render(j) {
     try { if (navigator.share) await navigator.share({ title: j.title, url: link }); else { await navigator.clipboard.writeText(link); toast("Link copied"); } } catch {}
   };
   $("bReport").onclick = () => { $("rErr").hidden = true; $("dReport").showModal(); };
-  if (open) jobPosting(j);
+  if (open) jobPosting(j); else noindex();
 }
 
 $("fReport").addEventListener("submit", async e => {
@@ -133,8 +136,10 @@ $("fReport").addEventListener("submit", async e => {
   finally { $("rSend").disabled = false; }
 });
 
+if (!id) noindex();
 if (!id) $("view").innerHTML = '<div class="empty" style="margin:30px 0">No job selected. <a href="jobs.html">Browse jobs</a></div>';
 else api("/jobs/" + id).then(render).catch(e => {
+  noindex();
   $("view").innerHTML = `<div class="empty" style="margin:30px 0"><h2 style="font-size:20px">${e.status === 404 ? "This job isn't available" : "Couldn't load this job"}</h2><p>${esc(e.message)}</p><a class="btn" href="jobs.html">Browse jobs</a></div>`;
 });
 </script>
