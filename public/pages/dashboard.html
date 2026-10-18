@@ -226,6 +226,7 @@
         <p id="userEmail">your@email.com</p>
       </div>
       <div class="user-menu">
+        <a href="../pages/apply-mentor.html" class="btn ghost" id="mentorBtn" hidden>🎓 Edit mentor profile</a>
         <a href="../pages/profile.html" class="btn ghost">📝 Edit Profile</a>
         <button id="logoutBtn" class="btn ghost">🚪 Logout</button>
       </div>
@@ -290,6 +291,16 @@
       currentUser = user;
       document.getElementById('userName').textContent = user.displayName || 'User';
       document.getElementById('userEmail').textContent = user.email;
+
+      // Mentors get a shortcut to edit their mentor profile
+      (async () => {
+        try {
+          const { JOBS_API } = await import('../jobs-api-url.js');
+          const r = await fetch(JOBS_API + '/mentor/me', { headers: { authorization: 'Bearer ' + (await user.getIdToken()) } });
+          const d = await r.json();
+          if (r.ok && d.application) document.getElementById('mentorBtn').hidden = false;
+        } catch (_) { /* not a mentor, or the server is unreachable: no button */ }
+      })();
 
       // Load user data
       try {
