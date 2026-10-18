@@ -275,11 +275,10 @@ const slotsBody = z.object({
   durationMin: z.union([z.literal(45), z.literal(60)]).default(60),
 });
 
-mockRouter.post("/mock/interviewer/slots", requireAuth, wrap(async (req, res) => {
-  const me = await interviewerFor(req.user!.uid);
-  if (!me) throw new HttpError(403, "Only Widgetry interviewers can do this.");
-  if (!me.meeting_link) throw new HttpError(400, "Add your meeting link (Google Meet or Zoom) in your interviewer profile first.");
-  const { starts, durationMin } = slotsBody.parse(req.body);
+/** Adds slots for an interviewer (used by the interviewer in the app and by admins). Overlaps are skipped. */
+async function addSlotsFor(me: any, body: unknown) {
+  if (!me.meeting_link) throw new HttpError(400, "Add a meeting link (Google Meet or Zoom) for this interviewer first.");
+  const { starts, durationMin } = slotsBody.parse(body);
   const now = new Date();
   const dates = [...new Set(starts)].map(s => new Date(s));
   for (const d of dates) {
@@ -287,8 +286,7 @@ mockRouter.post("/mock/interviewer/slots", requireAuth, wrap(async (req, res) =>
     if (d > addMinutes(now, 60 * 24 * 60)) throw new HttpError(400, "Slots can be at most 60 days ahead.");
   }
   const [{ n }] = await query<{ n: number }>("SELECT COUNT(*) AS n FROM interview_slots WHERE interviewer_uid = ? AND starts_at >= ? AND status IN ('open','held')", [me.uid, now]);
-  if (Number(n) + dates.length > 60) throw new HttpError(400, "You can have up to 60 open slots at a time.");
-  // Overlapping slots aren't allowed
+  if (Number(n) + dates.length > 60) throw new HttpError(400, "Up to 60 open slots at a time.");
   const existing = await query<any>("SELECT starts_at, duration_min FROM interview_slots WHERE interviewer_uid = ? AND status <> 'cancelled' AND starts_at >= ?", [me.uid, addMinutes(now, -120)]);
   const all = [...existing.map(e => ({ s: new Date(e.starts_at).getTime(), m: Number(e.duration_min) }))];
   let added = 0;
@@ -299,7 +297,13 @@ mockRouter.post("/mock/interviewer/slots", requireAuth, wrap(async (req, res) =>
     all.push({ s, m: durationMin });
     added++;
   }
-  res.status(201).json({ ok: true, added, skipped: dates.length - added });
+  return { added, skipped: dates.length - added };
+}
+
+mockRouter.post("/mock/interviewer/slots", requireAuth, wrap(async (req, res) => {
+  const me = await interviewerFor(req.user!.uid);
+  if (!me) throw new HttpError(403, "Only Widgetry interviewers can do this.");
+  res.status(201).json({ ok: true, ...(await addSlotsFor(me, req.body)) });
 }));
 
 mockRouter.delete("/mock/interviewer/slots/:id", requireAuth, wrap(async (req, res) => {
@@ -379,12 +383,56 @@ mockAdminRouter.post("/interviewers", wrap(async (req, res) => {
   res.status(201).json({ ok: true, uid });
 }));
 
+const adminEdit = z.object({
+  active: z.boolean().optional(),
+  meetingLink: optUrl.optional(),
+  title: z.string().trim().min(2).max(120).optional(),
+  company: z.string().trim().max(120).optional(),
+  years: z.coerce.number().int().min(0).max(40).optional(),
+  tracks: z.array(trackId).min(1).max(3).optional(),
+});
+
+/** Pause/re-activate, or edit the meeting link and details. */
 mockAdminRouter.patch("/interviewers/:uid", wrap(async (req, res) => {
-  const { active } = z.object({ active: z.boolean() }).parse(req.body);
-  const r = await exec("UPDATE interviewers SET active = ? WHERE uid = ?", [active ? 1 : 0, req.params.uid]);
-  if (r.affectedRows === 0) throw new HttpError(404, "Interviewer not found.");
+  const e = adminEdit.parse(req.body);
+  const [cur] = await query<any>("SELECT * FROM interviewers WHERE uid = ?", [req.params.uid]);
+  if (!cur) throw new HttpError(404, "Interviewer not found.");
+  await exec("UPDATE interviewers SET active = ?, meeting_link = ?, title = ?, company = ?, years = ?, tracks = ? WHERE uid = ?", [
+    e.active === undefined ? cur.active : e.active ? 1 : 0,
+    e.meetingLink === undefined ? cur.meeting_link : e.meetingLink,
+    e.title ?? cur.title,
+    e.company === undefined ? cur.company : e.company || null,
+    e.years ?? cur.years,
+    e.tracks ? JSON.stringify([...new Set(e.tracks)]) : (typeof cur.tracks === "string" ? cur.tracks : JSON.stringify(cur.tracks)),
+    cur.uid,
+  ]);
   // Taking someone off removes their open slots (booked interviews stay)
-  if (!active) await exec("DELETE FROM interview_slots WHERE interviewer_uid = ? AND status = 'open'", [req.params.uid]);
+  if (e.active === false) await exec("DELETE FROM interview_slots WHERE interviewer_uid = ? AND status = 'open'", [cur.uid]);
+  res.json({ ok: true });
+}));
+
+/** An interviewer's upcoming slots, for Admin. */
+mockAdminRouter.get("/interviewers/:uid/slots", wrap(async (req, res) => {
+  const now = new Date();
+  const rows = await query<any>(
+    `SELECT s.id, s.starts_at, s.duration_min, s.status, s.held_until, b.name AS booked_by FROM interview_slots s
+     LEFT JOIN mock_bookings b ON b.id = s.booking_id AND s.status = 'booked'
+     WHERE s.interviewer_uid = ? AND s.starts_at >= ? AND s.status <> 'cancelled' ORDER BY s.starts_at LIMIT 200`, [req.params.uid, addMinutes(now, -60)]);
+  res.json({ items: rows.map(r => ({
+    id: Number(r.id), startsAt: new Date(r.starts_at).toISOString(), durationMin: Number(r.duration_min),
+    status: r.status === "held" && new Date(r.held_until) < now ? "open" : r.status, bookedBy: r.booked_by ?? null,
+  })) });
+}));
+
+mockAdminRouter.post("/interviewers/:uid/slots", wrap(async (req, res) => {
+  const [me] = await query<any>("SELECT * FROM interviewers WHERE uid = ? AND active = 1", [req.params.uid]);
+  if (!me) throw new HttpError(404, "Interviewer not found or paused.");
+  res.status(201).json({ ok: true, ...(await addSlotsFor(me, req.body)) });
+}));
+
+mockAdminRouter.delete("/interview-slots/:id", wrap(async (req, res) => {
+  const r = await exec("DELETE FROM interview_slots WHERE id = ? AND (status = 'open' OR (status = 'held' AND held_until < ?))", [id.parse(req.params.id), new Date()]);
+  if (r.affectedRows === 0) throw new HttpError(409, "This slot is booked or being paid for, so it can't be removed.");
   res.json({ ok: true });
 }));
 

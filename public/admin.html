@@ -328,7 +328,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
     <h2 style="font-size:17px;margin:0 0 10px">Interviewers</h2>
     <form class="ji" id="iForm" novalidate>
       <b>Add an interviewer</b>
-      <p class="small" style="margin:0">They must have signed in to the app or website once with this email. They then add their meeting link and free slots in the app (Profile → Mock interviews → Interviewer dashboard).</p>
+      <p class="small" style="margin:0">They must have signed in to the app or website once with this email. After adding, set their meeting link and free slots below (they can also do it themselves in the app: Mock interviews → Interviewer dashboard).</p>
       <div class="acts" style="align-items:end">
         <label style="min-width:200px;flex:1">Email<input id="iEmail" type="email" required placeholder="engineer@gmail.com"></label>
         <label style="min-width:160px;flex:1">Name<input id="iName" required maxlength="100"></label>
@@ -965,14 +965,63 @@ async function loadInterviews() {
       <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3>${esc(i.name)} ${(i.tracks || []).map(k => `<span class="pill cat">${esc(TRK[k] || k)}</span>`).join(" ")}</h3><span class="pill">${i.active ? "Active" : "Paused"}</span></div>
       <div class="meta"><b style="color:var(--ink)">${esc(i.title)}</b>${i.company ? `<span>${esc(i.company)}</span>` : ""}<span>${i.years} yrs</span><a href="mailto:${esc(i.email)}">${esc(i.email)}</a>${safe(i.linkedinUrl) ? `<a href="${esc(i.linkedinUrl)}" target="_blank" rel="noopener">LinkedIn</a>` : ""}</div>
       <div class="meta"><span>${i.openSlots} open slots</span><span>${i.completed} interviews done</span><span>${i.meetingLink ? "Meeting link set" : '<b style="color:var(--bad)">No meeting link yet</b>'}</span></div>
-      <div class="acts"><button class="btn ghost" data-iact="${esc(i.uid)}" data-on="${i.active ? 0 : 1}">${i.active ? "Pause (removes open slots)" : "Re-activate"}</button></div>
+      <div class="acts" style="align-items:end">
+        <label style="flex:1;min-width:260px">Meeting link (Google Meet / Zoom)<input data-imeet="${esc(i.uid)}" value="${esc(i.meetingLink || "")}" placeholder="https://meet.google.com/abc-defg-hij"></label>
+        <button class="btn" data-isave="${esc(i.uid)}">Save link</button>
+        <button class="btn ghost" data-iact="${esc(i.uid)}" data-on="${i.active ? 0 : 1}">${i.active ? "Pause (removes open slots)" : "Re-activate"}</button>
+      </div>
+      ${i.active ? `<details data-islots="${esc(i.uid)}"${i.meetingLink ? " open" : ""}><summary><b>Free slots</b> <span class="small">(${i.openSlots} open)</span></summary>
+        <div data-ilist="${esc(i.uid)}" class="tags" style="margin:10px 0"><span class="small">Loading…</span></div>
+        ${i.meetingLink ? `<div class="acts" style="align-items:end">
+          <label>Day<input type="date" data-iday="${esc(i.uid)}" min="${new Date().toISOString().slice(0, 10)}"></label>
+          <label>Length<select data-idur="${esc(i.uid)}"><option value="60">60 min</option><option value="45">45 min</option></select></label>
+        </div>
+        <div class="tags" data-itimes="${esc(i.uid)}" style="margin:8px 0">${SLOT_TIMES.map(m => `<label class="small" style="display:inline-flex;gap:4px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:4px 8px;cursor:pointer"><input type="checkbox" value="${m}">${fmtMin(m)}</label>`).join("")}</div>
+        <div class="acts"><button class="btn" data-iadd="${esc(i.uid)}">Add selected times</button><span class="small" data-imsg="${esc(i.uid)}"></span></div>` : `<p class="small" style="color:var(--bad)">Save a meeting link first, then add slots.</p>`}
+      </details>` : ""}
     </div>`).join("") : '<p class="small">No interviewers yet. Add your first one above.</p>';
+    for (const i of items) if (i.active) loadSlots(i.uid);
+    $("iList").querySelectorAll("[data-isave]").forEach(b => b.onclick = async () => {
+      const uid = b.dataset.isave, v = $("iList").querySelector(`[data-imeet="${CSS.escape(uid)}"]`).value.trim();
+      try { await japi(`/admin/interviewers/${encodeURIComponent(uid)}`, { method: "PATCH", body: { meetingLink: !v ? "" : /^https?:\/\//i.test(v) ? v : "https://" + v } }); loadInterviews(); } catch (x) { alert(x.message); }
+    });
+    $("iList").querySelectorAll("[data-iadd]").forEach(b => b.onclick = async () => {
+      const uid = b.dataset.iadd, q = sel => $("iList").querySelector(`[${sel}="${CSS.escape(uid)}"]`);
+      const day = q("data-iday").value, msg = q("data-imsg");
+      const mins = [...q("data-itimes").querySelectorAll("input:checked")].map(x => Number(x.value));
+      if (!day) { msg.textContent = "Pick a day."; return; }
+      if (!mins.length) { msg.textContent = "Tick at least one time."; return; }
+      const [y, mo, d] = day.split("-").map(Number);
+      // Times are in this computer's time zone (IST in India); the server stores UTC
+      const starts = mins.map(m => new Date(y, mo - 1, d, Math.floor(m / 60), m % 60).toISOString());
+      msg.textContent = "Adding…";
+      try {
+        const r = await japi(`/admin/interviewers/${encodeURIComponent(uid)}/slots`, { method: "POST", body: { starts, durationMin: Number(q("data-idur").value) } });
+        msg.textContent = `Added ${r.added}${r.skipped ? `, skipped ${r.skipped} that overlap` : ""}.`;
+        q("data-itimes").querySelectorAll("input:checked").forEach(x => (x.checked = false));
+        loadSlots(uid);
+      } catch (x) { msg.textContent = x.message; }
+    });
     $("iList").querySelectorAll("[data-iact]").forEach(b => b.onclick = async () => {
       if (b.dataset.on === "0" && !confirm("Pause this interviewer? Their open slots are removed; booked interviews stay.")) return;
       try { await japi(`/admin/interviewers/${encodeURIComponent(b.dataset.iact)}`, { method: "PATCH", body: { active: b.dataset.on === "1" } }); loadInterviews(); } catch (x) { alert(x.message); }
     });
   } catch (x) { $("iOff").textContent = x.message; $("iOff").hidden = false; $("iList").innerHTML = ""; }
   loadMockBookings();
+}
+const SLOT_TIMES = Array.from({ length: 32 }, (_, k) => 7 * 60 + k * 30);   // 7:00 AM to 10:30 PM
+const fmtMin = m => new Date(2000, 0, 1, Math.floor(m / 60), m % 60).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
+async function loadSlots(uid) {
+  const box = $("iList").querySelector(`[data-ilist="${CSS.escape(uid)}"]`);
+  if (!box) return;
+  try {
+    const { items } = await japi(`/admin/interviewers/${encodeURIComponent(uid)}/slots`);
+    box.innerHTML = items.length ? items.map(x => `<span title="${x.durationMin} min" style="${x.status === "booked" ? "background:#e3f3ea" : x.status === "held" ? "background:#fdecd2" : ""}">${esc(itime(x.startsAt))} · ${x.durationMin}m${x.status === "booked" ? ` · booked${x.bookedBy ? " by " + esc(x.bookedBy) : ""}` : x.status === "held" ? " · being paid" : ` <a href="#" data-sdel="${x.id}" data-uid="${esc(uid)}" title="Remove" style="text-decoration:none">✕</a>`}</span>`).join("") : '<span class="small">No upcoming slots.</span>';
+    box.querySelectorAll("[data-sdel]").forEach(a => a.onclick = async e => {
+      e.preventDefault();
+      try { await japi(`/admin/interview-slots/${a.dataset.sdel}`, { method: "DELETE" }); loadSlots(a.dataset.uid); } catch (x) { alert(x.message); }
+    });
+  } catch (x) { box.innerHTML = `<span class="small">${esc(x.message)}</span>`; }
 }
 async function loadMockBookings() {
   try {

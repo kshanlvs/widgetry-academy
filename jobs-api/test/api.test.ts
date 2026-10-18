@@ -778,6 +778,21 @@ test("mock interviews: interviewer slots, booking with a 15-minute hold, payment
   const list = await call("GET", "/admin/interviewers", undefined, ADMIN);
   assert.equal(list.body.items[0].completed, 1);
 
+  // Admin can manage another interviewer's link and slots without the app
+  setUserLookup({ async uidForEmail(e) { return e === "neha@eng.dev" ? "eng2" : null; } });
+  await call("POST", "/admin/interviewers", { ...person, email: "neha@eng.dev", name: "Neha", tracks: ["ios"] }, ADMIN);
+  assert.equal((await call("POST", "/admin/interviewers/eng2/slots", { starts: [inDays(8)] }, ADMIN)).status, 400, "needs a meeting link");
+  assert.equal((await call("PATCH", "/admin/interviewers/eng2", { meetingLink: "meet.google.com/x" }, ADMIN)).status, 400, "full link only");
+  assert.equal((await call("PATCH", "/admin/interviewers/eng2", { meetingLink: "https://zoom.us/j/123" }, ADMIN)).status, 200);
+  r = await call("POST", "/admin/interviewers/eng2/slots", { starts: [inDays(8), inDays(9)], durationMin: 45 }, ADMIN);
+  assert.equal(r.body.added, 2);
+  assert.equal((await call("POST", "/admin/interviewers/eng2/slots", { starts: [inDays(8)] }, C1)).status, 403);
+  const adminSlots = (await call("GET", "/admin/interviewers/eng2/slots", undefined, ADMIN)).body.items;
+  assert.equal(adminSlots.length, 2);
+  assert.equal((await call("GET", "/mock/slots?track=ios")).body.slots.length, 2);
+  assert.equal((await call("DELETE", `/admin/interview-slots/${adminSlots[0].id}`, undefined, ADMIN)).status, 200);
+  assert.equal((await call("GET", "/mock/slots?track=ios")).body.slots.length, 1);
+
   // Taking an interviewer off removes their open slots
   await call("PATCH", "/admin/interviewers/eng1", { active: false }, ADMIN);
   assert.equal((await call("GET", "/mock/slots?track=flutter")).body.slots.length, 0);
