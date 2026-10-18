@@ -34,6 +34,34 @@ label{display:grid;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
 .kpi span{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
 .kpi b{display:block;font-family:"Unbounded",sans-serif;font-size:22px;margin-top:6px;font-variant-numeric:tabular-nums}
 .kpi.money b{color:var(--accent)}
+/* Overview */
+.ov-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.ov-top h2{margin:0;font-size:20px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:18px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.tile .l{font-size:13px;color:var(--muted);font-weight:600}
+.tile .v{font-size:28px;font-weight:700;margin-top:4px;color:var(--ink)}
+.tile .d{font-size:13px;margin-top:2px;color:var(--muted)}
+.tile .d .up{color:#13663c;font-weight:700}.tile .d .down{color:#a33a2b;font-weight:700}
+.todo{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.todo button{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:7px 12px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+.todo button b{background:#fdecd2;color:#8a4b00;border-radius:99px;padding:1px 8px;font-size:13px}
+.todo button.zero{color:var(--muted)}.todo button.zero b{background:var(--soft);color:var(--muted)}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-bottom:18px}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;position:relative}
+.chart h3{margin:0;font-size:15px}.chart .sub{font-size:13px;color:var(--muted);margin:2px 0 8px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:12.5px;padding:6px 9px;border-radius:8px;white-space:nowrap;transform:translate(-50%,-110%);opacity:0;transition:opacity .1s}
+.chart details{font-size:13px;margin-top:6px}.chart table{width:100%;border-collapse:collapse;margin-top:6px}.chart td,.chart th{padding:3px 6px;border-bottom:1px solid var(--line);text-align:left}.chart td:last-child,.chart th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.feed{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 0}
+.feed .it{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
+.feed .it:last-child{border-bottom:0}
+.feed .ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--soft);font-size:16px}
+.feed .t{font-weight:600;font-size:14.5px}.feed .s{font-size:13px;color:var(--muted)}
+.feed .r{text-align:right;font-size:13px;color:var(--muted);white-space:nowrap}.feed .r b{display:block;color:var(--ink);font-size:14px}
 @media (max-width:1000px){.kpis{grid-template-columns:repeat(3,1fr)}}@media (max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
 .tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:end}
 .tools label{min-width:180px;flex:1}.tools .btn{height:42px}
@@ -133,7 +161,8 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
   <div id="denied" class="note" hidden></div>
 
   <div class="tabs" id="tabs" hidden>
-    <button class="tab" data-tab="app" aria-selected="true">Students <span class="c" id="cStu">0</span></button>
+    <button class="tab" data-tab="oapp" aria-selected="true">Overview</button>
+    <button class="tab" data-tab="app" aria-selected="false">Students <span class="c" id="cStu">0</span></button>
     <button class="tab" data-tab="mapp" aria-selected="false">Mentors <span class="c" id="cMen">0</span></button>
     <button class="tab" data-tab="bapp" aria-selected="false">Next batch</button>
     <button class="tab" data-tab="capp" aria-selected="false">Courses <span class="c" id="cCrs">0</span></button>
@@ -141,6 +170,24 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
     <button class="tab" data-tab="tapp" aria-selected="false">Talent <span class="c" id="cTal">0</span></button>
     <button class="tab" data-tab="iapp" aria-selected="false">Interviews <span class="c" id="cInt">0</span></button>
   </div>
+
+  <section id="oapp" hidden>
+    <div class="ov-top">
+      <h2>What's happening</h2>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span class="small" id="ovUpdated"></span>
+        <div class="seg" id="ovRange"><button data-d="7" aria-pressed="false">7 days</button><button data-d="30" aria-pressed="true">30 days</button><button data-d="90" aria-pressed="false">90 days</button></div>
+        <button class="btn ghost" id="ovReload" type="button">Refresh</button>
+      </div>
+    </div>
+    <p class="note" id="ovErr" hidden></p>
+    <div class="todo" id="ovTodo"></div>
+    <div class="tiles" id="ovTiles"><p class="small">Loading…</p></div>
+    <div class="charts" id="ovCharts"></div>
+    <h2 style="font-size:17px;margin:8px 0 10px">Latest activity</h2>
+    <div class="feed" id="ovFeed"><p class="small" style="padding:12px 16px">Loading…</p></div>
+    <p class="small" style="margin-top:10px">Revenue counts payments made online (app and website checkout) and mock interviews. Payments you record by hand in Students aren't included. Times are India time.</p>
+  </section>
 
   <section id="app" hidden>
     <div class="kpis">
@@ -448,7 +495,7 @@ function due(r) { const st = ps(r); if (["refunded", "cancelled"].includes(st) |
 function fmtDate(ts) { const d = ts?.toDate ? ts.toDate() : null; return d ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"; }
 
 onAuthStateChanged(auth, async u => {
-  $("fLogin").hidden = !!u; $("who").hidden = !u; $("denied").hidden = true; $("app").hidden = true; $("mapp").hidden = true; $("bapp").hidden = true; $("capp").hidden = true; $("japp").hidden = true; $("tapp").hidden = true; $("iapp").hidden = true; $("tabs").hidden = true;
+  $("fLogin").hidden = !!u; $("who").hidden = !u; $("denied").hidden = true; $("app").hidden = true; $("mapp").hidden = true; $("bapp").hidden = true; $("capp").hidden = true; $("japp").hidden = true; $("tapp").hidden = true; $("iapp").hidden = true; $("oapp").hidden = true; $("tabs").hidden = true;
   if (!u) return;
   $("whoEmail").textContent = u.email || "";
   await load(u);
@@ -954,6 +1001,110 @@ async function loadTalent() {
 $("tReload").onclick = loadTalent; $("tVer").onchange = loadTalent; $("tCat").onchange = loadTalent;
 $("tq").addEventListener("keydown", e => { if (e.key === "Enter") loadTalent(); });
 
+/* ---------- Overview ---------- */
+let ovDays = 30, ovRedraw = null, ovResize = 0;
+addEventListener("resize", () => { clearTimeout(ovResize); ovResize = setTimeout(() => { if (!$("oapp").hidden && ovRedraw) ovRedraw(); }, 150); });
+const nfmt = n => Number(n).toLocaleString("en-IN");
+const rs = n => "₹" + nfmt(n);
+const compact = n => n >= 100000 ? (n / 100000).toFixed(n >= 1000000 ? 0 : 1).replace(/\.0$/, "") + "L" : n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, "") + "K" : String(n);
+const BAR = "#13866a";   // brand green, chart step (passes contrast and chroma checks)
+function deltaText(cur, prev, money) {
+  const diff = cur - prev;
+  const per = `vs previous ${ovDays} days`;
+  if (!diff) return `<span>No change ${per}</span>`;
+  const word = diff > 0 ? "up" : "down";
+  return `<span class="${word}">${diff > 0 ? "▲" : "▼"} ${money ? rs(Math.abs(diff)) : nfmt(Math.abs(diff))}</span> ${per}`;
+}
+function niceMax(v) { if (v <= 4) return Math.max(1, Math.ceil(v)); const p = 10 ** Math.floor(Math.log10(v)); const m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
+function columnChart(el, title, sub, rows, key, money) {
+  // Drawn at the card's real width so text stays at its true size
+  const W = Math.max(260, Math.round(el.clientWidth - 32)), H = 170, L = 40, B = 22, T = 10, n = rows.length;
+  const max = niceMax(Math.max(0, ...rows.map(r => r[key])));
+  const band = (W - L) / n, bw = Math.min(24, Math.max(2, band - 2));
+  const y = v => T + (H - T - B) * (1 - v / max);
+  const ticks = [0, max / 2, max].filter((v, i, a) => a.indexOf(v) === i && Number.isInteger(v));
+  const dayLbl = d => new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  const every = Math.ceil(n / Math.max(2, Math.floor((W - L) / 70)));
+  const total = rows.reduce((a, r) => a + r[key], 0);
+  el.innerHTML = `<h3>${title}</h3><div class="sub"><b style="color:var(--ink)">${money ? rs(total) : nfmt(total)}</b> ${sub} in the last ${n} days</div>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}, ${money ? rs(total) : nfmt(total)} in total">
+      ${ticks.map(v => `<line x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="#e4ebe7" stroke-width="1"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end" font-size="12" fill="#6b7d74">${money ? "₹" + compact(v) : compact(v)}</text>`).join("")}
+      ${rows.map((r, i) => {
+        const x = L + i * band + (band - bw) / 2, v = r[key], h = Math.max(0, y(0) - y(v)), rad = Math.min(4, h, bw / 2);
+        const path = v ? `M${x},${y(0)} V${y(v) + rad} Q${x},${y(v)} ${x + rad},${y(v)} H${x + bw - rad} Q${x + bw},${y(v)} ${x + bw},${y(v) + rad} V${y(0)} Z` : "";
+        return `<g data-i="${i}">${path ? `<path d="${path}" fill="${BAR}"/>` : ""}<rect x="${L + i * band}" y="${T}" width="${band}" height="${H - T - B}" fill="transparent"/></g>`;
+      }).join("")}
+      ${rows.map((r, i) => (i % every === 0 && (n - 1 - i) * band >= 64) || i === n - 1 ? `<text x="${i === n - 1 ? W : i === 0 ? L : L + i * band + band / 2}" y="${H - 5}" text-anchor="${i === n - 1 ? "end" : i === 0 ? "start" : "middle"}" font-size="12" fill="#6b7d74">${dayLbl(r.date)}</text>` : "").join("")}
+    </svg>
+    <div class="tip"></div>
+    <details><summary>Show as table</summary><table><thead><tr><th>Day</th><th>${title}</th></tr></thead><tbody>${rows.slice().reverse().map(r => `<tr><td>${dayLbl(r.date)}</td><td>${money ? rs(r[key]) : nfmt(r[key])}</td></tr>`).join("")}</tbody></table></details>`;
+  const tip = el.querySelector(".tip"), svg = el.querySelector("svg");
+  svg.querySelectorAll("g[data-i]").forEach(g => {
+    g.onmouseenter = () => {
+      const r = rows[+g.dataset.i], box = svg.getBoundingClientRect(), sc = box.width / W, i = +g.dataset.i;
+      tip.innerHTML = `<b>${dayLbl(r.date)}</b> · ${money ? rs(r[key]) : nfmt(r[key])}`;
+      const eb = el.getBoundingClientRect();
+      tip.style.left = Math.min(el.clientWidth - 60, Math.max(60, box.left - eb.left + (L + i * band + band / 2) * sc)) + "px";
+      tip.style.top = (box.top - eb.top + y(r[key]) * sc) + "px";
+      tip.style.opacity = 1;
+      g.querySelector("path")?.setAttribute("fill", "#0c6b54");
+    };
+    g.onmouseleave = () => { tip.style.opacity = 0; g.querySelector("path")?.setAttribute("fill", BAR); };
+  });
+}
+const FEED_ICON = { registration: "🎓", payment: "💳", mock: "🎙", mentor: "🧑‍🏫", job: "💼", profile: "👤" };
+function ago(iso) {
+  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (m < 1) return "just now"; if (m < 60) return m + " min ago";
+  const h = Math.round(m / 60); if (h < 24) return h + (h === 1 ? " hour ago" : " hours ago");
+  const d = Math.round(h / 24); return d === 1 ? "yesterday" : d + " days ago";
+}
+async function loadOverview() {
+  $("ovErr").hidden = true;
+  try {
+    const o = await japi("/admin/overview?days=" + ovDays);
+    const k = o.kpis;
+    const tiles = [
+      ["New registrations", k.registrations, false, `${nfmt(o.totals.registrations)} all time`],
+      ["Registrations paid", k.paidRegistrations, false, `${nfmt(o.totals.paidRegistrations)} paid all time`],
+      ["Course fees online", k.courseRevenue, true],
+      ["Mock interviews booked", k.mockBookings, false, `${nfmt(o.totals.upcomingMocks)} upcoming`],
+      ["Mock interview revenue", k.mockRevenue, true],
+      ["Mentor applications", k.mentorApplications, false],
+      ["New Talent profiles", k.profiles, false],
+      ["Jobs posted", k.jobs, false],
+      ["New app installs", k.appDevices, false, "phones that turned on notifications"],
+    ];
+    $("ovTiles").innerHTML = tiles.map(([label, x, money, note]) => `<div class="tile"><div class="l">${label}</div><div class="v">${money ? rs(x.value) : nfmt(x.value)}</div><div class="d">${deltaText(x.value, x.prev, money)}</div>${note ? `<div class="d">${esc(note)}</div>` : ""}</div>`).join("");
+    const t = o.todo;
+    const todo = [
+      ["Jobs to review", t.jobsInReview, "japp"], ["Reported jobs", t.reportedJobs, "japp"], ["Refunds due", t.refundsDue, "iapp"],
+      ["Interview feedback pending", t.feedbackPending, "iapp"], ["New mentor applications", t.newMentors, "mapp"], ["Students not paid yet", t.unpaidRegistrations, "app"],
+    ];
+    $("ovTodo").innerHTML = todo.map(([l, n, tab]) => `<button type="button" class="${n ? "" : "zero"}" data-go="${tab}">${l} <b>${nfmt(n)}</b></button>`).join("");
+    $("ovTodo").querySelectorAll("[data-go]").forEach(b => b.onclick = () => showTab(b.dataset.go));
+    $("ovCharts").innerHTML = '<div class="chart" id="ch1"></div><div class="chart" id="ch2"></div><div class="chart" id="ch3"></div>';
+    const draw = () => {
+      columnChart($("ch1"), "Registrations", "new", o.daily, "registrations");
+      columnChart($("ch2"), "Mock interviews", "booked", o.daily, "mockBookings");
+      columnChart($("ch3"), "Revenue", "collected", o.daily, "revenue", true);
+    };
+    draw();
+    ovRedraw = draw;
+    $("ovFeed").innerHTML = o.feed.length ? o.feed.map(f => `<div class="it"><div class="ic" aria-hidden="true">${FEED_ICON[f.type] || "•"}</div><div><div class="t">${esc(f.title)}</div><div class="s">${esc(f.detail || "")}</div></div><div class="r">${f.amount ? `<b>${rs(f.amount)}</b>` : ""}${ago(f.at)}</div></div>`).join("")
+      : `<p class="small" style="padding:12px 16px">Nothing new in the last ${ovDays} days.</p>`;
+    const missing = [!o.sourcesOk.registrations && "registrations", !o.sourcesOk.mentors && "mentor applications"].filter(Boolean);
+    if (missing.length) { $("ovErr").textContent = `Couldn't read ${missing.join(" and ")} from Firebase on the server. Check FIREBASE_SERVICE_ACCOUNT on Railway.`; $("ovErr").hidden = false; }
+    $("ovUpdated").textContent = "Updated " + new Date().toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
+  } catch (x) { $("ovErr").textContent = x.message; $("ovErr").hidden = false; $("ovTiles").innerHTML = ""; $("ovFeed").innerHTML = ""; }
+}
+$("ovRange").querySelectorAll("button").forEach(b => b.onclick = () => {
+  ovDays = Number(b.dataset.d);
+  $("ovRange").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  loadOverview();
+});
+$("ovReload").onclick = loadOverview;
+
 /* ---------- Mock interviews ---------- */
 const BS = { confirmed: "Upcoming", completed: "Completed", refund_due: "Refund due", no_show: "No-show", cancelled: "Cancelled / refunded" };
 const TRK = { flutter: "Flutter", android: "Android", ios: "iOS" };
@@ -1056,12 +1207,13 @@ $("iForm").onsubmit = async e => {
 $("iReload").onclick = loadInterviews; $("bStatus").onchange = loadMockBookings;
 
 /* ---------- Tabs ---------- */
-let curTab = "app";
+let curTab = "oapp";
 function showTab(t) {
   curTab = t;
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
   $("app").hidden = t !== "app"; $("mapp").hidden = t !== "mapp"; $("bapp").hidden = t !== "bapp"; $("capp").hidden = t !== "capp";
-  $("japp").hidden = t !== "japp"; $("tapp").hidden = t !== "tapp"; $("iapp").hidden = t !== "iapp";
+  $("japp").hidden = t !== "japp"; $("tapp").hidden = t !== "tapp"; $("iapp").hidden = t !== "iapp"; $("oapp").hidden = t !== "oapp";
+  if (t === "oapp") loadOverview();
   if (t === "iapp") loadInterviews();
   if (t === "bapp") loadBatch();
   if (t === "japp") loadJobs();

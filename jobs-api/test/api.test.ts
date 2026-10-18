@@ -13,6 +13,7 @@ import { setPlayApi, playAccountId } from "../src/play.js";
 import { setAccountServices } from "../src/routes/account.js";
 import { setUserLookup, sendReminders } from "../src/mock.js";
 import { setMentorStore } from "../src/routes/mentors.js";
+import { setOverviewSources, istDay } from "../src/routes/overview.js";
 
 const ADMIN = "dev:E4edbAvcdwTdkTdNwcdWneVWe572:admin@widgetry.test:Admin";
 const EMP = "dev:emp1:hr@acme.test:Acme HR";
@@ -851,4 +852,37 @@ test("mentors: apply or edit their own profile, opt in to mock interviews, publi
   assert.deepEqual(iv.tracks, ["flutter", "ios"]);
 
   setMentorStore(null); setUserLookup(null);
+});
+
+test("admin overview: counts this period vs the previous one, daily series, to-do list and activity feed", async () => {
+  const now = Date.now(), day = 86_400_000;
+  setOverviewSources({
+    async registrations() {
+      return [
+        { at: new Date(now - 60_000), name: "Asha", course: "Flutter in 10 Days", payStatus: "paid", amountPaid: 4999 },
+        { at: new Date(now - 2 * day), name: "Ravi", course: "Flutter in 10 Days", payStatus: "pending", amountPaid: 0 },
+        { at: new Date(now - 10 * day), name: "Old", course: "Flutter in 10 Days", payStatus: "pending", amountPaid: 0 },
+      ];
+    },
+    async mentorApplications() { return [{ at: new Date(now - day), name: "Meena", role: "SDE", company: "Zoho", status: "new", wantsInterviews: true }]; },
+  });
+  assert.equal((await call("GET", "/admin/overview?days=7", undefined, SEEK)).status, 403);
+  assert.equal((await call("GET", "/admin/overview?days=5", undefined, ADMIN)).status, 400);
+  const r = await call("GET", "/admin/overview?days=7", undefined, ADMIN);
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.body.kpis.registrations, { value: 2, prev: 1 });
+  assert.equal(r.body.kpis.paidRegistrations.value, 1);
+  assert.equal(r.body.kpis.mentorApplications.value, 1);
+  assert.equal(r.body.daily.length, 7);
+  assert.equal(r.body.daily.at(-1).date, istDay(new Date()));
+  assert.equal(r.body.daily.at(-1).registrations, 1);
+  assert.equal(r.body.todo.newMentors, 1);
+  assert.equal(r.body.todo.unpaidRegistrations, 2);
+  assert.ok(r.body.feed.some((f: any) => f.type === "registration" && f.title === "Asha registered"));
+  assert.ok(r.body.feed.some((f: any) => f.type === "mentor" && f.detail.includes("wants to take interviews")));
+  // Mock interviews paid earlier in the test run show up with revenue
+  assert.ok(r.body.kpis.mockBookings.value >= 1);
+  assert.ok(r.body.kpis.mockRevenue.value >= 499);
+  assert.equal(r.body.daily.reduce((a: number, d: any) => a + d.revenue, 0), r.body.kpis.mockRevenue.value + r.body.kpis.courseRevenue.value);
+  setOverviewSources(null);
 });
