@@ -60,13 +60,20 @@ accountRouter.delete("/me", requireAuth, wrap(async (req, res) => {
   await query("UPDATE job_reports SET reporter_uid = NULL WHERE reporter_uid = ?", [uid]);
   const [{ n }] = await query<{ n: number }>("SELECT COUNT(*) AS n FROM payments WHERE uid = ? AND status = 'paid'", [uid]);
   await query("DELETE FROM payments WHERE uid = ? AND status <> 'paid'", [uid]);
+  // Mock interviews: unpaid bookings and feedback go; paid bookings stay as payment records, without notes
+  await query("UPDATE interview_slots SET status = 'open', booking_id = NULL, held_until = NULL WHERE booking_id IN (SELECT id FROM (SELECT id FROM mock_bookings WHERE uid = ? AND status IN ('created','confirmed')) x)", [uid]);
+  await query("DELETE FROM mock_bookings WHERE uid = ? AND paid_at IS NULL", [uid]);
+  await query("DELETE s FROM mock_scorecards s JOIN mock_bookings b ON b.id = s.booking_id WHERE b.uid = ?", [uid]);
+  await query("UPDATE mock_bookings SET focus = NULL, share_profile = 0, status = IF(status = 'confirmed', 'refund_due', status) WHERE uid = ?", [uid]);
+  const [{ m }] = await query<{ m: number }>("SELECT COUNT(*) AS m FROM mock_bookings WHERE uid = ?", [uid]);
+  await query("DELETE FROM interviewers WHERE uid = ?", [uid]);
 
   const s = firebase();
   const keptRegistration = await s.removeRegistration(uid);
   await s.removeMentorApplications(uid);
   await s.deleteSignIn(uid);
 
-  const kept = Number(n) > 0 || keptRegistration;
+  const kept = Number(n) > 0 || Number(m) > 0 || keptRegistration;
   res.json({
     ok: true,
     keptPaymentRecords: kept,

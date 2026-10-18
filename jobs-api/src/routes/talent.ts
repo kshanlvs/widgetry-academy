@@ -33,7 +33,7 @@ export function candidateOut(r: any, skills: string[], forAdmin = false, cats: s
   return out;
 }
 
-async function load(uid: string) {
+export async function loadProfile(uid: string) {
   const [r] = await query("SELECT * FROM candidates WHERE uid = ?", [uid]);
   if (!r) return null;
   const skills = (await query<{ skill: string }>("SELECT skill FROM candidate_skills WHERE candidate_id = ? ORDER BY skill", [r.id])).map(s => s.skill);
@@ -41,13 +41,17 @@ async function load(uid: string) {
   const out = candidateOut(r, skills, false, cats.length ? cats : ["flutter"]);
   const [ph] = await query<{ mime: string; data: Buffer }>("SELECT mime, data FROM candidate_photos WHERE candidate_id = ?", [r.id]);
   out.photo = ph ? `data:${ph.mime};base64,${Buffer.from(ph.data).toString("base64")}` : null;
+  // A mock interview scorecard the candidate chose to show
+  const [mock] = await query<any>(
+    "SELECT s.overall, b.track, b.level, b.starts_at FROM mock_scorecards s JOIN mock_bookings b ON b.id = s.booking_id WHERE b.uid = ? AND s.shared = 1 ORDER BY b.starts_at DESC LIMIT 1", [uid]);
+  out.mockInterview = mock ? { overall: Number(mock.overall), track: mock.track, level: mock.level, date: new Date(mock.starts_at).toISOString() } : null;
   return out;
 }
 
 talentRouter.use((_req, res, next) => { res.set("Cache-Control", "private, no-store"); next(); });
 
 talentRouter.get("/talent/me", requireAuth, wrap(async (req, res) => {
-  res.json({ profile: await load(req.user!.uid) });
+  res.json({ profile: await loadProfile(req.user!.uid) });
 }));
 
 talentRouter.put("/talent/me", requireAuth, wrap(async (req, res) => {
@@ -78,7 +82,7 @@ talentRouter.put("/talent/me", requireAuth, wrap(async (req, res) => {
     await c.query("DELETE FROM candidate_categories WHERE candidate_id = ?", [id]);
     await c.query("INSERT INTO candidate_categories (candidate_id, category) VALUES ?", [p.categories.map(k => [id, k])]);
   });
-  res.json({ profile: await load(u.uid), message: "Your Talent Network profile is saved." });
+  res.json({ profile: await loadProfile(u.uid), message: "Your Talent Network profile is saved." });
 }));
 
 // Delete everything we hold for this profile (right to erasure)

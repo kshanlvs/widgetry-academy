@@ -34,6 +34,7 @@ class CandidateModel {
     this.verification = 'self',
     this.photo,
     this.resumeSettings,
+    this.mockInterview,
   });
 
   factory CandidateModel.fromJson(Map<String, dynamic> json) => _$CandidateModelFromJson(json);
@@ -65,6 +66,8 @@ class CandidateModel {
   final String verification;
   final String? photo;
   final ResumeSettingsModel? resumeSettings;
+  /// {overall, track, level, date} when the candidate shows a mock interview score.
+  final Map<String, dynamic>? mockInterview;
 
   Candidate toEntity() => Candidate(
         id: id,
@@ -94,6 +97,9 @@ class CandidateModel {
         verification: verification,
         photo: photo,
         resumeSettings: resumeSettings?.toEntity() ?? const ResumeSettings(),
+        mockInterview: mockInterview == null || mockInterview!['overall'] is! num
+            ? null
+            : MockBadge(overall: (mockInterview!['overall'] as num).toDouble(), track: '${mockInterview!['track'] ?? 'flutter'}'),
       );
 
   /// Body for PUT /talent/me. Empty strings mean "not set" on the server.

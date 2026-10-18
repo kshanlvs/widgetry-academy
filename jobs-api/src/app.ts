@@ -12,6 +12,8 @@ import { adminRouter } from "./routes/admin.js";
 import { devicesRouter } from "./routes/devices.js";
 import { paymentsRouter } from "./routes/payments.js";
 import { accountRouter } from "./routes/account.js";
+import { mockRouter, mockAdminRouter } from "./routes/mock.js";
+import { requireAdmin } from "./auth.js";
 
 export function createApp() {
   const app = express();
@@ -55,6 +57,8 @@ export function createApp() {
   api.use(devicesRouter);
   api.use(paymentsRouter);
   api.use(accountRouter);
+  api.use(mockRouter);
+  api.use("/admin", requireAdmin, mockAdminRouter);
   api.use("/admin", adminRouter);
   api.use((_req, res) => res.status(404).json({ error: "Not found." }));
   api.use(errorHandler);

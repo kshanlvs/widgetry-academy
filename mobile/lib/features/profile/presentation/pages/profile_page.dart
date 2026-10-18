@@ -134,6 +134,12 @@ class _ProfileView extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(p.verification == 'verified' ? 'Widgetry verified' : 'Portfolio checked', style: t.bodySmall?.copyWith(color: pal.accent, fontWeight: FontWeight.w600)),
                     ]),
+                  if (p.mockInterview != null)
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.record_voice_over_rounded, size: 14, color: AppColors.gold),
+                      const SizedBox(width: 4),
+                      Text('Mock interview ${p.mockInterview!.overall.toStringAsFixed(1)}/5', style: t.bodySmall?.copyWith(color: AppColors.warn, fontWeight: FontWeight.w600)),
+                    ]),
                 ]),
               ]),
             ),
@@ -147,6 +153,32 @@ class _ProfileView extends StatelessWidget {
             const SizedBox(width: Space.sm),
             Expanded(child: OutlinedButton(onPressed: () => context.push('/profile/edit'), child: const Text('Edit profile'))),
           ]),
+        ),
+        const SizedBox(height: Space.lg),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Space.lg),
+          child: Material(
+            color: pal.soft.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(Radii.lg),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(Radii.lg),
+              onTap: () => context.push('/interviews'),
+              child: Padding(
+                padding: const EdgeInsets.all(Space.lg),
+                child: Row(children: [
+                  Icon(Icons.record_voice_over_outlined, color: pal.accent),
+                  const SizedBox(width: Space.md),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('Practise with a mock interview', style: t.titleSmall),
+                      Text('One-to-one with a working engineer, with a written scorecard', style: t.bodySmall),
+                    ]),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: pal.faint),
+                ]),
+              ),
+            ),
+          ),
         ),
 
         // Score

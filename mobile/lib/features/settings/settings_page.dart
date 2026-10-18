@@ -136,6 +136,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ]),
         const SectionLabel('Help'),
         Group(children: [
+          _link(Icons.record_voice_over_outlined, 'Mock interviews', () => context.push('/interviews')),
           _link(Icons.chat_bubble_outline_rounded, 'Ask the Widgetry Assistant', () => context.push('/assistant')),
           _link(Icons.chat_rounded, 'WhatsApp us', () => _links.openExternal('https://wa.me/${AppConfig.whatsappNumber}'), external: true),
         ]),

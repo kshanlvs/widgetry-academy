@@ -271,3 +271,45 @@ class _FeaturedCard extends StatelessWidget {
     );
   }
 }
+
+/// "Mock interview with a working engineer" on the home screen.
+class MockInterviewTile extends StatelessWidget {
+  const MockInterviewTile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final p = Palette.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Space.lg, 0, Space.lg, Space.lg),
+      child: Material(
+        color: p.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.lg), side: BorderSide(color: p.line)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.push('/interviews'),
+          child: Padding(
+            padding: const EdgeInsets.all(Space.lg),
+            child: Row(children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(color: AppColors.gold.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(Radii.md)),
+                child: const Icon(Icons.record_voice_over_rounded, color: AppColors.warn, size: 22),
+              ),
+              const SizedBox(width: Space.md),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Mock interview with a working engineer', style: t.titleSmall),
+                  const SizedBox(height: 2),
+                  Text('One-to-one video call and a written scorecard', style: t.bodySmall),
+                ]),
+              ),
+              Icon(Icons.chevron_right_rounded, color: p.faint),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+}

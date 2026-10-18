@@ -157,6 +157,12 @@ class PushService {
         return const PushTarget(route: '/profile');
       case 'payment':
         return const PushTarget(route: '/payments');
+      case 'mock':
+        final id = '${data['id'] ?? ''}';
+        return PushTarget(route: id.isEmpty ? '/interviews' : '/interviews/$id');
+      case 'mock-interviewer':
+        final id = '${data['id'] ?? ''}';
+        return PushTarget(route: id.isEmpty ? '/interviewer' : '/interviews/$id');
     }
     if (link.startsWith(AppConfig.siteUrl)) {
       final path = link.substring(AppConfig.siteUrl.length);

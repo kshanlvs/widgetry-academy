@@ -3,6 +3,7 @@ import { config } from "./config.js";
 import { pool } from "./db.js";
 import { migrate } from "./migrate.js";
 import { reportPendingExternal } from "./play.js";
+import { sendReminders } from "./mock.js";
 
 async function main() {
   if (process.env.MIGRATE_ON_START === "1") await migrate();
@@ -10,6 +11,9 @@ async function main() {
   // Google Play needs alternative-billing payments reported within 24 hours: retry any that failed
   const reporter = setInterval(() => { reportPendingExternal().catch(e => console.warn(`[play] retry failed: ${e?.message}`)); }, 10 * 60 * 1000);
   reporter.unref();
+  // Mock interview reminders, about an hour before
+  const reminders = setInterval(() => { sendReminders().catch(e => console.warn(`[mock] reminders failed: ${e?.message}`)); }, 5 * 60 * 1000);
+  reminders.unref();
   const stop = () => server.close(() => pool.end().finally(() => process.exit(0)));
   process.on("SIGTERM", stop);
   process.on("SIGINT", stop);

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { query } from "../db.js";
 import { wrap, HttpError } from "../errors.js";
 import { requireAuth } from "../auth.js";
+import { fulfilMock } from "../mock.js";
 import { INDIA_STATES, PLAY_PRODUCTS, planForProduct, playAccountId, playApi, playConfig } from "../play.js";
 import { COURSE, PLAN_TITLE, bookingAmount, coursePrice, fulfil, gateway, paymentsEnabled, plansFor, razorpayConfig, reconcile, store, validPaymentSignature, validWebhookSignature } from "../payments.js";
 
@@ -112,6 +113,9 @@ paymentsRouter.post("/payments/webhook", wrap(async (req, res) => {
   if (["payment.captured", "order.paid"].includes(event?.event) && p?.order_id && p?.id && p?.status === "captured") {
     const [row] = await query<{ amount: number }>("SELECT amount FROM payments WHERE order_id = ?", [p.order_id]);
     if (row && row.amount === p.amount) await fulfil(p.order_id, p.id, p.method);
+    // Mock interview bookings use their own table
+    const [mock] = row ? [] : await query<{ amount: number }>("SELECT amount FROM mock_bookings WHERE order_id = ?", [p.order_id]);
+    if (mock && mock.amount === p.amount) await fulfilMock(p.order_id, p.id, p.method);
   }
   if (event?.event === "payment.failed" && p?.order_id) {
     await query("UPDATE payments SET status = 'failed' WHERE order_id = ? AND status = 'created'", [p.order_id]);

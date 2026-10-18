@@ -222,6 +222,24 @@ Until the keys are set, the app shows "In-app payment is coming soon" with a lin
 
 **Android release builds:** `android/app/proguard-rules.pro` (in this repo) keeps Razorpay's classes. Flutter picks it up automatically.
 
+## Mock interviews
+
+One-to-one mock interviews with working engineers, paid with Razorpay. A live one-to-one session is exempt from Google Play Billing, so no Google fee applies.
+
+**Candidates** (Home tile, Profile, Settings → Mock interviews):
+1. Choose the track (Flutter, Android, iOS), level (Fresher ₹499, Mid ₹799, Senior ₹1,199) and round.
+2. Pick an open slot. It's held for 15 minutes while they pay.
+3. After paying, the booking shows the interviewer and, from 10 minutes before, a **Join call** button. A reminder is pushed about an hour before.
+4. After the call they get a scorecard: five skills scored 1–5, what went well, what to work on, and a hire call. They can show the overall score on their profile.
+5. Cancelling 24+ hours before puts the booking in "Refund due" (refund in Razorpay, then mark it refunded in Admin).
+
+**Interviewers** (added in Admin → Interviews by the email they signed in with):
+1. In the app, open Mock interviews → Interviewer dashboard, and add their Google Meet/Zoom link.
+2. Add free slots (any day in the next 3 weeks, 45 or 60 minutes). Overlaps are skipped.
+3. After each interview, tap the booking → **Write feedback**, or mark a no-show 15 minutes after the start.
+
+Server: `src/mock.ts` and `src/routes/mock.ts`; tables in `migrations/011_mock_interviews.sql`. Prices: `PRICE_MOCK_FRESHER`, `PRICE_MOCK_MID`, `PRICE_MOCK_SENIOR` on Railway. Payment confirmation works like course fees: app, webhook, or recovery when the candidate opens their bookings.
+
 ## Widgetry Assistant (chat)
 
 The app's chat gives the same answers as the website chatbot. The answers live in one place, `public/chatbot.js`, and are copied into the app's `assets/chatbot/intents.json`.

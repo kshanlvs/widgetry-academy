@@ -139,6 +139,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
     <button class="tab" data-tab="capp" aria-selected="false">Courses <span class="c" id="cCrs">0</span></button>
     <button class="tab" data-tab="japp" aria-selected="false">Jobs <span class="c" id="cJobs">0</span></button>
     <button class="tab" data-tab="tapp" aria-selected="false">Talent <span class="c" id="cTal">0</span></button>
+    <button class="tab" data-tab="iapp" aria-selected="false">Interviews <span class="c" id="cInt">0</span></button>
   </div>
 
   <section id="app" hidden>
@@ -321,6 +322,39 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
     <div class="jl" id="tList"><p class="small">Loading…</p></div>
     <p class="small" style="margin-top:12px">Profiles are private: only you can see them. Verify: check their apps and GitHub (Portfolio checked), then a 20–30 min technical call (Widgetry verified).</p>
   </section>
+
+  <section id="iapp" hidden>
+    <p class="note" id="iOff" hidden></p>
+    <h2 style="font-size:17px;margin:0 0 10px">Interviewers</h2>
+    <form class="ji" id="iForm" novalidate>
+      <b>Add an interviewer</b>
+      <p class="small" style="margin:0">They must have signed in to the app or website once with this email. They then add their meeting link and free slots in the app (Profile → Mock interviews → Interviewer dashboard).</p>
+      <div class="acts" style="align-items:end">
+        <label style="min-width:200px;flex:1">Email<input id="iEmail" type="email" required placeholder="engineer@gmail.com"></label>
+        <label style="min-width:160px;flex:1">Name<input id="iName" required maxlength="100"></label>
+        <label style="min-width:200px;flex:1">Title<input id="iTitle" required maxlength="120" placeholder="Senior Flutter Engineer"></label>
+        <label style="min-width:140px">Company<input id="iCompany" maxlength="120"></label>
+        <label style="width:90px">Years<input id="iYears" type="number" min="0" max="40" value="5"></label>
+      </div>
+      <div class="acts" style="align-items:end">
+        <label class="small"><input type="checkbox" id="iTf" checked> Flutter</label>
+        <label class="small"><input type="checkbox" id="iTa"> Android</label>
+        <label class="small"><input type="checkbox" id="iTi"> iOS</label>
+        <label style="min-width:220px;flex:1">Meeting link (optional)<input id="iMeet" placeholder="https://meet.google.com/..."></label>
+        <label style="min-width:200px;flex:1">LinkedIn (optional)<input id="iLi" placeholder="https://linkedin.com/in/..."></label>
+        <button class="btn" type="submit">Add interviewer</button>
+      </div>
+      <p class="small" id="iMsg" style="margin:0"></p>
+    </form>
+    <div class="jl" id="iList" style="margin-top:12px"><p class="small">Loading…</p></div>
+    <h2 style="font-size:17px;margin:26px 0 10px">Bookings</h2>
+    <div class="tools">
+      <label>Status<select id="bStatus"><option value="all">All</option><option value="refund_due">Refund due</option><option value="confirmed">Upcoming</option><option value="completed">Completed</option><option value="no_show">No-show</option><option value="cancelled">Cancelled</option></select></label>
+      <button class="btn ghost" id="iReload" type="button">Refresh</button>
+    </div>
+    <div class="jl" id="bList"><p class="small">Loading…</p></div>
+    <p class="small" style="margin-top:12px">Refunds: refund the payment in Razorpay → Transactions → Payments (search the payment ID), then mark the booking "Refunded". Prices: PRICE_MOCK_FRESHER / PRICE_MOCK_MID / PRICE_MOCK_SENIOR on Railway (default ₹499 / ₹799 / ₹1,199).</p>
+  </section>
 </main>
 
 <dialog id="ndlg"><form class="dlg" id="nForm" method="dialog" novalidate>
@@ -413,7 +447,7 @@ function due(r) { const st = ps(r); if (["refunded", "cancelled"].includes(st) |
 function fmtDate(ts) { const d = ts?.toDate ? ts.toDate() : null; return d ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"; }
 
 onAuthStateChanged(auth, async u => {
-  $("fLogin").hidden = !!u; $("who").hidden = !u; $("denied").hidden = true; $("app").hidden = true; $("mapp").hidden = true; $("bapp").hidden = true; $("capp").hidden = true; $("japp").hidden = true; $("tapp").hidden = true; $("tabs").hidden = true;
+  $("fLogin").hidden = !!u; $("who").hidden = !u; $("denied").hidden = true; $("app").hidden = true; $("mapp").hidden = true; $("bapp").hidden = true; $("capp").hidden = true; $("japp").hidden = true; $("tapp").hidden = true; $("iapp").hidden = true; $("tabs").hidden = true;
   if (!u) return;
   $("whoEmail").textContent = u.email || "";
   await load(u);
@@ -919,13 +953,66 @@ async function loadTalent() {
 $("tReload").onclick = loadTalent; $("tVer").onchange = loadTalent; $("tCat").onchange = loadTalent;
 $("tq").addEventListener("keydown", e => { if (e.key === "Enter") loadTalent(); });
 
+/* ---------- Mock interviews ---------- */
+const BS = { confirmed: "Upcoming", completed: "Completed", refund_due: "Refund due", no_show: "No-show", cancelled: "Cancelled / refunded" };
+const TRK = { flutter: "Flutter", android: "Android", ios: "iOS" };
+const itime = d => new Date(d).toLocaleString("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+async function loadInterviews() {
+  try {
+    const { items } = await japi("/admin/interviewers");
+    $("iOff").hidden = true;
+    $("iList").innerHTML = items.length ? items.map(i => `<div class="ji">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3>${esc(i.name)} ${(i.tracks || []).map(k => `<span class="pill cat">${esc(TRK[k] || k)}</span>`).join(" ")}</h3><span class="pill">${i.active ? "Active" : "Paused"}</span></div>
+      <div class="meta"><b style="color:var(--ink)">${esc(i.title)}</b>${i.company ? `<span>${esc(i.company)}</span>` : ""}<span>${i.years} yrs</span><a href="mailto:${esc(i.email)}">${esc(i.email)}</a>${safe(i.linkedinUrl) ? `<a href="${esc(i.linkedinUrl)}" target="_blank" rel="noopener">LinkedIn</a>` : ""}</div>
+      <div class="meta"><span>${i.openSlots} open slots</span><span>${i.completed} interviews done</span><span>${i.meetingLink ? "Meeting link set" : '<b style="color:var(--bad)">No meeting link yet</b>'}</span></div>
+      <div class="acts"><button class="btn ghost" data-iact="${esc(i.uid)}" data-on="${i.active ? 0 : 1}">${i.active ? "Pause (removes open slots)" : "Re-activate"}</button></div>
+    </div>`).join("") : '<p class="small">No interviewers yet. Add your first one above.</p>';
+    $("iList").querySelectorAll("[data-iact]").forEach(b => b.onclick = async () => {
+      if (b.dataset.on === "0" && !confirm("Pause this interviewer? Their open slots are removed; booked interviews stay.")) return;
+      try { await japi(`/admin/interviewers/${encodeURIComponent(b.dataset.iact)}`, { method: "PATCH", body: { active: b.dataset.on === "1" } }); loadInterviews(); } catch (x) { alert(x.message); }
+    });
+  } catch (x) { $("iOff").textContent = x.message; $("iOff").hidden = false; $("iList").innerHTML = ""; }
+  loadMockBookings();
+}
+async function loadMockBookings() {
+  try {
+    const { items } = await japi("/admin/mock-bookings?status=" + $("bStatus").value);
+    $("cInt").textContent = items.filter(b => b.status === "refund_due").length || "";
+    $("bList").innerHTML = items.length ? items.map(b => `<div class="ji">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3>${esc(b.title)}</h3><span class="pill"${b.status === "refund_due" ? ' style="background:#fdecd2;color:#8a4b00"' : ""}>${esc(BS[b.status] || b.status)}</span></div>
+      <div class="meta"><b style="color:var(--ink)">${esc(itime(b.startsAt))}</b><span>${esc(b.candidate.name || "—")}</span>${b.candidate.email ? `<a href="mailto:${esc(b.candidate.email)}">${esc(b.candidate.email)}</a>` : ""}<span>with ${esc(b.interviewer || "—")}</span></div>
+      <div class="meta"><span>₹${Number(b.amount).toLocaleString("en-IN")}</span>${b.paymentId ? `<span>Payment ${esc(b.paymentId)}</span>` : ""}${b.paidAt ? `<span>Paid ${jdate(b.paidAt)}</span>` : ""}</div>
+      ${b.status === "refund_due" ? `<div class="acts"><button class="btn" data-bset="${b.id}" data-st="cancelled">Mark refunded</button></div>` : ""}
+      ${b.status === "confirmed" && new Date(b.startsAt) < new Date() ? `<div class="acts"><button class="btn ghost" data-bset="${b.id}" data-st="no_show">Mark no-show</button></div>` : ""}
+    </div>`).join("") : '<p class="small">No bookings here.</p>';
+    $("bList").querySelectorAll("[data-bset]").forEach(btn => btn.onclick = async () => {
+      try { await japi(`/admin/mock-bookings/${btn.dataset.bset}`, { method: "PATCH", body: { status: btn.dataset.st } }); loadMockBookings(); } catch (x) { alert(x.message); }
+    });
+  } catch (x) { $("bList").innerHTML = `<p class="small">${esc(x.message)}</p>`; }
+}
+$("iForm").onsubmit = async e => {
+  e.preventDefault();
+  const tracks = [["iTf", "flutter"], ["iTa", "android"], ["iTi", "ios"]].filter(([id]) => $(id).checked).map(([, t]) => t);
+  const url = v => { v = v.trim(); return !v ? "" : /^https?:\/\//i.test(v) ? v : "https://" + v; };
+  $("iMsg").textContent = "Adding…";
+  try {
+    await japi("/admin/interviewers", { method: "POST", body: {
+      email: $("iEmail").value, name: $("iName").value, title: $("iTitle").value, company: $("iCompany").value,
+      years: Number($("iYears").value || 0), tracks, meetingLink: url($("iMeet").value), linkedinUrl: url($("iLi").value),
+    } });
+    $("iMsg").textContent = "Added. They'll get a notification in the app."; $("iForm").reset(); $("iTf").checked = true; loadInterviews();
+  } catch (x) { $("iMsg").textContent = x.message; }
+};
+$("iReload").onclick = loadInterviews; $("bStatus").onchange = loadMockBookings;
+
 /* ---------- Tabs ---------- */
 let curTab = "app";
 function showTab(t) {
   curTab = t;
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
   $("app").hidden = t !== "app"; $("mapp").hidden = t !== "mapp"; $("bapp").hidden = t !== "bapp"; $("capp").hidden = t !== "capp";
-  $("japp").hidden = t !== "japp"; $("tapp").hidden = t !== "tapp";
+  $("japp").hidden = t !== "japp"; $("tapp").hidden = t !== "tapp"; $("iapp").hidden = t !== "iapp";
+  if (t === "iapp") loadInterviews();
   if (t === "bapp") loadBatch();
   if (t === "japp") loadJobs();
   if (t === "tapp") loadTalent();

@@ -11,6 +11,7 @@ import { createHmac } from "node:crypto";
 import { setPaymentServices, type Registration } from "../src/payments.js";
 import { setPlayApi, playAccountId } from "../src/play.js";
 import { setAccountServices } from "../src/routes/account.js";
+import { setUserLookup, sendReminders } from "../src/mock.js";
 
 const ADMIN = "dev:E4edbAvcdwTdkTdNwcdWneVWe572:admin@widgetry.test:Admin";
 const EMP = "dev:emp1:hr@acme.test:Acme HR";
@@ -35,6 +36,7 @@ const goodJob = (over: Record<string, unknown> = {}) => ({
 before(async () => {
   await migrate(() => {});
   for (const t of ["job_reports", "job_skills", "jobs", "companies", "candidate_skills", "candidates"]) await pool.query(`DELETE FROM ${t}`);
+  for (const t of ["mock_scorecards", "mock_bookings", "interview_slots", "interviewers"]) await pool.query(`DELETE FROM ${t}`);
   server = createApp().listen(0);
   await new Promise(r => server.once("listening", r));
   base = `http://127.0.0.1:${(server.address() as any).port}/api`;
@@ -644,4 +646,142 @@ test("profile links: blank or spaces means no link; a bad link says how to fix i
   r = await call("PUT", "/talent/me", profile({ apps: [{ name: "X", url: "bad link", role: "", about: "" }] }), U);
   assert.match(r.body.error, /^apps\.0\.url: /);
   await call("DELETE", "/talent/me", undefined, U);
+});
+
+test("mock interviews: interviewer slots, booking with a 15-minute hold, payment, scorecard, profile badge, cancellations", async () => {
+  process.env.RAZORPAY_KEY_ID = "rzp_test_abc"; process.env.RAZORPAY_KEY_SECRET = "test_secret"; process.env.RAZORPAY_WEBHOOK_SECRET = "hook_secret";
+  const rzp = new Map<string, { id: string; order_id: string; amount: number; status: string; method?: string }>();
+  let n = 500;
+  setPaymentServices(
+    {
+      async createOrder(o) { n++; return { id: "order_M" + n, amount: o.amount, currency: "INR" }; },
+      async fetchPayment(id) { return rzp.get(id)!; },
+      async orderPayments(orderId) { return [...rzp.values()].filter(p => p.order_id === orderId); },
+    },
+    { async get() { return null; }, async addPayment() { return "paid"; }, async earlyBirdOpen() { return false; } });
+  const pushes: string[] = [];
+  setSender({ async topic() {}, async tokens(_t, p) { pushes.push(p.title); return []; } });
+  setUserLookup({ async uidForEmail(e) { return e === "arjun@eng.dev" ? "eng1" : null; } });
+  const ENG = "dev:eng1:arjun@eng.dev:Arjun", C1 = "dev:cand1:c1@test.dev:Cand One", C2 = "dev:cand2:c2@test.dev:Cand Two";
+  const sign = (o: string, p: string) => createHmac("sha256", "test_secret").update(`${o}|${p}`).digest("hex");
+  const inDays = (d: number, h = 18) => { const t = new Date(); t.setUTCDate(t.getUTCDate() + d); t.setUTCHours(h, 0, 0, 0); return t.toISOString(); };
+  await call("POST", "/me/devices", { token: "tok-cand1-0123456789abcdef" }, C1);
+  await call("POST", "/me/devices", { token: "tok-eng1-0123456789abcdefg" }, ENG);
+
+  // Admin adds an interviewer by email
+  const person = { email: "arjun@eng.dev", name: "Arjun Mehta", title: "Senior Flutter Engineer", company: "Swiggy", years: 7, tracks: ["flutter", "android"], bio: "Built apps used by millions." };
+  assert.equal((await call("POST", "/admin/interviewers", person, C1)).status, 403);
+  assert.equal((await call("POST", "/admin/interviewers", { ...person, email: "nobody@x.dev" }, ADMIN)).status, 404, "must have signed in once");
+  assert.equal((await call("POST", "/admin/interviewers", person, ADMIN)).status, 201);
+  assert.equal((await call("GET", "/mock/interviewer/me", undefined, C1)).body.interviewer, null);
+
+  // Slots need a meeting link; too soon and overlapping ones are refused/skipped
+  assert.equal((await call("POST", "/mock/interviewer/slots", { starts: [inDays(3)] }, ENG)).status, 400);
+  assert.equal((await call("PUT", "/mock/interviewer/me", { title: "Senior Flutter Engineer", company: "Swiggy", years: 7, tracks: ["flutter", "android"], meetingLink: "https://meet.google.com/abc-defg-hij" }, ENG)).status, 200);
+  assert.equal((await call("POST", "/mock/interviewer/slots", { starts: [new Date(Date.now() + 30 * 60_000).toISOString()] }, ENG)).status, 400);
+  let r = await call("POST", "/mock/interviewer/slots", { starts: [inDays(3), inDays(3, 18).replace("18:00:00", "18:30:00"), inDays(4), inDays(5), inDays(6)], durationMin: 60 }, ENG);
+  assert.equal(r.status, 201);
+  assert.deepEqual([r.body.added, r.body.skipped], [4, 1], "18:30 overlaps 18:00");
+  assert.equal((await call("POST", "/mock/interviewer/slots", { starts: [inDays(3)] }, C1)).status, 403);
+
+  // Candidates see open slots for their track
+  const opts = await call("GET", "/mock/options");
+  assert.deepEqual(opts.body.levels.map((l: any) => l.price), [499, 799, 1199]);
+  assert.equal((await call("GET", "/mock/slots?track=ios")).body.slots.length, 0);
+  let slots = (await call("GET", "/mock/slots?track=flutter")).body.slots;
+  assert.equal(slots.length, 4);
+  assert.equal(slots[0].interviewer.name, "Arjun Mehta");
+  assert.equal(slots[0].interviewer.meetingLink, undefined, "link is never public");
+
+  // Book: slot is held, price by level, others can't take it
+  const book = { slotId: slots[0].id, track: "flutter", level: "mid", format: "technical", focus: "Bloc and testing" };
+  assert.equal((await call("POST", "/mock/book", { ...book, track: "ios" }, C1)).status, 400);
+  r = await call("POST", "/mock/book", book, C1);
+  assert.equal(r.status, 201);
+  assert.equal(r.body.amount, 79900);
+  const o1 = r.body.orderId, b1 = r.body.bookingId;
+  assert.equal((await call("POST", "/mock/book", book, C2)).status, 409, "held for C1");
+  assert.equal((await call("GET", "/mock/slots?track=flutter")).body.slots.length, 3);
+  let mine = (await call("GET", "/mock/mine", undefined, C1)).body.bookings;
+  assert.equal(mine[0].status, "created");
+  assert.equal(mine[0].meetingLink, null, "no link before paying");
+
+  // Pay
+  rzp.set("pay_M1", { id: "pay_M1", order_id: o1, amount: 79900, status: "captured", method: "upi" });
+  assert.equal((await call("POST", "/mock/verify", { orderId: o1, paymentId: "pay_M1", signature: sign(o1, "pay_M1") }, C2)).status, 404, "not C2's booking");
+  r = await call("POST", "/mock/verify", { orderId: o1, paymentId: "pay_M1", signature: sign(o1, "pay_M1") }, C1);
+  assert.equal(r.body.status, "confirmed");
+  mine = (await call("GET", "/mock/mine", undefined, C1)).body.bookings;
+  assert.equal(mine[0].meetingLink, "https://meet.google.com/abc-defg-hij");
+  assert.equal(mine[0].interviewer.company, "Swiggy");
+  assert.ok(pushes.includes("Mock interview booked") && pushes.includes("New mock interview booked"));
+
+  // Interviewer sees it, with the candidate's profile when shared
+  await call("PUT", "/talent/me", profile({ fullName: "Cand One" }), C1);
+  let dash = (await call("GET", "/mock/interviewer/me", undefined, ENG)).body;
+  assert.equal(dash.bookings.length, 1);
+  assert.equal(dash.bookings[0].candidate.name, "Cand One");
+  assert.equal(dash.bookings[0].canScore, false);
+  assert.equal((await call("GET", `/mock/bookings/${b1}`, undefined, ENG)).body.booking.candidateProfile.fullName, "Cand One");
+  assert.equal((await call("GET", `/mock/bookings/${b1}`, undefined, C2)).status, 404);
+  assert.equal((await call("DELETE", `/mock/interviewer/slots/${slots[0].id}`, undefined, ENG)).status, 409, "booked slots can't be deleted");
+
+  // Reminder about an hour before
+  const start1 = new Date(mine[0].startsAt);
+  assert.equal(await sendReminders(new Date(start1.getTime() - 50 * 60_000)), 1);
+  assert.equal(await sendReminders(new Date(start1.getTime() - 45 * 60_000)), 0, "only once");
+
+  // Scorecard after the interview
+  const card = { scores: { knowledge: 4, coding: 3, architecture: 4, debugging: 3, communication: 5 }, strengths: "Clear explanation of Bloc and solid widget tests.", improve: "Practise breaking problems down before coding.", recommendation: "hire" };
+  assert.equal((await call("POST", `/mock/interviewer/bookings/${b1}/scorecard`, card, ENG)).status, 409, "not started yet");
+  await pool.query("UPDATE mock_bookings SET starts_at = ? WHERE id = ?", [new Date(Date.now() - 70 * 60_000), b1]);
+  assert.equal((await call("POST", `/mock/interviewer/bookings/${b1}/scorecard`, { ...card, strengths: "ok" }, ENG)).status, 400);
+  r = await call("POST", `/mock/interviewer/bookings/${b1}/scorecard`, card, ENG);
+  assert.equal(r.status, 201);
+  assert.equal(r.body.overall, 3.8);
+  mine = (await call("GET", "/mock/mine", undefined, C1)).body.bookings;
+  assert.equal(mine[0].status, "completed");
+  assert.equal(mine[0].scorecard.recommendation, "hire");
+  assert.equal((await call("GET", "/talent/me", undefined, C1)).body.profile.mockInterview, null, "private until shared");
+  assert.equal((await call("PUT", `/mock/bookings/${b1}/share`, { shared: true }, C1)).status, 200);
+  assert.deepEqual((await call("GET", "/talent/me", undefined, C1)).body.profile.mockInterview.overall, 3.8);
+
+  // Cancel an unpaid booking: slot opens again
+  slots = (await call("GET", "/mock/slots?track=flutter")).body.slots;
+  r = await call("POST", "/mock/book", { ...book, slotId: slots[0].id }, C2);
+  assert.equal((await call("POST", `/mock/bookings/${r.body.bookingId}/cancel`, undefined, C2)).body.status, "cancelled");
+  assert.equal((await call("GET", "/mock/slots?track=flutter")).body.slots.length, 3);
+
+  // Paid and more than 24 hours away: cancel → refund due, slot open again
+  r = await call("POST", "/mock/book", { ...book, slotId: slots[0].id, level: "fresher" }, C2);
+  assert.equal(r.body.amount, 49900);
+  rzp.set("pay_M2", { id: "pay_M2", order_id: r.body.orderId, amount: 49900, status: "captured", method: "card" });
+  await call("POST", "/mock/verify", { orderId: r.body.orderId, paymentId: "pay_M2", signature: sign(r.body.orderId, "pay_M2") }, C2);
+  const c = await call("POST", `/mock/bookings/${r.body.bookingId}/cancel`, undefined, C2);
+  assert.equal(c.body.status, "refund_due");
+  assert.equal((await call("GET", "/mock/slots?track=flutter")).body.slots.length, 3);
+
+  // Hold expired and someone else took the slot; the late payment becomes a refund, never a double booking
+  slots = (await call("GET", "/mock/slots?track=flutter")).body.slots;
+  const late = await call("POST", "/mock/book", { ...book, slotId: slots[1].id }, C1);
+  await pool.query("UPDATE interview_slots SET held_until = ? WHERE id = ?", [new Date(Date.now() - 60_000), slots[1].id]);
+  const other = await call("POST", "/mock/book", { ...book, slotId: slots[1].id }, C2);
+  assert.equal(other.status, 201);
+  rzp.set("pay_M3", { id: "pay_M3", order_id: late.body.orderId, amount: 79900, status: "captured" });
+  mine = (await call("GET", "/mock/mine", undefined, C1)).body.bookings;   // recovered here
+  assert.equal(mine.find((b: any) => b.id === late.body.bookingId).status, "refund_due");
+
+  // Admin sees bookings that need a refund
+  const due = await call("GET", "/admin/mock-bookings?status=refund_due", undefined, ADMIN);
+  assert.equal(due.body.items.length, 2);
+  assert.equal((await call("PATCH", `/admin/mock-bookings/${c.body ? r.body.bookingId : 0}`, { status: "cancelled" }, ADMIN)).status, 200);
+  const list = await call("GET", "/admin/interviewers", undefined, ADMIN);
+  assert.equal(list.body.items[0].completed, 1);
+
+  // Taking an interviewer off removes their open slots
+  await call("PATCH", "/admin/interviewers/eng1", { active: false }, ADMIN);
+  assert.equal((await call("GET", "/mock/slots?track=flutter")).body.slots.length, 0);
+
+  setUserLookup(null); setSender(null); setPaymentServices(null, null);
+  await call("DELETE", "/talent/me", undefined, C1);
 });

@@ -20,6 +20,12 @@ import 'package:widgetry_academy/features/profile/presentation/pages/profile_edi
 import 'package:widgetry_academy/features/profile/presentation/pages/profile_page.dart';
 import 'package:widgetry_academy/features/profile/presentation/pages/resume_page.dart';
 import 'package:widgetry_academy/features/settings/settings_page.dart';
+import 'package:widgetry_academy/features/interviews/presentation/book_interview_page.dart';
+import 'package:widgetry_academy/features/interviews/presentation/interview_detail_page.dart';
+import 'package:widgetry_academy/features/interviews/presentation/interviewer_page.dart';
+import 'package:widgetry_academy/features/interviews/presentation/interviews_cubits.dart';
+import 'package:widgetry_academy/features/interviews/presentation/interviews_page.dart';
+import 'package:widgetry_academy/features/interviews/presentation/scorecard_form_page.dart';
 
 /// All routes in one place. Four tabs (Jobs, Courses, Guides, Profile) keep their own history.
 /// Screens that need an account send signed-out users to /sign-in and bring them back after.
@@ -37,7 +43,7 @@ class AppRouter {
     refreshListenable: _StreamListenable(_auth.stream),
     redirect: (context, state) {
       final path = state.uri.path;
-      final needs = _needsAccount.contains(path) || RegExp(r'^/courses/[^/]+/(register|pay)$').hasMatch(path);
+      final needs = _needsAccount.contains(path) || RegExp(r'^/courses/[^/]+/(register|pay)$').hasMatch(path) || RegExp(r'^/(interviews/.+|interviewer(/.*)?)$').hasMatch(path);
       if (needs && _auth.state.status == AuthStatus.signedOut) return '/sign-in?from=${Uri.encodeComponent(state.uri.toString())}';
       return null;
     },
@@ -89,6 +95,27 @@ class AppRouter {
       GoRoute(path: '/settings', parentNavigatorKey: rootKey, builder: (_, __) => const SettingsPage()),
       GoRoute(path: '/assistant', parentNavigatorKey: rootKey, builder: (_, __) => const AssistantPage()),
       GoRoute(path: '/payments', parentNavigatorKey: rootKey, builder: (_, __) => const PaymentsPage()),
+      GoRoute(
+        path: '/interviews',
+        parentNavigatorKey: rootKey,
+        builder: (_, __) => const InterviewsPage(),
+        routes: [
+          GoRoute(path: 'book', parentNavigatorKey: rootKey, builder: (_, s) => BookInterviewPage(track: s.uri.queryParameters['track'], level: s.uri.queryParameters['level'])),
+          GoRoute(path: ':id', parentNavigatorKey: rootKey, builder: (_, s) => InterviewDetailPage(id: int.tryParse(s.pathParameters['id'] ?? '') ?? 0)),
+        ],
+      ),
+      GoRoute(
+        path: '/interviewer',
+        parentNavigatorKey: rootKey,
+        builder: (_, __) => const InterviewerPage(),
+        routes: [
+          GoRoute(
+            path: 'score/:id',
+            parentNavigatorKey: rootKey,
+            builder: (_, s) => ScorecardFormPage(id: int.tryParse(s.pathParameters['id'] ?? '') ?? 0, cubit: s.extra is BookingCubit ? s.extra! as BookingCubit : null),
+          ),
+        ],
+      ),
     ],
   );
 }

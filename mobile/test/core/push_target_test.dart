@@ -14,6 +14,12 @@ void main() {
 
   test('payment confirmation opens receipts', () => expect(PushService.targetFor({'type': 'payment', 'link': 'https://widgetryacademy.in/#fees'}).route, '/payments'));
 
+  test('mock interview messages open the booking or the interviewer dashboard', () {
+    expect(PushService.targetFor({'type': 'mock', 'id': '12'}).route, '/interviews/12');
+    expect(PushService.targetFor({'type': 'mock-interviewer', 'id': '12'}).route, '/interviews/12');
+    expect(PushService.targetFor({'type': 'mock-interviewer'}).route, '/interviewer');
+  });
+
   test('academy links map to app screens', () {
     expect(PushService.targetFor({'type': 'announcement', 'link': 'https://widgetryacademy.in/#courses'}).route, '/courses');
     expect(PushService.targetFor({'type': 'announcement', 'link': 'https://widgetryacademy.in/blog/flutter-developer-salary-india.html'}).route, '/blog');

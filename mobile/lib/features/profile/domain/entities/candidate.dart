@@ -93,6 +93,7 @@ class Candidate extends Equatable {
     this.verification = 'self',
     this.photo,
     this.resumeSettings = const ResumeSettings(),
+    this.mockInterview,
   });
 
   final String id;
@@ -124,6 +125,8 @@ class Candidate extends Equatable {
   /// data:image/... URL, or null
   final String? photo;
   final ResumeSettings resumeSettings;
+  /// A mock interview score the candidate chose to show, or null.
+  final MockBadge? mockInterview;
 
   Candidate copyWith({bool? openToWork, String? photo, bool clearPhoto = false, ResumeSettings? resumeSettings}) => Candidate(
         id: id, fullName: fullName, email: email, phone: phone, headline: headline, currentCompany: currentCompany,
@@ -131,13 +134,22 @@ class Candidate extends Equatable {
         noticePeriod: noticePeriod, expectedSalaryLpa: expectedSalaryLpa, githubUrl: githubUrl, linkedinUrl: linkedinUrl,
         portfolioUrl: portfolioUrl, apps: apps, experience: experience, education: education, certifications: certifications,
         about: about, skills: skills, openToWork: openToWork ?? this.openToWork, hiddenCompanies: hiddenCompanies,
-        verification: verification, photo: clearPhoto ? null : (photo ?? this.photo), resumeSettings: resumeSettings ?? this.resumeSettings,
+        verification: verification, photo: clearPhoto ? null : (photo ?? this.photo), resumeSettings: resumeSettings ?? this.resumeSettings, mockInterview: mockInterview,
       );
 
   @override
   List<Object?> get props => [
         id, fullName, email, phone, headline, currentCompany, experienceYears, city, categories, workModes, jobTypes, noticePeriod,
         expectedSalaryLpa, githubUrl, linkedinUrl, portfolioUrl, apps, experience, education, certifications, about, skills,
-        openToWork, hiddenCompanies, verification, photo, resumeSettings,
+        openToWork, hiddenCompanies, verification, photo, resumeSettings, mockInterview,
       ];
+}
+
+/// "Mock interview 4.2/5 · Flutter" on the profile.
+class MockBadge extends Equatable {
+  const MockBadge({required this.overall, required this.track});
+  final double overall;
+  final String track;
+  @override
+  List<Object?> get props => [overall, track];
 }
