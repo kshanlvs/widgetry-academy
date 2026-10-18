@@ -632,3 +632,16 @@ test("delete account: removes profile, devices, jobs and sign-in; keeps paid pay
   assert.equal(Number(kept[0].n), 1);
   setAccountServices(null);
 });
+
+test("profile links: blank or spaces means no link; a bad link says how to fix it", async () => {
+  const U = "dev:links1:links@test.dev:Links";
+  let r = await call("PUT", "/talent/me", profile({ githubUrl: "   ", portfolioUrl: "", apps: [{ name: "ShopEasy", url: "  ", role: "", about: "" }] }), U);
+  assert.equal(r.status, 200);
+  assert.equal(r.body.profile.githubUrl, null);
+  r = await call("PUT", "/talent/me", profile({ githubUrl: "notalink" }), U);
+  assert.equal(r.status, 400);
+  assert.match(r.body.error, /githubUrl: Enter a full link/);
+  r = await call("PUT", "/talent/me", profile({ apps: [{ name: "X", url: "bad link", role: "", about: "" }] }), U);
+  assert.match(r.body.error, /^apps\.0\.url: /);
+  await call("DELETE", "/talent/me", undefined, U);
+});

@@ -28,7 +28,18 @@ void main() {
   test('optionalHttpsUrl allows empty, needs a full link otherwise', () {
     expect(Validators.optionalHttpsUrl(''), isNull);
     expect(Validators.optionalHttpsUrl('https://github.com/kishan'), isNull);
-    expect(Validators.optionalHttpsUrl('github.com/kishan'), isNotNull);
+    expect(Validators.optionalHttpsUrl('github.com/kishan'), isNull, reason: 'completed to https://');
+    expect(Validators.optionalHttpsUrl('   '), isNull);
+    expect(Validators.optionalHttpsUrl('https://github.com/ki shan'), isNotNull);
+    expect(Validators.optionalHttpsUrl('notalink'), isNotNull);
+    expect(Validators.normalizeUrl(' github.com/kishan '), 'https://github.com/kishan');
+    expect(Validators.normalizeUrl('http://x.in'), 'http://x.in');
+    expect(Validators.normalizeUrl('  '), '');
+    expect(Validators.optionalPhone(''), isNull);
+    expect(Validators.optionalPhone('+91 98765 43210'), isNull);
+    expect(Validators.optionalPhone('12ab'), isNotNull);
+    expect(Validators.optionalYear('2024'), isNull);
+    expect(Validators.optionalYear('24'), isNotNull);
     expect(Validators.optionalHttpsUrl('ftp://x.in'), isNotNull);
   });
 

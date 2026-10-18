@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +15,7 @@ import 'package:widgetry_academy/features/jobs/domain/entities/jobs_meta.dart';
 import 'package:widgetry_academy/features/jobs/domain/usecases/jobs_usecases.dart';
 import 'package:widgetry_academy/features/profile/domain/entities/candidate.dart';
 import 'package:widgetry_academy/features/profile/presentation/cubit/profile_cubit.dart';
+import 'package:widgetry_academy/features/profile/presentation/widgets/photo_picker.dart';
 
 /// Create or edit the Talent Network profile (the resume is built from it).
 class ProfileEditPage extends StatefulWidget {
@@ -61,6 +65,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   bool _openToWork = true;
   bool _consent = false;
   bool _existing = false;
+  /// After the first Save, fields re-check as you type, so fixed errors disappear straight away.
+  bool _submitted = false;
+  /// Photo chosen before the profile exists; uploaded right after it's created.
+  Uint8List? _pendingPhoto;
   JobsMeta _meta = JobsMeta.fallback;
 
   @override
@@ -132,6 +140,59 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     return RegExp(r'^\d{4}-(0[1-9]|1[0-2])$').hasMatch(v!.trim()) ? null : 'Use YYYY-MM';
   }
 
+  static String? _url(String text) {
+    final n = Validators.normalizeUrl(text);
+    return n.isEmpty ? null : n;
+  }
+
+  /// A row with anything typed in it must be complete (the server rejects half-filled rows).
+  String? Function(String?) _neededIfRow(_Row r, String label) => (v) => r.c.any((c) => c.text.trim().isNotEmpty) && (v ?? '').trim().isEmpty ? '$label is required' : null;
+
+  String? _endAfterStart(_Row r, String? v) {
+    final e = _monthValidator(v, optional: true);
+    if (e != null || (v ?? '').trim().isEmpty) return e;
+    return v!.trim().compareTo(r.v(2)) < 0 ? 'Must be after the start date' : null;
+  }
+
+  /// Scrolls to the first field showing an error.
+  void _showFirstError() {
+    FormFieldState<dynamic>? first;
+    void visit(Element e) {
+      if (first != null) return;
+      if (e is StatefulElement && e.state is FormFieldState && (e.state as FormFieldState).hasError) {
+        first = e.state as FormFieldState;
+        return;
+      }
+      e.visitChildren(visit);
+    }
+
+    _form.currentContext?.visitChildElements(visit);
+    final ctx = first?.context;
+    if (ctx != null) Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 300), alignment: 0.2, curve: Curves.easeOut);
+  }
+
+  Future<void> _pickPhoto() async {
+    final cubit = context.read<ProfileCubit>();
+    final hasPhoto = _pendingPhoto != null || cubit.state.profile?.photo != null;
+    final bytes = await pickProfilePhoto(
+      context,
+      canRemove: hasPhoto,
+      onRemove: () {
+        if (_existing) {
+          cubit.removePhoto();
+        } else {
+          setState(() => _pendingPhoto = null);
+        }
+      },
+    );
+    if (bytes == null || !mounted) return;
+    if (_existing) {
+      await cubit.uploadPhoto(bytes);
+    } else {
+      setState(() => _pendingPhoto = bytes);
+    }
+  }
+
   Candidate _build() {
     final p = context.read<ProfileCubit>().state.profile;
     return Candidate(
@@ -142,9 +203,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       currentCompany: _company.text.trim().isEmpty ? null : _company.text.trim(),
       city: _city.text.trim().isEmpty ? null : _city.text.trim(),
       about: _about.text.trim().isEmpty ? null : _about.text.trim(),
-      githubUrl: _github.text.trim().isEmpty ? null : _github.text.trim(),
-      linkedinUrl: _linkedin.text.trim().isEmpty ? null : _linkedin.text.trim(),
-      portfolioUrl: _portfolio.text.trim().isEmpty ? null : _portfolio.text.trim(),
+      githubUrl: _url(_github.text),
+      linkedinUrl: _url(_linkedin.text),
+      portfolioUrl: _url(_portfolio.text),
       expectedSalaryLpa: double.tryParse(_salary.text.trim()),
       hiddenCompanies: _hidden.text.trim().isEmpty ? null : _hidden.text.trim(),
       categories: _cats.isEmpty ? const ['flutter'] : _cats,
@@ -163,7 +224,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       ],
       apps: [
         for (final r in _apps)
-          if (r.v(0).isNotEmpty) AppItem(name: r.v(0), url: r.v(1).isEmpty ? null : r.v(1), role: r.v(2).isEmpty ? null : r.v(2), about: r.v(3).isEmpty ? null : r.v(3)),
+          if (r.v(0).isNotEmpty) AppItem(name: r.v(0), url: _url(r.v(1)), role: r.v(2).isEmpty ? null : r.v(2), about: r.v(3).isEmpty ? null : r.v(3)),
       ],
       certifications: [
         for (final r in _certs)
@@ -175,8 +236,11 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   }
 
   Future<void> _save() async {
+    FocusScope.of(context).unfocus();
+    if (!_submitted) setState(() => _submitted = true);
     if (!(_form.currentState?.validate() ?? false)) {
       showMessage(context, 'Please fix the highlighted fields.');
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showFirstError());
       return;
     }
     if (_skills.isEmpty) {
@@ -187,8 +251,12 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       showMessage(context, 'Please tick the consent box at the bottom.');
       return;
     }
-    final ok = await context.read<ProfileCubit>().save(_build());
-    if (ok && mounted) context.pop();
+    final cubit = context.read<ProfileCubit>();
+    final ok = await cubit.save(_build());
+    if (!ok) return;
+    final photo = _pendingPhoto;
+    if (photo != null) await cubit.uploadPhoto(photo);
+    if (mounted) context.pop();
   }
 
   Future<void> _delete() async {
@@ -253,13 +321,23 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         appBar: AppBar(title: Text(_existing ? 'Edit profile' : 'Create profile'), titleSpacing: 0),
         body: Form(
           key: _form,
-          child: ListView(padding: const EdgeInsets.fromLTRB(Space.lg, Space.sm, Space.lg, Space.xxxl), children: [
+          autovalidateMode: _submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+          // A Column (not a lazy ListView) keeps every field mounted, so Save checks all of them
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(Space.lg, Space.sm, Space.lg, Space.xxxl),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            _PhotoSection(
+              name: _name.text,
+              photo: _pendingPhoto != null ? 'data:image/jpeg;base64,${base64Encode(_pendingPhoto!)}' : context.select<ProfileCubit, String?>((c) => c.state.profile?.photo),
+              busy: saving,
+              onTap: _pickPhoto,
+            ),
             _section('I work with', [
               _chips({for (final c in _meta.categories) c.slug: c.name}, _cats, (v) => _cats = v),
             ], hint: 'Pick all that apply. We use this to match jobs and suggest skills.'),
             _section('About you', [
               _field(_name, 'Full name', validator: (v) => Validators.required(v, 'Name')),
-              _field(_phone, 'Phone / WhatsApp (private)', keyboard: TextInputType.phone, hint: '+91 98765 43210'),
+              _field(_phone, 'Phone / WhatsApp (private)', keyboard: TextInputType.phone, hint: '+91 98765 43210', validator: Validators.optionalPhone),
               _field(_headline, 'Headline', hint: 'e.g. Flutter Developer · 3 years · Bloc & Firebase', validator: (v) => (v ?? '').trim().length < 4 ? 'Add a short headline' : null, maxLength: 140),
               Row(children: [
                 Expanded(child: _field(_years, 'Experience (years)', keyboard: const TextInputType.numberWithOptions(decimal: true), validator: (v) => (double.tryParse((v ?? '').trim()) ?? -1) < 0 ? 'Enter a number' : null)),
@@ -293,7 +371,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                   Row(children: [
                     Expanded(child: _field(r.c[2], 'From (YYYY-MM)', hint: '2023-06', validator: _monthValidator)),
                     const SizedBox(width: 12),
-                    Expanded(child: r.current ? const Padding(padding: EdgeInsets.only(bottom: 12), child: Text('Present')) : _field(r.c[3], 'To (YYYY-MM)', hint: '2024-12', validator: (v) => _monthValidator(v, optional: true))),
+                    Expanded(child: r.current ? const Padding(padding: EdgeInsets.only(bottom: 12), child: Text('Present')) : _field(r.c[3], 'To (YYYY-MM)', hint: '2024-12', validator: (v) => _endAfterStart(r, v))),
                   ]),
                   CheckboxListTile(value: r.current, onChanged: (v) => setState(() => r.current = v ?? false), title: const Text('I work here now'), contentPadding: EdgeInsets.zero, dense: true, controlAffinity: ListTileControlAffinity.leading),
                   _field(r.c[4], 'What you did (one point per line)', hint: 'Built live order tracking with Google Maps\nCut crash rate by 40%', maxLines: 5, maxLength: 1500),
@@ -303,7 +381,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             _section('Apps & projects', [
               for (final r in _apps)
                 _rowCard(r, [
-                  _field(r.c[0], 'App or project name'),
+                  _field(r.c[0], 'App or project name', validator: _neededIfRow(r, 'Name')),
                   _field(r.c[1], 'Play Store / App Store / GitHub link', keyboard: TextInputType.url, validator: Validators.optionalHttpsUrl),
                   _field(r.c[2], 'Your role'),
                   _field(r.c[3], 'One line: what it does and the tech', maxLength: 400),
@@ -313,10 +391,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             _section('Education', [
               for (final r in _edu)
                 _rowCard(r, [
-                  _field(r.c[0], 'Degree / course', hint: 'MCA, B.Tech CSE, Class 12'),
-                  _field(r.c[1], 'College / school'),
+                  _field(r.c[0], 'Degree / course', hint: 'MCA, B.Tech CSE, Class 12', validator: _neededIfRow(r, 'Degree or course')),
+                  _field(r.c[1], 'College / school', validator: _neededIfRow(r, 'College or school')),
                   Row(children: [
-                    Expanded(child: _field(r.c[2], 'Year', keyboard: TextInputType.number)),
+                    Expanded(child: _field(r.c[2], 'Year', keyboard: TextInputType.number, validator: Validators.optionalYear)),
                     const SizedBox(width: 12),
                     Expanded(child: _field(r.c[3], 'Score (optional)', hint: '8.1 CGPA')),
                   ]),
@@ -326,16 +404,16 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             _section('Certifications (optional)', [
               for (final r in _certs)
                 _rowCard(r, [
-                  _field(r.c[0], 'Certificate', hint: 'Flutter in 10 Days'),
+                  _field(r.c[0], 'Certificate', hint: 'Flutter in 10 Days', validator: _neededIfRow(r, 'Certificate name')),
                   _field(r.c[1], 'Issued by', hint: 'Widgetry Academy'),
-                  _field(r.c[2], 'Year', keyboard: TextInputType.number),
+                  _field(r.c[2], 'Year', keyboard: TextInputType.number, validator: Validators.optionalYear),
                 ], () => _removeRow(_certs, r)),
               OutlinedButton.icon(onPressed: () => setState(() => _certs.add(_Row(['', '', '']))), icon: const Icon(Icons.add), label: const Text('Add a certificate')),
             ]),
             _section('Links', [
-              _field(_github, 'GitHub', hint: 'https://github.com/you', keyboard: TextInputType.url, validator: Validators.optionalHttpsUrl),
-              _field(_linkedin, 'LinkedIn', hint: 'https://linkedin.com/in/you', keyboard: TextInputType.url, validator: Validators.optionalHttpsUrl),
-              _field(_portfolio, 'Portfolio', hint: 'https://', keyboard: TextInputType.url, validator: Validators.optionalHttpsUrl),
+              _field(_github, 'GitHub', hint: 'github.com/you', keyboard: TextInputType.url, validator: Validators.optionalHttpsUrl),
+              _field(_linkedin, 'LinkedIn', hint: 'linkedin.com/in/you', keyboard: TextInputType.url, validator: Validators.optionalHttpsUrl),
+              _field(_portfolio, 'Portfolio', hint: 'yoursite.com', keyboard: TextInputType.url, validator: Validators.optionalHttpsUrl),
             ]),
             _section('What you\'re looking for', [
               const Text('Job type'),
@@ -368,6 +446,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               if (_existing) TextButton.icon(onPressed: _delete, icon: const Icon(Icons.delete_forever_outlined), label: const Text('Delete my profile')),
             ]),
           ]),
+          ),
         ),
         bottomNavigationBar: BottomActionBar(
           child: FilledButton(
@@ -388,5 +467,55 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     final v = _skillInput.text.trim();
     if (v.isNotEmpty && _skills.length < 15 && !_skills.any((s) => s.toLowerCase() == v.toLowerCase())) setState(() => _skills = [..._skills, v]);
     _skillInput.clear();
+  }
+}
+
+/// Profile photo at the top of the form. Optional; most recruiters don't need one.
+class _PhotoSection extends StatelessWidget {
+  const _PhotoSection({required this.name, required this.photo, required this.busy, required this.onTap});
+  final String name;
+  final String? photo;
+  final bool busy;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final p = Palette.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Space.xl),
+      child: Card(
+        child: InkWell(
+          onTap: busy ? null : onTap,
+          borderRadius: BorderRadius.circular(Radii.lg),
+          child: Padding(
+            padding: const EdgeInsets.all(Space.lg),
+            child: Row(children: [
+              Stack(clipBehavior: Clip.none, children: [
+                AnimatedOpacity(duration: const Duration(milliseconds: 200), opacity: busy ? 0.5 : 1, child: Avatar(name: name.isEmpty ? '?' : name, photo: photo, size: 64)),
+                Positioned(
+                  right: -2,
+                  bottom: -2,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(color: p.surface, shape: BoxShape.circle, border: Border.all(color: p.line)),
+                    child: Icon(Icons.photo_camera_outlined, size: 14, color: p.ink),
+                  ),
+                ),
+              ]),
+              const SizedBox(width: Space.lg),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(photo == null ? 'Add a profile photo' : 'Profile photo', style: t.titleSmall),
+                  const SizedBox(height: 2),
+                  Text(photo == null ? 'Optional. A clear, friendly photo of your face.' : 'Tap to change or remove it.', style: t.bodySmall),
+                ]),
+              ),
+              Text(photo == null ? 'Add' : 'Change', style: t.labelLarge?.copyWith(color: p.accent)),
+            ]),
+          ),
+        ),
+      ),
+    );
   }
 }

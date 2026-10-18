@@ -8,6 +8,7 @@ import 'package:widgetry_academy/core/usecase/usecase.dart';
 import 'package:widgetry_academy/features/auth/domain/entities/app_user.dart';
 import 'package:widgetry_academy/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:widgetry_academy/features/profile/domain/entities/candidate.dart';
+import 'package:widgetry_academy/features/profile/domain/services/profile_errors.dart';
 import 'package:widgetry_academy/features/profile/domain/services/profile_score.dart';
 import 'package:widgetry_academy/features/profile/domain/usecases/profile_usecases.dart';
 
@@ -83,7 +84,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(state.copyWith(saving: true));
     final r = await _save(profile);
     return r.fold((f) {
-      emit(state.copyWith(saving: false, error: f.message));
+      emit(state.copyWith(saving: false, error: ProfileErrors.readable(f.message)));
       return false;
     }, (p) {
       // Keep the photo and resume settings the server holds separately

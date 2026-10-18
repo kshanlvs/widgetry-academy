@@ -20,8 +20,9 @@ export const COMMON_SKILLS = ["Flutter", "Dart", "Firebase", "Bloc", "Provider",
 const trim = (max: number) => z.string().trim().max(max);
 const optText = (max: number) => trim(max).optional().transform(v => (v ? v : null));
 // Only http(s) links; stops javascript:/data: URLs being stored and shown
-const url = z.string().trim().max(400).url().refine(u => /^https?:\/\//i.test(u), "must start with https://");
-const optUrl = z.union([url, z.literal("")]).optional().transform(v => (v ? v : null));
+const url = z.string().trim().max(400, "Link is too long").url("Enter a full link, e.g. https://github.com/you").refine(u => /^https?:\/\//i.test(u), "Enter a full link starting with https://");
+// Empty or spaces only means "no link"
+const optUrl = z.preprocess(v => (typeof v === "string" ? v.trim() : v), z.union([url, z.literal("")]).optional().nullable()).transform(v => (v ? v : null));
 const email = z.string().trim().toLowerCase().email().max(200);
 
 export const skillList = z.array(trim(40).min(1)).max(15).default([])
