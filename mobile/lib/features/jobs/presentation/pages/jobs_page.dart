@@ -9,9 +9,11 @@ import 'package:widgetry_academy/core/theme/app_colors.dart';
 import 'package:widgetry_academy/core/utils/link_launcher.dart';
 import 'package:widgetry_academy/core/widgets/common.dart';
 import 'package:widgetry_academy/core/widgets/state_views.dart';
+import 'package:widgetry_academy/features/jobs/domain/entities/job.dart';
 import 'package:widgetry_academy/features/jobs/domain/entities/jobs_meta.dart';
 import 'package:widgetry_academy/features/jobs/presentation/bloc/jobs_bloc.dart';
 import 'package:widgetry_academy/features/jobs/presentation/widgets/filters_sheet.dart';
+import 'package:widgetry_academy/features/jobs/presentation/widgets/home_highlights.dart';
 import 'package:widgetry_academy/features/jobs/presentation/widgets/job_card.dart';
 
 class JobsPage extends StatelessWidget {
@@ -65,6 +67,10 @@ class _JobsViewState extends State<_JobsView> {
         builder: (context, s) {
           final bloc = context.read<JobsBloc>();
           final live = s.meta.liveJobs > 0 ? s.meta.liveJobs : s.meta.categories.fold<int>(0, (a, c) => a + c.liveJobs);
+          // Browsing (not searching or filtering): show the course banners and the featured row
+          final browsing = s.filter.query.isEmpty && s.filter.activeCount == 0;
+          final featured = browsing ? s.jobs.where((j) => j.featured).toList() : const <Job>[];
+          final listed = featured.isEmpty ? s.jobs : s.jobs.where((j) => !j.featured).toList();
           return RefreshIndicator(
             onRefresh: () => _refresh(bloc),
             edgeOffset: 120,
@@ -98,6 +104,7 @@ class _JobsViewState extends State<_JobsView> {
                     ]),
                   ),
                 ),
+                if (browsing) const SliverToBoxAdapter(child: CourseBanners()),
                 SliverPersistentHeader(
                   pinned: true,
                   delegate: _SearchHeader(
@@ -162,23 +169,30 @@ class _JobsViewState extends State<_JobsView> {
                     ),
                   )
                 else ...[
+                  if (featured.isNotEmpty) SliverToBoxAdapter(child: FeaturedJobsRow(jobs: featured, categoryName: s.meta.categoryName)),
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(Space.page, Space.md, Space.page, Space.sm),
+                    padding: EdgeInsets.fromLTRB(Space.page, featured.isNotEmpty ? Space.xl : Space.md, Space.page, Space.sm),
                     sliver: SliverToBoxAdapter(
-                      child: Text(
-                        '${s.total} ${s.total == 1 ? 'job' : 'jobs'}${s.filter.query.isEmpty ? '' : ' for “${s.filter.query}”'}',
-                        style: t.bodySmall?.copyWith(color: p.faint),
-                      ),
+                      child: featured.isNotEmpty
+                          ? Row(children: [
+                              Text('Latest jobs', style: t.titleSmall),
+                              const Spacer(),
+                              Text('${s.total} ${s.total == 1 ? 'job' : 'jobs'}', style: t.bodySmall?.copyWith(color: p.faint)),
+                            ])
+                          : Text(
+                              '${s.total} ${s.total == 1 ? 'job' : 'jobs'}${s.filter.query.isEmpty ? '' : ' for “${s.filter.query}”'}',
+                              style: t.bodySmall?.copyWith(color: p.faint),
+                            ),
                     ),
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(Space.lg, 0, Space.lg, Space.xxxl),
                     sliver: SliverList.separated(
-                      itemCount: s.jobs.length + (s.hasMore ? 1 : 0),
+                      itemCount: listed.length + (s.hasMore ? 1 : 0),
                       separatorBuilder: (_, __) => const SizedBox(height: Space.md),
                       itemBuilder: (context, i) {
-                        if (i >= s.jobs.length) return const Padding(padding: EdgeInsets.all(Space.lg), child: Center(child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.2))));
-                        final j = s.jobs[i];
+                        if (i >= listed.length) return const Padding(padding: EdgeInsets.all(Space.lg), child: Center(child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.2))));
+                        final j = listed[i];
                         return JobCard(job: j, categoryName: s.meta.categoryName(j.category), onTap: () => context.push('/jobs/${j.id}'));
                       },
                     ),

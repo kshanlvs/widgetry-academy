@@ -113,17 +113,22 @@ abstract final class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: p.accent, textStyle: buttonText.copyWith(fontSize: 14.5))),
       iconButtonTheme: IconButtonThemeData(style: IconButton.styleFrom(foregroundColor: p.ink)),
+      // Selected chips: brand green with light text (Material 3 ignores secondaryLabelStyle,
+      // so the label colour must follow the selected state itself)
       chipTheme: ChipThemeData(
-        backgroundColor: p.surface,
-        selectedColor: p.ink,
-        disabledColor: p.soft,
-        checkmarkColor: p.bg,
-        labelStyle: text.labelLarge?.copyWith(color: p.ink, fontWeight: FontWeight.w600),
-        secondaryLabelStyle: text.labelLarge?.copyWith(color: p.bg, fontWeight: FontWeight.w600),
-        side: BorderSide(color: p.line),
+        color: WidgetStateProperty.resolveWith((s) {
+          if (s.contains(WidgetState.disabled)) return p.soft;
+          return s.contains(WidgetState.selected) ? p.accent : p.surface;
+        }),
+        checkmarkColor: p.onAccent,
+        labelStyle: text.labelLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: WidgetStateColor.resolveWith((s) => s.contains(WidgetState.selected) ? p.onAccent : p.ink),
+        ),
+        side: WidgetStateBorderSide.resolveWith((s) => BorderSide(color: s.contains(WidgetState.selected) ? p.accent : p.line)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.sm + 2)),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        showCheckmark: false,
+        showCheckmark: true,
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? p.onAccent : p.faint),
