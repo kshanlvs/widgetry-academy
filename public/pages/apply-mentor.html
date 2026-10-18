@@ -77,6 +77,11 @@ form.f{background:var(--surface);color:var(--ink);border-radius:24px;padding:32p
 .auth-required{background:var(--surface);color:var(--ink);border-radius:24px;padding:40px 32px;text-align:center;grid-column:1/-1}
 .auth-required p{color:var(--muted);margin:0 0 20px}
 .auth-required .btn{margin-top:10px}
+.mstatus{grid-column:1/-1;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--soft);border-radius:12px;padding:12px 16px;margin:0;font-size:15px}
+.mstatus b{font-weight:700}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;background:var(--surface);border:1px solid var(--line)}
+.badge.ok{background:#e3f3ea;border-color:#b9e0c9;color:#13663c}
+.ok-msg{grid-column:1/-1;color:var(--ok);font-weight:600;margin:0}
 
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:14px;padding:24px 0}
 footer .w{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -103,9 +108,10 @@ footer a{color:var(--muted)}
   <div class="w">
     <p class="eyebrow">Join Our Team</p>
     <h2>Become a Widgetry Mentor</h2>
-    <p class="sub">Share your expertise and teach the next generation of Flutter developers. We handle students, payments, and marketing. You teach.</p>
+    <p class="sub" id="pageSub">Share your expertise and teach the next generation of Flutter developers. We handle students, payments, and marketing. You teach.</p>
 
     <form class="f" id="fMentor" novalidate hidden>
+      <p class="mstatus" id="mStatus" hidden></p>
       <h4>About you</h4>
       <div class="fld"><label for="m_name">Full name</label><input id="m_name" name="name" autocomplete="name" required maxlength="99"></div>
       <div class="fld"><label for="m_email">Email</label><input id="m_email" name="email" type="email" autocomplete="email" required maxlength="150"></div>
@@ -140,9 +146,19 @@ footer a{color:var(--muted)}
           <option value="">Select</option><option>Weekends</option><option>Weekdays</option><option>Flexible</option>
         </select></div>
 
+      <h4>Mock interviews</h4>
+      <label class="consent" style="background:var(--bg)"><input type="checkbox" id="m_iv"><span><b>I also want to take paid mock interviews.</b> One-to-one video interviews with job seekers at times you choose, with a short written scorecard after each one. Paid per interview.</span></label>
+      <div class="fld full" id="ivTracks" hidden><span class="lbl">Interviews I can take</span>
+        <div class="chips" id="tracks">
+          <label><input type="checkbox" value="flutter"><span>Flutter</span></label>
+          <label><input type="checkbox" value="android"><span>Android</span></label>
+          <label><input type="checkbox" value="ios"><span>iOS</span></label>
+        </div></div>
+
       <label class="consent"><input type="checkbox" id="m_ok" required><span>I confirm the details above are accurate and I can commit to teaching regularly.</span></label>
 
       <p class="err" id="mErr" role="alert" hidden></p>
+      <p class="ok-msg" id="mOk" role="status" hidden></p>
       <div class="actions">
         <button class="btn" id="mBtn" type="submit">Submit application</button>
         <small>We'll review and contact you within 7 days.</small>
@@ -150,9 +166,9 @@ footer a{color:var(--muted)}
     </form>
 
     <div class="auth-required" id="authRequired" hidden>
-      <h3 style="margin:0 0 10px">Login Required</h3>
-      <p>You need to be logged in to apply as a mentor.</p>
-      <a class="btn" href="login.html">Login</a>
+      <h3 style="margin:0 0 10px">Sign in to continue</h3>
+      <p>Sign in to apply as a mentor, or to edit the profile you already sent. Use the email you want students and our team to reach you on.</p>
+      <a class="btn" href="login.html?next=%2Fpages%2Fapply-mentor.html">Sign in</a>
       <p style="font-size:14px;margin-top:15px">Don't have an account? <a href="register.html">Register here</a></p>
     </div>
 
@@ -174,130 +190,100 @@ footer a{color:var(--muted)}
 
 <script type="module">
 import { watchAuthState, getCurrentUser } from '../js/auth.js';
-import { db } from '../js/firebase-init.js';
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const form = document.getElementById('fMentor');
-const authRequired = document.getElementById('authRequired');
-const err = document.getElementById('mErr');
-const btn = document.getElementById('mBtn');
-const done = document.getElementById('mDone');
+import { JOBS_API } from '../jobs-api-url.js';
 
 const $ = id => document.getElementById(id);
+const form = $('fMentor'), err = $('mErr'), okMsg = $('mOk'), btn = $('mBtn'), done = $('mDone'), authRequired = $('authRequired');
 const val = id => $(id).value.trim();
 const picked = id => [...document.querySelectorAll("#" + id + " input:checked")].map(i => i.value);
+const setPicked = (id, values) => document.querySelectorAll("#" + id + " input").forEach(i => (i.checked = (values || []).includes(i.value)));
+const STATUS = { new: "Received", shortlisted: "Shortlisted", demo: "Demo scheduled", approved: "Approved", rejected: "Not selected this time" };
+let editing = false;
 
-// Check auth state - pre-fill if logged in, but allow form for unauthenticated users
-watchAuthState((user) => {
-  if (user) {
-    // Pre-fill name and email if logged in
-    document.getElementById('m_name').value = user.displayName || '';
-    document.getElementById('m_email').value = user.email;
-    // Make email read-only for authenticated users
-    const emailField = document.getElementById('m_email');
-    emailField.setAttribute('readonly', '');
-    emailField.style.background = '#e8ecea';
-    emailField.style.color = '#0e1f1a';
-    emailField.style.cursor = 'not-allowed';
-    emailField.style.opacity = '0.9';
-  } else {
-    // Email field is editable for unauthenticated users - remove readonly
-    const emailField = document.getElementById('m_email');
-    emailField.removeAttribute('readonly');
-    emailField.style.background = '';
-    emailField.style.color = '';
-    emailField.style.cursor = '';
-    emailField.style.opacity = '';
-  }
+async function api(path, { method = "GET", body } = {}) {
+  const user = getCurrentUser();
+  const token = await user.getIdToken();
+  let r;
+  try { r = await fetch(JOBS_API + path, { method, headers: { "content-type": "application/json", authorization: "Bearer " + token }, body: body ? JSON.stringify(body) : undefined }); }
+  catch { throw new Error("Network problem. Check your connection and try again."); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((d.error || "Something went wrong. Please try again.").replace(/^[a-zA-Z]+: /, ""));
+  return d;
+}
+
+$('m_iv').addEventListener('change', () => { $('ivTracks').hidden = !$('m_iv').checked; });
+
+watchAuthState(async user => {
+  if (!user) { form.hidden = true; authRequired.hidden = false; return; }
+  authRequired.hidden = true;
+  const emailField = $('m_email');
+  emailField.value = user.email || '';
+  emailField.readOnly = true;
+  emailField.style.background = '#e8ecea';
+  emailField.style.cursor = 'not-allowed';
+  if (!$('m_name').value) $('m_name').value = user.displayName || '';
+  try {
+    const { application: a, interviewer } = await api('/mentor/me');
+    if (a) {
+      editing = true;
+      $('m_name').value = a.name; $('m_phone').value = a.phone; $('m_company').value = a.company; $('m_role').value = a.role;
+      if (a.experience) $('m_exp').value = String(a.experience);
+      $('m_li').value = a.linkedin; setPicked('skills', a.skills); $('m_course').value = a.course; $('m_pitch').value = a.bio;
+      if (a.availability) $('m_avail').value = a.availability;
+      $('m_iv').checked = a.wantsInterviews; setPicked('tracks', a.interviewTracks); $('ivTracks').hidden = !a.wantsInterviews;
+      $('m_ok').checked = true;
+      document.querySelector('.apply h2').textContent = 'Your mentor profile';
+      $('pageSub').textContent = 'Keep your details up to date. Approved mentors\' changes show on the public mentors page straight away.';
+      const st = $('mStatus');
+      st.innerHTML = `<span>Application status:</span> <span class="badge${a.status === 'approved' ? ' ok' : ''}">${STATUS[a.status] || a.status}</span>` +
+        (interviewer === 'active' ? ' <span class="badge ok">Mock interviewer</span> <span style="color:var(--muted);font-size:14px">Manage your slots in the Widgetry app: Mock interviews → Interviewer dashboard.</span>' : a.wantsInterviews ? ' <span style="color:var(--muted);font-size:14px">We\'ll be in touch about mock interviews.</span>' : '');
+      st.hidden = false;
+      btn.textContent = 'Save changes';
+    }
+  } catch (x) { fail(x.message); }
+  form.hidden = false;
 });
-
-// Show form for all users (authenticated or not)
-form.hidden = false;
-authRequired.hidden = true;
 
 form.addEventListener("submit", async e => {
   e.preventDefault();
-  err.hidden = true;
-
-  const user = getCurrentUser();
-  let phone = val("m_phone").replace(/[\s()-]/g, "");
-  if (/^[6-9]\d{9}$/.test(phone)) phone = "+91" + phone;
-  if (/^91[6-9]\d{9}$/.test(phone)) phone = "+" + phone;
-
-  // Build form data - structure depends on auth state
-  const d = {
-    name: val("m_name"),
-    email: val("m_email").toLowerCase(),
-    phone,
-    company: val("m_company"),
-    role: val("m_role"),
-    experience: parseInt(val("m_exp"), 10),
-    linkedin: val("m_li"),
-    skills: picked("skills"),
-    course: val("m_course"),
-    bio: val("m_pitch"),
-    availability: val("m_avail"),
-    status: "new",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
+  err.hidden = true; okMsg.hidden = true;
+  const body = {
+    name: val("m_name"), phone: val("m_phone"), company: val("m_company"), role: val("m_role"),
+    experience: parseInt(val("m_exp"), 10) || 0, linkedin: val("m_li"), skills: picked("skills"),
+    course: val("m_course"), bio: val("m_pitch"), availability: val("m_avail"),
+    wantsInterviews: $('m_iv').checked, interviewTracks: $('m_iv').checked ? picked('tracks') : [],
   };
-
-  // Logged-in applicants are linked to their account; others are stored with an empty uid
-  d.uid = user?.uid || "";
-
-  // Validation
-  if (d.name.length < 2) return fail("Please enter your full name.");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return fail("Please enter a valid email.");
-  if (!d.phone || !/^\+[1-9]\d{9,14}$/.test(d.phone)) return fail("Please enter a valid WhatsApp number with country code (e.g., +91 98765432109).");
-  if (!d.company || !d.role) return fail("Please add your company and role.");
-  if (!d.experience || d.experience <= 0) return fail("Please select your experience level.");
-  if (!d.skills || d.skills.length === 0) return fail("Please select at least one skill you can teach.");
-  if (!d.course || d.course.length < 3) return fail("Tell us what you'd like to teach (minimum 3 characters).");
-  if (!d.bio || d.bio.length < 20) return fail("Please write at least 20 characters about your teaching style.");
-  if (!d.availability) return fail("Please select your availability.");
+  if (body.name.length < 2) return fail("Please enter your full name.");
+  if (!body.company || !body.role) return fail("Please add your company and role.");
+  if (!body.experience) return fail("Please select your experience level.");
+  if (!body.skills.length) return fail("Please select at least one skill you can teach.");
+  if (body.course.length < 3) return fail("Tell us what you'd like to teach.");
+  if (body.bio.length < 20) return fail("Please write at least 20 characters about yourself.");
+  if (!body.availability) return fail("Please select your availability.");
+  if (body.wantsInterviews && !body.interviewTracks.length) return fail("Choose which mock interviews you can take.");
+  if (!$('m_ok').checked) return fail("Please confirm your details are accurate.");
 
   btn.disabled = true;
-  btn.textContent = "Submitting…";
-
+  const label = btn.textContent;
+  btn.textContent = editing ? "Saving…" : "Submitting…";
   try {
-    console.log("Submitting mentor application with data:", d);
-    const docRef = await addDoc(collection(db, "mentorApplications"), d);
-    console.log("Successfully submitted! Document ID:", docRef.id);
-
-    document.getElementById('mDoneName').textContent = d.name.split(" ")[0];
-    form.hidden = true;
-    done.hidden = false;
-    done.scrollIntoView({behavior:"smooth"});
-  } catch (x) {
-    console.error("❌ Submission failed!");
-    console.error("Error code:", x.code);
-    console.error("Error message:", x.message);
-    console.error("Full error:", x);
-    console.error("Submitted data:", JSON.stringify(d, null, 2));
-    console.error("User state:", user ? "Authenticated (" + user.uid + ")" : "Unauthenticated");
-
-    // Provide specific error messages based on error type
-    if (x.code === "permission-denied") {
-      fail("Permission denied. Your submission was rejected. Please ensure all fields are correct and try again.");
-    } else if (x.code === "invalid-argument") {
-      fail("Invalid data detected. Please verify all fields are filled correctly (especially phone number and skills).");
-    } else if (x.code === "unavailable") {
-      fail("Service temporarily unavailable. Please check your internet and try again in a moment.");
-    } else if (x.code === "unauthenticated") {
-      fail("Please ensure you have an active internet connection and try again.");
+    const r = await api('/mentor/me', { method: 'PUT', body });
+    if (r.created) {
+      $('mDoneName').textContent = body.name.split(" ")[0];
+      form.hidden = true; done.hidden = false;
+      done.scrollIntoView({ behavior: "smooth" });
     } else {
-      fail("Couldn't submit right now. Please check your internet connection and try again. If the problem persists, contact support.");
+      okMsg.textContent = "Saved. Your mentor profile is up to date.";
+      okMsg.hidden = false;
     }
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Submit application";
-  }
+  } catch (x) { fail(x.message); }
+  finally { btn.disabled = false; btn.textContent = label; }
 });
 
 function fail(m) {
   err.textContent = m;
   err.hidden = false;
-  err.scrollIntoView({behavior:"smooth", block:"center"});
+  err.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 </script>
 <script src="../site-config.js"></script>

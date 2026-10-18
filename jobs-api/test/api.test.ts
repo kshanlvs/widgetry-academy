@@ -12,6 +12,7 @@ import { setPaymentServices, type Registration } from "../src/payments.js";
 import { setPlayApi, playAccountId } from "../src/play.js";
 import { setAccountServices } from "../src/routes/account.js";
 import { setUserLookup, sendReminders } from "../src/mock.js";
+import { setMentorStore } from "../src/routes/mentors.js";
 
 const ADMIN = "dev:E4edbAvcdwTdkTdNwcdWneVWe572:admin@widgetry.test:Admin";
 const EMP = "dev:emp1:hr@acme.test:Acme HR";
@@ -804,4 +805,50 @@ test("mock interviews: interviewer slots, booking with a 15-minute hold, payment
 
   setUserLookup(null); setSender(null); setPaymentServices(null, null);
   await call("DELETE", "/talent/me", undefined, C1);
+});
+
+test("mentors: apply or edit their own profile, opt in to mock interviews, public card and interviewer kept in step", async () => {
+  const docs = new Map<string, Record<string, any>>(), cards = new Map<string, Record<string, any>>();
+  let n = 0;
+  setMentorStore({
+    async findMine(uid, email) {
+      const hit = [...docs.entries()].find(([, d]) => d.uid === uid) ?? [...docs.entries()].find(([, d]) => d.email === email);
+      return hit ? { id: hit[0], data: hit[1] } : null;
+    },
+    async create(d) { const id = "m" + ++n; docs.set(id, { ...d }); return id; },
+    async update(id, d) { docs.set(id, { ...docs.get(id), ...d }); },
+    async setPublic(id, c) { cards.set(id, c); },
+  });
+  const M = "dev:men1:meena@eng.dev:Meena";
+  const form = { name: "Meena Iyer", phone: "98765 43210", company: "Zoho", role: "Senior Flutter Engineer", experience: 6, linkedin: "linkedin.com/in/meena",
+    skills: ["Flutter", "Dart"], course: "State management", bio: "I build large Flutter apps and enjoy teaching.", availability: "Weekends" };
+
+  assert.equal((await call("GET", "/mentor/me")).status, 401);
+  assert.equal((await call("GET", "/mentor/me", undefined, M)).body.application, null);
+  assert.equal((await call("PUT", "/mentor/me", { ...form, wantsInterviews: true }, M)).status, 400, "tracks needed when opting in");
+  let r = await call("PUT", "/mentor/me", { ...form, wantsInterviews: true, interviewTracks: ["flutter", "android"] }, M);
+  assert.equal(r.status, 201);
+  assert.equal(r.body.application.phone, "+919876543210");
+  assert.equal(r.body.application.linkedin, "https://linkedin.com/in/meena");
+  assert.equal(r.body.application.status, "new");
+  assert.equal(docs.get("m1")!.email, "meena@eng.dev", "email comes from the sign-in");
+
+  // Editing keeps the admin's status; approved mentors' public card updates
+  docs.get("m1")!.status = "approved";
+  r = await call("PUT", "/mentor/me", { ...form, company: "Razorpay", wantsInterviews: true, interviewTracks: ["flutter"] }, M);
+  assert.equal(r.status, 200);
+  assert.equal(r.body.application.status, "approved");
+  assert.equal(cards.get("m1")!.company, "Razorpay");
+  assert.equal(docs.size, 1, "no second application");
+
+  // Once an interviewer, edits flow to the interviewer details
+  setUserLookup({ async uidForEmail() { return "men1"; } });
+  await call("POST", "/admin/interviewers", { email: "meena@eng.dev", name: "Meena Iyer", title: "Senior Flutter Engineer", company: "Razorpay", years: 6, tracks: ["flutter"] }, ADMIN);
+  assert.equal((await call("GET", "/mentor/me", undefined, M)).body.interviewer, "active");
+  await call("PUT", "/mentor/me", { ...form, role: "Staff Engineer", company: "Razorpay", wantsInterviews: true, interviewTracks: ["flutter", "ios"] }, M);
+  const iv = (await call("GET", "/admin/interviewers", undefined, ADMIN)).body.items.find((i: any) => i.uid === "men1");
+  assert.equal(iv.title, "Staff Engineer");
+  assert.deepEqual(iv.tracks, ["flutter", "ios"]);
+
+  setMentorStore(null); setUserLookup(null);
 });

@@ -404,8 +404,9 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
   <div><div class="small" style="font-weight:600;margin-bottom:6px">Why they want to mentor</div><div class="pitch" id="mdPitch"></div></div>
   <label>Status<select id="meStatus"><option value="new">New</option><option value="shortlisted">Shortlisted</option><option value="demo">Demo scheduled</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
   <label>Notes<textarea id="meNotes" rows="3" placeholder="e.g. Call done 12 Oct. Demo on Saturday 4 PM: topic = Stateful widgets"></textarea></label>
+  <div id="mdIv" class="pitch" hidden></div>
   <p class="err" id="meErr" hidden></p>
-  <div class="acts"><button class="btn ghost" value="cancel" formnovalidate>Close</button><button class="btn" id="mbSave" value="save">Save</button></div>
+  <div class="acts"><button class="btn ghost" value="cancel" formnovalidate>Close</button><button class="btn ghost" id="mbIv" type="button" hidden>Make mock interviewer</button><button class="btn" id="mbSave" value="save">Save</button></div>
 </form></dialog>
 
 <dialog id="dlg"><form class="dlg" id="fEdit" method="dialog">
@@ -1145,7 +1146,7 @@ function renderM() {
       <td><div class="tags">${(r.skills || []).map(k => `<span>${esc(k)}</span>`).join("")}</div></td>
       <td class="small">${esc(r.course)}</td>
       <td><a href="https://wa.me/${wa}" target="_blank" rel="noopener">${esc(r.phone)}</a><div class="small">${esc(r.email)}</div><div class="small">${link(r.linkedin, "LinkedIn")}</div></td>
-      <td><span class="pill ${MSC[st]}">${MSL[st]}</span></td>
+      <td><span class="pill ${MSC[st]}">${MSL[st]}</span>${r.wantsInterviews ? `<div class="small" style="margin-top:4px">🎙 Wants interviews</div>` : ""}</td>
       <td><button class="btn ghost" data-mid="${r.id}" style="padding:6px 12px">View</button></td></tr>`;
   }).join("");
   $("mrows").querySelectorAll("button[data-mid]").forEach(b => b.onclick = () => openM(b.dataset.mid));
@@ -1167,8 +1168,31 @@ function openM(id) {
   $("mdDet").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
   $("mdPitch").textContent = r.pitch || r.bio || "";
   $("meStatus").value = mStatus(r); $("meNotes").value = r.notes || "";
+  // Mock interviews: mentors opt in on their profile; one click makes them an interviewer
+  const tracks = Array.isArray(r.interviewTracks) && r.interviewTracks.length ? r.interviewTracks : ["flutter"];
+  $("mdIv").hidden = !r.wantsInterviews;
+  $("mdIv").textContent = r.wantsInterviews ? `Wants to take mock interviews: ${tracks.map(t => TRK[t] || t).join(", ")}.` : "";
+  $("mbIv").hidden = !r.email;
+  $("mbIv").textContent = r.wantsInterviews ? "Make mock interviewer" : "Make mock interviewer anyway";
   $("meErr").hidden = true; $("mdlg").showModal();
 }
+$("mbIv").onclick = async () => {
+  const r = mediting; if (!r) return;
+  const tracks = Array.isArray(r.interviewTracks) && r.interviewTracks.length ? r.interviewTracks : ["flutter"];
+  $("mbIv").disabled = true; $("meErr").hidden = true;
+  try {
+    const res = await japi("/admin/interviewers", { method: "POST", body: {
+      email: r.email, name: r.name, title: r.role || "Engineer", company: r.company || "",
+      years: typeof r.experience === "number" ? Math.min(40, r.experience) : 0, tracks,
+      bio: (r.bio || r.pitch || "").slice(0, 500),
+      linkedinUrl: /^https:\/\//i.test(r.linkedin || "") ? r.linkedin : "",
+      ...(r.uid ? { uid: r.uid } : {}),
+    } });
+    $("meErr").textContent = res.updated ? "Already an interviewer: details updated. Add their meeting link and slots in the Interviews tab." : "Done. Add their meeting link and slots in the Interviews tab.";
+    $("meErr").style.color = "var(--ok, #1f9d55)"; $("meErr").hidden = false;
+  } catch (x) { $("meErr").textContent = x.message; $("meErr").style.color = ""; $("meErr").hidden = false; }
+  finally { $("mbIv").disabled = false; }
+};
 $("mfEdit").addEventListener("submit", async e => {
   if (e.submitter?.value !== "save") return;
   e.preventDefault(); $("mbSave").disabled = true; $("meErr").hidden = true;

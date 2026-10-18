@@ -33,8 +33,8 @@ class InterviewerPage extends StatelessWidget {
                       ? EmptyView(
                           icon: Icons.record_voice_over_outlined,
                           title: 'For Widgetry interviewers',
-                          message: 'Working engineers take mock interviews with us and get paid per session. Apply as a mentor and we\'ll get in touch.',
-                          action: FilledButton(onPressed: () => getIt<LinkLauncher>().openInApp('${AppConfig.siteUrl}/mentor.html'), child: const Text('Apply as a mentor')),
+                          message: 'Working engineers take mock interviews with us and get paid per interview. Apply as a mentor and tick "I also want to take paid mock interviews". Already applied? Open it again to edit your profile.',
+                          action: FilledButton(onPressed: () => getIt<LinkLauncher>().openInApp('${AppConfig.siteUrl}/pages/apply-mentor.html'), child: const Text('Apply as a mentor')),
                         )
                       : d == null
                           ? ErrorView(message: s.error ?? 'Could not load your dashboard.', onRetry: cubit.load)
@@ -144,6 +144,16 @@ class _Body extends StatelessWidget {
             ]),
           ),
 
+      Padding(
+        padding: const EdgeInsets.fromLTRB(Space.sm, Space.lg, Space.sm, 0),
+        child: ListTile(
+          leading: const Icon(Icons.badge_outlined, size: 22),
+          title: const Text('Edit your mentor profile'),
+          subtitle: const Text('Role, company, skills and the interviews you take'),
+          trailing: Icon(Icons.north_east_rounded, size: 18, color: p.faint),
+          onTap: () => getIt<LinkLauncher>().openInApp('${AppConfig.siteUrl}/pages/apply-mentor.html'),
+        ),
+      ),
       if (past.isNotEmpty) ...[
         const SectionLabel('Past'),
         Group(children: [for (final b in past.take(20)) _BookingTile(b: b)]),

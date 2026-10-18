@@ -13,6 +13,7 @@ import { devicesRouter } from "./routes/devices.js";
 import { paymentsRouter } from "./routes/payments.js";
 import { accountRouter } from "./routes/account.js";
 import { mockRouter, mockAdminRouter } from "./routes/mock.js";
+import { mentorsRouter } from "./routes/mentors.js";
 import { requireAdmin } from "./auth.js";
 
 export function createApp() {
@@ -58,6 +59,7 @@ export function createApp() {
   api.use(paymentsRouter);
   api.use(accountRouter);
   api.use(mockRouter);
+  api.use(mentorsRouter);
   api.use("/admin", requireAdmin, mockAdminRouter);
   api.use("/admin", adminRouter);
   api.use((_req, res) => res.status(404).json({ error: "Not found." }));
