@@ -20,14 +20,16 @@ abstract final class AppColors {
   static const Color bad = Color(0xFFB3261E);
   static const Color whatsapp = Color(0xFF1FA855);
 
-  // Category accents (Flutter / Android / iOS)
+  // Category accents (Flutter / Android / iOS / React Native)
   static const Color flutter = Color(0xFF0F6B56);
   static const Color android = Color(0xFF2E7D4F);
   static const Color ios = Color(0xFF1C5FB8);
+  static const Color reactNative = Color(0xFF066A8A);
 
   static Color category(String slug) => switch (slug) {
         'android' => android,
         'ios' => ios,
+        'react-native' => reactNative,
         _ => flutter,
       };
 }

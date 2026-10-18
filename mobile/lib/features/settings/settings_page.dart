@@ -144,7 +144,7 @@ class _SettingsPageState extends State<SettingsPage> {
         Group(children: [
           _link(Icons.business_center_outlined, 'Post a job (employers)', () => _links.openInApp(AppConfig.postJobUrl), external: true),
           _link(Icons.school_outlined, 'Become a mentor or interviewer', () => _links.openInApp('${AppConfig.siteUrl}/pages/apply-mentor.html'), external: true),
-          _link(Icons.ios_share_rounded, 'Share the app', () => _links.share('Flutter, Android and iOS jobs, a free ATS resume and live courses: ${AppConfig.siteUrl}')),
+          _link(Icons.ios_share_rounded, 'Share the app', () => _links.share('Flutter, Android, iOS and React Native jobs, a free ATS resume and live courses: ${AppConfig.siteUrl}')),
           _link(Icons.privacy_tip_outlined, 'Privacy policy', () => _links.openInApp(AppConfig.privacyUrl), external: true),
           _link(Icons.gavel_outlined, 'Terms & posting rules', () => _links.openInApp(AppConfig.termsUrl), external: true),
         ]),

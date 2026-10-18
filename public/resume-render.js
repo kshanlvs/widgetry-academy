@@ -42,7 +42,7 @@ export function autoSummary(p) {
   const yrs = Number(p.experienceYears) || 0;
   const top = (p.skills || []).filter(s => !/^(flutter|dart|kotlin|swift)$/i.test(s)).slice(0, 4);
   // Role comes from what they work with: Flutter, Android or iOS (several = "Mobile")
-  const ROLE = { flutter: ["Flutter developer", "cross-platform Android and iOS apps"], android: ["Android developer", "native Android apps"], ios: ["iOS developer", "native iOS apps"] };
+  const ROLE = { flutter: ["Flutter developer", "cross-platform Android and iOS apps"], android: ["Android developer", "native Android apps"], ios: ["iOS developer", "native iOS apps"], "react-native": ["React Native developer", "cross-platform Android and iOS apps"] };
   const cats = (p.categories || ["flutter"]).filter(c => ROLE[c]);
   const [role, what] = cats.length === 1 ? ROLE[cats[0]] : cats.length > 1 ? ["Mobile developer", `apps with ${cats.map(c => ROLE[c][0].split(" ")[0]).join(" and ")}`] : ROLE.flutter;
   const names = (p.apps || []).map(a => a.name).filter(Boolean).slice(0, 2);

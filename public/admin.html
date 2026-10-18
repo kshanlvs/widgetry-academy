@@ -858,7 +858,7 @@ async function japi(path, { method = "GET", body } = {}) {
   return d;
 }
 // Job categories come from the jobs server (job_categories table)
-let jcats = [{ slug: "flutter", name: "Flutter" }, { slug: "android", name: "Android" }, { slug: "ios", name: "iOS" }];
+let jcats = [{ slug: "flutter", name: "Flutter" }, { slug: "android", name: "Android" }, { slug: "ios", name: "iOS" }, { slug: "react-native", name: "React Native" }];
 const catLabel = slug => jcats.find(c => c.slug === slug)?.name || slug || "Flutter";
 async function loadCats() {
   try { const m = await japi("/meta"); if (m.categories?.length) jcats = m.categories; } catch {}

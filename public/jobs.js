@@ -27,7 +27,7 @@ export const LABEL = {
  * Job categories come from the server (job_categories table), so a new one appears everywhere without code changes.
  * The fallback is only used if the server can't be reached.
  */
-const FALLBACK_CATS = [{ slug: "flutter", name: "Flutter", liveJobs: 0, suggestedSkills: [] }, { slug: "android", name: "Android", liveJobs: 0, suggestedSkills: [] }, { slug: "ios", name: "iOS", liveJobs: 0, suggestedSkills: [] }];
+const FALLBACK_CATS = [{ slug: "flutter", name: "Flutter", liveJobs: 0, suggestedSkills: [] }, { slug: "android", name: "Android", liveJobs: 0, suggestedSkills: [] }, { slug: "ios", name: "iOS", liveJobs: 0, suggestedSkills: [] }, { slug: "react-native", name: "React Native", liveJobs: 0, suggestedSkills: [] }];
 let metaP = null;
 export function getMeta() { return (metaP ??= api("/meta").catch(e => { metaP = null; throw e; })); }
 export async function getCategories() { try { return (await getMeta()).categories || FALLBACK_CATS; } catch { return FALLBACK_CATS; } }

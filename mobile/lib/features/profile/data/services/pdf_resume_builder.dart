@@ -189,7 +189,7 @@ class PdfResumeBuilder implements ResumeBuilder {
   }
 
   static String _autoSummary(Candidate p) {
-    const roles = {'flutter': ('Flutter developer', 'cross-platform Android and iOS apps'), 'android': ('Android developer', 'native Android apps'), 'ios': ('iOS developer', 'native iOS apps')};
+    const roles = {'flutter': ('Flutter developer', 'cross-platform Android and iOS apps'), 'android': ('Android developer', 'native Android apps'), 'ios': ('iOS developer', 'native iOS apps'), 'react-native': ('React Native developer', 'cross-platform Android and iOS apps')};
     final cats = p.categories.where(roles.containsKey).toList();
     final (role, what) = cats.length == 1 ? roles[cats.first]! : cats.length > 1 ? ('Mobile developer', 'apps with ${cats.map((c) => roles[c]!.$1.split(' ').first).join(' and ')}') : roles['flutter']!;
     final yrs = p.experienceYears;

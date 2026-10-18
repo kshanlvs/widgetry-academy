@@ -334,13 +334,17 @@ test("admin bulk import: checks everything first, skips duplicates, posts live",
   assert.equal(again.body.created, 0); assert.equal(again.body.report[0].status, "duplicate");
 });
 
-test("categories: Flutter, Android and iOS jobs and seekers", async () => {
+test("categories: Flutter, Android, iOS and React Native jobs and seekers", async () => {
   const meta = (await call("GET", "/meta")).body;
-  assert.deepEqual(meta.categories.map((c: any) => c.slug), ["flutter", "android", "ios"]);
+  assert.deepEqual(meta.categories.map((c: any) => c.slug), ["flutter", "android", "ios", "react-native"]);
+  assert.ok(meta.categories[3].suggestedSkills.includes("Expo"));
   assert.ok(meta.categories[1].suggestedSkills.includes("Jetpack Compose"));
   const desc = "Build our Android app in Kotlin with Jetpack Compose, coroutines and MVVM. Work with design and backend teams and ship every sprint.";
   const android = { category: "android", companyName: "Droid Co", title: "Android Developer", jobType: "full_time", workMode: "remote", level: "mid", description: desc, skills: ["kotlin", "jetpack compose"], applyUrl: "https://droid.test/careers/android" };
-  assert.equal((await call("POST", "/admin/jobs", { ...android, category: "react-native" }, ADMIN)).status, 400, "unknown category refused");
+  assert.equal((await call("POST", "/admin/jobs", { ...android, category: "xamarin" }, ADMIN)).status, 400, "unknown category refused");
+  const rn = await call("POST", "/admin/jobs", { ...android, category: "react-native", title: "React Native Developer", skills: ["react native", "typescript"], applyUrl: "https://droid.test/careers/rn" }, ADMIN);
+  assert.equal(rn.status, 201, "React Native jobs accepted");
+  assert.deepEqual((await call("GET", "/jobs?category=react-native")).body.items.map((j: any) => j.title), ["React Native Developer"]);
   const a = await call("POST", "/admin/jobs", android, ADMIN);
   assert.equal(a.status, 201);
   const ios = await call("POST", "/admin/jobs", { ...android, category: "ios", title: "iOS Developer", skills: ["swift", "swiftui"], applyUrl: "https://droid.test/careers/ios" }, ADMIN);
