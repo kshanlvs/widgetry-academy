@@ -1096,7 +1096,10 @@ async function loadOverview() {
     const missing = [!o.sourcesOk.registrations && "registrations", !o.sourcesOk.mentors && "mentor applications"].filter(Boolean);
     if (missing.length) { $("ovErr").textContent = `Couldn't read ${missing.join(" and ")} from Firebase on the server. Check FIREBASE_SERVICE_ACCOUNT on Railway.`; $("ovErr").hidden = false; }
     $("ovUpdated").textContent = "Updated " + new Date().toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
-  } catch (x) { $("ovErr").textContent = x.message; $("ovErr").hidden = false; $("ovTiles").innerHTML = ""; $("ovFeed").innerHTML = ""; }
+  } catch (x) {
+    $("ovErr").textContent = x.message === "Not found." ? "The server is still updating to the version with this dashboard. Try again in a few minutes (Railway → Deployments shows its progress)." : x.message;
+    $("ovErr").hidden = false; $("ovTiles").innerHTML = ""; $("ovFeed").innerHTML = ""; $("ovCharts").innerHTML = "";
+  }
 }
 $("ovRange").querySelectorAll("button").forEach(b => b.onclick = () => {
   ovDays = Number(b.dataset.d);
