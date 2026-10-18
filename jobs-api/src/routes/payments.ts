@@ -6,6 +6,7 @@ import { query } from "../db.js";
 import { wrap, HttpError } from "../errors.js";
 import { requireAuth } from "../auth.js";
 import { fulfilMock } from "../mock.js";
+import { fulfilWorkshop } from "./workshops.js";
 import { INDIA_STATES, PLAY_PRODUCTS, planForProduct, playAccountId, playApi, playConfig } from "../play.js";
 import { COURSE, PLAN_TITLE, bookingAmount, coursePrice, fulfil, gateway, paymentsEnabled, plansFor, razorpayConfig, reconcile, store, validPaymentSignature, validWebhookSignature } from "../payments.js";
 
@@ -116,6 +117,9 @@ paymentsRouter.post("/payments/webhook", wrap(async (req, res) => {
     // Mock interview bookings use their own table
     const [mock] = row ? [] : await query<{ amount: number }>("SELECT amount FROM mock_bookings WHERE order_id = ?", [p.order_id]);
     if (mock && mock.amount === p.amount) await fulfilMock(p.order_id, p.id, p.method);
+    // Short courses (workshops) too
+    const [ws] = row || mock ? [] : await query<{ amount: number }>("SELECT amount FROM workshop_enrollments WHERE order_id = ?", [p.order_id]);
+    if (ws && ws.amount === p.amount) await fulfilWorkshop(p.order_id, p.id, p.method);
   }
   if (event?.event === "payment.failed" && p?.order_id) {
     await query("UPDATE payments SET status = 'failed' WHERE order_id = ? AND status = 'created'", [p.order_id]);

@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bloc State Management Crash Course (Live, One Weekend) | Widgetry Academy</title>
+<meta name="description" content="Learn Flutter Bloc the way companies use it: Cubit, Bloc, BlocListener, repositories and bloc_test. Two live sessions over one weekend. Build a real cart feature.">
+<link rel="canonical" href="https://widgetryacademy.in/bloc-crash-course.html">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Widgetry Academy">
+<meta property="og:title" content="Bloc State Management Crash Course | Widgetry Academy">
+<meta property="og:description" content="Two live sessions, one weekend. Cubit, Bloc, testing and a real shopping cart feature, taught by a working Flutter engineer.">
+<meta property="og:url" content="https://widgetryacademy.in/bloc-crash-course.html"><meta property="og:image" content="https://widgetryacademy.in/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@500&display=swap">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Course","name":"Bloc State Management Crash Course","url":"https://widgetryacademy.in/bloc-crash-course.html",
+ "description":"A live, two-session weekend course on Flutter Bloc state management: Cubit, Bloc, BlocListener, repositories, testing with bloc_test, and a real shopping cart feature.",
+ "provider":{"@type":"EducationalOrganization","@id":"https://widgetryacademy.in/#org","name":"Widgetry Academy","url":"https://widgetryacademy.in/"},
+ "educationalLevel":"Intermediate","inLanguage":"en","teaches":["Flutter Bloc","Cubit","bloc_test","Repository pattern","Clean architecture"],
+ "coursePrerequisites":"Flutter basics: widgets, StatefulWidget and setState, and basic Dart async."}
+</script>
+<style>
+:root{
+  --bg:#f3f6f4; --surface:#fff; --ink:#0e1f1a; --muted:#4f6359; --line:#d8e2dc;
+  --accent:#0f6b56; --gold:#f2a900; --deep:#0c2a23; --deep-2:#123a30; --deep-line:#245446; --deep-fg:#eaf3ee; --deep-muted:#b3cbbf; --soft:#e3efe9;
+  --bad:#c23b3b; --ok:#1f8a4c;
+  --display:"Unbounded","Segoe UI",system-ui,sans-serif; --body:"DM Sans","Segoe UI",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6}
+a{color:var(--accent)}
+.w{max-width:1100px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.02em;line-height:1.15}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;padding:14px 24px;border-radius:12px;text-decoration:none;border:0;font:inherit;font-weight:700;cursor:pointer;min-height:48px}
+.btn:hover{filter:brightness(1.08)}
+.btn.gold{background:var(--gold);color:var(--deep)}
+.btn.ghost{background:transparent;color:inherit;border:2px solid currentColor}
+.btn[disabled]{opacity:.6;cursor:wait}
+
+.top{background:var(--deep);color:var(--deep-fg)}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 0;flex-wrap:wrap}
+.brand{color:#fff;text-decoration:none;font-family:var(--display);font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px}
+.mark{display:grid;grid-template-columns:1fr 1fr;gap:3px;width:26px;height:26px}
+.mark i{border-radius:3px;background:#3fc79f}.mark i:nth-child(2),.mark i:nth-child(3){background:var(--gold)}
+.nav a.l{color:var(--deep-fg);text-decoration:none;font-weight:500;margin-left:18px}
+
+.hero{padding:44px 0 64px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;align-items:start}
+.kicker{display:inline-block;background:var(--gold);color:var(--deep);font-weight:700;font-size:14px;letter-spacing:.08em;padding:6px 12px;border-radius:8px;transform:rotate(-1.5deg)}
+.hero h1{color:#fff;font-size:clamp(34px,5.4vw,58px);font-weight:800;margin:18px 0 16px}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p.lede{color:var(--deep-muted);font-size:19px;margin:0 0 22px;max-width:560px}
+.facts{display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0;list-style:none}
+.facts li{border:1px solid var(--deep-line);border-radius:999px;padding:7px 14px;font-size:15px;color:var(--deep-fg)}
+
+.enrol{background:var(--surface);color:var(--ink);border-radius:20px;padding:26px;box-shadow:0 18px 40px rgba(0,0,0,.25);display:grid;gap:14px;scroll-margin-top:20px}
+.enrol h2{font-size:20px;margin:0}
+.price{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.price b{font-family:var(--display);font-size:42px;font-weight:800;line-height:1}
+.price s{color:var(--muted);font-size:20px}
+.tag{display:inline-block;background:#fff4d6;color:#7a5400;font-weight:700;font-size:13px;padding:4px 10px;border-radius:6px}
+.sched{background:var(--soft);border-radius:12px;padding:12px 14px;font-weight:500}
+.muted{color:var(--muted)}.small{font-size:14.5px}
+.enrol label{display:grid;gap:6px;font-weight:600;font-size:15px}
+.enrol input{font:inherit;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;min-height:48px}
+.enrol input:focus{outline:3px solid #9fd8c4;border-color:var(--accent)}
+.err{color:var(--bad);font-weight:600;margin:0}
+.okbox{background:#e8f7ef;border:1px solid #b9e5cc;border-radius:12px;padding:14px;display:grid;gap:8px}
+.skel{height:180px;border-radius:12px;background:linear-gradient(90deg,#eef2f0,#f7f9f8,#eef2f0);background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+
+section.band{padding:64px 0}
+.band h2{font-size:clamp(26px,3.4vw,36px);margin:0 0 10px}
+.band .sub{color:var(--muted);margin:0 0 30px;max-width:700px}
+.sessions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.sess{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px}
+.sess .n{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:500}
+.sess h3{font-size:21px;margin:6px 0 14px}
+.sess ul{margin:0;padding-left:20px;display:grid;gap:8px}
+.build{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);font-weight:600}
+.build span{color:var(--accent)}
+
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px}
+.card h3{font-size:17px;margin:0 0 8px}
+.card p{margin:0;color:var(--muted)}
+
+.code{background:var(--deep);color:#d7efe5;border-radius:16px;padding:22px;font-family:var(--mono);font-size:14px;line-height:1.7;overflow-x:auto;white-space:pre}
+.code .k{color:#ffd166}.code .t{color:#7fdcc0}.code .c{color:#86a79a}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:center}
+
+.mentor{display:flex;gap:22px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px}
+.mentor img{width:110px;height:110px;border-radius:50%;object-fit:cover;flex-shrink:0;border:4px solid var(--soft)}
+.mentor h3{margin:0 0 4px;font-size:20px}
+.mentor p{margin:0;color:var(--muted)}
+
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:10px}
+summary{font-weight:700;cursor:pointer}
+details p{margin:10px 0 0;color:var(--muted)}
+
+footer{background:var(--deep);color:var(--deep-muted);padding:26px 0;font-size:14.5px}
+footer .w{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer a{color:var(--deep-fg)}
+
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr;padding-top:24px}
+  .sessions,.grid3,.two{grid-template-columns:1fr}
+  .nav a.l.hide-m{display:none}
+}
+@media (max-width:520px){ .mentor{flex-direction:column;text-align:center} .enrol{padding:20px} }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="w">
+    <nav class="nav" aria-label="Main">
+      <a class="brand" href="./"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Widgetry Academy</a>
+      <div><a class="l hide-m" href="./#courses">Courses</a><a class="l hide-m" href="jobs.html">Jobs</a><a class="l" href="#enrol">Enrol</a></div>
+    </nav>
+
+    <div class="hero">
+      <div>
+        <span class="kicker">LIVE CRASH COURSE · ONE WEEKEND</span>
+        <h1>Learn <em>Bloc</em> the way real Flutter teams use it.</h1>
+        <p class="lede">Two live sessions. You'll go from "I've heard of Bloc" to building a complete shopping cart feature with Cubit, Bloc, a repository and tests. The same patterns you'll see in company codebases and interviews.</p>
+        <ul class="facts">
+          <li>2 live sessions · about 5 hours</li>
+          <li>Code along, ask anything</li>
+          <li>Full source code on GitHub</li>
+          <li>For people who know Flutter basics</li>
+        </ul>
+      </div>
+
+      <div class="enrol" id="enrol" aria-live="polite">
+        <div class="skel" id="eLoading"></div>
+        <div id="eBody" hidden></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="band" aria-labelledby="hLearn">
+  <div class="w">
+    <h2 id="hLearn">What we'll cover</h2>
+    <p class="sub">Every topic is built live in one project, so by the end you've written every line yourself.</p>
+    <div class="sessions">
+      <article class="sess">
+        <div class="n">SESSION 1 · ~2.5 HOURS</div>
+        <h3>Bloc foundations</h3>
+        <ul>
+          <li>Why state management: where <code>setState</code> breaks down in real apps</li>
+          <li>Cubit first: states, <code>emit</code>, <code>BlocProvider</code> and <code>BlocBuilder</code></li>
+          <li>Bloc with events, and when to choose Bloc over Cubit</li>
+          <li><code>BlocListener</code> and <code>BlocConsumer</code> for navigation, snackbars and dialogs</li>
+          <li>Immutable states with Equatable and <code>copyWith</code></li>
+        </ul>
+        <p class="build">You build: <span>a login screen with validation, loading and error states</span></p>
+      </article>
+      <article class="sess">
+        <div class="n">SESSION 2 · ~2.5 HOURS</div>
+        <h3>Bloc in a real app</h3>
+        <ul>
+          <li>The repository pattern: keep API calls out of your Bloc</li>
+          <li>A product list from a REST API with loading, empty and error states</li>
+          <li>A cart shared across screens with <code>MultiBlocProvider</code></li>
+          <li>Testing Blocs with <code>bloc_test</code> and mocktail</li>
+          <li>A folder structure that scales, and common Bloc interview questions</li>
+        </ul>
+        <p class="build">You build: <span>a product list and cart, tested, pushed to your GitHub</span></p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="band" style="background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)" aria-labelledby="hCode">
+  <div class="w two">
+    <div>
+      <h2 id="hCode">Code you'll actually understand</h2>
+      <p class="sub" style="margin-bottom:14px">No copy-pasting from tutorials. We write each piece together and talk through why it's shaped that way, so you can explain it in an interview.</p>
+      <p class="muted" style="margin:0">You'll leave knowing how events turn into states, where business logic belongs, and how to test it without a device.</p>
+    </div>
+    <div class="code" role="img" aria-label="Example Dart code: a CartCubit that adds a product and emits a new state">
+<span class="k">class</span> <span class="t">CartCubit</span> <span class="k">extends</span> <span class="t">Cubit</span>&lt;<span class="t">CartState</span>&gt; {
+  <span class="t">CartCubit</span>(<span class="k">this</span>._repo) : <span class="k">super</span>(<span class="k">const</span> <span class="t">CartState</span>());
+  <span class="k">final</span> <span class="t">CartRepository</span> _repo;
+
+  <span class="t">Future</span>&lt;<span class="k">void</span>&gt; add(<span class="t">Product</span> p) <span class="k">async</span> {
+    emit(state.copyWith(saving: <span class="k">true</span>));
+    <span class="k">await</span> _repo.add(p);
+    emit(state.copyWith(
+      items: [...state.items, p],
+      saving: <span class="k">false</span>,
+    ));
+  }
+}</div>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="hWho">
+  <div class="w">
+    <h2 id="hWho">Is this for you?</h2>
+    <p class="sub">This is not a beginner course. It's the next step after you can build basic Flutter screens.</p>
+    <div class="grid3">
+      <div class="card"><h3>You've learned Flutter basics</h3><p>You can build screens with widgets and <code>setState</code>, and now want to structure a real app.</p></div>
+      <div class="card"><h3>You're preparing for jobs</h3><p>Bloc shows up in a lot of Flutter job posts and interviews. Learn it properly, with tests.</p></div>
+      <div class="card"><h3>You use Provider or setState at work</h3><p>Your team is moving to Bloc, or you want to know when it's worth it.</p></div>
+    </div>
+    <p class="muted" style="margin:22px 0 0"><b>You'll need:</b> a laptop with Flutter installed, VS Code or Android Studio, and a GitHub account. New to Flutter? Start with <a href="./#courses">Flutter in 10 Days</a>.</p>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0" aria-labelledby="hMentor">
+  <div class="w">
+    <h2 id="hMentor" style="margin-bottom:20px">Your instructor</h2>
+    <div class="mentor">
+      <img src="shots/mentor-square.jpg" alt="Kishan Kumar Sharma" width="110" height="110" loading="lazy">
+      <div>
+        <h3>Kishan Kumar Sharma</h3>
+        <p>Flutter developer for 5+ years and Senior Software Engineer at Relevance Lab. Uses Bloc and clean architecture in production apps every day. Founder of Widgetry Academy.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0" aria-labelledby="hFaq">
+  <div class="w" style="max-width:820px">
+    <h2 id="hFaq" style="margin-bottom:20px">Questions</h2>
+    <details><summary>Do I need to know Bloc already?</summary><p>No. We start from zero with Bloc. You only need Flutter basics: widgets, StatefulWidget and setState, and a little Dart async (<code>Future</code>, <code>async</code>/<code>await</code>).</p></details>
+    <details><summary>How do I join the sessions?</summary><p>The sessions are live online. After you pay, the joining link appears on this page (sign in with the same account), and we also share the details on WhatsApp.</p></details>
+    <details><summary>Will I get the code?</summary><p>Yes. The full source code of everything we build is shared on GitHub after the course.</p></details>
+    <details><summary>Can I get a refund?</summary><p>Yes, a full refund if you cancel before the first session starts. If we cancel or move the batch, you get a full refund or a seat in the next batch. See the <a href="refund.html">refund policy</a>.</p></details>
+    <details><summary>I have another question</summary><p>Message us on <a id="waLink" href="contact.html" target="_blank" rel="noopener">WhatsApp</a> or use the <a href="contact.html">contact page</a>.</p></details>
+  </div>
+</section>
+
+<footer>
+  <div class="w">
+    <span>© 2026 Widgetry Academy · Kolkata, India</span>
+    <span><a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="refund.html">Refunds</a> · <a href="contact.html">Contact</a></span>
+  </div>
+</footer>
+
+<script src="site-config.js"></script>
+<script type="module">
+import { watchAuthState, getCurrentUser } from './js/auth.js';
+import { JOBS_API } from './jobs-api-url.js';
+
+const SLUG = "bloc-crash-course";
+const $ = id => document.getElementById(id);
+const esc = t => { const d = document.createElement("div"); d.textContent = t ?? ""; return d.innerHTML; };
+const inr = n => "₹" + Number(n || 0).toLocaleString("en-IN");
+const wa = (window.WIDGETRY || {}).whatsapp || "";
+const waHref = text => wa ? `https://wa.me/${wa}?text=${encodeURIComponent(text)}` : "contact.html";
+if (wa) $("waLink").href = waHref("Hi! I have a question about the Bloc crash course.");
+const when = iso => new Date(iso).toLocaleString("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" }) + " IST";
+
+let user = null, data = null;
+
+async function api(path, { method = "GET", body } = {}) {
+  const headers = { "content-type": "application/json" };
+  const u = getCurrentUser();
+  if (u) headers.authorization = "Bearer " + await u.getIdToken();
+  let r;
+  try { r = await fetch(JOBS_API + path, { method, headers, body: body ? JSON.stringify(body) : undefined }); }
+  catch { throw new Error("Network problem. Check your connection and try again."); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((d.error || "Something went wrong. Please try again.").replace(/^[a-zA-Z]+: /, ""));
+  return d;
+}
+
+async function load() {
+  try { data = await api("/workshops/" + SLUG); render(); }
+  catch (e) { show(`<h2>Bloc crash course</h2><p class="err">${esc(e.message)}</p><a class="btn" href="${waHref("Hi! I'd like to join the Bloc crash course.")}" target="_blank" rel="noopener">Message us on WhatsApp</a>`); }
+}
+
+function show(html) { $("eLoading").hidden = true; $("eBody").hidden = false; $("eBody").innerHTML = html; $("eBody").style.display = "grid"; $("eBody").style.gap = "14px"; }
+
+function priceHtml(w) {
+  return w.earlyPrice
+    ? `<div class="price"><b>${inr(w.earlyPrice)}</b><s>${inr(w.price)}</s></div><div><span class="tag">Early-bird price${w.earlySeatsLeft != null ? ` · ${w.earlySeatsLeft} seat${w.earlySeatsLeft === 1 ? "" : "s"} left at this price` : ""}${w.earlyUntil ? ` · until ${esc(when(w.earlyUntil))}` : ""}</span></div>`
+    : `<div class="price"><b>${inr(w.price)}</b></div>`;
+}
+const schedHtml = w => (w.schedule || w.startsAt) ? `<div class="sched">📅 ${esc(w.schedule || ("Starts " + when(w.startsAt)))}</div>` : "";
+
+function render() {
+  const w = data.workshop, mine = data.mine;
+  if (mine?.status === "confirmed") {
+    return show(`<h2>You're enrolled ✓</h2>${schedHtml(w)}
+      <div class="okbox">
+        ${mine.meetingLink ? `<b>Joining link</b><a class="btn" href="${esc(mine.meetingLink)}" target="_blank" rel="noopener">Join the live session ↗</a><span class="small muted">Keep this page bookmarked. Join 5 minutes early with Flutter ready on your laptop.</span>`
+          : `<span>The joining link will appear here before the first session. We'll also message you on WhatsApp.</span>`}
+      </div>
+      <p class="small muted" style="margin:0">Paid ${inr(mine.amount)}${mine.paymentId ? ` · Payment ID ${esc(mine.paymentId)}` : ""}</p>
+      <a class="small" href="${waHref("Hi! I'm enrolled in the Bloc crash course and have a question.")}" target="_blank" rel="noopener">Questions? Message us on WhatsApp</a>`);
+  }
+  if (w.status === "draft") {
+    return show(`<h2>Next batch: dates coming soon</h2>${priceHtml(w)}
+      <p class="muted" style="margin:0">We're fixing the dates for the next weekend batch. Message us and we'll tell you first.</p>
+      <a class="btn gold" href="${waHref("Hi! Please tell me when the Bloc crash course dates are out.")}" target="_blank" rel="noopener">Notify me on WhatsApp</a>`);
+  }
+  if (w.status !== "open" || w.seatsLeft <= 0) {
+    return show(`<h2>${w.seatsLeft <= 0 && w.status === "open" ? "This batch is full" : "Enrolment is closed"}</h2>${schedHtml(w)}
+      <p class="muted" style="margin:0">Want a seat in the next batch? Message us and we'll tell you when it opens.</p>
+      <a class="btn gold" href="${waHref("Hi! Please add me to the waiting list for the next Bloc crash course.")}" target="_blank" rel="noopener">Join the waiting list</a>`);
+  }
+  const top = `<h2>Enrol in the next batch</h2>${schedHtml(w)}${priceHtml(w)}<p class="small muted" style="margin:0">${w.seatsLeft} seat${w.seatsLeft === 1 ? "" : "s"} left · full refund if you cancel before the first session</p>`;
+  if (!data.paymentsOpen) {
+    return show(top + `<a class="btn gold" href="${waHref("Hi! I'd like to enrol in the Bloc crash course.")}" target="_blank" rel="noopener">Enrol on WhatsApp</a>`);
+  }
+  if (!user) {
+    return show(top + `<a class="btn gold" href="pages/login.html?next=${encodeURIComponent("/bloc-crash-course.html#enrol")}">Sign in to enrol</a>
+      <p class="small muted" style="margin:0">New here? You can create a free account on the sign-in page. It takes a minute.</p>`);
+  }
+  show(top + `<form id="fEnrol" novalidate style="display:grid;gap:12px">
+      <label for="eName">Your full name<input id="eName" autocomplete="name" maxlength="99" required value="${esc(user.displayName || "")}"></label>
+      <label for="ePhone">WhatsApp number<input id="ePhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" required placeholder="98765 43210"></label>
+      <p class="err" id="eErr" hidden></p>
+      <button class="btn gold" id="ePay" type="submit">Pay ${inr(w.earlyPrice ?? w.price)} &amp; enrol</button>
+      <span class="small muted">Secure payment by Razorpay: UPI, cards, net banking. Signed in as ${esc(user.email || "")}.</span>
+    </form>`);
+  $("fEnrol").onsubmit = pay;
+}
+
+function loadRazorpay() {
+  if (window.Razorpay) return Promise.resolve();
+  return new Promise((ok, bad) => {
+    const s = document.createElement("script"); s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = ok; s.onerror = () => bad(new Error("Couldn't load the payment window. Check your connection and try again.")); document.head.appendChild(s);
+  });
+}
+
+async function pay(e) {
+  e.preventDefault();
+  const err = $("eErr"), btn = $("ePay");
+  err.hidden = true;
+  const name = $("eName").value.trim(), phone = $("ePhone").value.trim();
+  if (name.length < 2) { err.textContent = "Please enter your full name."; err.hidden = false; $("eName").focus(); return; }
+  if (phone.replace(/\D/g, "").length < 10) { err.textContent = "Please enter your WhatsApp number."; err.hidden = false; $("ePhone").focus(); return; }
+  btn.disabled = true; btn.textContent = "Opening payment…";
+  try {
+    await loadRazorpay();
+    const o = await api(`/workshops/${SLUG}/enroll`, { method: "POST", body: { name, phone } });
+    const rzp = new window.Razorpay({
+      key: o.keyId, order_id: o.orderId, amount: o.amount, currency: o.currency, name: o.name, description: o.description, prefill: o.prefill,
+      theme: { color: "#0f6b56" },
+      handler: async resp => {
+        show(`<h2>Confirming your payment…</h2><div class="skel" style="height:80px"></div>`);
+        try { await api("/workshops/verify", { method: "POST", body: { orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature } }); }
+        catch (x) { /* the webhook or the next page load confirms it */ }
+        await load();
+      },
+      modal: { ondismiss: () => { btn.disabled = false; btn.textContent = "Try again"; } },
+    });
+    rzp.on("payment.failed", r => { err.textContent = (r?.error?.description || "The payment didn't go through.") + " No money was taken for a failed payment."; err.hidden = false; });
+    rzp.open();
+  } catch (x) {
+    err.textContent = x.message; err.hidden = false; btn.disabled = false; btn.textContent = "Try again";
+  }
+}
+
+watchAuthState(u => { user = u; load(); });
+</script>
+</body>
+</html>

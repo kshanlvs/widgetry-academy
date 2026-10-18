@@ -334,6 +334,45 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
         </div>
       </form>
     </div>
+
+    <div class="cgrid" style="margin-top:22px">
+      <div class="bcard">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <h2>Short courses with online payment</h2>
+          <button class="btn ghost" type="button" id="wReload">Refresh</button>
+        </div>
+        <p class="small" style="margin:0">Crash courses people pay for on their own page (for example <a href="bloc-crash-course.html" target="_blank" rel="noopener">bloc-crash-course.html</a>). Set the dates and price, then set Status to <b>Enrolment open</b>.</p>
+        <div class="jl" id="wList"><p class="small">Loading…</p></div>
+        <p class="err" id="wListErr" hidden></p>
+        <div id="wPeople" hidden></div>
+      </div>
+      <form class="bcard" id="fWs" novalidate hidden>
+        <h2 id="wFormTitle">Edit course</h2>
+        <label>Course name *<input id="wTitle" maxlength="140" required></label>
+        <div class="row2">
+          <label>First session starts *<input id="wStart" type="datetime-local"></label>
+          <label>Total length (minutes)<input id="wDur" type="number" min="30" step="15" value="300"></label>
+        </div>
+        <label><span>Dates as shown on the page <span class="opt">(e.g. Sat 8 &amp; Sun 9 Nov · 11 AM–1:30 PM IST)</span></span><input id="wSched" maxlength="200"></label>
+        <div class="row3">
+          <label>Price (₹) *<input id="wPrice" type="number" min="1" step="1"></label>
+          <label>Early-bird price (₹)<input id="wEarly" type="number" min="1" step="1" placeholder="optional"></label>
+          <label>Early-bird seats<input id="wEarlySeats" type="number" min="1" step="1" placeholder="optional"></label>
+        </div>
+        <div class="row2">
+          <label>Early bird ends<input id="wEarlyUntil" type="datetime-local"></label>
+          <label>Total seats *<input id="wSeats" type="number" min="1" step="1" value="40"></label>
+        </div>
+        <label><span>Joining link <span class="opt">(Google Meet / Zoom · shown only to people who paid)</span></span><input id="wLink" maxlength="500" placeholder="https://meet.google.com/..."></label>
+        <label>Status<select id="wStatus"><option value="draft">Draft (page says dates coming soon)</option><option value="open">Enrolment open</option><option value="closed">Enrolment closed</option><option value="done">Finished</option></select></label>
+        <p class="err" id="wErr" hidden></p>
+        <p class="okmsg" id="wOk" hidden></p>
+        <div class="acts">
+          <button class="btn ghost" type="button" id="wCancel">Close</button>
+          <button class="btn" type="submit" id="wSave">Save</button>
+        </div>
+      </form>
+    </div>
   </section>
   <section id="japp" hidden>
     <p class="note" id="jOff" hidden></p>
@@ -658,7 +697,12 @@ const SEED = [
   { title: "Full-Stack Web Development", tagline: "Build a complete website with your own backend, and put it live on the internet.", status: "soon", flagship: false, order: 2,
     meta: "Weekends · Beginner friendly", tags: [], outcome: "a live full-stack project with a frontend, an API and a real link.",
     steps: [{ t: "JavaScript basics", d: "Make web pages that think and respond" }, { t: "React", d: "Build modern, interactive screens" }, { t: "Your own API with .NET", d: "The backend that stores and serves data" }, { t: "Deployment", d: "Put your project live with a link to share" }, { t: "CI/CD", d: "Your site updates itself when you push code" }],
-    price: null, mrp: null, priceNote: "", showBatch: false, mentorName: "", mentorLine: "", mentorPhoto: "", cta: "", ctaLink: "", cta2: "", cta2Link: "" }
+    price: null, mrp: null, priceNote: "", showBatch: false, mentorName: "", mentorLine: "", mentorPhoto: "", cta: "", ctaLink: "", cta2: "", cta2Link: "" },
+  { title: "Bloc Crash Course", tagline: "Learn Bloc state management the way companies use it, in one weekend.", status: "open", flagship: false, order: 2, badge: "★ New · Crash course",
+    meta: "2 live sessions · one weekend · 5 hours", tags: ["Bloc", "Cubit", "bloc_test", "Clean architecture"], steps: [],
+    outcome: "a working shopping cart feature built with Bloc, with tests, on your GitHub.", price: 799, mrp: 999, priceNote: "Early-bird fee · first 15 seats", showBatch: false,
+    mentorName: "Kishan Kumar Sharma", mentorLine: "5+ years · Senior Software Engineer, Relevance Lab", mentorPhoto: "shots/mentor-square.jpg",
+    cta: "See details & enrol", ctaLink: "bloc-crash-course.html", cta2: "", cta2Link: "" }
 ];
 let call = [], cediting = null;
 const okLink = u => !u || /^(#[\w-]+|[\w./-]+\.html(#[\w-]+)?|https:\/\/\S+)$/.test(u);
@@ -1209,6 +1253,75 @@ $("iForm").onsubmit = async e => {
 };
 $("iReload").onclick = loadInterviews; $("bStatus").onchange = loadMockBookings;
 
+
+/* ---------- Short courses (online payment) ---------- */
+const WST = { draft: "Draft", open: "Enrolment open", closed: "Closed", done: "Finished" };
+let wall = [], wediting = null;
+const toLocalInput = iso => { if (!iso) return ""; const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
+const fromLocalInput = v => v ? new Date(v).toISOString() : null;
+async function loadWorkshops() {
+  $("wListErr").hidden = true;
+  try {
+    wall = (await japi("/admin/workshops")).items;
+    $("wList").innerHTML = wall.length ? wall.map(w => `<div class="citem">
+        <div><h3>${esc(w.title)}</h3><div class="small">${w.startsAt ? esc(itime(w.startsAt)) : "No date yet"}${w.schedule ? " · " + esc(w.schedule) : ""}</div></div>
+        <span class="pill c-${w.status === "open" ? "open" : "soon"}">${esc(WST[w.status] || w.status)}</span>
+        <div class="small" style="grid-column:1/-1">${inr(w.price)}${w.earlyPrice ? ` · early bird ${inr(w.earlyPrice)}` : ""} · <b>${w.enrolled}</b> paid of ${w.seats} seats · collected ${inr(w.revenue)}${w.refunded ? ` · ${w.refunded} refunded` : ""}${w.meetingLink ? "" : " · <b>no joining link yet</b>"}</div>
+        <div class="cbtns" style="grid-column:1/-1">
+          <button class="btn ghost" type="button" data-wedit="${w.id}">Edit</button>
+          <button class="btn ghost" type="button" data-wppl="${w.id}">Students (${w.enrolled})</button>
+          <a class="btn ghost" href="${esc(w.slug)}.html" target="_blank" rel="noopener">Open page ↗</a>
+        </div></div>`).join("") : '<p class="small">No short courses yet.</p>';
+    $("wList").querySelectorAll("[data-wedit]").forEach(b => b.onclick = () => editWorkshop(Number(b.dataset.wedit)));
+    $("wList").querySelectorAll("[data-wppl]").forEach(b => b.onclick = () => wPeople(Number(b.dataset.wppl)));
+  } catch (x) {
+    $("wList").innerHTML = ""; $("wListErr").textContent = x.message === "Not found." ? "The server is still updating to the version with short courses. Try again in a few minutes." : x.message; $("wListErr").hidden = false;
+  }
+}
+function editWorkshop(id) {
+  wediting = wall.find(w => w.id === id); if (!wediting) return;
+  const w = wediting;
+  $("wFormTitle").textContent = "Edit: " + w.title;
+  $("wTitle").value = w.title; $("wStart").value = toLocalInput(w.startsAt); $("wDur").value = w.durationMin;
+  $("wSched").value = w.schedule || ""; $("wPrice").value = w.price; $("wEarly").value = w.earlyPrice ?? ""; $("wEarlySeats").value = w.earlySeats ?? "";
+  $("wEarlyUntil").value = toLocalInput(w.earlyUntil); $("wSeats").value = w.seats; $("wLink").value = w.meetingLink || ""; $("wStatus").value = w.status;
+  $("wErr").hidden = true; $("wOk").hidden = true; $("fWs").hidden = false; $("fWs").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("wCancel").onclick = () => { $("fWs").hidden = true; wediting = null; };
+$("wReload").onclick = loadWorkshops;
+$("fWs").onsubmit = async e => {
+  e.preventDefault(); if (!wediting) return;
+  const num = id => $(id).value === "" ? null : Number($(id).value);
+  $("wErr").hidden = true; $("wOk").hidden = true; $("wSave").disabled = true;
+  try {
+    await japi("/admin/workshops/" + wediting.id, { method: "PUT", body: {
+      title: $("wTitle").value.trim(), startsAt: fromLocalInput($("wStart").value), schedule: $("wSched").value.trim(), durationMin: num("wDur") ?? 300,
+      price: num("wPrice"), earlyPrice: num("wEarly"), earlySeats: num("wEarlySeats"), earlyUntil: fromLocalInput($("wEarlyUntil").value),
+      seats: num("wSeats"), meetingLink: $("wLink").value.trim(), status: $("wStatus").value } });
+    $("wOk").textContent = "Saved. The course page updates straight away."; $("wOk").hidden = false;
+    await loadWorkshops(); wediting = wall.find(w => w.id === wediting.id) || null;
+  } catch (x) { $("wErr").textContent = x.message.replace(/^[a-zA-Z]+: /, ""); $("wErr").hidden = false; }
+  finally { $("wSave").disabled = false; }
+};
+async function wPeople(id) {
+  const w = wall.find(x => x.id === id);
+  $("wPeople").hidden = false; $("wPeople").innerHTML = '<p class="small">Loading…</p>';
+  try {
+    const items = (await japi(`/admin/workshops/${id}/enrollments`)).items;
+    $("wPeople").innerHTML = `<h3 style="margin:8px 0">${esc(w?.title || "")}: students</h3>` + (items.length ? `<div class="tablewrap" style="overflow-x:auto"><table class="small" style="width:100%;border-collapse:collapse">
+      <tr><th align="left">Name</th><th align="left">WhatsApp</th><th align="left">Email</th><th align="left">Paid</th><th></th></tr>` +
+      items.map(p => `<tr style="border-top:1px solid var(--line)"><td>${esc(p.name)}</td><td><a href="https://wa.me/${esc((p.phone || "").replace(/\D/g, ""))}" target="_blank" rel="noopener">${esc(p.phone)}</a></td><td>${esc(p.email)}</td>
+        <td>${inr(p.amount)}${p.early ? " (early bird)" : ""}${p.status === "refunded" ? " · <b>refunded</b>" : ""}</td>
+        <td>${p.status === "confirmed" ? `<button class="btn ghost" type="button" data-wref="${p.id}">Mark refunded</button>` : ""}</td></tr>`).join("") + "</table></div>"
+      : '<p class="small">Nobody has paid yet.</p>');
+    $("wPeople").querySelectorAll("[data-wref]").forEach(b => b.onclick = async () => {
+      if (!confirm("Mark this payment as refunded? Do the actual refund in your Razorpay dashboard first.")) return;
+      try { await japi("/admin/workshop-enrollments/" + b.dataset.wref, { method: "PATCH", body: { status: "refunded" } }); await loadWorkshops(); wPeople(id); }
+      catch (x) { alert(x.message); }
+    });
+  } catch (x) { $("wPeople").innerHTML = `<p class="err">${esc(x.message)}</p>`; }
+}
+
 /* ---------- Tabs ---------- */
 let curTab = "oapp";
 function showTab(t) {
@@ -1221,6 +1334,7 @@ function showTab(t) {
   if (t === "bapp") loadBatch();
   if (t === "japp") loadJobs();
   if (t === "tapp") loadTalent();
+  if (t === "capp") loadWorkshops();
 }
 document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
 

@@ -15,6 +15,7 @@ import { accountRouter } from "./routes/account.js";
 import { mockRouter, mockAdminRouter } from "./routes/mock.js";
 import { mentorsRouter } from "./routes/mentors.js";
 import { overviewRouter } from "./routes/overview.js";
+import { workshopsRouter, workshopsAdminRouter } from "./routes/workshops.js";
 import { requireAdmin } from "./auth.js";
 
 export function createApp() {
@@ -61,8 +62,10 @@ export function createApp() {
   api.use(accountRouter);
   api.use(mockRouter);
   api.use(mentorsRouter);
+  api.use(workshopsRouter);
   api.use("/admin", requireAdmin, mockAdminRouter);
   api.use("/admin", requireAdmin, overviewRouter);
+  api.use("/admin", requireAdmin, workshopsAdminRouter);
   api.use("/admin", adminRouter);
   api.use((_req, res) => res.status(404).json({ error: "Not found." }));
   api.use(errorHandler);

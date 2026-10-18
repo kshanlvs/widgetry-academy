@@ -40,6 +40,9 @@ before(async () => {
   await migrate(() => {});
   for (const t of ["job_reports", "job_skills", "jobs", "companies", "candidate_skills", "candidates"]) await pool.query(`DELETE FROM ${t}`);
   for (const t of ["mock_scorecards", "mock_bookings", "interview_slots", "interviewers"]) await pool.query(`DELETE FROM ${t}`);
+  await pool.query("DELETE FROM workshop_enrollments");
+  await pool.query("DELETE FROM workshops WHERE slug <> 'bloc-crash-course'");
+  await pool.query("UPDATE workshops SET status = 'draft', starts_at = NULL, price = 99900, early_price = 79900, early_seats = 15, early_until = NULL, seats = 40, meeting_link = NULL WHERE slug = 'bloc-crash-course'");
   server = createApp().listen(0);
   await new Promise(r => server.once("listening", r));
   base = `http://127.0.0.1:${(server.address() as any).port}/api`;
@@ -914,4 +917,80 @@ test("Google: live jobs sitemap, and Google is told when a job goes live or clos
     await call("DELETE", `/admin/jobs/${id}`, undefined, ADMIN);
     assert.deepEqual(pings, [`URL_UPDATED ${id}`, `URL_DELETED ${id}`]);
   } finally { setIndexer(null); }
+});
+
+test("short courses: Bloc crash course enrolment, early-bird price, seats, Razorpay confirm, joining link, admin", async () => {
+  process.env.RAZORPAY_KEY_ID = "rzp_test_abc"; process.env.RAZORPAY_KEY_SECRET = "test_secret"; process.env.RAZORPAY_WEBHOOK_SECRET = "hook_secret";
+  const rzp = new Map<string, { id: string; order_id: string; amount: number; status: string; method?: string }>();
+  let n = 900;
+  setPaymentServices({
+    async createOrder(o) { n++; return { id: "order_W" + n, amount: o.amount, currency: "INR" }; },
+    async fetchPayment(id) { return rzp.get(id)!; },
+    async orderPayments(orderId) { return [...rzp.values()].filter(p => p.order_id === orderId); },
+  }, { async get() { return null; }, async addPayment() { return "paid"; }, async earlyBirdOpen() { return false; } });
+  const sign = (o: string, p: string) => createHmac("sha256", "test_secret").update(`${o}|${p}`).digest("hex");
+  const S1 = "dev:stu1:s1@test.dev:Stu One", S2 = "dev:stu2:s2@test.dev:Stu Two", S3 = "dev:stu3:s3@test.dev:Stu Three";
+  try {
+    // Seeded as a draft: visible, not open
+    let g = await call("GET", "/workshops/bloc-crash-course");
+    assert.equal(g.status, 200);
+    assert.deepEqual([g.body.workshop.status, g.body.workshop.price, g.body.workshop.earlyPrice], ["draft", 999, 799]);
+    assert.equal((await call("POST", "/workshops/bloc-crash-course/enroll", { name: "Stu One", phone: "9876543210" }, S1)).status, 409);
+    assert.equal((await call("GET", "/workshops/nope")).status, 404);
+
+    const list = await call("GET", "/admin/workshops", undefined, ADMIN);
+    const id = list.body.items.find((w: any) => w.slug === "bloc-crash-course").id;
+    assert.equal((await call("GET", "/admin/workshops", undefined, S1)).status, 403);
+    const start = new Date(Date.now() + 7 * 86_400_000).toISOString();
+    const edit = { title: "Bloc State Management Crash Course", startsAt: start, schedule: "Sat & Sun · 11 AM–1:30 PM IST", durationMin: 300, price: 999, earlyPrice: 799, earlySeats: 1, seats: 2, meetingLink: "https://meet.google.com/abc-defg-hij", status: "open" };
+    assert.equal((await call("PUT", `/admin/workshops/${id}`, { ...edit, startsAt: null }, ADMIN)).status, 400, "needs a date to open");
+    assert.equal((await call("PUT", `/admin/workshops/${id}`, { ...edit, earlyPrice: 1200 }, ADMIN)).status, 400, "early price must be lower");
+    assert.equal((await call("PUT", `/admin/workshops/${id}`, edit, ADMIN)).status, 200);
+
+    // Sign-in and a valid phone are needed
+    assert.equal((await call("POST", "/workshops/bloc-crash-course/enroll", { name: "Stu One", phone: "9876543210" })).status, 401);
+    assert.equal((await call("POST", "/workshops/bloc-crash-course/enroll", { name: "Stu One", phone: "123" }, S1)).status, 400);
+
+    // First student gets the early-bird price and pays through the app flow
+    let e1 = await call("POST", "/workshops/bloc-crash-course/enroll", { name: "Stu One", phone: "98765 43210" }, S1);
+    assert.equal(e1.status, 201);
+    assert.equal(e1.body.amount, 79900);
+    assert.equal(e1.body.prefill.contact, "+919876543210");
+    rzp.set("pay_W1", { id: "pay_W1", order_id: e1.body.orderId, amount: 79900, status: "captured", method: "upi" });
+    assert.equal((await call("POST", "/workshops/verify", { orderId: e1.body.orderId, paymentId: "pay_W1", signature: "0".repeat(64) }, S1)).status, 400, "bad signature");
+    assert.equal((await call("POST", "/workshops/verify", { orderId: e1.body.orderId, paymentId: "pay_W1", signature: sign(e1.body.orderId, "pay_W1") }, S2)).status, 404, "someone else's order");
+    let v = await call("POST", "/workshops/verify", { orderId: e1.body.orderId, paymentId: "pay_W1", signature: sign(e1.body.orderId, "pay_W1") }, S1);
+    assert.deepEqual([v.status, v.body.status], [200, "confirmed"]);
+    g = await call("GET", "/workshops/bloc-crash-course", undefined, S1);
+    assert.equal(g.body.mine.status, "confirmed");
+    assert.equal(g.body.mine.meetingLink, "https://meet.google.com/abc-defg-hij", "joining link only for paid students");
+    assert.equal((await call("GET", "/workshops/bloc-crash-course", undefined, S2)).body.mine, null);
+    assert.equal((await call("POST", "/workshops/bloc-crash-course/enroll", { name: "Stu One", phone: "9876543210" }, S1)).status, 409, "already enrolled");
+
+    // Early-bird seats used up: full price now. Second student pays, confirmed by the webhook only.
+    g = await call("GET", "/workshops/bloc-crash-course");
+    assert.deepEqual([g.body.workshop.earlyPrice, g.body.workshop.seatsLeft], [null, 1]);
+    const e2 = await call("POST", "/workshops/bloc-crash-course/enroll", { name: "Stu Two", phone: "9123456789" }, S2);
+    assert.equal(e2.body.amount, 99900);
+    // While S2's seat is held, the course is full for others
+    assert.equal((await call("POST", "/workshops/bloc-crash-course/enroll", { name: "Stu Three", phone: "9000000001" }, S3)).status, 409);
+    const raw = JSON.stringify({ event: "payment.captured", payload: { payment: { entity: { id: "pay_W2", order_id: e2.body.orderId, amount: 99900, status: "captured", method: "card" } } } });
+    const hook = await fetch(base + "/payments/webhook", { method: "POST", headers: { "content-type": "application/json", "x-razorpay-signature": createHmac("sha256", "hook_secret").update(raw).digest("hex") }, body: raw });
+    assert.equal(hook.status, 200);
+    assert.equal((await call("GET", "/workshops/bloc-crash-course", undefined, S2)).body.mine.status, "confirmed");
+
+    // Admin sees both, revenue adds up, and can mark a refund
+    const adm = (await call("GET", "/admin/workshops", undefined, ADMIN)).body.items.find((w: any) => w.id === id);
+    assert.deepEqual([adm.enrolled, adm.revenue], [2, 1798]);
+    const people = (await call("GET", `/admin/workshops/${id}/enrollments`, undefined, ADMIN)).body.items;
+    assert.equal(people.length, 2);
+    assert.equal(people.find((p: any) => p.name === "Stu One").early, true);
+    assert.equal((await call("PATCH", `/admin/workshop-enrollments/${people[0].id}`, { status: "refunded" }, ADMIN)).status, 200);
+    assert.equal((await call("PATCH", `/admin/workshop-enrollments/${people[0].id}`, { status: "refunded" }, ADMIN)).status, 404, "only once");
+
+    // A new course can be added from admin
+    const c = await call("POST", "/admin/workshops", { slug: "riverpod-crash-course", title: "Riverpod Crash Course", price: 999, seats: 30 }, ADMIN);
+    assert.equal(c.status, 201);
+    assert.equal((await call("POST", "/admin/workshops", { slug: "riverpod-crash-course", title: "Riverpod Crash Course", price: 999, seats: 30 }, ADMIN)).status, 409);
+  } finally { setPaymentServices(null, null); }
 });

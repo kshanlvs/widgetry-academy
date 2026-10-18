@@ -67,13 +67,16 @@ accountRouter.delete("/me", requireAuth, wrap(async (req, res) => {
   await query("UPDATE mock_bookings SET focus = NULL, share_profile = 0, status = IF(status = 'confirmed', 'refund_due', status) WHERE uid = ?", [uid]);
   const [{ m }] = await query<{ m: number }>("SELECT COUNT(*) AS m FROM mock_bookings WHERE uid = ?", [uid]);
   await query("DELETE FROM interviewers WHERE uid = ?", [uid]);
+  // Short courses: unpaid attempts go; paid enrolments are kept as payment records
+  await query("DELETE FROM workshop_enrollments WHERE uid = ? AND paid_at IS NULL", [uid]);
+  const [{ w }] = await query<{ w: number }>("SELECT COUNT(*) AS w FROM workshop_enrollments WHERE uid = ?", [uid]);
 
   const s = firebase();
   const keptRegistration = await s.removeRegistration(uid);
   await s.removeMentorApplications(uid);
   await s.deleteSignIn(uid);
 
-  const kept = Number(n) > 0 || Number(m) > 0 || keptRegistration;
+  const kept = Number(n) > 0 || Number(m) > 0 || Number(w) > 0 || keptRegistration;
   res.json({
     ok: true,
     keptPaymentRecords: kept,
