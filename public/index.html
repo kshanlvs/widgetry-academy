@@ -728,7 +728,19 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 .crs-price span{font-size:13.5px;color:var(--muted);flex-basis:100%}
 .crs-card.flagship .btn{padding:14px 24px;font-size:16px}
 .crs-card.soon{opacity:.86}
-.crs.eq{align-items:start}
+.crs.eq{align-items:stretch}
+.crs.eq .crs-card.flagship h3{font-size:clamp(22px,2.3vw,28px)}
+.crs.eq .crs-flag{font-size:11px;letter-spacing:.05em;padding:10px 16px}
+.crs.eq .crs-live{padding:4px 9px}
+.crs-flag{flex-wrap:wrap;row-gap:6px}
+.crs-flag > span:first-child{min-width:0}
+.crs-live{white-space:nowrap}
+.crs-more{margin:-2px 0 2px}
+.crs-more summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--accent);list-style:none;padding:4px 0}
+.crs-more summary::-webkit-details-marker{display:none}
+.crs-more summary::after{content:" ▾"}
+.crs-more[open] summary::after{content:" ▴"}
+.crs-more .crs-steps{margin-top:8px}
 .crs-card > .mx-links:last-child{margin-top:auto}
 .crs-card > .crs-mentor + .mx-links{margin-top:0}
 @media (max-width:820px){.crs{grid-template-columns:1fr}}
@@ -1268,6 +1280,12 @@ try {
     const img = u => /^([\w./-]+\.(jpg|jpeg|png|webp|svg)|https:\/\/\S+)$/i.test(u || "") ? u : "";
     const inr = n => "₹" + Number(n).toLocaleString("en-IN");
     let batchUsed = keepFlutter;
+    // The syllabus opens on tap, so cards side by side stay a similar height
+    const stepsHtml = (steps, esc) => {
+      if (!steps.length) return "";
+      const li = s => "<li><b>" + esc(s.t) + "</b>" + esc(s.d || "") + "</li>";
+      return '<details class="crs-more"><summary>See all ' + steps.length + ' topics</summary><ol class="crs-steps">' + steps.map(li).join("") + "</ol></details>";
+    };
     box.innerHTML = flutterHtml + list.map(c => {
       const soon = c.status === "soon", flag = !soon;
       const band = (c.badge || "").trim() || (c.flagship ? "★ Flagship course" : "★ New course");
@@ -1283,14 +1301,14 @@ try {
         "<h3>" + esc(c.title) + "</h3>" + when +
         (c.tagline ? '<p class="crs-sub">' + esc(c.tagline) + "</p>" : "") +
         ((c.tags || []).length ? '<div class="crs-tags">' + c.tags.map(t => "<span>" + esc(t) + "</span>").join("") + "</div>" : "") +
-        ((c.steps || []).length ? '<ol class="crs-steps">' + c.steps.map(s => "<li><b>" + esc(s.t) + "</b>" + esc(s.d || "") + "</li>").join("") + "</ol>" : "") +
+        stepsHtml(c.steps || [], esc) +
         (c.outcome ? '<p class="crs-out"><b>You finish with:</b> ' + esc(c.outcome) + "</p>" : "") +
         (c.price != null && !soon ? '<div class="crs-price"><b>' + inr(c.price) + "</b>" + (c.mrp ? "<s>" + inr(c.mrp) + "</s>" : "") + (c.priceNote ? "<span>" + esc(c.priceNote) + "</span>" : "") + "</div>" : "") +
         (c.mentorName ? '<div class="crs-mentor">' + (ph ? '<img src="' + esc(ph) + '" alt="" loading="lazy">' : '<span class="crs-av">' + esc(ini) + "</span>") + "<div><b>" + esc(c.mentorName) + "</b><span>" + esc(c.mentorLine || "") + "</span></div></div>" : "") +
         btns + "</article>";
     }).join("");
     const n = list.length + (keepFlutter ? 1 : 0), allOpen = list.every(c => c.status !== "soon");
-    box.style.gridTemplateColumns = n === 1 ? "minmax(0,640px)" : (n === 2 && !allOpen ? "" : "repeat(auto-fit,minmax(min(300px,100%),1fr))");
+    box.style.gridTemplateColumns = n === 1 ? "minmax(0,640px)" : (n === 2 && !allOpen ? "" : "repeat(auto-fit,minmax(min(330px,100%),1fr))");
     box.classList.toggle("eq", allOpen);
     if (window.renderBatch) window.renderBatch((window.WIDGETRY && window.WIDGETRY.batch) || {});
   }
@@ -1522,6 +1540,7 @@ async function logOut(){ saving = true; try { await signOut(auth); } finally { s
 $("bSignOut").onclick = logOut;
 $("navOut").addEventListener("click", e => { e.preventDefault(); logOut(); });
 
+let autoTimer = null;
 onAuthStateChanged(auth, async u => {
   if (saving) return;
   me.user = u; me.reg = null;
@@ -1533,7 +1552,6 @@ onAuthStateChanged(auth, async u => {
     if (!me.reg && !dlg.open && !document.querySelector("dialog[open]")) openReg("", null, "Get batch dates, the free demo class and course updates on WhatsApp.");
   }, 8000);
 });
-let autoTimer = null;
 render();
 </script>
 
