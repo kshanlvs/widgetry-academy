@@ -154,8 +154,10 @@ Play's rules require Google Play Billing for selling a course inside the app. Wi
    |---|---|---|
    | `short_course_799` | Crash course (early bird) | 799 |
    | `short_course_999` | Crash course | 999 |
+   | `short_course_2499` | Short course (early bird) | 2,499 |
+   | `short_course_2999` | Short course | 2,999 |
 
-   One product per price serves every short course, so the next crash course at ₹999 needs nothing new here. If you set a new price in Admin (say ₹1,299), create `short_course_1299` with that price and add it to `WORKSHOP_PLAY_PRICES` on Railway (default `799,999`). Until then, that price is paid with Razorpay from Google's screen.
+   One product per price serves every short course, so the next crash course at ₹999 needs nothing new here. If you set a new price in Admin (say ₹1,299), create `short_course_1299` with that price and add it to `WORKSHOP_PLAY_PRICES` on Railway (default `799,999,2499,2999`). Until then, that price is paid with Razorpay from Google's screen.
 
 5. **Licence testers:** go to Settings → License testing and add the Gmail addresses you test with, so test purchases are free.
 

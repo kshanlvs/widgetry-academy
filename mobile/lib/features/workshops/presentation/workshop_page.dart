@@ -205,7 +205,7 @@ class _Header extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(color: AppColors.gold, borderRadius: BorderRadius.circular(6)),
-          child: Text('LIVE CRASH COURSE', style: t.labelSmall?.copyWith(color: const Color(0xFF0C2A23), fontWeight: FontWeight.w800, letterSpacing: 0.8)),
+          child: Text(w.durationMin <= 360 ? 'LIVE CRASH COURSE' : 'LIVE COURSE', style: t.labelSmall?.copyWith(color: const Color(0xFF0C2A23), fontWeight: FontWeight.w800, letterSpacing: 0.8)),
         ),
         const SizedBox(height: Space.md),
         Text(w.title, style: t.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),

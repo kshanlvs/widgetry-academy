@@ -151,6 +151,6 @@ export async function reportPendingExternal(): Promise<number> {
  * (short_course_799, short_course_999…). Only the prices listed in WORKSHOP_PLAY_PRICES are offered
  * through Google Play; any other price is paid with Razorpay (still from Google's choice screen).
  */
-export const workshopPlayPrices = () => (env.WORKSHOP_PLAY_PRICES ?? "799,999").split(",").map(s => Number(s.trim())).filter(n => n > 0);
+export const workshopPlayPrices = () => (env.WORKSHOP_PLAY_PRICES ?? "799,999,2499,2999").split(",").map(s => Number(s.trim())).filter(n => n > 0);
 export const workshopPlayProduct = (rupees: number) => (workshopPlayPrices().includes(rupees) ? `short_course_${rupees}` : null);
 export const workshopProductPrice = (productId: string) => { const m = /^short_course_(\d+)$/.exec(productId); return m ? Number(m[1]) : null; };

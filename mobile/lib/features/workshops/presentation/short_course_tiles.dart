@@ -31,7 +31,7 @@ class _Tile extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     final p = Palette.of(context);
     final sub = w.datesComingSoon
-        ? 'Live crash course · dates coming soon'
+        ? '${w.durationMin <= 360 ? 'Live crash course' : 'Live course'} · dates coming soon'
         : [w.schedule ?? (w.startsAt == null ? null : Fmt.date(w.startsAt!)), w.isFull ? 'Full' : Fmt.rupees(w.payNow)].whereType<String>().join(' · ');
     return Padding(
       padding: const EdgeInsets.fromLTRB(Space.lg, 0, Space.lg, Space.lg),
