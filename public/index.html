@@ -1348,7 +1348,7 @@ function renderCourses(list) {
         '<div class="cm-foot">' +
           (soon ? '<span class="crs-meta">Dates soon</span><button class="btn crs-soon" type="button" disabled aria-disabled="true">Coming soon</button>'
             : '<div class="crs-price">' + (c.price != null ? "<b>" + inr(c.price) + "</b>" + (c.mrp ? "<s>" + inr(c.mrp) + "</s>" : "") : "") + "</div>" +
-              '<a class="btn" href="' + esc(href) + '"' + ext(href) + ">" + esc(/^#register$/.test(href) ? (c.cta || "Reserve my seat") : "View course") + "</a>") +
+              '<a class="btn" href="' + esc(href) + '"' + ext(href) + ">" + esc(/^[\w./-]+\.html(#[\w-]+)?$/.test(href) ? "View course" : (c.cta || "Reserve my seat")) + "</a>") +
         "</div></article>";
     }).join("") + "</div>";
   }
