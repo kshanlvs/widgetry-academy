@@ -27,6 +27,7 @@ class Course extends Equatable {
     this.flagship = false,
     this.badge,
     this.ctaLink,
+    this.brochure,
     this.showBatch = false,
     this.order = 99,
   });
@@ -49,13 +50,33 @@ class Course extends Equatable {
   final String? badge;
   /// Payment page (e.g. a Razorpay link) or a page on the website
   final String? ctaLink;
+  /// Syllabus PDF: a path on the website ("brochures/bloc-crash-course.pdf") or an https link.
+  final String? brochure;
   final bool showBatch;
   final int order;
 
   bool get isOpen => status != 'soon';
 
+  /// Brochures for courses saved before the "brochure" field existed (matched by title, like the website).
+  static const _knownBrochures = {
+    'flutter in 10 days': 'Widgetry-Academy-Flutter-Brochure.pdf',
+    'bloc crash course': 'brochures/bloc-crash-course.pdf',
+    'bloc state management crash course': 'brochures/bloc-crash-course.pdf',
+    'flutter, bloc & clean architecture': 'brochures/flutter-clean-architecture-course.pdf',
+    'food delivery app with flutter & firebase': 'brochures/food-delivery-app-course.pdf',
+  };
+
+  /// The syllabus PDF as a full link, or null if this course has none.
+  String? brochureUrl(String siteUrl) {
+    final key = title.toLowerCase().replaceAll(RegExp(r'\s*&\s*'), ' & ').replaceAll(RegExp(r'\s+'), ' ').trim();
+    final b = (brochure ?? '').trim().isNotEmpty ? brochure!.trim() : _knownBrochures[key];
+    if (b == null) return null;
+    if (b.startsWith('https://')) return b;
+    return RegExp(r'^[\w./-]+\.pdf$', caseSensitive: false).hasMatch(b) ? '$siteUrl/$b' : null;
+  }
+
   @override
-  List<Object?> get props => [id, title, tagline, meta, tags, steps, outcome, price, mrp, priceNote, mentorName, mentorLine, status, flagship, badge, ctaLink, showBatch, order];
+  List<Object?> get props => [id, title, tagline, meta, tags, steps, outcome, price, mrp, priceNote, mentorName, mentorLine, status, flagship, badge, ctaLink, brochure, showBatch, order];
 }
 
 /// Next batch details, edited in Admin → Next batch.

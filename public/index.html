@@ -768,6 +768,8 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 .crs-mini .crs-price b{font-size:24px}
 .crs-mini .crs-price s{font-size:14px}
 .crs-mini .btn{padding:10px 16px;font-size:14.5px;align-self:auto}
+.crs-dl{font-size:14.5px;font-weight:700;color:var(--accent);text-decoration:none;text-align:center}
+.crs-dl:hover{text-decoration:underline}
 .crs-feature.soon{border-style:dashed;background:linear-gradient(165deg,var(--soft),var(--surface) 60%);box-shadow:none}
 .crs-feature.soon .crs-flag{background:color-mix(in srgb,var(--accent) 75%,#000 0%);opacity:.9}
 .crs-feature + .crs-feature{margin-top:6px}
@@ -1306,6 +1308,18 @@ const DEFAULT_COURSES = [FLUTTER,
     tagline: "Dart OOP, clean architecture, Bloc and testing, learned by building a ball-by-ball cricket scorer app.", tags: ["OOP", "Clean architecture", "Bloc", "Testing", "Cricket scorer"], outcome: "a tested cricket scorer app on your GitHub that you can use in your own matches and explain in interviews.", price: 2499, mrp: 2999, priceNote: "Early-bird fee · first 10 seats", ...MENTOR, ctaLink: "flutter-clean-architecture-course.html" },
   { title: "Full-Stack Web Development", status: "soon", order: 9, meta: "Weekends · Beginner friendly", tagline: "Build a complete website with your own backend, and put it live on the internet.", tags: ["JavaScript", "React", ".NET"] },
 ];
+// Brochures for courses saved before the "brochure" field existed (matched by title)
+const KNOWN_BROCHURES = {
+  "flutter in 10 days": "Widgetry-Academy-Flutter-Brochure.pdf",
+  "bloc crash course": "brochures/bloc-crash-course.pdf",
+  "bloc state management crash course": "brochures/bloc-crash-course.pdf",
+  "flutter, bloc & clean architecture": "brochures/flutter-clean-architecture-course.pdf",
+  "food delivery app with flutter & firebase": "brochures/food-delivery-app-course.pdf",
+};
+const brochureFor = c => {
+  const b = (c.brochure || "").trim() || KNOWN_BROCHURES[(c.title || "").toLowerCase().replace(/\s*&\s*/g, " & ").replace(/\s+/g, " ").trim()] || "";
+  return /^([\w./-]+\.pdf|https:\/\/\S+)$/i.test(b) ? b : "";
+};
 function renderCourses(list) {
   const box = document.querySelector("#courses .crs");
   if (!box || !list.length) return;
@@ -1344,6 +1358,7 @@ function renderCourses(list) {
         (soon ? '<p class="crs-meta" style="margin:0">Dates will be announced soon.</p>'
               : (c.price != null ? '<div class="crs-price"><b>' + inr(c.price) + "</b>" + (c.mrp ? "<s>" + inr(c.mrp) + "</s>" : "") + (c.priceNote ? "<span>" + esc(c.priceNote) + "</span>" : "") + "</div>" : "")) +
         '<div class="mx-links">' + btns + "</div>" +
+        (brochureFor(c) ? '<a class="crs-dl" href="' + esc(brochureFor(c)) + '" download>⬇ Download syllabus (PDF)</a>' : "") +
         (c.mentorName ? '<div class="crs-mentor">' + (ph ? '<img src="' + esc(ph) + '" alt="" loading="lazy">' : '<span class="crs-av">' + esc(ini) + "</span>") + "<div><b>" + esc(c.mentorName) + "</b><span>" + esc(c.mentorLine || "") + "</span></div></div>" : "") +
       "</div></article>";
   }).join("");

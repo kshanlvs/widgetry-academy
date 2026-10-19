@@ -32,6 +32,7 @@ class CoursesFirestoreDataSource implements CoursesDataSource {
     badge: 'Flagship course',
     showBatch: true,
     order: 0,
+    brochure: 'Widgetry-Academy-Flutter-Brochure.pdf',
   );
 
   @override
@@ -67,6 +68,7 @@ class CoursesFirestoreDataSource implements CoursesDataSource {
       flagship: m['flagship'] == true,
       badge: s(m['badge']),
       ctaLink: s(m['ctaLink']),
+      brochure: s(m['brochure']),
       showBatch: m['showBatch'] == true,
       order: n(m['order']) ?? 99,
     );

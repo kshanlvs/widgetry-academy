@@ -325,6 +325,8 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
           <p class="small" style="margin:0">Links: <code>#register</code> (reserve form), <code>#schedule</code> (syllabus), <code>#fees</code>, a page like <code>apps.html</code>, or a full https:// link.</p>
         </fieldset>
 
+        <label><span>Syllabus / brochure PDF <span class="opt">(optional · shows a "Download syllabus" link on the website and in the app)</span></span><input id="cBrochure" maxlength="300" placeholder="brochures/bloc-crash-course.pdf"></label>
+
         <div><div class="small" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Preview</div><div id="cPrev"></div></div>
         <p class="err" id="cErr" hidden></p>
         <p class="okmsg" id="cOk" hidden></p>
@@ -364,6 +366,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
           <label>Total seats *<input id="wSeats" type="number" min="1" step="1" value="40"></label>
         </div>
         <label><span>Joining link <span class="opt">(Google Meet / Zoom · shown only to people who paid)</span></span><input id="wLink" maxlength="500" placeholder="https://meet.google.com/..."></label>
+        <label><span>Syllabus / brochure PDF <span class="opt">(shown as "Download syllabus" in the app)</span></span><input id="wBrochure" maxlength="300" placeholder="brochures/my-course.pdf"></label>
         <label>Status<select id="wStatus"><option value="draft">Draft (page says dates coming soon)</option><option value="open">Enrolment open</option><option value="closed">Enrolment closed</option><option value="done">Finished</option></select></label>
         <p class="err" id="wErr" hidden></p>
         <p class="okmsg" id="wOk" hidden></p>
@@ -693,7 +696,7 @@ const SEED = [
     meta: "10 live online sessions · Saturdays & Sundays · 2 hrs each", tags: ["Flutter", "Dart", "Firebase", "APIs", "GitHub"], steps: [],
     outcome: "your own installable Android app and a GitHub portfolio.", price: 3499, mrp: 4999, priceNote: "Early-bird fee · first 10 seats · pay in 2 parts", showBatch: true,
     mentorName: "Kishan Kumar Sharma", mentorLine: "5+ years · Senior Software Engineer, Relevance Lab", mentorPhoto: "shots/mentor-square.jpg",
-    cta: "Reserve my seat", ctaLink: "#register", cta2: "See syllabus", cta2Link: "#schedule" },
+    cta: "Reserve my seat", ctaLink: "#register", cta2: "See syllabus", cta2Link: "#schedule", brochure: "Widgetry-Academy-Flutter-Brochure.pdf" },
   { title: "Full-Stack Web Development", tagline: "Build a complete website with your own backend, and put it live on the internet.", status: "soon", flagship: false, order: 2,
     meta: "Weekends · Beginner friendly", tags: [], outcome: "a live full-stack project with a frontend, an API and a real link.",
     steps: [{ t: "JavaScript basics", d: "Make web pages that think and respond" }, { t: "React", d: "Build modern, interactive screens" }, { t: "Your own API with .NET", d: "The backend that stores and serves data" }, { t: "Deployment", d: "Put your project live with a link to share" }, { t: "CI/CD", d: "Your site updates itself when you push code" }],
@@ -702,12 +705,12 @@ const SEED = [
     meta: "2 live sessions · one weekend · 5 hours", tags: ["Bloc", "Cubit", "bloc_test", "Clean architecture"], steps: [],
     outcome: "a working shopping cart feature built with Bloc, with tests, on your GitHub.", price: 799, mrp: 999, priceNote: "Early-bird fee · first 15 seats", showBatch: false,
     mentorName: "Kishan Kumar Sharma", mentorLine: "5+ years · Senior Software Engineer, Relevance Lab", mentorPhoto: "shots/mentor-square.jpg",
-    cta: "See details & enrol", ctaLink: "bloc-crash-course.html", cta2: "", cta2Link: "" },
+    cta: "See details & enrol", ctaLink: "bloc-crash-course.html", cta2: "", cta2Link: "", brochure: "brochures/bloc-crash-course.pdf" },
   { title: "Flutter, Bloc & Clean Architecture", tagline: "Dart OOP, clean architecture, Bloc and testing, learned by building a ball-by-ball cricket scorer app.", status: "open", flagship: false, order: 3, badge: "★ New · Intermediate",
     meta: "6 live sessions · 3 weekends · about 15 hours", tags: ["OOP", "Clean architecture", "Bloc", "Testing", "Cricket scorer"], steps: [],
     outcome: "a tested cricket scorer app on your GitHub that you can use in your own matches and explain in interviews.", price: 2499, mrp: 2999, priceNote: "Early-bird fee · first 10 seats", showBatch: false,
     mentorName: "Kishan Kumar Sharma", mentorLine: "5+ years · Senior Software Engineer, Relevance Lab", mentorPhoto: "shots/mentor-square.jpg",
-    cta: "See details & enrol", ctaLink: "flutter-clean-architecture-course.html", cta2: "", cta2Link: "" }
+    cta: "See details & enrol", ctaLink: "flutter-clean-architecture-course.html", cta2: "", cta2Link: "", brochure: "brochures/flutter-clean-architecture-course.pdf" }
 ];
 let call = [], cediting = null;
 const okLink = u => !u || /^(#[\w-]+|[\w./-]+\.html(#[\w-]+)?|https:\/\/\S+)$/.test(u);
@@ -758,7 +761,8 @@ function courseFromForm() {
     steps: $("cSteps").value.split("\n").map(l => l.trim()).filter(Boolean).slice(0, 12).map(l => { const m = l.split(/\s+[—–-]\s+|\s*\|\s*/); return { t: (m[0] || "").slice(0, 60), d: m.slice(1).join(" — ").slice(0, 120) }; }),
     outcome: $("cOutcome").value.trim(), price: num("cPrice"), mrp: num("cMrp"), priceNote: $("cPriceNote").value.trim(), showBatch: $("cBatch").checked,
     mentorName: $("cMName").value.trim(), mentorLine: $("cMLine").value.trim(), mentorPhoto: $("cMPhoto").value.trim(),
-    cta: $("cCta").value.trim(), ctaLink: $("cCtaLink").value.trim(), cta2: $("cCta2").value.trim(), cta2Link: $("cCta2Link").value.trim()
+    cta: $("cCta").value.trim(), ctaLink: $("cCtaLink").value.trim(), cta2: $("cCta2").value.trim(), cta2Link: $("cCta2Link").value.trim(),
+    brochure: $("cBrochure").value.trim()
   };
 }
 function fillCourse(c) {
@@ -767,7 +771,7 @@ function fillCourse(c) {
   $("cSteps").value = (c.steps || []).map(s => s.d ? s.t + " — " + s.d : s.t).join("\n"); $("cOutcome").value = c.outcome || "";
   $("cPrice").value = c.price ?? ""; $("cMrp").value = c.mrp ?? ""; $("cPriceNote").value = c.priceNote || ""; $("cBatch").checked = !!c.showBatch;
   $("cMName").value = c.mentorName || ""; $("cMLine").value = c.mentorLine || ""; $("cMPhoto").value = c.mentorPhoto || "";
-  $("cCta").value = c.cta || ""; $("cCtaLink").value = c.ctaLink || ""; $("cCta2").value = c.cta2 || ""; $("cCta2Link").value = c.cta2Link || "";
+  $("cCta").value = c.cta || ""; $("cCtaLink").value = c.ctaLink || ""; $("cCta2").value = c.cta2 || ""; $("cCta2Link").value = c.cta2Link || ""; $("cBrochure").value = c.brochure || "";
   previewCourse();
 }
 function previewCourse() {
@@ -802,6 +806,7 @@ $("fCourse").addEventListener("submit", async e => {
   const c = courseFromForm(), bad = m => { $("cErr").textContent = m; $("cErr").hidden = false; };
   if (!c.title) return bad("Enter a course name.");
   if (!okLink(c.ctaLink) || !okLink(c.cta2Link)) return bad("Button links must look like #register, apps.html or https://…");
+  if (c.brochure && !/^([\w./-]+\.pdf|https:\/\/\S+)$/i.test(c.brochure)) return bad("The brochure must be a PDF path like brochures/my-course.pdf, or an https:// link.");
   if (!okPhoto(c.mentorPhoto)) return bad("Photo link must be an image file like shots/mentor-square.jpg or an https:// link.");
   if (c.mrp != null && c.price != null && c.mrp <= c.price) return bad("The crossed-out price should be higher than the price, or leave it empty.");
   $("cSave").disabled = true;
@@ -1289,7 +1294,7 @@ function editWorkshop(id) {
   $("wFormTitle").textContent = "Edit: " + w.title;
   $("wTitle").value = w.title; $("wStart").value = toLocalInput(w.startsAt); $("wDur").value = w.durationMin;
   $("wSched").value = w.schedule || ""; $("wPrice").value = w.price; $("wEarly").value = w.earlyPrice ?? ""; $("wEarlySeats").value = w.earlySeats ?? "";
-  $("wEarlyUntil").value = toLocalInput(w.earlyUntil); $("wSeats").value = w.seats; $("wLink").value = w.meetingLink || ""; $("wStatus").value = w.status;
+  $("wEarlyUntil").value = toLocalInput(w.earlyUntil); $("wSeats").value = w.seats; $("wLink").value = w.meetingLink || ""; $("wBrochure").value = w.brochure || ""; $("wStatus").value = w.status;
   $("wErr").hidden = true; $("wOk").hidden = true; $("fWs").hidden = false; $("fWs").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 $("wCancel").onclick = () => { $("fWs").hidden = true; wediting = null; };
@@ -1302,7 +1307,7 @@ $("fWs").onsubmit = async e => {
     await japi("/admin/workshops/" + wediting.id, { method: "PUT", body: {
       title: $("wTitle").value.trim(), startsAt: fromLocalInput($("wStart").value), schedule: $("wSched").value.trim(), durationMin: num("wDur") ?? 300,
       price: num("wPrice"), earlyPrice: num("wEarly"), earlySeats: num("wEarlySeats"), earlyUntil: fromLocalInput($("wEarlyUntil").value),
-      seats: num("wSeats"), meetingLink: $("wLink").value.trim(), status: $("wStatus").value } });
+      seats: num("wSeats"), meetingLink: $("wLink").value.trim(), brochure: $("wBrochure").value.trim(), status: $("wStatus").value } });
     $("wOk").textContent = "Saved. The course page updates straight away."; $("wOk").hidden = false;
     await loadWorkshops(); wediting = wall.find(w => w.id === wediting.id) || null;
   } catch (x) { $("wErr").textContent = x.message.replace(/^[a-zA-Z]+: /, ""); $("wErr").hidden = false; }

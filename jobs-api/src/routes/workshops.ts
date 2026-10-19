@@ -9,7 +9,7 @@ import { exec, query } from "../db.js";
 import { wrap, HttpError } from "../errors.js";
 import { requireAuth } from "../auth.js";
 import { gateway, paymentsEnabled, razorpayConfig, validPaymentSignature } from "../payments.js";
-import { notifyUser } from "../notify.js";
+import { notifyUser, SITE } from "../notify.js";
 import { INDIA_STATES, playAccountId, playApi, playConfig, reportExternalWorkshop, workshopPlayProduct, workshopProductPrice } from "../play.js";
 
 const HOLD_MINUTES = 15;   // an unpaid enrolment keeps a seat this long
@@ -39,6 +39,9 @@ function earlyActive(w: any, earlySold: number) {
   return true;
 }
 
+/** The syllabus PDF as a full link: a path on the website, or an https link as is. */
+const brochureUrl = (b: string | null | undefined) => (!b ? null : /^https:\/\//i.test(b) ? b : `${SITE}/${b.replace(/^\/+/, "")}`);
+
 const workshopOut = (w: any, s: { seatsLeft: number; earlySold: number }) => {
   const early = earlyActive(w, s.earlySold);
   return {
@@ -49,6 +52,7 @@ const workshopOut = (w: any, s: { seatsLeft: number; earlySold: number }) => {
     earlySeatsLeft: early && w.early_seats != null ? Math.max(0, Number(w.early_seats) - s.earlySold) : null,
     earlyUntil: early && w.early_until ? new Date(w.early_until).toISOString() : null,
     seatsLeft: s.seatsLeft,
+    brochureUrl: brochureUrl(w.brochure),
   };
 };
 
@@ -249,6 +253,9 @@ const workshopEdit = z.object({
   meetingLink: z.string().trim().max(500).nullable().optional().transform(v => (v ? v : null))
     .refine(v => !v || /^https:\/\/\S+$/i.test(v), "The joining link must start with https://"),
   status: z.enum(["draft", "open", "closed", "done"]),
+  // Left out: unchanged. Empty: removed.
+  brochure: z.string().trim().max(300).optional().transform(v => (v === undefined ? undefined : v || null))
+    .refine(v => !v || /^([\w./-]+\.pdf|https:\/\/\S+)$/i.test(v), "The brochure must be a PDF path like brochures/my-course.pdf, or an https:// link"),
 }).superRefine((b, ctx) => {
   if (b.earlyPrice != null && b.earlyPrice >= b.price) ctx.addIssue({ code: "custom", path: ["earlyPrice"], message: "The early-bird price must be lower than the full price" });
   if (b.status === "open" && !b.startsAt) ctx.addIssue({ code: "custom", path: ["startsAt"], message: "Set the start date before opening enrolment" });
@@ -264,7 +271,7 @@ workshopsAdminRouter.get("/workshops", wrap(async (_req, res) => {
       id: Number(w.id), slug: w.slug, title: w.title, status: w.status,
       startsAt: w.starts_at ? new Date(w.starts_at).toISOString() : null, schedule: w.schedule, durationMin: Number(w.duration_min),
       price: rupees(w.price), earlyPrice: rupees(w.early_price), earlyUntil: w.early_until ? new Date(w.early_until).toISOString() : null,
-      earlySeats: w.early_seats == null ? null : Number(w.early_seats), seats: Number(w.seats), meetingLink: w.meeting_link,
+      earlySeats: w.early_seats == null ? null : Number(w.early_seats), seats: Number(w.seats), meetingLink: w.meeting_link, brochure: w.brochure ?? null,
       enrolled: Number(c?.paid ?? 0), refunded: Number(c?.refunded ?? 0), revenue: rupees(Number(c?.revenue ?? 0)),
     };
   }) });
@@ -275,16 +282,17 @@ workshopsAdminRouter.post("/workshops", wrap(async (req, res) => {
   const b = workshopEdit.parse({ status: "draft", ...req.body });
   const [dup] = await query("SELECT id FROM workshops WHERE slug = ?", [slug]);
   if (dup) throw new HttpError(409, "A course with this link name already exists.");
-  const r = await exec(`INSERT INTO workshops (slug, title, starts_at, schedule, duration_min, price, early_price, early_until, early_seats, seats, meeting_link, status)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-    [slug, b.title, b.startsAt ? new Date(b.startsAt) : null, b.schedule, b.durationMin, paise(b.price), paise(b.earlyPrice), b.earlyUntil ? new Date(b.earlyUntil) : null, b.earlySeats ?? null, b.seats, b.meetingLink, b.status]);
+  const r = await exec(`INSERT INTO workshops (slug, title, starts_at, schedule, duration_min, price, early_price, early_until, early_seats, seats, meeting_link, status, brochure)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    [slug, b.title, b.startsAt ? new Date(b.startsAt) : null, b.schedule, b.durationMin, paise(b.price), paise(b.earlyPrice), b.earlyUntil ? new Date(b.earlyUntil) : null, b.earlySeats ?? null, b.seats, b.meetingLink, b.status, b.brochure ?? null]);
   res.status(201).json({ id: Number(r.insertId) });
 }));
 
 workshopsAdminRouter.put("/workshops/:id", wrap(async (req, res) => {
   const b = workshopEdit.parse(req.body);
-  const r = await exec(`UPDATE workshops SET title = ?, starts_at = ?, schedule = ?, duration_min = ?, price = ?, early_price = ?, early_until = ?, early_seats = ?, seats = ?, meeting_link = ?, status = ? WHERE id = ?`,
-    [b.title, b.startsAt ? new Date(b.startsAt) : null, b.schedule, b.durationMin, paise(b.price), paise(b.earlyPrice), b.earlyUntil ? new Date(b.earlyUntil) : null, b.earlySeats ?? null, b.seats, b.meetingLink, b.status, Number(req.params.id) || 0]);
+  const r = await exec(`UPDATE workshops SET title = ?, starts_at = ?, schedule = ?, duration_min = ?, price = ?, early_price = ?, early_until = ?, early_seats = ?, seats = ?, meeting_link = ?, status = ?, brochure = IF(?, ?, brochure) WHERE id = ?`,
+    [b.title, b.startsAt ? new Date(b.startsAt) : null, b.schedule, b.durationMin, paise(b.price), paise(b.earlyPrice), b.earlyUntil ? new Date(b.earlyUntil) : null, b.earlySeats ?? null, b.seats, b.meetingLink, b.status,
+     b.brochure !== undefined ? 1 : 0, b.brochure ?? null, Number(req.params.id) || 0]);
   if (!r.affectedRows) throw new HttpError(404, "Course not found.");
   res.json({ ok: true });
 }));

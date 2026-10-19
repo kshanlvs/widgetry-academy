@@ -151,7 +151,7 @@ void main() {
 
   test('JSON: detail with seat, joining link and Google Play product', () {
     final d = WorkshopsJson.detail({
-      'workshop': {'slug': 'bloc-crash-course', 'title': 'Bloc', 'status': 'open', 'price': 999, 'earlyPrice': 799, 'earlySeatsLeft': 3, 'seatsLeft': 12, 'startsAt': '2026-11-08T05:30:00.000Z', 'schedule': 'Sat & Sun'},
+      'workshop': {'slug': 'bloc-crash-course', 'title': 'Bloc', 'status': 'open', 'price': 999, 'earlyPrice': 799, 'earlySeatsLeft': 3, 'seatsLeft': 12, 'startsAt': '2026-11-08T05:30:00.000Z', 'schedule': 'Sat & Sun', 'brochureUrl': 'https://widgetryacademy.in/brochures/bloc-crash-course.pdf'},
       'mine': {'status': 'confirmed', 'amount': 799, 'paymentId': 'pay_1', 'meetingLink': 'https://meet.google.com/x'},
       'paymentsOpen': true,
       'android': {'billing': 'user_choice', 'accountId': 'acc', 'states': ['KERALA'], 'playProductId': 'short_course_799'},
@@ -162,6 +162,7 @@ void main() {
     expect(d.mine?.meetingLink, 'https://meet.google.com/x');
     expect(d.android?.userChoice, isTrue);
     expect(d.playProductId, 'short_course_799');
+    expect(d.workshop.brochureUrl, 'https://widgetryacademy.in/brochures/bloc-crash-course.pdf');
   });
 
   test('JSON: signed out, dates coming soon', () {

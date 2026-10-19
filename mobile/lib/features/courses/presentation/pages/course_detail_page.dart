@@ -134,6 +134,15 @@ class CourseDetailPage extends StatelessWidget {
                   ],
                   Divider(color: p.line),
                   const SizedBox(height: Space.sm),
+                  if (c.brochureUrl(AppConfig.siteUrl) case final String pdf)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.picture_as_pdf_outlined, color: p.accent),
+                      title: const Text('Download syllabus'),
+                      subtitle: const Text('Full syllabus and brochure (PDF)'),
+                      trailing: Icon(Icons.download_rounded, size: 20, color: p.faint),
+                      onTap: () => links.openExternal(pdf),
+                    ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.chat_rounded, color: AppColors.whatsapp),

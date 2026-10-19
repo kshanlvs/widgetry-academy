@@ -18,6 +18,7 @@ class Workshop extends Equatable {
     this.schedule,
     this.durationMin = 300,
     this.seatsLeft = 0,
+    this.brochureUrl,
   });
   final String slug;
   final String title;
@@ -34,6 +35,8 @@ class Workshop extends Equatable {
   final String? schedule;
   final int durationMin;
   final int seatsLeft;
+  /// Syllabus PDF, if the course has one.
+  final String? brochureUrl;
 
   /// What you'd pay today.
   int get payNow => earlyPrice ?? price;
@@ -43,7 +46,7 @@ class Workshop extends Equatable {
   String get webUrlPath => '/$slug.html';
 
   @override
-  List<Object?> get props => [slug, title, status, price, earlyPrice, earlySeatsLeft, earlyUntil, startsAt, schedule, durationMin, seatsLeft];
+  List<Object?> get props => [slug, title, status, price, earlyPrice, earlySeatsLeft, earlyUntil, startsAt, schedule, durationMin, seatsLeft, brochureUrl];
 }
 
 /// Your seat, once paid.

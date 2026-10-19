@@ -164,6 +164,14 @@ class _ViewState extends State<_View> {
                     trailing: const Icon(Icons.open_in_new_rounded, size: 18),
                     onTap: () => links.openInApp('${AppConfig.siteUrl}${w.webUrlPath}'),
                   ),
+                  if (w.brochureUrl != null)
+                    ListTile(
+                      leading: const Icon(Icons.picture_as_pdf_outlined),
+                      title: const Text('Download syllabus'),
+                      subtitle: const Text('Full syllabus and brochure (PDF)'),
+                      trailing: const Icon(Icons.download_rounded, size: 18),
+                      onTap: () => links.openExternal(w.brochureUrl!),
+                    ),
                   ListTile(
                     leading: const Icon(Icons.undo_rounded),
                     title: const Text('Refund policy'),

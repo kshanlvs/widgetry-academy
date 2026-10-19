@@ -42,7 +42,7 @@ before(async () => {
   for (const t of ["mock_scorecards", "mock_bookings", "interview_slots", "interviewers"]) await pool.query(`DELETE FROM ${t}`);
   await pool.query("DELETE FROM workshop_enrollments");
   await pool.query("DELETE FROM workshops WHERE slug <> 'bloc-crash-course'");
-  await pool.query("UPDATE workshops SET status = 'draft', starts_at = NULL, price = 99900, early_price = 79900, early_seats = 15, early_until = NULL, seats = 40, meeting_link = NULL WHERE slug = 'bloc-crash-course'");
+  await pool.query("UPDATE workshops SET status = 'draft', starts_at = NULL, price = 99900, early_price = 79900, early_seats = 15, early_until = NULL, seats = 40, meeting_link = NULL, brochure = 'brochures/bloc-crash-course.pdf' WHERE slug = 'bloc-crash-course'");
   server = createApp().listen(0);
   await new Promise(r => server.once("listening", r));
   base = `http://127.0.0.1:${(server.address() as any).port}/api`;
@@ -939,6 +939,7 @@ test("short courses: Bloc crash course enrolment, early-bird price, seats, Razor
     let g = await call("GET", "/workshops/bloc-crash-course");
     assert.equal(g.status, 200);
     assert.deepEqual([g.body.workshop.status, g.body.workshop.price, g.body.workshop.earlyPrice], ["draft", 999, 799]);
+    assert.equal(g.body.workshop.brochureUrl, "https://widgetryacademy.in/brochures/bloc-crash-course.pdf");
     assert.equal((await call("POST", "/workshops/bloc-crash-course/enroll", { name: "Stu One", phone: "9876543210" }, S1)).status, 409);
     assert.equal((await call("GET", "/workshops/nope")).status, 404);
 
@@ -949,7 +950,9 @@ test("short courses: Bloc crash course enrolment, early-bird price, seats, Razor
     const edit = { title: "Bloc State Management Crash Course", startsAt: start, schedule: "Sat & Sun · 11 AM–1:30 PM IST", durationMin: 300, price: 999, earlyPrice: 799, earlySeats: 1, seats: 2, meetingLink: "https://meet.google.com/abc-defg-hij", status: "open" };
     assert.equal((await call("PUT", `/admin/workshops/${id}`, { ...edit, startsAt: null }, ADMIN)).status, 400, "needs a date to open");
     assert.equal((await call("PUT", `/admin/workshops/${id}`, { ...edit, earlyPrice: 1200 }, ADMIN)).status, 400, "early price must be lower");
+    assert.equal((await call("PUT", `/admin/workshops/${id}`, { ...edit, brochure: "notes.docx" }, ADMIN)).status, 400, "brochure must be a PDF");
     assert.equal((await call("PUT", `/admin/workshops/${id}`, edit, ADMIN)).status, 200);
+    assert.equal((await call("GET", "/admin/workshops", undefined, ADMIN)).body.items.find((w: any) => w.id === id).brochure, "brochures/bloc-crash-course.pdf", "kept when not sent");
 
     // Sign-in and a valid phone are needed
     assert.equal((await call("POST", "/workshops/bloc-crash-course/enroll", { name: "Stu One", phone: "9876543210" })).status, 401);

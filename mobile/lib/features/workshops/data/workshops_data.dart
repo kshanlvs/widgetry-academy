@@ -23,6 +23,7 @@ abstract final class WorkshopsJson {
         schedule: _s(j['schedule']),
         durationMin: _iOrNull(j['durationMin']) ?? 300,
         seatsLeft: _iOrNull(j['seatsLeft']) ?? 0,
+        brochureUrl: (_s(j['brochureUrl']) ?? '').startsWith('https://') ? _s(j['brochureUrl']) : null,
       );
 
   static WorkshopDetail detail(Map<String, dynamic> j) {
