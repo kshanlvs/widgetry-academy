@@ -768,6 +768,9 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 .crs-mini .crs-price b{font-size:24px}
 .crs-mini .crs-price s{font-size:14px}
 .crs-mini .btn{padding:10px 16px;font-size:14.5px;align-self:auto}
+.crs-feature.soon{border-style:dashed;background:linear-gradient(165deg,var(--soft),var(--surface) 60%);box-shadow:none}
+.crs-feature.soon .crs-flag{background:color-mix(in srgb,var(--accent) 75%,#000 0%);opacity:.9}
+.crs-feature + .crs-feature{margin-top:6px}
 .crs-mini.soon{background:linear-gradient(165deg,var(--soft),var(--surface) 60%);border-style:dashed;border-color:var(--accent);opacity:.9}
 @media (max-width:820px){.crs-feature{grid-template-columns:1fr;gap:18px}}
 @media (max-width:520px){.crs-feature{padding-top:56px}}
@@ -1298,9 +1301,9 @@ const FLUTTER = { title: "Flutter in 10 Days", status: "open", flagship: true, o
   price: 3499, mrp: 4999, priceNote: "Early-bird fee · first 10 seats · pay in 2 parts", ...MENTOR, cta: "Reserve my seat", ctaLink: "#register", cta2: "See syllabus", cta2Link: "#schedule" };
 const DEFAULT_COURSES = [FLUTTER,
   { title: "Bloc Crash Course", status: "open", order: 2, badge: "★ New · Crash course", meta: "2 live sessions · one weekend · 5 hours",
-    tagline: "Learn Bloc state management the way companies use it, in one weekend.", tags: ["Bloc", "Cubit", "bloc_test"], price: 799, mrp: 999, priceNote: "Early-bird fee", ctaLink: "bloc-crash-course.html" },
+    tagline: "Learn Bloc state management the way companies use it, in one weekend.", tags: ["Bloc", "Cubit", "bloc_test", "Clean architecture"], outcome: "a working shopping cart feature built with Bloc, with tests, on your GitHub.", price: 799, mrp: 999, priceNote: "Early-bird fee · first 15 seats", ...MENTOR, ctaLink: "bloc-crash-course.html" },
   { title: "Flutter, Bloc & Clean Architecture", status: "open", order: 3, badge: "★ New · Intermediate", meta: "6 live sessions · 3 weekends · ~15 hours",
-    tagline: "Dart OOP, clean architecture, Bloc and testing, learned by building a ball-by-ball cricket scorer app.", tags: ["OOP", "Clean architecture", "Bloc"], price: 2499, mrp: 2999, priceNote: "Early-bird fee", ctaLink: "flutter-clean-architecture-course.html" },
+    tagline: "Dart OOP, clean architecture, Bloc and testing, learned by building a ball-by-ball cricket scorer app.", tags: ["OOP", "Clean architecture", "Bloc", "Testing", "Cricket scorer"], outcome: "a tested cricket scorer app on your GitHub that you can use in your own matches and explain in interviews.", price: 2499, mrp: 2999, priceNote: "Early-bird fee · first 10 seats", ...MENTOR, ctaLink: "flutter-clean-architecture-course.html" },
   { title: "Full-Stack Web Development", status: "soon", order: 9, meta: "Weekends · Beginner friendly", tagline: "Build a complete website with your own backend, and put it live on the internet.", tags: ["JavaScript", "React", ".NET"] },
 ];
 function renderCourses(list) {
@@ -1313,45 +1316,37 @@ function renderCourses(list) {
   const inr = n => "₹" + Number(n).toLocaleString("en-IN");
   const tags = (c, max) => (c.tags || []).length ? '<div class="crs-tags">' + c.tags.slice(0, max).map(t => "<span>" + esc(t) + "</span>").join("") + "</div>" : "";
 
-  // Featured: the course marked flagship, else Flutter in 10 Days, else the first open one
-  const featured = list.find(c => c.flagship && c.status !== "soon") || list.find(c => /^flutter in 10 days$/i.test((c.title || "").trim())) || list.find(c => c.status !== "soon");
-  const rest = list.filter(c => c !== featured);
-
-  let html = "";
-  if (featured) {
-    const c = featured, ph = img(c.mentorPhoto), ini = (c.mentorName || "").split(/\s+/).map(w => w[0] || "").join("").slice(0, 2).toUpperCase();
-    const steps = (c.steps || []).length ? '<details class="crs-more"><summary>See all ' + c.steps.length + ' topics</summary><ol class="crs-steps">' + c.steps.map(s => "<li><b>" + esc(s.t) + "</b>" + esc(s.d || "") + "</li>").join("") + "</ol></details>" : "";
-    html += '<article class="crs-card crs-feature" aria-label="' + esc(c.title) + ', enrolling now">' +
-      '<div class="crs-flag"><span>' + esc((c.badge || "").trim() || "★ Flagship course") + '</span><span class="crs-live"><i></i>Enrolling now</span></div>' +
+  // Every course gets the same wide card, one under another: details on the left, price and buttons on the right.
+  // Order: the flagship (or Flutter in 10 Days) first, then the order set in admin; "coming soon" ones last.
+  const first = list.find(c => c.flagship && c.status !== "soon") || list.find(c => /^flutter in 10 days$/i.test((c.title || "").trim()));
+  const ordered = [...(first ? [first] : []), ...list.filter(c => c !== first && c.status !== "soon"), ...list.filter(c => c !== first && c.status === "soon")];
+  let batchUsed = false;
+  const html = ordered.map(c => {
+    const soon = c.status === "soon";
+    const ph = img(c.mentorPhoto), ini = (c.mentorName || "").split(/\s+/).map(w => w[0] || "").join("").slice(0, 2).toUpperCase();
+    const page = /^[\w./-]+\.html(#[\w-]+)?$/.test(c.ctaLink || "");
+    const band = soon ? "◷ Coming soon" : ((c.badge || "").trim() || (c === first ? "★ Flagship course" : "★ New course"));
+    let when = ""; if (c.showBatch && !soon && !batchUsed) { when = '<p class="crs-when" id="crsBatch" hidden></p>'; batchUsed = true; }
+    const steps = (c.steps || []).length ? '<details class="crs-more"><summary>See all ' + c.steps.length + ' topics</summary><ol class="crs-steps">' + c.steps.map(st => "<li><b>" + esc(st.t) + "</b>" + esc(st.d || "") + "</li>").join("") + "</ol></details>" : "";
+    const btns = soon
+      ? '<button class="btn crs-soon" type="button" disabled aria-disabled="true">Coming soon</button>'
+      : '<a class="btn" href="' + esc(link(c.ctaLink)) + '"' + ext(link(c.ctaLink)) + ">" + esc(c.cta || (page ? "See details & enrol" : "Reserve my seat")) + "</a>" +
+        (c.cta2 ? '<a class="btn ghost" href="' + esc(link(c.cta2Link)) + '"' + ext(link(c.cta2Link)) + ">" + esc(c.cta2) + "</a>" : "");
+    return '<article class="crs-card crs-feature' + (soon ? " soon" : "") + '" aria-label="' + esc(c.title) + (soon ? ", coming soon" : ", enrolling now") + '">' +
+      '<div class="crs-flag"><span>' + esc(band) + "</span>" + (soon ? "" : '<span class="crs-live"><i></i>Enrolling now</span>') + "</div>" +
       '<div class="cf-main">' +
         (c.meta ? '<span class="crs-meta">' + esc(c.meta) + "</span>" : "") +
-        "<h3>" + esc(c.title) + "</h3>" + (c.showBatch ? '<p class="crs-when" id="crsBatch" hidden></p>' : "") +
+        "<h3>" + esc(c.title) + "</h3>" + when +
         (c.tagline ? '<p class="crs-sub">' + esc(c.tagline) + "</p>" : "") + tags(c, 8) + steps +
         (c.outcome ? '<p class="crs-out"><b>You finish with:</b> ' + esc(c.outcome) + "</p>" : "") +
       "</div>" +
       '<div class="cf-side">' +
-        (c.price != null ? '<div class="crs-price"><b>' + inr(c.price) + "</b>" + (c.mrp ? "<s>" + inr(c.mrp) + "</s>" : "") + (c.priceNote ? "<span>" + esc(c.priceNote) + "</span>" : "") + "</div>" : "") +
-        '<div class="mx-links"><a class="btn" href="' + esc(link(c.ctaLink)) + '"' + ext(link(c.ctaLink)) + ">" + esc(c.cta || "Reserve my seat") + "</a>" +
-          (c.cta2 ? '<a class="btn ghost" href="' + esc(link(c.cta2Link)) + '"' + ext(link(c.cta2Link)) + ">" + esc(c.cta2) + "</a>" : "") + "</div>" +
+        (soon ? '<p class="crs-meta" style="margin:0">Dates will be announced soon.</p>'
+              : (c.price != null ? '<div class="crs-price"><b>' + inr(c.price) + "</b>" + (c.mrp ? "<s>" + inr(c.mrp) + "</s>" : "") + (c.priceNote ? "<span>" + esc(c.priceNote) + "</span>" : "") + "</div>" : "")) +
+        '<div class="mx-links">' + btns + "</div>" +
         (c.mentorName ? '<div class="crs-mentor">' + (ph ? '<img src="' + esc(ph) + '" alt="" loading="lazy">' : '<span class="crs-av">' + esc(ini) + "</span>") + "<div><b>" + esc(c.mentorName) + "</b><span>" + esc(c.mentorLine || "") + "</span></div></div>" : "") +
       "</div></article>";
-  }
-  if (rest.length) {
-    html += '<div class="crs-grid">' + rest.map(c => {
-      const soon = c.status === "soon", href = link(c.ctaLink);
-      const label = soon ? "◷ Coming soon" : ((c.badge || "").replace(/★/g, "").trim() || "New course");
-      return '<article class="crs-card crs-mini' + (soon ? " soon" : "") + '">' +
-        '<div class="cm-top"><span class="crs-status' + (soon ? "" : " open") + '">' + esc(label) + "</span></div>" +
-        "<h3>" + esc(c.title) + "</h3>" +
-        (c.meta ? '<span class="crs-meta">' + esc(c.meta) + "</span>" : "") +
-        (c.tagline ? '<p class="crs-sub">' + esc(c.tagline) + "</p>" : "") + tags(c, 3) +
-        '<div class="cm-foot">' +
-          (soon ? '<span class="crs-meta">Dates soon</span><button class="btn crs-soon" type="button" disabled aria-disabled="true">Coming soon</button>'
-            : '<div class="crs-price">' + (c.price != null ? "<b>" + inr(c.price) + "</b>" + (c.mrp ? "<s>" + inr(c.mrp) + "</s>" : "") : "") + "</div>" +
-              '<a class="btn" href="' + esc(href) + '"' + ext(href) + ">" + esc(/^[\w./-]+\.html(#[\w-]+)?$/.test(href) ? "View course" : (c.cta || "Reserve my seat")) + "</a>") +
-        "</div></article>";
-    }).join("") + "</div>";
-  }
+  }).join("");
   box.innerHTML = html;
   box.classList.add("crs-v2");
   box.style.gridTemplateColumns = "";
