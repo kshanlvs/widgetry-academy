@@ -14,24 +14,31 @@
 .note{color:var(--muted);font-size:15px}
 .err{color:#b3261e;font-weight:600}
 .done{border-color:#9fd3bf;background:#eef8f3}
+.em{display:grid;gap:10px;margin-top:18px;max-width:380px}.em input{font:inherit;font-size:16px;padding:11px 12px;border:1px solid #cfd8d4;border-radius:10px}.em .btn{justify-content:center;background:#0f6b56;color:#fff}
 label.ck{display:flex;gap:10px;align-items:flex-start;margin:14px 0 18px;font-size:16px}
 label.ck input{margin-top:5px;width:18px;height:18px;accent-color:#b3261e}
 </style></head><body>
 <header><div class="w"><a href="./">Widgetry Academy</a><nav><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="contact.html">Contact</a></nav></div></header>
 <main>
-<h1>Delete your account</h1><p class="upd">Widgetry Academy app and website</p>
+<h1>Delete your account</h1><p class="upd">Widgetry app (Google Play) and widgetryacademy.in</p>
 
 <p>You can delete your Widgetry Academy account at any time. It takes effect immediately.</p>
 
 <h2>In the app</h2>
-<p>Open the Widgetry Academy app, go to <b>Profile → Settings → Delete account</b>, and confirm.</p>
+<p>Open the <b>Widgetry</b> app (by Widgetry Academy), go to <b>Profile → Settings → Delete account</b>, and confirm.</p>
 
 <h2>On this page</h2>
 <div class="card" id="box">
   <p class="note" id="loading">Loading…</p>
   <div id="signedOut" hidden>
-    <p>Sign in with the Google account you use in the app.</p>
+    <p>Sign in with the account you use in the app.</p>
     <button class="btn google" id="signIn" type="button"></button>
+    <form class="em" id="emForm" novalidate>
+      <p style="margin:0">Or, if you signed up with an email and password:</p>
+      <input id="emEmail" type="email" autocomplete="email" placeholder="Email" required>
+      <input id="emPass" type="password" autocomplete="current-password" placeholder="Password" required>
+      <button class="btn" type="submit" id="emGo">Sign in with email</button>
+    </form>
   </div>
   <div id="signedIn" hidden>
     <p>Signed in as <b style="display:inline;text-transform:none;letter-spacing:0;font-size:inherit;color:inherit" id="email"></b>.</p>
@@ -44,7 +51,7 @@ label.ck input{margin-top:5px;width:18px;height:18px;accent-color:#b3261e}
 
 <h2>What is deleted</h2>
 <ul>
-  <li>Your sign-in account (name, email and photo from Google).</li>
+  <li>Your sign-in account (name, email, and photo if you used Google).</li>
   <li>Your Talent Network profile and resume, photo, skills and job preferences.</li>
   <li>Jobs you posted as an employer.</li>
   <li>Your course registration, unless you paid for it (see below).</li>
@@ -60,11 +67,21 @@ label.ck input{margin-top:5px;width:18px;height:18px;accent-color:#b3261e}
 </main>
 <footer><div class="w">© 2026 Widgetry Academy · Registered MSME (Udyam): UDYAM-WB-22-0009252</div></footer>
 <script type="module">
-import { $, api, onUser, googleSignIn, logOut, GOOGLE_SVG } from "./jobs.js";
+import { $, api, onUser, googleSignIn, logOut, GOOGLE_SVG, auth } from "./jobs.js";
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 const show = (id, on) => ($(id).hidden = !on);
 const err = m => { $("err").textContent = m || ""; show("err", !!m); };
 $("signIn").innerHTML = GOOGLE_SVG + " Continue with Google";
 $("signIn").onclick = () => googleSignIn().catch(e => err(e.message));
+$("emForm").onsubmit = async e => {
+  e.preventDefault(); err("");
+  const email = $("emEmail").value.trim(), pass = $("emPass").value;
+  if (!email || !pass) return err("Enter your email and password.");
+  $("emGo").disabled = true;
+  try { await signInWithEmailAndPassword(auth, email, pass); $("emPass").value = ""; }
+  catch (x) { err(/invalid-credential|wrong-password|user-not-found|invalid-email/.test(x.code || "") ? "That email and password don't match an account." : (x.message || "Couldn't sign in.")); }
+  finally { $("emGo").disabled = false; }
+};
 $("other").onclick = () => logOut();
 $("sure").onchange = () => ($("del").disabled = !$("sure").checked);
 let deleted = false;
