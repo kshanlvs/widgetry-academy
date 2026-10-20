@@ -1,6 +1,7 @@
 ---
 title: Flutter Internship and Fresher Jobs in India: How to Land Your First Role
 description: A step-by-step plan for students and freshers to get a Flutter internship or first job in India: skills, projects, resume, where to apply and interviews.
+seo_title: Flutter Internship & Fresher Jobs in India | Widgetry
 date: 2026-10-18
 tag: Jobs
 keywords: flutter internship, flutter jobs for freshers, flutter fresher jobs india, flutter internship for students, first flutter job, remote flutter internship

@@ -1,6 +1,7 @@
 ---
 title: Flutter Developer Resume: ATS-Friendly Format, Example Bullet Points and Tips
 description: How to write a Flutter developer resume that passes ATS screening and gets interviews: format, section order, example bullet points and mistakes to avoid.
+seo_title: Flutter Developer Resume: ATS Format & Examples
 date: 2026-10-14
 tag: Resume
 keywords: flutter developer resume, flutter resume for freshers, ats friendly resume, mobile developer resume, flutter resume format

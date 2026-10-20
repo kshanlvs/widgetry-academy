@@ -1,6 +1,7 @@
 ---
 title: "Flutter Interview Questions and Answers (2026): Freshers to Experienced"
 description: The Flutter interview questions Indian companies actually ask, with clear answers: widgets, state management, async Dart, performance and architecture.
+seo_title: Flutter Interview Questions & Answers (2026)
 date: 2026-10-13
 tag: Interviews
 keywords: flutter interview questions, flutter interview questions for freshers, flutter interview questions and answers, dart interview questions, flutter developer interview

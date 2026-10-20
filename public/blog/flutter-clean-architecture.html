@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en-IN"><head><meta charset="utf-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flutter Clean Architecture Explained, With Example</title>
+<meta name="description" content="What clean architecture means in Flutter, the domain, data and presentation layers, a feature-first folder structure, and a full example with Bloc and tests.">
+<link rel="canonical" href="https://widgetryacademy.in/blog/flutter-clean-architecture.html">
+<meta property="og:type" content="article"><meta property="og:site_name" content="Widgetry Academy">
+<meta property="og:title" content="Flutter Clean Architecture Explained, With Example"><meta property="og:description" content="What clean architecture means in Flutter, the domain, data and presentation layers, a feature-first folder structure, and a full example with Bloc and tests.">
+<meta property="og:url" content="https://widgetryacademy.in/blog/flutter-clean-architecture.html"><meta property="og:image" content="https://widgetryacademy.in/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="alternate" type="application/rss+xml" title="Widgetry blog" href="https://widgetryacademy.in/blog/feed.xml">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="blog.css">
+<meta property="article:published_time" content="2026-10-20"><meta property="article:modified_time" content="2026-10-20">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Flutter Clean Architecture Explained: Layers, Folder Structure and a Real Example", "description": "What clean architecture means in Flutter, the domain, data and presentation layers, a feature-first folder structure, and a full example with Bloc and tests.", "mainEntityOfPage": "https://widgetryacademy.in/blog/flutter-clean-architecture.html", "url": "https://widgetryacademy.in/blog/flutter-clean-architecture.html", "datePublished": "2026-10-20", "dateModified": "2026-10-20", "wordCount": 1414, "keywords": "flutter clean architecture, clean architecture flutter example, flutter folder structure, flutter bloc clean architecture, flutter architecture, domain layer flutter, repository pattern flutter", "inLanguage": "en-IN", "image": "https://widgetryacademy.in/og-image.jpg", "author": {"@type": "Person", "name": "Kishan Kumar Sharma", "url": "https://widgetryacademy.in/mentor.html"}, "publisher": {"@type": "Organization", "name": "Widgetry Academy", "url": "https://widgetryacademy.in", "logo": {"@type": "ImageObject", "url": "https://widgetryacademy.in/logo-512.png", "width": 512, "height": 512}}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://widgetryacademy.in/"}, {"@type": "ListItem", "position": 2, "name": "Blog", "item": "https://widgetryacademy.in/blog/"}, {"@type": "ListItem", "position": 3, "name": "Flutter Clean Architecture Explained: Layers, Folder Structure and a Real Example", "item": "https://widgetryacademy.in/blog/flutter-clean-architecture.html"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What are the layers of clean architecture in Flutter?", "acceptedAnswer": {"@type": "Answer", "text": "Three: the domain layer (entities, repository interfaces and use cases, in plain Dart), the data layer (repository implementations, API and database code, JSON mapping) and the presentation layer (widgets plus Blocs or Cubits). Dependencies point inward, towards the domain."}}, {"@type": "Question", "name": "Do I need Bloc for clean architecture?", "acceptedAnswer": {"@type": "Answer", "text": "No. Clean architecture is about separating layers; Bloc is one way to build the presentation layer. Riverpod, Provider or even plain ChangeNotifier can sit on top of the same domain and data layers. Bloc is a popular pairing because both push you towards testable, predictable code."}}, {"@type": "Question", "name": "What is a use case in Flutter clean architecture?", "acceptedAnswer": {"@type": "Answer", "text": "A use case is a small class for one action the user can take, such as RecordBall or PlaceOrder. It holds the rules for that action and talks to repositories through interfaces, so the rules can be tested without Flutter or a backend."}}, {"@type": "Question", "name": "Is clean architecture good for small Flutter apps?", "acceptedAnswer": {"@type": "Answer", "text": "For very small apps and prototypes it can be more structure than you need. For apps that will grow, be maintained by a team, or need reliable tests, it saves time within a few months. A lighter version (entities, repositories and Blocs, without use cases) is a good middle ground."}}, {"@type": "Question", "name": "How do I explain my app's architecture in an interview?", "acceptedAnswer": {"@type": "Answer", "text": "Name the layers and say what lives in each, give one concrete example from your app (for instance, how a button tap travels from the widget to the Bloc, the use case and the repository), and explain one benefit you actually got, such as testing business rules without an emulator or swapping a data source easily."}}]}</script>
+<script src="../site-config.js" defer></script>
+</head><body>
+<nav class="bnav"><div class="bwrap">
+  <a class="brand" href="../">Widgetry<span>.</span></a>
+  <div class="blinks"><a href="../#courses" class="hide-s">Courses</a><a href="../jobs.html">Jobs</a><a href="../resume-builder.html" class="hide-s">Free resume</a><a href="./" aria-current="page">Blog</a></div>
+</div></nav>
+<main class="bwrap post">
+  <p class="crumbs"><a href="../">Home</a> › <a href="./">Blog</a> › <span>Learning</span></p>
+  <header class="phead">
+    <p class="tag">Learning</p>
+    <h1>Flutter Clean Architecture Explained: Layers, Folder Structure and a Real Example</h1>
+    <p class="lede">What clean architecture means in Flutter, the domain, data and presentation layers, a feature-first folder structure, and a full example with Bloc and tests.</p>
+    <div class="byline"><img src="../shots/mentor-square.jpg" alt="" width="40" height="40"><div><a href="../mentor.html">Kishan Kumar Sharma</a><span>20 October 2026 · 7 min read</span></div></div>
+  </header>
+  <div class="layout">
+    <article class="prose">
+      <p>"We follow clean architecture" appears in a lot of Flutter job descriptions, and "explain the architecture of your last app" is a favourite interview question. Yet most tutorials either drown you in theory or show a folder tree with fifteen empty files.</p>
+<p>This guide explains clean architecture in plain words, then builds one small, real feature through every layer: recording balls in a cricket scorer. By the end you will know what goes where, and why.</p>
+<h2 id="the-one-rule-that-matters">The one rule that matters</h2>
+<p>Clean architecture splits your app into layers, and has one rule:</p>
+<blockquote>
+<p><strong>Code can only depend on layers closer to the centre. The centre knows nothing about the outside.</strong></p>
+</blockquote>
+<p>In a Flutter app, that gives three layers:</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>What lives here</th>
+<th>Knows about Flutter?</th>
+<th>Knows about APIs, Firebase, databases?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Domain</strong> (centre)</td>
+<td>Entities, business rules, repository <em>interfaces</em>, use cases</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Data</strong></td>
+<td>Repository <em>implementations</em>, API clients, local storage, JSON mapping</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>Presentation</strong></td>
+<td>Widgets, pages, Blocs and Cubits</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+</tbody>
+</table></div>
+<p>The domain layer is plain Dart. That's the point: your most important logic (the rules of your app) can't break because Firebase changed an API or a designer moved a button, and you can test it without a phone.</p>
+<h2 id="feature-first-folder-structure">Feature-first folder structure</h2>
+<p>Group code by <strong>feature</strong> first, then by layer. It scales much better than one giant <code>models/</code>, <code>screens/</code> and <code>services/</code> folder:</p>
+<pre><code class="language-text">lib/
+  core/                 # shared: DI setup, theme, error types, network client
+  features/
+    scoring/
+      domain/
+        entities/       # Ball, Innings
+        repositories/   # MatchRepository (abstract)
+        usecases/       # RecordBall
+      data/
+        repositories/   # LocalMatchRepository
+      presentation/
+        cubit/          # ScoreCubit
+        pages/          # ScoringPage
+    teams/
+      ...
+</code></pre>
+<p>When you work on scoring, everything you need is in one place. When you delete a feature, you delete one folder.</p>
+<aside class="cta"><div><b>Build a real app with clean architecture</b><p>Flutter, Bloc &amp; Clean Architecture: Dart OOP, SOLID, Bloc, dependency injection and tests, by building a cricket scorer app.</p></div><a class="btn" href="../flutter-clean-architecture-course.html">See the course →</a></aside><h2 id="step-1-the-domain-plain-dart">Step 1: The domain, plain Dart</h2>
+<p>Start with the entities: the things your app is about. A cricket ball can be runs, a wide or a wicket. Dart 3 sealed classes model this perfectly:</p>
+<pre><code class="language-dart">sealed class Ball {
+  const Ball();
+  int get runs;
+  bool get countsInOver =&gt; true; // wides don't use up a ball
+}
+
+final class Runs extends Ball {
+  const Runs(this.runs);
+  @override
+  final int runs;
+}
+
+final class Wide extends Ball {
+  const Wide();
+  @override
+  int get runs =&gt; 1;
+  @override
+  bool get countsInOver =&gt; false;
+}
+
+final class Wicket extends Ball {
+  const Wicket();
+  @override
+  int get runs =&gt; 0;
+}
+</code></pre>
+<p>The innings holds the balls and knows the rules of scoring:</p>
+<pre><code class="language-dart">class Innings {
+  const Innings({this.balls = const []});
+  final List&lt;Ball&gt; balls;
+
+  int get total =&gt; balls.fold(0, (sum, b) =&gt; sum + b.runs);
+  int get wickets =&gt; balls.whereType&lt;Wicket&gt;().length;
+  int get legalBalls =&gt; balls.where((b) =&gt; b.countsInOver).length;
+  String get overs =&gt; '${legalBalls ~/ 6}.${legalBalls % 6}';
+
+  Innings add(Ball ball) =&gt; Innings(balls: [...balls, ball]);
+}
+</code></pre>
+<p>Next, the domain says <strong>what</strong> it needs from storage, without saying <strong>how</strong>. That's an interface:</p>
+<pre><code class="language-dart">abstract interface class MatchRepository {
+  Future&lt;Innings&gt; load(String matchId);
+  Future&lt;void&gt; save(String matchId, Innings innings);
+}
+</code></pre>
+<p>And a <strong>use case</strong>: one action the user can take, with its rules in one place:</p>
+<pre><code class="language-dart">class RecordBall {
+  const RecordBall(this._repo);
+  final MatchRepository _repo;
+
+  Future&lt;Innings&gt; call(String matchId, Innings current, Ball ball) async {
+    final next = current.add(ball);
+    await _repo.save(matchId, next);
+    return next;
+  }
+}
+</code></pre>
+<p>Is a use case overkill for two lines? Sometimes. It earns its place when the rules grow: "after a wicket, ask for the new batter", "after 6 legal balls, change the bowler". Those rules belong here, not in a widget.</p>
+<h2 id="step-2-the-data-layer">Step 2: The data layer</h2>
+<p>Now implement the interface. This version saves to the phone with <code>shared_preferences</code>; later you could add a Firebase version without touching the domain:</p>
+<pre><code class="language-dart">class LocalMatchRepository implements MatchRepository {
+  LocalMatchRepository(this._prefs);
+  final SharedPreferences _prefs;
+
+  @override
+  Future&lt;Innings&gt; load(String matchId) async {
+    final codes = _prefs.getStringList('match_$matchId') ?? const [];
+    return Innings(balls: codes.map(_decode).toList());
+  }
+
+  @override
+  Future&lt;void&gt; save(String matchId, Innings innings) =&gt;
+      _prefs.setStringList('match_$matchId', innings.balls.map(_encode).toList());
+
+  static String _encode(Ball b) =&gt; switch (b) {
+        Runs(:final runs) =&gt; 'r$runs',
+        Wide() =&gt; 'wd',
+        Wicket() =&gt; 'w',
+      };
+
+  static Ball _decode(String s) =&gt; switch (s) {
+        'wd' =&gt; const Wide(),
+        'w' =&gt; const Wicket(),
+        _ =&gt; Runs(int.parse(s.substring(1))),
+      };
+}
+</code></pre>
+<p>The conversion between storage format and entities lives here, and only here.</p>
+<h2 id="step-3-presentation-with-bloc">Step 3: Presentation with Bloc</h2>
+<p>The Cubit calls the use case and emits the new innings. It doesn't know about storage at all:</p>
+<pre><code class="language-dart">class ScoreCubit extends Cubit&lt;Innings&gt; {
+  ScoreCubit(this._recordBall, this.matchId) : super(const Innings());
+  final RecordBall _recordBall;
+  final String matchId;
+
+  Future&lt;void&gt; record(Ball ball) async =&gt; emit(await _recordBall(matchId, state, ball));
+}
+</code></pre>
+<p>And the widget just draws the state and sends taps:</p>
+<pre><code class="language-dart">BlocBuilder&lt;ScoreCubit, Innings&gt;(
+  builder: (context, innings) =&gt; Text(
+    '${innings.total}/${innings.wickets}  (${innings.overs} ov)',
+    style: Theme.of(context).textTheme.displaySmall,
+  ),
+);
+
+FilledButton(
+  onPressed: () =&gt; context.read&lt;ScoreCubit&gt;().record(const Runs(4)),
+  child: const Text('4'),
+);
+</code></pre>
+<p>New to Bloc? Our <a href="flutter-bloc-tutorial.html">Flutter Bloc tutorial</a> covers Cubit, Bloc, BlocListener and testing from scratch.</p>
+<h2 id="step-4-wiring-it-together-dependency-injection">Step 4: Wiring it together (dependency injection)</h2>
+<p>Something has to create the real <code>LocalMatchRepository</code> and hand it to the use case. That's dependency injection. With <code>get_it</code>:</p>
+<pre><code class="language-dart">final getIt = GetIt.instance;
+
+void setupDependencies(SharedPreferences prefs) {
+  getIt
+    ..registerLazySingleton&lt;MatchRepository&gt;(() =&gt; LocalMatchRepository(prefs))
+    ..registerFactory(() =&gt; RecordBall(getIt()));
+}
+</code></pre>
+<p>The Cubit receives <code>RecordBall</code>, which receives "some <code>MatchRepository</code>". Nothing in the domain or presentation ever writes <code>LocalMatchRepository</code>, so swapping it is a one-line change. Larger apps often generate this wiring with <code>injectable</code>.</p>
+<h2 id="step-5-why-this-pays-off-in-tests">Step 5: Why this pays off in tests</h2>
+<p>The scoring rules are plain Dart, so testing them needs no emulator and no mocks:</p>
+<pre><code class="language-dart">test('a wide adds a run but not a ball', () {
+  final innings = const Innings().add(const Runs(4)).add(const Wide());
+  expect(innings.total, 5);
+  expect(innings.overs, '0.1');
+});
+</code></pre>
+<p>To test the Cubit, give <code>RecordBall</code> a fake repository that keeps the innings in memory. You can check every scoring rule and screen state in seconds, which is exactly what interviewers mean when they ask "how did you make your app testable?"</p>
+<h2 id="when-clean-architecture-is-overkill">When clean architecture is overkill</h2>
+<p>Be honest about the cost. Three layers mean more files. For a two-screen prototype, a hackathon project or a quick demo, a Cubit that calls an API directly is fine.</p>
+<p>It pays off when the app will <strong>live and grow</strong>: more features, more developers, more data sources, and tests you trust. Most production apps fall into that group, which is why teams hiring Flutter developers ask about it.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ol>
+<li><strong>Flutter imports in the domain.</strong> If <code>domain/</code> imports <code>package:flutter/...</code>, Firebase or <code>dio</code>, the rule is broken.</li>
+<li><strong>Returning API models from repositories.</strong> Map JSON to your own entities in the data layer, so an API change doesn't ripple through the app.</li>
+<li><strong>Business rules in widgets or Blocs.</strong> "Six legal balls make an over" belongs in the domain, not in a button's <code>onPressed</code>.</li>
+<li><strong>Empty use cases everywhere.</strong> A use case that only forwards one call adds noise. Add them where there are real rules, and be consistent within a team.</li>
+<li><strong>Layer-first folders for a big app.</strong> <code>models/</code>, <code>screens/</code> and <code>services/</code> with 200 files each is hard to navigate. Go feature-first.</li>
+</ol>
+<h2 id="frequently-asked-questions">Frequently asked questions</h2>
+<h3 id="what-are-the-layers-of-clean-architecture-in-flutter">What are the layers of clean architecture in Flutter?</h3>
+<p>Three: the domain layer (entities, repository interfaces and use cases, in plain Dart), the data layer (repository implementations, API and database code, JSON mapping) and the presentation layer (widgets plus Blocs or Cubits). Dependencies point inward, towards the domain.</p>
+<h3 id="do-i-need-bloc-for-clean-architecture">Do I need Bloc for clean architecture?</h3>
+<p>No. Clean architecture is about separating layers; Bloc is one way to build the presentation layer. Riverpod, Provider or even plain ChangeNotifier can sit on top of the same domain and data layers. Bloc is a popular pairing because both push you towards testable, predictable code.</p>
+<h3 id="what-is-a-use-case-in-flutter-clean-architecture">What is a use case in Flutter clean architecture?</h3>
+<p>A use case is a small class for one action the user can take, such as RecordBall or PlaceOrder. It holds the rules for that action and talks to repositories through interfaces, so the rules can be tested without Flutter or a backend.</p>
+<h3 id="is-clean-architecture-good-for-small-flutter-apps">Is clean architecture good for small Flutter apps?</h3>
+<p>For very small apps and prototypes it can be more structure than you need. For apps that will grow, be maintained by a team, or need reliable tests, it saves time within a few months. A lighter version (entities, repositories and Blocs, without use cases) is a good middle ground.</p>
+<h3 id="how-do-i-explain-my-apps-architecture-in-an-interview">How do I explain my app's architecture in an interview?</h3>
+<p>Name the layers and say what lives in each, give one concrete example from your app (for instance, how a button tap travels from the widget to the Bloc, the use case and the repository), and explain one benefit you actually got, such as testing business rules without an emulator or swapping a data source easily.</p>
+      <aside class="cta"><div><b>Build a real app with clean architecture</b><p>Flutter, Bloc &amp; Clean Architecture: Dart OOP, SOLID, Bloc, dependency injection and tests, by building a cricket scorer app.</p></div><a class="btn" href="../flutter-clean-architecture-course.html">See the course →</a></aside>
+      <section class="author"><img src="../shots/mentor-square.jpg" alt="Kishan Kumar Sharma" width="72" height="72" loading="lazy"><div><b>Written by <a href="../mentor.html">Kishan Kumar Sharma</a></b><p>Flutter developer with 5+ years of experience, Senior Software Engineer at Relevance Lab and founder of Widgetry Academy. MCA.</p></div></section>
+    </article>
+    <aside class="side">
+      <nav class="toc" aria-label="On this page"><b>On this page</b><ol><li><a href="#the-one-rule-that-matters">The one rule that matters</a></li><li><a href="#feature-first-folder-structure">Feature-first folder structure</a></li><li><a href="#step-1-the-domain-plain-dart">Step 1: The domain, plain Dart</a></li><li><a href="#step-2-the-data-layer">Step 2: The data layer</a></li><li><a href="#step-3-presentation-with-bloc">Step 3: Presentation with Bloc</a></li><li><a href="#step-4-wiring-it-together-dependency-injection">Step 4: Wiring it together (dependency injection)</a></li><li><a href="#step-5-why-this-pays-off-in-tests">Step 5: Why this pays off in tests</a></li><li><a href="#when-clean-architecture-is-overkill">When clean architecture is overkill</a></li><li><a href="#common-mistakes">Common mistakes</a></li><li><a href="#frequently-asked-questions">Frequently asked questions</a></li></ol></nav>
+      <div class="sidecta"><b>Widgetry Jobs</b><p>Flutter, Android and iOS jobs, checked by engineers.</p><a href="../jobs.html">Browse jobs →</a><a href="../resume-builder.html">Free ATS resume →</a></div>
+    </aside>
+  </div>
+  <section class="related"><h2>Keep reading</h2><div class="cards"><a class="pcard" href="flutter-bloc-tutorial.html"><span class="tag">Learning</span><b>Flutter Bloc Tutorial for Beginners: Cubit, Bloc and Testing, With a Real Example</b><p>Learn Flutter Bloc step by step: Cubit vs Bloc, events and states, BlocBuilder and BlocListener, loading data from a repository, and testing with bloc_test.</p><span class="more">Read →</span></a><a class="pcard" href="flutter-internship-fresher-jobs.html"><span class="tag">Jobs</span><b>Flutter Internship and Fresher Jobs in India: How to Land Your First Role</b><p>A step-by-step plan for students and freshers to get a Flutter internship or first job in India: skills, projects, resume, where to apply and interviews.</p><span class="more">Read →</span></a><a class="pcard" href="famous-apps-built-with-flutter.html"><span class="tag">Learning</span><b>Famous Apps Built with Flutter (2026): Google Pay, BMW, Toyota and More</b><p>Eight well-known apps built with Flutter, from Google Pay and Google Classroom to BMW and Toyota cars, with real numbers and what each teaches developers.</p><span class="more">Read →</span></a></div></section>
+</main>
+<footer class="bfoot"><div class="bwrap">
+  <span>© 2026 Widgetry Academy · Kolkata, India</span>
+  <nav><a href="../">Academy</a><a href="../jobs.html">Jobs</a><a href="../resume-builder.html">Free resume</a><a href="./">Blog</a><a href="../privacy.html">Privacy</a><a href="../contact.html">Contact</a></nav>
+</div></footer>
+</body></html>

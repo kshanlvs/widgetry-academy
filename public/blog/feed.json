@@ -4,6 +4,30 @@
  "home_page_url": "https://widgetryacademy.in/blog/",
  "items": [
   {
+   "id": "flutter-clean-architecture",
+   "url": "https://widgetryacademy.in/blog/flutter-clean-architecture.html",
+   "title": "Flutter Clean Architecture Explained: Layers, Folder Structure and a Real Example",
+   "summary": "What clean architecture means in Flutter, the domain, data and presentation layers, a feature-first folder structure, and a full example with Bloc and tests.",
+   "date_published": "2026-10-20",
+   "date_modified": "2026-10-20",
+   "tags": [
+    "Learning"
+   ],
+   "reading_minutes": 7
+  },
+  {
+   "id": "flutter-bloc-tutorial",
+   "url": "https://widgetryacademy.in/blog/flutter-bloc-tutorial.html",
+   "title": "Flutter Bloc Tutorial for Beginners: Cubit, Bloc and Testing, With a Real Example",
+   "summary": "Learn Flutter Bloc step by step: Cubit vs Bloc, events and states, BlocBuilder and BlocListener, loading data from a repository, and testing with bloc_test.",
+   "date_published": "2026-10-20",
+   "date_modified": "2026-10-20",
+   "tags": [
+    "Learning"
+   ],
+   "reading_minutes": 7
+  },
+  {
    "id": "flutter-internship-fresher-jobs",
    "url": "https://widgetryacademy.in/blog/flutter-internship-fresher-jobs.html",
    "title": "Flutter Internship and Fresher Jobs in India: How to Land Your First Role",

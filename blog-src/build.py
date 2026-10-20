@@ -11,7 +11,8 @@ blog entries in public/sitemap.xml. Commit the generated files; pushing to main 
 
 Front matter (between --- lines, one "key: value" per line):
     title, description, date (YYYY-MM-DD), updated (optional), tag, keywords (comma separated),
-    cta (jobs | resume | course), image (optional, path under public/)
+    seo_title (optional: the shorter title Google shows, up to ~60 characters; the page heading keeps "title"),
+    cta (jobs | resume | course | bloc | cleanarch), image (optional, path under public/)
 FAQs: a "## Frequently asked questions" section whose questions are "### ..." headings becomes FAQ structured data.
 """
 import datetime as dt
@@ -36,6 +37,8 @@ CTAS = {
     "jobs": ("Looking for your next mobile developer role?", "Browse Flutter, Android and iOS jobs reviewed by working engineers. Free for job seekers.", "../jobs.html", "Browse jobs"),
     "resume": ("Build your ATS-friendly resume in 5 minutes", "Free, no watermark, three professional templates and a resume strength score.", "../resume-builder.html", "Create my resume free"),
     "course": ("Learn Flutter by building a real app", "Flutter in 10 Days: live weekend classes, a real app in your portfolio, and mentor support.", "../#courses", "See the course"),
+    "bloc": ("Learn Bloc live in one weekend", "Bloc crash course: Cubit, Bloc, repositories and bloc_test, building a real shopping cart. Two live sessions.", "../bloc-crash-course.html", "See the Bloc course"),
+    "cleanarch": ("Build a real app with clean architecture", "Flutter, Bloc & Clean Architecture: Dart OOP, SOLID, Bloc, dependency injection and tests, by building a cricket scorer app.", "../flutter-clean-architecture-course.html", "See the course"),
 }
 
 
@@ -64,6 +67,9 @@ def read_post(path):
     meta["slug"] = path.stem
     meta["body_md"] = m.group(2)
     meta.setdefault("updated", meta["date"])
+    meta.setdefault("seo_title", "")
+    if len(meta["seo_title"] or meta["title"] + " | Widgetry") > 62:
+        print(f"  ! {path.name}: search title is long; add a seo_title of up to ~60 characters")
     meta.setdefault("tag", "Careers")
     meta.setdefault("cta", "jobs")
     return meta
@@ -153,7 +159,7 @@ def post_page(p, all_posts):
         "datePublished": p["date"], "dateModified": p["updated"], "wordCount": words,
         "keywords": p.get("keywords", ""), "inLanguage": "en-IN", "image": f"{SITE}/og-image.jpg",
         "author": {"@type": "Person", "name": AUTHOR["name"], "url": AUTHOR["url"]},
-        "publisher": {"@type": "Organization", "name": "Widgetry Academy", "url": SITE, "logo": {"@type": "ImageObject", "url": f"{SITE}/favicon.svg"}},
+        "publisher": {"@type": "Organization", "name": "Widgetry Academy", "url": SITE, "logo": {"@type": "ImageObject", "url": f"{SITE}/logo-512.png", "width": 512, "height": 512}},
     }, {
         "@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
             {"@type": "ListItem", "position": 1, "name": "Home", "item": f"{SITE}/"},
@@ -166,7 +172,7 @@ def post_page(p, all_posts):
     related = [q for q in all_posts if q["slug"] != p["slug"]][:3]
     toc_html = "".join(f'<li><a href="#{esc(i)}">{esc(n)}</a></li>' for i, n in toc)
     updated = f' · Updated {nice_date(p["updated"])}' if p["updated"] != p["date"] else ""
-    return head(f'{p["title"]} | Widgetry Blog', p["description"], url, "article",
+    return head(p["seo_title"] or f'{p["title"]} | Widgetry', p["description"], url, "article",
                 f'<meta property="article:published_time" content="{p["date"]}"><meta property="article:modified_time" content="{p["updated"]}">\n{ld_html}') + f"""
 <main class="bwrap post">
   <p class="crumbs"><a href="../">Home</a> › <a href="./">Blog</a> › <span>{esc(p["tag"])}</span></p>
