@@ -122,6 +122,16 @@ jobsRouter.get("/meta", wrap(async (_req, res) => {
   res.json({ liveJobs: Number(count?.n ?? 0), categories: cats, cities: cities.map(c => c.city), skills: top.length ? top.map(t => t.skill) : COMMON_SKILLS.slice(0, 12), suggestedSkills: COMMON_SKILLS });
 }));
 
+// Other names for the same city. "Delhi NCR" is a region: it covers several cities.
+const CITY_SYNONYMS: string[][] = [["Bengaluru", "Bangalore"], ["Gurugram", "Gurgaon"], ["Mumbai", "Bombay"], ["Kolkata", "Calcutta"], ["Chennai", "Madras"]];
+const REGIONS: Record<string, string[]> = { "delhi ncr": ["Delhi", "Noida", "Gurugram", "Gurgaon", "Ghaziabad", "Faridabad"] };
+/** The names to look for when filtering by [city]. Matching is "contains", so "Delhi" also finds "New Delhi". */
+export function cityNames(city: string): string[] {
+  const c = city.trim();
+  if (REGIONS[c.toLowerCase()]) return REGIONS[c.toLowerCase()];
+  return CITY_SYNONYMS.find(g => g.some(n => n.toLowerCase() === c.toLowerCase())) ?? [c];
+}
+
 jobsRouter.get("/jobs", wrap(async (req, res) => {
   const f = jobSearch.parse(req.query);
   const where = [LIVE];
@@ -130,7 +140,12 @@ jobsRouter.get("/jobs", wrap(async (req, res) => {
   if (f.type) { where.push("j.job_type = ?"); params.push(f.type); }
   if (f.mode) { where.push("j.work_mode = ?"); params.push(f.mode); }
   if (f.level) { where.push("j.level = ?"); params.push(f.level); }
-  if (f.city) { where.push("j.city = ?"); params.push(f.city); }
+  if (f.city) {
+    // A city also matches its other names and areas ("Bangalore", "Whitefield, Bengaluru"); "Delhi NCR" covers its cities
+    const names = cityNames(f.city);
+    where.push("(" + names.map(() => "j.city LIKE ?").join(" OR ") + ")");
+    params.push(...names.map(n => "%" + likeEsc(n) + "%"));
+  }
   if (f.skill) { where.push("EXISTS (SELECT 1 FROM job_skills s WHERE s.job_id = j.id AND s.skill = ?)"); params.push(f.skill); }
   if (f.q) {
     const ft = ftQuery(f.q), like = "%" + likeEsc(f.q) + "%";

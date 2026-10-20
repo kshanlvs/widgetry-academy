@@ -119,6 +119,8 @@ test("admin posts go live immediately; featured jobs sort first; search and filt
   assert.equal((await call("GET", "/jobs?mode=remote")).body.total, 1);
   assert.equal((await call("GET", "/jobs?level=junior")).body.total, 1);
   assert.equal((await call("GET", "/jobs?city=kolkata")).body.total, 1, "city match is case-insensitive");
+  assert.equal((await call("GET", "/jobs?city=Calcutta")).body.total, 1, "a city's other name finds it");
+  assert.equal((await call("GET", "/jobs?city=Pune")).body.total, 0, "other cities don't match");
   assert.equal((await call("GET", "/jobs?skill=Provider")).body.total, 1);
   assert.equal((await call("GET", "/jobs?q=intern")).body.total, 1, "full-text prefix search");
   assert.equal((await call("GET", "/jobs?q=bytewave")).body.total, 1, "company name search");
@@ -1076,4 +1078,11 @@ test("short courses in the Android app: Google Play purchase, Razorpay from Goog
     const people = (await call("GET", `/admin/workshops/${id}/enrollments`, undefined, ADMIN)).body.items;
     assert.deepEqual(people.map((p: any) => p.channel).sort(), ["google_play", "razorpay"]);
   } finally { setPaymentServices(null, null); setPlayApi(null); }
+});
+
+test("city names: other names and Delhi NCR", async () => {
+  const { cityNames } = await import("../src/routes/jobs.js");
+  assert.deepEqual(cityNames("bangalore"), ["Bengaluru", "Bangalore"]);
+  assert.deepEqual(cityNames("Delhi NCR"), ["Delhi", "Noida", "Gurugram", "Gurgaon", "Ghaziabad", "Faridabad"]);
+  assert.deepEqual(cityNames("Noida"), ["Noida"]);
 });
