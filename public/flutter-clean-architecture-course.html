@@ -352,8 +352,9 @@ function render() {
       <a class="small" href="${waHref("Hi! I'm enrolled in the Flutter clean architecture course and have a question.")}" target="_blank" rel="noopener">Questions? Message us on WhatsApp</a>`);
   }
   if (w.status === "draft") {
-    return show(`<h2>Next batch: dates coming soon</h2>${priceHtml(w)}
-      <p class="muted" style="margin:0">We're fixing the dates for the next weekend batch. Message us and we'll tell you first.</p>
+    const dated = !!(w.schedule || w.startsAt);
+    return show(`<h2>${dated ? "Next batch: enrolment opens soon" : "Next batch: dates coming soon"}</h2>${schedHtml(w)}${priceHtml(w)}
+      <p class="muted" style="margin:0">${dated ? "Payments open here shortly. Message us and we'll tell you the moment you can enrol." : "We're fixing the dates for the next weekend batch. Message us and we'll tell you first."}</p>
       <a class="btn gold" href="${waHref("Hi! Please tell me when the Flutter clean architecture course dates are out.")}" target="_blank" rel="noopener">Notify me on WhatsApp</a>`);
   }
   if (w.status !== "open" || w.seatsLeft <= 0) {

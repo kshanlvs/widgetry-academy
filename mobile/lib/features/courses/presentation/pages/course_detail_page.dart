@@ -35,7 +35,7 @@ class CourseDetailPage extends StatelessWidget {
           final p = Palette.of(context);
           final links = getIt<LinkLauncher>();
           final registered = s.registration != null && s.myCourse?.id == c.id;
-          final showBatch = (c.showBatch || c.flagship) && !s.batch.isEmpty;
+          final showBatch = c.usesBatch && !s.batch.isEmpty;
           final when = [s.batch.days, s.batch.time, s.batch.mode].whereType<String>().where((x) => x.isNotEmpty).join(' · ');
 
           return Scaffold(
@@ -94,7 +94,14 @@ class CourseDetailPage extends StatelessWidget {
                                 : 'Pay to confirm your seat. Seats are held for a short time.'),
                     const SizedBox(height: Space.xl),
                   ],
-                  if (showBatch) ...[
+                  if (c.dateLine != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(Space.lg),
+                      decoration: BoxDecoration(color: p.bg, borderRadius: BorderRadius.circular(Radii.lg)),
+                      child: Fact(icon: Icons.event_rounded, label: c.enrolling ? 'Next batch' : (c.live?.tag ?? 'Next batch'), value: c.dateLine!),
+                    ),
+                    const SizedBox(height: Space.xxl),
+                  ] else if (showBatch) ...[
                     Container(
                       padding: const EdgeInsets.all(Space.lg),
                       decoration: BoxDecoration(color: p.bg, borderRadius: BorderRadius.circular(Radii.lg)),

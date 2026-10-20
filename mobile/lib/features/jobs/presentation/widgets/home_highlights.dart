@@ -53,7 +53,7 @@ class _CourseBannersState extends State<CourseBanners> {
                   onPageChanged: (i) => setState(() => _index = i),
                   itemBuilder: (_, i) => Padding(
                     padding: EdgeInsets.only(left: i == 0 && open.length > 1 ? Space.lg - 6 : 6, right: 6),
-                    child: _CourseBanner(course: open[i], batch: open[i].showBatch || open[i].flagship ? s.batch : const BatchInfo()),
+                    child: _CourseBanner(course: open[i], batch: open[i].usesBatch ? s.batch : const BatchInfo()),
                   ),
                 ),
               ),
@@ -87,7 +87,7 @@ class _CourseBanner extends StatelessWidget {
     final p = Palette.of(context);
     final c = course;
     final line = [
-      if (batch.startDate != null) 'Next batch ${batch.startDate}' else if (c.meta != null) c.meta!,
+      if (c.dateLine != null) c.dateLine! else if (batch.startDate != null) 'Next batch ${batch.startDate}' else if (c.meta != null) c.meta!,
       if (c.price != null) Fmt.rupees(c.price!),
     ].join('  ·  ');
     return Material(

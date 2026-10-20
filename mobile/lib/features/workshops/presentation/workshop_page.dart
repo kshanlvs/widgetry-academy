@@ -10,13 +10,14 @@ import 'package:widgetry_academy/core/utils/link_launcher.dart';
 import 'package:widgetry_academy/core/widgets/common.dart';
 import 'package:widgetry_academy/core/widgets/state_views.dart';
 import 'package:widgetry_academy/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:widgetry_academy/features/courses/domain/entities/course.dart';
 import 'package:widgetry_academy/features/payments/presentation/checkout_page.dart' show TaxStateField;
 import 'package:widgetry_academy/features/workshops/domain/workshops.dart';
 import 'package:widgetry_academy/features/workshops/presentation/workshops_cubits.dart';
 
 /// The short course a homepage course card points to, if any: its button links to a page like
 /// "bloc-crash-course.html" (short course pages end in "-course.html").
-String? shortCourseSlug(String? link) => RegExp(r'^([a-z0-9][a-z0-9-]*-course)\.html$').firstMatch((link ?? '').trim())?.group(1);
+String? shortCourseSlug(String? link) => Course.shortSlugOf(link);
 
 /// A short live course: dates, price, your seat and the joining link.
 class WorkshopPage extends StatelessWidget {
@@ -241,7 +242,7 @@ class _Price extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     final p = Palette.of(context);
     final status = w.datesComingSoon
-        ? 'Dates coming soon. Get a message when enrolment opens.'
+        ? (w.schedule != null || w.startsAt != null ? 'Enrolment opens soon. Get a message when it does.' : 'Dates coming soon. Get a message when enrolment opens.')
         : w.isFull
             ? 'This batch is full.'
             : !w.isOpen

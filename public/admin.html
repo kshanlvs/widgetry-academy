@@ -292,6 +292,20 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
         </div>
         <label><span>Label on the green band <span class="opt">(optional · default: “★ Flagship course” or “★ New course”)</span></span><input id="cBadge" maxlength="30" placeholder="e.g. ★ Advanced course"></label>
         <label><span>Short details line <span class="opt">(optional)</span></span><input id="cMeta" maxlength="90" placeholder="e.g. 10 live online sessions · Saturdays & Sundays · 2 hrs each"></label>
+        <fieldset id="cDates"><legend>Start date</legend>
+          <div id="cDatesOwn" style="display:grid;gap:12px">
+            <label><span>Starts on <span class="opt">(optional · as you want it shown, e.g. Sat 24 Oct 2026)</span></span><input id="cStartDate" maxlength="60" placeholder="Sat 24 Oct 2026"></label>
+            <label class="chk"><input type="checkbox" id="cBatch"> Use the date from the Next batch tab instead (for Flutter in 10 Days)</label>
+          </div>
+          <div id="cDatesWs" hidden style="display:grid;gap:12px">
+            <p class="small" style="margin:0" id="cWsNote"></p>
+            <div class="row2">
+              <label>First session starts<input id="cWsStart" type="datetime-local"></label>
+              <label>Enrolment<select id="cWsStatus"><option value="draft">Not open yet (dates coming soon)</option><option value="open">Open: people can pay</option><option value="closed">Closed</option><option value="done">Finished</option></select></label>
+            </div>
+            <label><span>Dates as shown <span class="opt">(e.g. Sat 8 &amp; Sun 9 Nov · 11 AM–1:30 PM IST)</span></span><input id="cWsSched" maxlength="200"></label>
+          </div>
+        </fieldset>
         <label><span>Topics <span class="opt">(comma separated)</span></span><input id="cTags" maxlength="160" placeholder="Flutter, Dart, Firebase, APIs, GitHub"></label>
         <label><span>What they'll learn, step by step <span class="opt">(optional · one per line: Topic — short description)</span></span><textarea id="cSteps" rows="5" placeholder="JavaScript basics — Make web pages that think and respond&#10;React — Build modern, interactive screens"></textarea></label>
         <label><span>You finish with <span class="opt">(optional)</span></span><input id="cOutcome" maxlength="160" placeholder="e.g. your own installable Android app and a GitHub portfolio."></label>
@@ -302,7 +316,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
             <label>Crossed-out price (₹)<input id="cMrp" type="number" min="0" step="1" placeholder="4999"></label>
           </div>
           <label>Note under the price<input id="cPriceNote" maxlength="90" placeholder="e.g. Early-bird fee · first 10 seats · pay in 2 parts"></label>
-          <label class="chk"><input type="checkbox" id="cBatch"> Show the next batch start date (from the Next batch tab)</label>
+          <p class="small" id="cPriceWs" hidden style="margin:0"></p>
         </fieldset>
 
         <fieldset><legend>Mentor (optional · leave empty for none)</legend>
@@ -713,6 +727,9 @@ const SEED = [
     cta: "See details & enrol", ctaLink: "flutter-clean-architecture-course.html", cta2: "", cta2Link: "", brochure: "brochures/flutter-clean-architecture-course.pdf" }
 ];
 let call = [], cediting = null;
+let wall = [], wediting = null; // short courses (loaded with the Courses tab)
+const toLocalInput = iso => { if (!iso) return ""; const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
+const fromLocalInput = v => v ? new Date(v).toISOString() : null;
 const okLink = u => !u || /^(#[\w-]+|[\w./-]+\.html(#[\w-]+)?|https:\/\/\S+)$/.test(u);
 const okPhoto = u => !u || /^([\w./-]+\.(jpg|jpeg|png|webp|svg)|https:\/\/\S+)$/i.test(u);
 
@@ -759,7 +776,7 @@ function courseFromForm() {
     flagship: $("cFlag").checked, order: Math.max(1, parseInt($("cOrder").value, 10) || 1), meta: $("cMeta").value.trim(),
     tags: $("cTags").value.split(",").map(t => t.trim()).filter(Boolean).slice(0, 12),
     steps: $("cSteps").value.split("\n").map(l => l.trim()).filter(Boolean).slice(0, 12).map(l => { const m = l.split(/\s+[—–-]\s+|\s*\|\s*/); return { t: (m[0] || "").slice(0, 60), d: m.slice(1).join(" — ").slice(0, 120) }; }),
-    outcome: $("cOutcome").value.trim(), price: num("cPrice"), mrp: num("cMrp"), priceNote: $("cPriceNote").value.trim(), showBatch: $("cBatch").checked,
+    outcome: $("cOutcome").value.trim(), price: num("cPrice"), mrp: num("cMrp"), priceNote: $("cPriceNote").value.trim(), showBatch: $("cBatch").checked, startDate: $("cBatch").checked ? "" : $("cStartDate").value.trim(),
     mentorName: $("cMName").value.trim(), mentorLine: $("cMLine").value.trim(), mentorPhoto: $("cMPhoto").value.trim(),
     cta: $("cCta").value.trim(), ctaLink: $("cCtaLink").value.trim(), cta2: $("cCta2").value.trim(), cta2Link: $("cCta2Link").value.trim(),
     brochure: $("cBrochure").value.trim()
@@ -769,10 +786,10 @@ function fillCourse(c) {
   $("cTitle").value = c.title || ""; $("cTagline").value = c.tagline || ""; $("cBadge").value = c.badge || ""; $("cStatus").value = c.status || "open"; $("cFlag").checked = !!c.flagship;
   $("cOrder").value = c.order ?? (call.length + 1); $("cMeta").value = c.meta || ""; $("cTags").value = (c.tags || []).join(", ");
   $("cSteps").value = (c.steps || []).map(s => s.d ? s.t + " — " + s.d : s.t).join("\n"); $("cOutcome").value = c.outcome || "";
-  $("cPrice").value = c.price ?? ""; $("cMrp").value = c.mrp ?? ""; $("cPriceNote").value = c.priceNote || ""; $("cBatch").checked = !!c.showBatch;
+  $("cPrice").value = c.price ?? ""; $("cMrp").value = c.mrp ?? ""; $("cPriceNote").value = c.priceNote || ""; $("cBatch").checked = !!c.showBatch; $("cStartDate").value = c.startDate || "";
   $("cMName").value = c.mentorName || ""; $("cMLine").value = c.mentorLine || ""; $("cMPhoto").value = c.mentorPhoto || "";
   $("cCta").value = c.cta || ""; $("cCtaLink").value = c.ctaLink || ""; $("cCta2").value = c.cta2 || ""; $("cCta2Link").value = c.cta2Link || ""; $("cBrochure").value = c.brochure || "";
-  previewCourse();
+  datesBox(true); previewCourse();
 }
 function previewCourse() {
   const c = courseFromForm(), soon = c.status === "soon";
@@ -782,7 +799,7 @@ function previewCourse() {
       ${!soon && c.status !== "hidden" ? "" : `<span class="pill c-${esc(c.status)}" style="justify-self:start">${esc(CST[c.status])}</span>`}
       ${c.meta ? `<div class="small">${esc(c.meta)}</div>` : ""}
       <h4>${esc(c.title || "Course name")}</h4>
-      ${c.showBatch ? '<div style="color:var(--accent);font-weight:700">🗓 Next batch starts … (from Next batch tab)</div>' : ""}
+      ${(() => { const l = whenLine(c); return l ? `<div style="color:var(--accent);font-weight:700">🗓 ${esc(l)}</div>` : ""; })()}
       ${c.tagline ? `<div class="small">${esc(c.tagline)}</div>` : ""}
       ${c.tags.length ? `<div class="tags">${c.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}
       ${c.steps.length ? `<ol>${c.steps.map(s => `<li><b>${esc(s.t)}</b>${s.d ? " — " + esc(s.d) : ""}</li>`).join("")}</ol>` : ""}
@@ -792,7 +809,31 @@ function previewCourse() {
       ${soon ? '<div class="small" style="font-weight:700">[ Coming soon ] button</div>' : `<div class="small" style="font-weight:700">[ ${esc(c.cta || "Reserve my seat")} ]${c.cta2 ? " [ " + esc(c.cta2) + " ]" : ""}</div>`}
     </div></div>`;
 }
-document.querySelectorAll("#fCourse input, #fCourse select, #fCourse textarea").forEach(el => el.addEventListener("input", () => { $("cOk").hidden = true; previewCourse(); }));
+document.querySelectorAll("#fCourse input, #fCourse select, #fCourse textarea").forEach(el => el.addEventListener("input", () => { $("cOk").hidden = true; if (el.id === "cCtaLink" || el.id === "cBatch") datesBox(el.id === "cCtaLink"); previewCourse(); }));
+// A card whose button opens a short course page (e.g. bloc-crash-course.html) takes its dates, enrolment and
+// price from that short course, so the card and the page always agree. Other cards use "Starts on".
+const wsSlug = link => (/^([a-z0-9][a-z0-9-]*-course)\.html$/.exec((link || "").trim()) || [])[1] || null;
+const linkedWs = () => { const sl = wsSlug($("cCtaLink").value); return sl ? wall.find(w => w.slug === sl) || null : null; };
+function datesBox(refill) {
+  const w = linkedWs(), sl = wsSlug($("cCtaLink").value);
+  $("cDatesWs").hidden = !w; $("cDatesOwn").hidden = !!w; $("cPriceWs").hidden = !w;
+  $("cStartDate").disabled = $("cBatch").checked;
+  if (!w) { if (sl && !wall.length) { $("cDatesWs").hidden = true; } return; }
+  $("cWsNote").innerHTML = `These dates are saved to the short course <b>${esc(w.title)}</b>, so this card and <a href="${esc(w.slug)}.html" target="_blank" rel="noopener">its page</a> always match.`;
+  $("cPriceWs").innerHTML = `The website and app show the short course's price: <b>${w.earlyPrice ? inr(w.earlyPrice) + "</b> early bird, then <b>" + inr(w.price) : inr(w.price)}</b>. Change it in <b>Short courses</b> below.`;
+  if (refill) { $("cWsStart").value = toLocalInput(w.startsAt); $("cWsSched").value = w.schedule || ""; $("cWsStatus").value = w.status; }
+}
+// Same wording as the homepage card
+function whenLine(c) {
+  const w = linkedWs();
+  if (w) {
+    const st = $("cWsStatus").value, sched = $("cWsSched").value.trim(), start = $("cWsStart").value;
+    const d = sched || (start ? "Starts " + itime(new Date(start)) : "");
+    return st === "open" ? (d || "Dates coming soon") : st === "draft" ? (d ? d + " · enrolment opens soon" : "Dates coming soon") : "Next batch dates coming soon";
+  }
+  if (c.showBatch) return "Next batch starts … (from the Next batch tab)";
+  return c.startDate ? "Starts " + c.startDate : "";
+}
 function resetCourse() { cediting = null; $("cFormTitle").textContent = "New course"; $("cErr").hidden = true; $("cOk").hidden = true; fillCourse({ order: call.length + 1, status: "open" }); renderCourses(); }
 $("cNew").onclick = () => { resetCourse(); $("cTitle").focus(); };
 $("cReset").onclick = resetCourse;
@@ -809,8 +850,18 @@ $("fCourse").addEventListener("submit", async e => {
   if (c.brochure && !/^([\w./-]+\.pdf|https:\/\/\S+)$/i.test(c.brochure)) return bad("The brochure must be a PDF path like brochures/my-course.pdf, or an https:// link.");
   if (!okPhoto(c.mentorPhoto)) return bad("Photo link must be an image file like shots/mentor-square.jpg or an https:// link.");
   if (c.mrp != null && c.price != null && c.mrp <= c.price) return bad("The crossed-out price should be higher than the price, or leave it empty.");
+  const w = linkedWs();
+  if (w && $("cWsStatus").value === "open" && !$("cWsStart").value) return bad("Set when the first session starts before opening enrolment.");
   $("cSave").disabled = true;
   try {
+    if (w) {
+      await japi("/admin/workshops/" + w.id, { method: "PUT", body: {
+        title: w.title, startsAt: fromLocalInput($("cWsStart").value), schedule: $("cWsSched").value.trim(), durationMin: w.durationMin,
+        price: w.price, earlyPrice: w.earlyPrice, earlySeats: w.earlySeats, earlyUntil: w.earlyUntil, seats: w.seats,
+        meetingLink: w.meetingLink || "", brochure: w.brochure || "", status: $("cWsStatus").value } });
+      await loadWorkshops();
+      c.showBatch = false; c.startDate = "";
+    }
     if (c.flagship) for (const o of call.filter(o => o.flagship && (!cediting || o.id !== cediting.id))) { await updateDoc(doc(db, "courses", o.id), { flagship: false, updatedAt: serverTimestamp() }); o.flagship = false; }
     if (cediting) { await updateDoc(doc(db, "courses", cediting.id), { ...c, showOnSite: true, updatedAt: serverTimestamp() }); Object.assign(cediting, c); }
     else { const r = await addDoc(collection(db, "courses"), { ...c, showOnSite: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }); cediting = { id: r.id, ...c, showOnSite: true }; call.push(cediting); }
@@ -1266,9 +1317,6 @@ $("iReload").onclick = loadInterviews; $("bStatus").onchange = loadMockBookings;
 
 /* ---------- Short courses (online payment) ---------- */
 const WST = { draft: "Draft", open: "Enrolment open", closed: "Closed", done: "Finished" };
-let wall = [], wediting = null;
-const toLocalInput = iso => { if (!iso) return ""; const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
-const fromLocalInput = v => v ? new Date(v).toISOString() : null;
 async function loadWorkshops() {
   $("wListErr").hidden = true;
   try {
@@ -1284,6 +1332,7 @@ async function loadWorkshops() {
         </div></div>`).join("") : '<p class="small">No short courses yet.</p>';
     $("wList").querySelectorAll("[data-wedit]").forEach(b => b.onclick = () => editWorkshop(Number(b.dataset.wedit)));
     $("wList").querySelectorAll("[data-wppl]").forEach(b => b.onclick = () => wPeople(Number(b.dataset.wppl)));
+    datesBox(true); previewCourse();
   } catch (x) {
     $("wList").innerHTML = ""; $("wListErr").textContent = x.message === "Not found." ? "The server is still updating to the version with short courses. Try again in a few minutes." : x.message; $("wListErr").hidden = false;
   }

@@ -722,6 +722,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 @keyframes crsp{70%{box-shadow:0 0 0 8px rgba(125,255,176,0)}100%{box-shadow:0 0 0 0 rgba(125,255,176,0)}}
 .crs-card.flagship h3{font-size:clamp(25px,3vw,32px)}
 .crs-when{margin:0;font-weight:700;color:var(--accent)}
+.crs-live.wait i{background:#ffd27a;animation:none;box-shadow:none}
 .crs-price{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-top:2px}
 .crs-price b{font-family:var(--display);font-size:30px;letter-spacing:-.02em}
 .crs-price s{color:var(--muted);font-size:16px}
@@ -1285,6 +1286,7 @@ n.addEventListener('click',function(e){if(e.target.tagName==='A'){n.classList.re
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
+import { JOBS_API } from "./jobs-api-url.js";
 try {
   const app = getApps()[0] || initializeApp(firebaseConfig);
   const snap = await getDoc(doc(getFirestore(app), "settings", "batch"));
@@ -1320,6 +1322,22 @@ const brochureFor = c => {
   const b = (c.brochure || "").trim() || KNOWN_BROCHURES[(c.title || "").toLowerCase().replace(/\s*&\s*/g, " & ").replace(/\s+/g, " ").trim()] || "";
   return /^([\w./-]+\.pdf|https:\/\/\S+)$/i.test(b) ? b : "";
 };
+// Short courses (cards whose button opens e.g. bloc-crash-course.html) take their dates, enrolment and price
+// from Admin → Short courses, exactly like their own page. null = couldn't load (keep the card as saved).
+let SHORT = null;
+const shortSlug = u => (/^([a-z0-9][a-z0-9-]*-course)\.html$/.exec((u || "").trim()) || [])[1] || null;
+const istDate = iso => new Date(iso).toLocaleString("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" }) + " IST";
+function liveFor(c) {
+  const sl = shortSlug(c.ctaLink);
+  if (!sl || !SHORT) return null;
+  const w = SHORT[sl], d = w ? (w.schedule || (w.startsAt ? "Starts " + istDate(w.startsAt) : "")) : "";
+  if (!w) return { when: "Next batch dates coming soon", open: false, tag: "Dates soon" };
+  const price = w.earlyPrice || w.price, mrp = w.earlyPrice ? w.price : null;
+  const note = w.earlyPrice ? "Early-bird price" + (w.earlySeatsLeft != null ? " · " + w.earlySeatsLeft + " seat" + (w.earlySeatsLeft === 1 ? "" : "s") + " left" : "") : "";
+  if (w.status === "open" && w.seatsLeft > 0) return { when: d || "Dates coming soon", open: true, price, mrp, note };
+  if (w.status === "open") return { when: "This batch is full", open: false, tag: "Batch full", price, mrp, note };
+  return { when: d ? d + " · enrolment opens soon" : "Dates coming soon", open: false, tag: "Dates soon", price, mrp, note };
+}
 function renderCourses(list) {
   const box = document.querySelector("#courses .crs");
   if (!box || !list.length) return;
@@ -1340,14 +1358,21 @@ function renderCourses(list) {
     const ph = img(c.mentorPhoto), ini = (c.mentorName || "").split(/\s+/).map(w => w[0] || "").join("").slice(0, 2).toUpperCase();
     const page = /^[\w./-]+\.html(#[\w-]+)?$/.test(c.ctaLink || "");
     const band = soon ? "◷ Coming soon" : ((c.badge || "").trim() || (c === first ? "★ Flagship course" : "★ New course"));
-    let when = ""; if (c.showBatch && !soon && !batchUsed) { when = '<p class="crs-when" id="crsBatch" hidden></p>'; batchUsed = true; }
+    // One rule for the date line (same in the app): short course → its own dates; else "Starts on"; else the Next batch tab.
+    const live = soon ? null : liveFor(c), linked = !!shortSlug(c.ctaLink);
+    if (live && live.price != null) c = { ...c, price: live.price, mrp: live.mrp, priceNote: live.note };
+    let when = "";
+    if (live) when = '<p class="crs-when">🗓 ' + esc(live.when) + "</p>";
+    else if (!soon && !linked && (c.startDate || "").trim()) when = '<p class="crs-when">🗓 Starts ' + esc(c.startDate.trim()) + "</p>";
+    else if (c.showBatch && !soon && !linked && !batchUsed) { when = '<p class="crs-when" id="crsBatch" hidden></p>'; batchUsed = true; }
+    const liveTag = live && !live.open ? '<span class="crs-live wait"><i></i>' + esc(live.tag) + "</span>" : '<span class="crs-live"><i></i>Enrolling now</span>';
     const steps = (c.steps || []).length ? '<details class="crs-more"><summary>See all ' + c.steps.length + ' topics</summary><ol class="crs-steps">' + c.steps.map(st => "<li><b>" + esc(st.t) + "</b>" + esc(st.d || "") + "</li>").join("") + "</ol></details>" : "";
     const btns = soon
       ? '<button class="btn crs-soon" type="button" disabled aria-disabled="true">Coming soon</button>'
-      : '<a class="btn" href="' + esc(link(c.ctaLink)) + '"' + ext(link(c.ctaLink)) + ">" + esc(c.cta || (page ? "See details & enrol" : "Reserve my seat")) + "</a>" +
+      : '<a class="btn" href="' + esc(link(c.ctaLink)) + '"' + ext(link(c.ctaLink)) + ">" + esc(c.cta || (page ? (live && !live.open ? "See details" : "See details & enrol") : "Reserve my seat")) + "</a>" +
         (c.cta2 ? '<a class="btn ghost" href="' + esc(link(c.cta2Link)) + '"' + ext(link(c.cta2Link)) + ">" + esc(c.cta2) + "</a>" : "");
-    return '<article class="crs-card crs-feature' + (soon ? " soon" : "") + '" aria-label="' + esc(c.title) + (soon ? ", coming soon" : ", enrolling now") + '">' +
-      '<div class="crs-flag"><span>' + esc(band) + "</span>" + (soon ? "" : '<span class="crs-live"><i></i>Enrolling now</span>') + "</div>" +
+    return '<article class="crs-card crs-feature' + (soon ? " soon" : "") + '" aria-label="' + esc(c.title) + (soon ? ", coming soon" : live && !live.open ? ", " + live.tag.toLowerCase() : ", enrolling now") + '">' +
+      '<div class="crs-flag"><span>' + esc(band) + "</span>" + (soon ? "" : liveTag) + "</div>" +
       '<div class="cf-main">' +
         (c.meta ? '<span class="crs-meta">' + esc(c.meta) + "</span>" : "") +
         "<h3>" + esc(c.title) + "</h3>" + when +
@@ -1367,9 +1392,11 @@ function renderCourses(list) {
   box.style.gridTemplateColumns = "";
   if (window.renderBatch) window.renderBatch((window.WIDGETRY && window.WIDGETRY.batch) || {});
 }
+const shortP = fetch(JOBS_API + "/workshops").then(r => r.ok ? r.json() : null).then(d => d && Array.isArray(d.items) ? Object.fromEntries(d.items.map(w => [w.slug, w])) : null).catch(() => null);
 try {
   const app = getApps()[0] || initializeApp(firebaseConfig);
   const snap = await getDocs(collection(getFirestore(app), "courses"));
+  SHORT = await shortP;
   const list = snap.docs.map(d => d.data()).filter(c => c.showOnSite === true && c.status !== "hidden" && c.title).sort((a, b) => (a.order || 99) - (b.order || 99));
   if (!list.length) renderCourses(DEFAULT_COURSES);
   else {
@@ -1378,7 +1405,7 @@ try {
     if (!hasFlutter) list.forEach(c => { c.flagship = false; });
     renderCourses(hasFlutter ? list : [FLUTTER, ...list]);
   }
-} catch (e) { console.warn("Using built-in course cards:", e.code || e.message); renderCourses(DEFAULT_COURSES); }
+} catch (e) { console.warn("Using built-in course cards:", e.code || e.message); SHORT = await shortP; renderCourses(DEFAULT_COURSES); }
 </script>
 
 <script>

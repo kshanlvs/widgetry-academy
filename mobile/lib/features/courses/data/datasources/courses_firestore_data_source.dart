@@ -71,6 +71,7 @@ class CoursesFirestoreDataSource implements CoursesDataSource {
       brochure: s(m['brochure']),
       showBatch: m['showBatch'] == true,
       order: n(m['order']) ?? 99,
+      startDate: s(m['startDate']),
     );
   }
 

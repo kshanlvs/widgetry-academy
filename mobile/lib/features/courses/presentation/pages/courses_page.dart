@@ -62,7 +62,7 @@ class CoursesPage extends StatelessWidget {
                         if (stageOf(reg) != EnrolmentStage.registered) ...[StartChecklist(course: mine, reg: reg, batch: s.batch), const SizedBox(height: Space.md)],
                         if (open.isNotEmpty || soon.isNotEmpty) const SectionLabel('Explore more courses', padding: EdgeInsets.fromLTRB(4, Space.lg, 4, Space.sm)),
                       ],
-                      for (final c in open) ...[_FeaturedCourse(course: c, batch: c.showBatch || c.flagship ? s.batch : const BatchInfo()), const SizedBox(height: Space.lg)],
+                      for (final c in open) ...[_FeaturedCourse(course: c, batch: c.usesBatch ? s.batch : const BatchInfo()), const SizedBox(height: Space.lg)],
                       if (soon.isNotEmpty) const SectionLabel('Coming soon', padding: EdgeInsets.fromLTRB(4, Space.sm, 4, Space.sm)),
                       for (final c in soon) ...[_CourseRow(course: c), const SizedBox(height: Space.md)],
                     ]),
@@ -71,6 +71,24 @@ class CoursesPage extends StatelessWidget {
             );
           },
         ),
+      );
+}
+
+/// The start date on a course card ("Starts Sat 8 Nov…", "Dates coming soon").
+class _DateBox extends StatelessWidget {
+  const _DateBox({required this.line});
+  final String line;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(Space.md),
+        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(Radii.md), border: Border.all(color: Colors.white.withValues(alpha: 0.08))),
+        child: Row(children: [
+          const Icon(Icons.event_rounded, color: AppColors.gold, size: 20),
+          const SizedBox(width: Space.md),
+          Expanded(child: Text(line, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700))),
+        ]),
       );
 }
 
@@ -99,15 +117,18 @@ class _FeaturedCourse extends StatelessWidget {
               Text((c.badge ?? (c.flagship ? 'Flagship course' : 'Now enrolling')).replaceAll('★', '').trim().toUpperCase(),
                   style: t.labelSmall?.copyWith(color: AppColors.gold, letterSpacing: 1.1)),
               const Spacer(),
-              Container(width: 7, height: 7, decoration: const BoxDecoration(color: AppColors.greenBright, shape: BoxShape.circle)),
+              Container(width: 7, height: 7, decoration: BoxDecoration(color: c.enrolling ? AppColors.greenBright : AppColors.gold, shape: BoxShape.circle)),
               const SizedBox(width: 6),
-              Text('Enrolling', style: t.bodySmall?.copyWith(color: p.onHeroMuted, fontWeight: FontWeight.w600)),
+              Text(c.enrolling ? 'Enrolling' : (c.live?.tag ?? 'Dates soon'), style: t.bodySmall?.copyWith(color: p.onHeroMuted, fontWeight: FontWeight.w600)),
             ]),
             const SizedBox(height: Space.md),
             Text(c.title, style: AppTheme.display(size: 24, color: Colors.white)),
             if (c.tagline != null) ...[const SizedBox(height: Space.sm), Text(c.tagline!, style: t.bodyMedium?.copyWith(color: p.onHeroMuted))],
             if (c.meta != null) ...[const SizedBox(height: Space.sm), Text(c.meta!, style: t.bodySmall?.copyWith(color: p.onHeroMuted, fontWeight: FontWeight.w600))],
-            if (!batch.isEmpty) ...[
+            if (c.dateLine != null) ...[
+              const SizedBox(height: Space.lg),
+              _DateBox(line: c.dateLine!),
+            ] else if (!batch.isEmpty) ...[
               const SizedBox(height: Space.lg),
               Container(
                 padding: const EdgeInsets.all(Space.md),

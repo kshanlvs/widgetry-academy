@@ -30,6 +30,8 @@ class Course extends Equatable {
     this.brochure,
     this.showBatch = false,
     this.order = 99,
+    this.startDate,
+    this.live,
   });
 
   final String id;
@@ -54,8 +56,30 @@ class Course extends Equatable {
   final String? brochure;
   final bool showBatch;
   final int order;
+  /// "Starts on" from Admin → Courses, as typed (e.g. "Sat 24 Oct 2026"). Not used for short courses.
+  final String? startDate;
+  /// Dates and enrolment of the short course this card opens, from Admin → Short courses.
+  final CourseLive? live;
 
   bool get isOpen => status != 'soon';
+
+  /// The short course page this card opens ("bloc-crash-course.html" → "bloc-crash-course"), if any.
+  String? get shortSlug => shortSlugOf(ctaLink);
+  static String? shortSlugOf(String? link) => RegExp(r'^([a-z0-9][a-z0-9-]*-course)\.html$').firstMatch((link ?? '').trim())?.group(1);
+
+  /// The same rule as the website's course cards: a short course shows its own dates,
+  /// other courses their "Starts on" date, and only then the Next batch tab (Flutter in 10 Days).
+  bool get usesBatch => (showBatch || flagship) && shortSlug == null && (startDate ?? '').isEmpty;
+  String? get dateLine => live?.line ?? (shortSlug == null && (startDate ?? '').isNotEmpty ? 'Starts $startDate' : null);
+  /// False while a short course's enrolment isn't open (dates coming soon, full, closed).
+  bool get enrolling => live?.open ?? true;
+
+  Course withLive(CourseLive? l, {int? price, int? mrp, String? priceNote}) => Course(
+        id: id, title: title, tagline: tagline, meta: meta, tags: tags, steps: steps, outcome: outcome,
+        price: l == null ? this.price : (price ?? this.price), mrp: l == null ? this.mrp : mrp, priceNote: l == null ? this.priceNote : priceNote,
+        mentorName: mentorName, mentorLine: mentorLine, status: status, flagship: flagship, badge: badge, ctaLink: ctaLink,
+        brochure: brochure, showBatch: showBatch, order: order, startDate: startDate, live: l,
+      );
 
   /// Brochures for courses saved before the "brochure" field existed (matched by title, like the website).
   static const _knownBrochures = {
@@ -76,7 +100,18 @@ class Course extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, title, tagline, meta, tags, steps, outcome, price, mrp, priceNote, mentorName, mentorLine, status, flagship, badge, ctaLink, brochure, showBatch, order];
+  List<Object?> get props => [id, title, tagline, meta, tags, steps, outcome, price, mrp, priceNote, mentorName, mentorLine, status, flagship, badge, ctaLink, brochure, showBatch, order, startDate, live];
+}
+
+/// What a short course's card says: "Starts Sat 8 Nov…" and whether people can pay now.
+class CourseLive extends Equatable {
+  const CourseLive({required this.line, required this.open, this.tag});
+  final String line;
+  final bool open;
+  /// Replaces "Enrolling" on the card when not open, e.g. "Dates soon", "Batch full".
+  final String? tag;
+  @override
+  List<Object?> get props => [line, open, tag];
 }
 
 /// Next batch details, edited in Admin → Next batch.
