@@ -109,7 +109,7 @@ Then download `google-services.json` again into `android/app/` and rebuild.
 
 Go to Play Console → **Create app**:
 
-- **Name:** Widgetry Academy
+- **Name:** Widgetry
 - **Default language:** English (India), en-IN
 - **App or game:** App
 - **Free or paid:** Free (the course fee is an in-app purchase)
@@ -169,7 +169,7 @@ The server checks Google Play purchases and reports Razorpay sales. It uses the 
 
 1. **Enable the API:** in Google Cloud Console (project **flutter-in-10-days**), go to APIs & Services → Library and enable **Google Play Android Developer API**.
 2. **Invite the service account:** in Play Console → Users and permissions → **Invite new users**, enter the service account's email. It's the `client_email` in the key you put on Railway, ending in `@flutter-in-10-days.iam.gserviceaccount.com`.
-3. **Permissions:** under App permissions, add Widgetry Academy with **View financial data** and **Manage orders and subscriptions**.
+3. **Permissions:** under App permissions, add Widgetry with **View financial data** and **Manage orders and subscriptions**.
 
 Access can take up to 24 hours to start working.
 
@@ -220,7 +220,7 @@ Go to Grow → Store presence → Main store listing. The images are in `store/`
 
 **App name** (30 characters max)
 
-> Widgetry Academy: Dev Jobs
+> Widgetry: Dev Jobs & Courses
 
 **Short description** (80 characters max)
 

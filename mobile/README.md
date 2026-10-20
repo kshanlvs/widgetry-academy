@@ -58,12 +58,12 @@ Add these inside `<manifest>`, above `<application>`:
 </queries>
 ```
 
-Set the label inside `<application>`: `android:label="Widgetry Academy"`.
+Set the label inside `<application>`: `android:label="Widgetry"`.
 
 ### iOS: `ios/Runner/Info.plist`
 
 ```xml
-<key>CFBundleDisplayName</key><string>Widgetry Academy</string>
+<key>CFBundleDisplayName</key><string>Widgetry</string>
 <key>NSPhotoLibraryUsageDescription</key><string>Choose a profile photo for your Widgetry profile and resume.</string>
 <key>NSCameraUsageDescription</key><string>Take a profile photo for your Widgetry profile and resume.</string>
 ```
