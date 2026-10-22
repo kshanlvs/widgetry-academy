@@ -1,6 +1,7 @@
 -- LLM chat (Claude): one row per conversation, one row per message.
 -- The server owns the history: the app sends only the new message, the API loads past ones from here.
-CREATE TABLE chat_conversations (
+-- IF NOT EXISTS: safe if the tables were already created by hand in the TiDB console.
+CREATE TABLE IF NOT EXISTS chat_conversations (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   uid         VARCHAR(128)    NOT NULL,
   title       VARCHAR(200)    NULL,
@@ -10,7 +11,7 @@ CREATE TABLE chat_conversations (
   KEY idx_chat_conv_uid (uid, updated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE chat_messages (
+CREATE TABLE IF NOT EXISTS chat_messages (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   conversation_id  BIGINT UNSIGNED NOT NULL,
   role             ENUM('user','assistant') NOT NULL,
