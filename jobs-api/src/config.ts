@@ -36,6 +36,15 @@ export const config = {
   // Salt for hashing reporters' IPs. Falls back to a value derived from the DB password so it stays stable.
   hashSalt: env.HASH_SALT || (env.DB_PASSWORD ? createHash("sha256").update("wj-salt|" + env.DB_PASSWORD).digest("hex") : "dev-salt"),
   jobLifetimeDays: Number(env.JOB_LIFETIME_DAYS || 30),
+
+  // LLM chat (Claude API). The key lives only here on the server, never in the app or website.
+  anthropic: {
+    apiKey: env.ANTHROPIC_API_KEY || "",
+    model: env.CHAT_MODEL || "claude-haiku-5-5",
+    maxTokens: Number(env.CHAT_MAX_TOKENS || 800),        // hard cap on each reply's length
+    historyLimit: Number(env.CHAT_HISTORY_LIMIT || 20),   // past messages resent to Claude each call
+    dailyLimit: Number(env.CHAT_DAILY_LIMIT || 30),       // messages per user per day
+  },
 };
 
 if (config.isProduction && config.hashSalt === "dev-salt") console.warn("[config] Set HASH_SALT or DB_PASSWORD in production.");
