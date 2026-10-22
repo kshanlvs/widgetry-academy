@@ -16,6 +16,7 @@ import { mockRouter, mockAdminRouter } from "./routes/mock.js";
 import { mentorsRouter } from "./routes/mentors.js";
 import { overviewRouter } from "./routes/overview.js";
 import { workshopsRouter, workshopsAdminRouter } from "./routes/workshops.js";
+import { chatRouter } from "./routes/chat.js";
 import { requireAdmin } from "./auth.js";
 
 export function createApp() {
@@ -63,6 +64,7 @@ export function createApp() {
   api.use(mockRouter);
   api.use(mentorsRouter);
   api.use(workshopsRouter);
+  api.use(chatRouter);
   api.use("/admin", requireAdmin, mockAdminRouter);
   api.use("/admin", requireAdmin, overviewRouter);
   api.use("/admin", requireAdmin, workshopsAdminRouter);
