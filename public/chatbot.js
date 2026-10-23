@@ -283,8 +283,8 @@
       if (it) {
         botSay(esc(it.a), it.act, it.rel, "Related");
       } else {
-        botSay("I don't have an answer for that yet. Ask us on WhatsApp and we'll reply quickly.",
-          [["Ask on WhatsApp", "wa", "Hi! I have a question about " + COURSE + ": " + text]],
+        botSay("I don't have a quick answer for that. Ask Widgetry Tutor, our AI tutor, or message us on WhatsApp.",
+          [["Ask Widgetry Tutor (AI)", "link", "tutor.html?q=" + encodeURIComponent(text)], ["Ask on WhatsApp", "wa", "Hi! I have a question about " + COURSE + ": " + text]],
           ["fee", "batch", "beginner", "build"], "Popular questions");
       }
       input.focus({ preventScroll: true });

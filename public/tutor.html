@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Widgetry Tutor | Widgetry Academy</title>
+  <meta name="description" content="Widgetry Tutor: an AI tutor for Flutter and Dart that answers from Widgetry Academy's own courses and guides.">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="logo-512.png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <style>
+    html, body { height: 100%; }
+    body { display: flex; flex-direction: column; background: var(--bg); }
+    .top { background: var(--surface); border-bottom: 1px solid var(--line); }
+    .top .in { max-width: 860px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+    .mark { width: 38px; height: 38px; border-radius: 10px; background: var(--deep); color: var(--accent-2); display: grid; place-items: center; font-size: 19px; flex: none; }
+    .top h1 { font-size: 17px; margin: 0; font-family: var(--body); font-weight: 700; }
+    .top p { margin: 0; font-size: 13px; color: var(--muted); }
+    .top .sp { flex: 1; }
+    .ib { border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 8px 12px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap; }
+    .ib:hover { background: var(--soft); }
+    main { flex: 1; overflow-y: auto; }
+    .chat { max-width: 860px; margin: 0 auto; padding: 20px 16px 8px; }
+    .welcome h2 { font-size: 26px; margin: 24px 0 8px; }
+    .welcome p { color: var(--muted); margin: 0 0 20px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; color: var(--ink); text-decoration: none; }
+    .chip:hover { border-color: var(--accent); }
+    .msg { margin: 0 0 16px; display: flex; flex-direction: column; }
+    .msg.me { align-items: flex-end; }
+    .bub { max-width: 85%; padding: 11px 15px; border-radius: 18px; line-height: 1.55; overflow-wrap: anywhere; }
+    .me .bub { background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 6px; white-space: pre-wrap; }
+    .me.failed .bub { background: var(--soft); color: var(--ink); }
+    .ai .bub { background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 6px; max-width: 100%; }
+    .bub p { margin: 0 0 8px; } .bub p:last-child { margin: 0; }
+    .bub ul, .bub ol { margin: 4px 0 8px; padding-left: 22px; }
+    .bub code { font-family: var(--mono); font-size: .9em; background: var(--soft); padding: 1px 5px; border-radius: 5px; }
+    .code { position: relative; background: #0c2a23; color: #e6f2ec; border-radius: 10px; margin: 8px 0; }
+    .code pre { margin: 0; padding: 30px 14px 14px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.5; font-variant-ligatures: none; }
+    .code pre code { background: none; padding: 0; color: inherit; }
+    .code .lang { position: absolute; top: 7px; left: 14px; font-family: var(--mono); font-size: 11px; color: #ffffff80; }
+    .code button { position: absolute; top: 4px; right: 6px; background: none; border: 0; color: #ffffffb0; font: inherit; font-size: 12px; cursor: pointer; padding: 4px 6px; }
+    .src { margin-top: 8px; font-size: 13px; }
+    .src b { display: block; font-size: 11px; letter-spacing: .08em; color: var(--muted); margin-bottom: 4px; }
+    .src a { display: inline-block; margin: 0 6px 6px 0; padding: 5px 11px; border-radius: 999px; background: var(--soft); color: var(--accent); text-decoration: none; font-weight: 600; }
+    .meta { font-size: 12.5px; color: var(--muted); margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .linkbtn { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+    details.why { margin-top: 6px; font-size: 12.5px; color: var(--muted); max-width: 100%; }
+    details.why summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+    details.why table { border-collapse: collapse; margin-top: 6px; width: 100%; }
+    details.why td { padding: 3px 8px 3px 0; vertical-align: top; border-top: 1px solid var(--line); }
+    .thinking { color: var(--muted); font-size: 14px; display: flex; gap: 8px; align-items: center; margin-bottom: 16px; }
+    .dot { width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .composer { background: var(--surface); border-top: 1px solid var(--line); }
+    .composer .in { max-width: 860px; margin: 0 auto; padding: 10px 16px 8px; }
+    .composer form { display: flex; gap: 8px; align-items: flex-end; }
+    .composer textarea { flex: 1; resize: none; font: inherit; font-size: 15px; padding: 11px 16px; border: 1.5px solid var(--line); border-radius: 22px; background: var(--bg); color: var(--ink); max-height: 160px; }
+    .composer textarea:focus { outline: none; border-color: var(--accent); }
+    .send { width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); font-size: 20px; cursor: pointer; flex: none; }
+    .send:disabled { opacity: .4; cursor: default; }
+    .fine { text-align: center; font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+    dialog { border: 1px solid var(--line); border-radius: 16px; padding: 0; width: min(480px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); }
+    dialog::backdrop { background: #0008; }
+    dialog .hd { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+    dialog ul { list-style: none; margin: 0; padding: 6px; max-height: 60vh; overflow-y: auto; }
+    dialog li button { width: 100%; text-align: left; background: none; border: 0; padding: 10px 12px; border-radius: 10px; font: inherit; color: var(--ink); cursor: pointer; }
+    dialog li button:hover { background: var(--soft); }
+    dialog li small { display: block; color: var(--muted); }
+    @media (max-width: 560px) { .top p { display: none; } .ib.hide-s { display: none; } .bub { max-width: 92%; } }
+  </style>
+</head>
+<body>
+  <header class="top"><div class="in">
+    <a class="mark" href="/" aria-label="Widgetry Academy home">✦</a>
+    <div><h1>Widgetry Tutor</h1><p>AI · answers from our courses and guides</p></div>
+    <span class="sp"></span>
+    <button class="ib" id="histBtn" type="button">Past chats</button>
+    <button class="ib" id="newBtn" type="button">New chat</button>
+    <a class="ib hide-s" href="pages/dashboard.html">My courses</a>
+  </div></header>
+
+  <main id="scroll"><div class="chat" id="chat">
+    <section class="welcome" id="welcome">
+      <h2>Hi! I'm Widgetry Tutor.</h2>
+      <p>Ask me about Flutter and Dart, your code, Flutter careers, or our courses. I answer from what we teach at Widgetry and show you where it comes from.</p>
+      <div class="chips" id="starters"></div>
+    </section>
+    <div id="msgs"></div>
+    <div class="thinking" id="thinking" hidden><span class="dot"></span>Looking through our material and thinking…</div>
+  </div></main>
+
+  <footer class="composer"><div class="in">
+    <form id="form">
+      <textarea id="q" rows="1" maxlength="2000" placeholder="Ask about Flutter, Dart or our courses…" aria-label="Your question"></textarea>
+      <button class="send" id="send" type="submit" aria-label="Send" disabled>↑</button>
+    </form>
+    <p class="fine" id="fine">AI can make mistakes. Check important details.</p>
+  </div></footer>
+
+  <dialog id="hist"><div class="hd"><b>Past chats</b><button class="ib" type="button" id="histClose">Close</button></div><ul id="histList"></ul></dialog>
+
+  <script type="module">
+    import { auth } from './js/firebase-init.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+    import { JOBS_API } from './jobs-api-url.js';
+
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    let user = null, conversationId = null, busy = false;
+
+    const STARTERS = ["What's the difference between Cubit and Bloc?", 'Explain setState with a small example', 'How do I become a Flutter developer?', 'What will I build in the Bloc crash course?'];
+    $('starters').innerHTML = STARTERS.map(s => `<button class="chip" type="button">${esc(s)}</button>`).join('');
+    $('starters').querySelectorAll('button').forEach((b, i) => b.onclick = () => ask(STARTERS[i]));
+
+    onAuthStateChanged(auth, u => {
+      user = u;
+      if (!u) location.href = 'pages/login.html?next=' + encodeURIComponent(location.pathname + location.search);
+      else { const q = new URLSearchParams(location.search).get('q'); if (q) { history.replaceState(null, '', location.pathname); ask(q); } }
+    });
+
+    async function api(path, opts = {}) {
+      const r = await fetch(JOBS_API + path, { ...opts, headers: { 'content-type': 'application/json', authorization: 'Bearer ' + await user.getIdToken() } });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || d.message || 'Something went wrong. Please try again.');
+      return d;
+    }
+
+    // ---- The small amount of Markdown the tutor writes: ``` code, **bold**, `code`, lists, headings ----
+    const inline = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>');
+    function render(text) {
+      const out = []; let at = 0;
+      const fence = /```([\w+-]*)[^\n]*\n([\s\S]*?)(?:```|$)/g; let m;
+      while ((m = fence.exec(text))) {
+        out.push(prose(text.slice(at, m.index)));
+        out.push(`<div class="code"><span class="lang">${esc(m[1] || 'code')}</span><button type="button" data-copy>Copy</button><pre><code>${esc(m[2].replace(/\s+$/, ''))}</code></pre></div>`);
+        at = fence.lastIndex;
+      }
+      out.push(prose(text.slice(at)));
+      return out.join('');
+    }
+    function prose(t) {
+      const html = []; let list = null;
+      const close = () => { if (list) { html.push(`</${list}>`); list = null; } };
+      for (const raw of t.split('\n')) {
+        const line = raw.trimEnd();
+        let m;
+        if (!line.trim()) { close(); continue; }
+        if ((m = /^\s*[-*•]\s+(.*)$/.exec(line))) { if (list !== 'ul') { close(); html.push('<ul>'); list = 'ul'; } html.push(`<li>${inline(m[1])}</li>`); continue; }
+        if ((m = /^\s*\d+[.)]\s+(.*)$/.exec(line))) { if (list !== 'ol') { close(); html.push('<ol>'); list = 'ol'; } html.push(`<li>${inline(m[1])}</li>`); continue; }
+        close();
+        if ((m = /^#{1,4}\s+(.*)$/.exec(line))) html.push(`<p><b>${inline(m[1])}</b></p>`);
+        else html.push(`<p>${inline(line)}</p>`);
+      }
+      close();
+      return html.join('');
+    }
+
+    const toBottom = () => requestAnimationFrame(() => { $('scroll').scrollTop = $('scroll').scrollHeight; });
+
+    function addMine(text) {
+      $('welcome').hidden = true;
+      const el = document.createElement('div'); el.className = 'msg me';
+      el.innerHTML = `<div class="bub">${esc(text)}</div>`;
+      $('msgs').append(el); toBottom();
+      return el;
+    }
+
+    function addAnswer(text, sources = [], usage = null, truncated = false) {
+      $('welcome').hidden = true;
+      const el = document.createElement('div'); el.className = 'msg ai';
+      const safe = (sources || []).filter(s => /^https:\/\//.test(s.url));
+      const src = safe.length ? `<div class="src"><b>FROM WIDGETRY</b>${safe.map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">📘 ${esc(s.title)}</a>`).join('')}</div>` : '';
+      // "Behind the scenes": what RAG retrieved and what it cost. Handy while learning how the tutor works.
+      const why = usage ? `<details class="why"><summary>Behind the scenes</summary><table>
+          <tr><td>Model</td><td>${esc(usage.model)}</td></tr>
+          <tr><td>Tokens</td><td>${usage.inputTokens} in (rules + facts + passages + history) · ${usage.outputTokens} out</td></tr>
+          <tr><td>History resent</td><td>${usage.contextMessages} earlier messages</td></tr>
+          <tr><td>Passages found</td><td>${(usage.retrieved || []).length ? usage.retrieved.map(r => `${esc(r.title)}${r.section ? ' › ' + esc(r.section) : ''} <i>(${r.score})</i>`).join('<br>') : 'none (answered from general knowledge)'}</td></tr>
+        </table></details>` : '';
+      el.innerHTML = `<div class="bub">${render(text)}</div>${src}<div class="meta"><button class="linkbtn" type="button" data-copyall>Copy answer</button>${truncated ? '<button class="linkbtn" type="button" data-more>Answer was cut short · Continue</button>' : ''}</div>${why}`;
+      el.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard?.writeText(b.parentElement.querySelector('code').textContent); b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy', 1500); });
+      el.querySelector('[data-copyall]').onclick = e => { navigator.clipboard?.writeText(text); e.target.textContent = 'Copied'; };
+      const more = el.querySelector('[data-more]'); if (more) more.onclick = () => ask('Please continue');
+      $('msgs').append(el); toBottom();
+    }
+
+    async function ask(text, existing) {
+      const q = String(text || '').trim();
+      if (!q || busy || !user) return;
+      busy = true; syncSend();
+      const mine = existing || addMine(q);
+      mine.classList.remove('failed'); mine.querySelector('.retry')?.remove();
+      $('thinking').hidden = false; toBottom();
+      try {
+        const d = await api('/chat', { method: 'POST', body: JSON.stringify({ message: q, ...(conversationId ? { conversationId } : {}) }) });
+        conversationId = d.conversationId;
+        addAnswer(d.reply, d.sources, d.usage, d.truncated);
+        if (d.usage?.questionsLeftToday != null) $('fine').textContent = `AI can make mistakes. Check important details. · ${d.usage.questionsLeftToday} questions left today`;
+      } catch (e) {
+        mine.classList.add('failed');
+        const r = document.createElement('button'); r.className = 'linkbtn retry'; r.type = 'button'; r.textContent = `${e.message} Tap to retry.`;
+        r.style.marginTop = '4px'; r.onclick = () => ask(q, mine);
+        mine.append(r);
+      } finally { $('thinking').hidden = true; busy = false; syncSend(); }
+    }
+
+    const syncSend = () => { $('send').disabled = busy || !$('q').value.trim(); };
+    $('q').addEventListener('input', () => { const t = $('q'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 160) + 'px'; syncSend(); });
+    $('q').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('form').requestSubmit(); } });
+    $('form').addEventListener('submit', e => { e.preventDefault(); const v = $('q').value; if (!v.trim() || busy) return; $('q').value = ''; $('q').style.height = 'auto'; ask(v); });
+
+    $('newBtn').onclick = () => { if (busy) return; conversationId = null; $('msgs').innerHTML = ''; $('welcome').hidden = false; $('q').focus(); };
+
+    $('histBtn').onclick = async () => {
+      $('histList').innerHTML = '<li style="padding:12px">Loading…</li>'; $('hist').showModal();
+      try {
+        const { conversations = [] } = await api('/chat/conversations');
+        $('histList').innerHTML = conversations.length ? conversations.map(c => `<li><button type="button" data-id="${Number(c.id)}">${esc(c.title)}<small>${esc(new Date(c.updatedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))}</small></button></li>`).join('') : '<li style="padding:12px">No chats yet.</li>';
+        $('histList').querySelectorAll('button[data-id]').forEach(b => b.onclick = () => openChat(Number(b.dataset.id)));
+      } catch (e) { $('histList').innerHTML = `<li style="padding:12px">${esc(e.message)}</li>`; }
+    };
+    $('histClose').onclick = () => $('hist').close();
+
+    async function openChat(id) {
+      $('hist').close(); if (busy) return;
+      try {
+        const { messages = [] } = await api(`/chat/conversations/${id}/messages`);
+        conversationId = id; $('msgs').innerHTML = '';
+        for (const m of messages) m.role === 'user' ? addMine(m.content) : addAnswer(m.content, m.sources);
+      } catch (e) { alert(e.message); }
+    }
+  </script>
+</body>
+</html>
