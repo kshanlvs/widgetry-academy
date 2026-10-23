@@ -10,7 +10,7 @@ Payments go through Razorpay, so you can pay securely with UPI, debit or credit 
 
 ## Is there a refund?
 
-Yes. If the course isn't right for you, you can get a refund within the first sessions. The exact rules are in our refund policy.
+Yes. Flutter in 10 Days: if the course isn't right for you, you can get a refund within the first sessions. Short courses (Bloc Crash Course, Clean Architecture): a full refund if you cancel before the first session starts, and if we cancel or move a batch you get a full refund or a seat in the next one. The exact rules are in our refund policy.
 
 ## How long is the course?
 
@@ -58,7 +58,7 @@ Yes, a Widgetry Academy certificate with a unique ID you can add to your resume 
 
 ## Will this help my career?
 
-You leave with a real app, a GitHub portfolio and guidance on presenting them in your resume and LinkedIn. We don't promise placements, but you'll have proof you can build, which is what recruiters look for. The Professional Flutter Program (coming soon) goes further for job-readiness.
+You leave with a real app, a GitHub portfolio and guidance on presenting them in your resume and LinkedIn. We don't promise placements, but you'll have proof you can build, which is what recruiters look for. For job-readiness, the Flutter, Bloc & Clean Architecture course goes further, and Widgetry Jobs lists mobile developer jobs.
 
 ## Who teaches the course?
 
@@ -79,6 +79,58 @@ Tap Reserve my seat, fill in the short form (it takes under a minute), then pay 
 ## What is Flutter?
 
 Flutter is Google's free toolkit for building Android, iOS and web apps from one codebase. Apps like Google Pay use it, and it's beginner-friendly: hot reload shows every change on your phone instantly.
+
+## Which course should I choose?
+
+New to coding or to Flutter: start with Flutter in 10 Days. You know Flutter basics and want Bloc quickly: the Bloc Crash Course (one weekend). You want to build apps properly, with OOP, clean architecture, Bloc and tests: Flutter, Bloc & Clean Architecture. Not sure? Tell us your background on WhatsApp and we'll suggest one.
+
+## What is the Bloc Crash Course?
+
+A live, one-weekend course: 2 sessions, about 5 hours. You learn Bloc the way real Flutter teams use it and build a login screen, a product list from an API and a shopping cart, with tests, pushed to your GitHub. The current fee, dates and seats are shown live on the course page.
+
+## What's in the Bloc Crash Course?
+
+Session 1, Bloc foundations: why state management, Cubit, Bloc with events, BlocListener and BlocConsumer, immutable states with Equatable. You build a login screen with loading and error states. Session 2, Bloc in a real app: the repository pattern, a product list from a REST API, a cart shared across screens, testing with bloc_test and mocktail, a folder structure that scales, and reviewing AI-written Bloc code.
+
+## Who is the Bloc Crash Course for?
+
+It's the next step after Flutter basics, not a beginner course. You need widgets, StatefulWidget and setState, and a little async Dart (Future, async/await). You don't need to know Bloc: we start it from zero. Totally new to Flutter? Start with Flutter in 10 Days.
+
+## What is the Flutter, Bloc & Clean Architecture course?
+
+A live course over 3 weekends: 6 sessions, about 15 hours. You learn Dart OOP, clean architecture, Bloc and testing by building a ball-by-ball cricket scorer app, then ship a release APK and a GitHub project you can explain in interviews. The current fee, dates and seats are shown live on the course page.
+
+## What's in the Clean Architecture course?
+
+1) Dart OOP through the game: classes, encapsulation, immutable objects. 2) Polymorphism and the rules of cricket: sealed classes, pattern matching, SOLID, test-first rules. 3) Clean architecture: layers, use cases, repositories, get_it. 4) Bloc in depth: every ball is an event, undo, BlocListener. 5) Scorecard and history, sharing, bloc_test. 6) Ship it: release APK, README, explaining your architecture, reviewing AI-written code.
+
+## Who is the Clean Architecture course for?
+
+People who can already build Flutter screens and want to build them properly. You need Flutter basics and a little Dart; we cover the OOP you need in session 1. You only need cricket basics (runs, overs, wides, wickets). Did the Bloc Crash Course? This goes much further: OOP, architecture, dependency injection, saving data and testing a whole app.
+
+## How do I join a short course session?
+
+Sessions are live online. After you pay, the joining link appears on the course page (sign in with the same account) and in My courses, and we also share the details on WhatsApp.
+
+## Will I get the source code?
+
+Yes. In the Bloc Crash Course and the Clean Architecture course, the full source code of everything we build is shared on GitHub after the course. In Flutter in 10 Days you put your own app on your GitHub as you build it.
+
+## Do you offer mock interviews?
+
+Yes. Book a one-to-one mock interview with a working engineer in the Widgetry app: Settings, then Mock interviews. You pick your track and level, get a scorecard afterwards, and can show the result on your Widgetry profile. Our free interview questions guide helps you prepare.
+
+## Where can I find Flutter jobs?
+
+Widgetry Jobs lists Flutter, Android, iOS and React Native jobs, including fresher, remote and internship roles. You can also make a free ATS-friendly resume and join our talent network so companies can find you.
+
+## Where can I see my courses and receipts?
+
+Log in and open My courses. It lists every course you've bought, with the class link, schedule and brochure, and every order with a receipt you can download as a PDF. In the Widgetry app, it's Settings, then Orders & receipts.
+
+## How do I log in?
+
+Use one account on the website and in the Widgetry app: Continue with Google, or email and password. Forgot your password? Tap Forgot password on the login page and we'll email you a link.
 
 ## Can I teach at Widgetry?
 

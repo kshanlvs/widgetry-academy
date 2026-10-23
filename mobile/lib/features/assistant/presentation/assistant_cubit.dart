@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:widgetry_academy/core/config/app_config.dart';
 import 'package:widgetry_academy/core/usecase/usecase.dart';
 import 'package:widgetry_academy/features/assistant/domain/assistant.dart';
 
@@ -96,9 +97,9 @@ class AssistantCubit extends Cubit<AssistantState> {
         typing: false,
         messages: [
           ...state.messages,
-          BotMessage("I don't have a quick answer for that. Ask Widgetry Tutor, our AI tutor, or message us on WhatsApp.",
+          BotMessage("I don't have an answer for that yet. Ask us on WhatsApp and we'll reply quickly.",
               actions: [
-                ChatAction(label: 'Ask Widgetry Tutor (AI)', type: 'tutor', target: q),
+                if (AppConfig.tutorEnabled) ChatAction(label: 'Ask Widgetry Tutor (AI)', type: 'tutor', target: q),
                 ChatAction(label: 'Ask on WhatsApp', type: 'wa', target: 'Hi! I have a question about ${kb.course}: $q'),
               ]),
         ],

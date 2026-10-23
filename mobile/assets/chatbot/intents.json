@@ -2,12 +2,12 @@
  "source": "public/chatbot.js",
  "course": "Flutter in 10 Days",
  "starters": [
+  "courses",
+  "which",
   "fee",
   "batch",
   "beginner",
-  "demo",
-  "build",
-  "certificate"
+  "demo"
  ],
  "generic": [
   "when",
@@ -144,12 +144,13 @@
    "q": "Is there a refund?",
    "k": [
     "refund",
+    "refund for",
     "money back",
     "cancel",
     "cancellation",
     "return"
    ],
-   "a": "Yes. If the course isn't right for you, you can get a refund within the first sessions. The exact rules are in our refund policy.",
+   "a": "Yes. Flutter in 10 Days: if the course isn't right for you, you can get a refund within the first sessions. Short courses (Bloc Crash Course, Clean Architecture): a full refund if you cancel before the first session starts, and if we cancel or move a batch you get a full refund or a seat in the next one. The exact rules are in our refund policy.",
    "act": [
     {
      "label": "Read refund policy",
@@ -549,7 +550,7 @@
     "hiring",
     "future"
    ],
-   "a": "You leave with a real app, a GitHub portfolio and guidance on presenting them in your resume and LinkedIn. We don't promise placements, but you'll have proof you can build, which is what recruiters look for. The Professional Flutter Program (coming soon) goes further for job-readiness.",
+   "a": "You leave with a real app, a GitHub portfolio and guidance on presenting them in your resume and LinkedIn. We don't promise placements, but you'll have proof you can build, which is what recruiters look for. For job-readiness, the Flutter, Bloc & Clean Architecture course goes further, and Widgetry Jobs lists mobile developer jobs.",
    "act": [],
    "rel": [
     "build",
@@ -695,32 +696,451 @@
   },
   {
    "id": "courses",
-   "q": "Do you have other courses?",
+   "q": "What courses do you offer?",
    "k": [
     "other course",
     "other courses",
     "more courses",
+    "courses",
+    "all courses",
+    "what courses",
+    "which courses",
+    "course list",
+    "list of courses",
+    "your courses",
     "full stack",
     "fullstack",
     "web development",
     "react",
     ".net",
     "javascript",
-    "advanced",
-    "next course",
-    "professional"
+    "next course"
    ],
-   "a": "Flutter in 10 Days is open now. A Full-Stack Web Development course and the Professional Flutter Program are coming soon.",
+   "a": "Three live online courses: Flutter in 10 Days for beginners (10 sessions over 5 weekends), the Bloc Crash Course for people who know Flutter basics (one weekend), and Flutter, Bloc & Clean Architecture, where you build a cricket scorer app (3 weekends). A Full-Stack Web Development course is coming soon.",
    "act": [
     {
-     "label": "See courses",
+     "label": "See all courses",
      "type": "go",
      "target": "courses"
+    },
+    {
+     "label": "Bloc Crash Course",
+     "type": "link",
+     "target": "bloc-crash-course.html"
+    },
+    {
+     "label": "Clean Architecture course",
+     "type": "link",
+     "target": "flutter-clean-architecture-course.html"
     }
    ],
    "rel": [
-    "career",
-    "build"
+    "which",
+    "bloc",
+    "cleanarch"
+   ]
+  },
+  {
+   "id": "which",
+   "q": "Which course should I choose?",
+   "k": [
+    "which course",
+    "which one",
+    "choose",
+    "confused",
+    "suggest",
+    "recommend",
+    "right for me",
+    "best course",
+    "which is better",
+    "where to start",
+    "difference between courses"
+   ],
+   "a": "New to coding or to Flutter: start with Flutter in 10 Days. You know Flutter basics and want Bloc quickly: the Bloc Crash Course (one weekend). You want to build apps properly, with OOP, clean architecture, Bloc and tests: Flutter, Bloc & Clean Architecture. Not sure? Tell us your background on WhatsApp and we'll suggest one.",
+   "act": [
+    {
+     "label": "See all courses",
+     "type": "go",
+     "target": "courses"
+    },
+    {
+     "label": "Ask on WhatsApp",
+     "type": "wa",
+     "target": "Hi! Which Widgetry course is right for me? My background: "
+    }
+   ],
+   "rel": [
+    "courses",
+    "beginner",
+    "bloc"
+   ]
+  },
+  {
+   "id": "bloc",
+   "q": "What is the Bloc Crash Course?",
+   "k": [
+    "bloc course",
+    "bloc crash",
+    "crash course",
+    "bloc",
+    "cubit",
+    "bloc state management",
+    "short course",
+    "weekend course"
+   ],
+   "a": "A live, one-weekend course: 2 sessions, about 5 hours. You learn Bloc the way real Flutter teams use it and build a login screen, a product list from an API and a shopping cart, with tests, pushed to your GitHub. The current fee, dates and seats are shown live on the course page.",
+   "act": [
+    {
+     "label": "See the Bloc Crash Course",
+     "type": "link",
+     "target": "bloc-crash-course.html"
+    },
+    {
+     "label": "Download syllabus",
+     "type": "link",
+     "target": "brochures/bloc-crash-course.pdf"
+    }
+   ],
+   "rel": [
+    "blocsyllabus",
+    "blocwho",
+    "shortjoin"
+   ]
+  },
+  {
+   "id": "blocsyllabus",
+   "q": "What's in the Bloc Crash Course?",
+   "k": [
+    "bloc",
+    "bloc syllabus",
+    "bloc course syllabus",
+    "bloc crash course syllabus",
+    "bloc topics",
+    "bloc sessions",
+    "bloc curriculum",
+    "learn in bloc",
+    "bloc_test",
+    "bloclistener",
+    "blocbuilder",
+    "blocprovider",
+    "mocktail",
+    "repository pattern",
+    "equatable"
+   ],
+   "a": "Session 1, Bloc foundations: why state management, Cubit, Bloc with events, BlocListener and BlocConsumer, immutable states with Equatable. You build a login screen with loading and error states. Session 2, Bloc in a real app: the repository pattern, a product list from a REST API, a cart shared across screens, testing with bloc_test and mocktail, a folder structure that scales, and reviewing AI-written Bloc code.",
+   "act": [
+    {
+     "label": "See the Bloc Crash Course",
+     "type": "link",
+     "target": "bloc-crash-course.html"
+    },
+    {
+     "label": "Download syllabus",
+     "type": "link",
+     "target": "brochures/bloc-crash-course.pdf"
+    }
+   ],
+   "rel": [
+    "blocwho",
+    "code",
+    "shortjoin"
+   ]
+  },
+  {
+   "id": "blocwho",
+   "q": "Who is the Bloc Crash Course for?",
+   "k": [
+    "bloc",
+    "join bloc course",
+    "who can join bloc",
+    "bloc prerequisite",
+    "bloc prerequisites",
+    "bloc for beginners",
+    "before bloc",
+    "know bloc",
+    "bloc course for me",
+    "need for bloc",
+    "new to bloc"
+   ],
+   "a": "It's the next step after Flutter basics, not a beginner course. You need widgets, StatefulWidget and setState, and a little async Dart (Future, async/await). You don't need to know Bloc: we start it from zero. Totally new to Flutter? Start with Flutter in 10 Days.",
+   "act": [
+    {
+     "label": "See the Bloc Crash Course",
+     "type": "link",
+     "target": "bloc-crash-course.html"
+    }
+   ],
+   "rel": [
+    "bloc",
+    "which"
+   ]
+  },
+  {
+   "id": "cleanarch",
+   "q": "What is the Flutter, Bloc & Clean Architecture course?",
+   "k": [
+    "clean architecture",
+    "clean arch",
+    "architecture course",
+    "cricket",
+    "scorer",
+    "intermediate",
+    "oop",
+    "solid principles",
+    "advanced course",
+    "professional"
+   ],
+   "a": "A live course over 3 weekends: 6 sessions, about 15 hours. You learn Dart OOP, clean architecture, Bloc and testing by building a ball-by-ball cricket scorer app, then ship a release APK and a GitHub project you can explain in interviews. The current fee, dates and seats are shown live on the course page.",
+   "act": [
+    {
+     "label": "See the course",
+     "type": "link",
+     "target": "flutter-clean-architecture-course.html"
+    },
+    {
+     "label": "Download syllabus",
+     "type": "link",
+     "target": "brochures/flutter-clean-architecture-course.pdf"
+    }
+   ],
+   "rel": [
+    "cleansyllabus",
+    "cleanwho",
+    "which"
+   ]
+  },
+  {
+   "id": "cleansyllabus",
+   "q": "What's in the Clean Architecture course?",
+   "k": [
+    "clean architecture",
+    "architecture syllabus",
+    "architecture course syllabus",
+    "clean architecture course syllabus",
+    "architecture topics",
+    "architecture sessions",
+    "cricket app syllabus",
+    "learn in clean",
+    "dependency injection",
+    "get_it",
+    "use case",
+    "use cases",
+    "sealed class",
+    "domain layer",
+    "data layer"
+   ],
+   "a": "1) Dart OOP through the game: classes, encapsulation, immutable objects. 2) Polymorphism and the rules of cricket: sealed classes, pattern matching, SOLID, test-first rules. 3) Clean architecture: layers, use cases, repositories, get_it. 4) Bloc in depth: every ball is an event, undo, BlocListener. 5) Scorecard and history, sharing, bloc_test. 6) Ship it: release APK, README, explaining your architecture, reviewing AI-written code.",
+   "act": [
+    {
+     "label": "See the course",
+     "type": "link",
+     "target": "flutter-clean-architecture-course.html"
+    },
+    {
+     "label": "Download syllabus",
+     "type": "link",
+     "target": "brochures/flutter-clean-architecture-course.pdf"
+    }
+   ],
+   "rel": [
+    "cleanwho",
+    "code",
+    "shortjoin"
+   ]
+  },
+  {
+   "id": "cleanwho",
+   "q": "Who is the Clean Architecture course for?",
+   "k": [
+    "clean architecture",
+    "join clean architecture",
+    "who can join clean",
+    "architecture prerequisite",
+    "architecture prerequisites",
+    "cricket rules",
+    "know cricket",
+    "architecture course for me",
+    "before clean architecture",
+    "messy code",
+    "after bloc"
+   ],
+   "a": "People who can already build Flutter screens and want to build them properly. You need Flutter basics and a little Dart; we cover the OOP you need in session 1. You only need cricket basics (runs, overs, wides, wickets). Did the Bloc Crash Course? This goes much further: OOP, architecture, dependency injection, saving data and testing a whole app.",
+   "act": [
+    {
+     "label": "See the course",
+     "type": "link",
+     "target": "flutter-clean-architecture-course.html"
+    }
+   ],
+   "rel": [
+    "cleanarch",
+    "which"
+   ]
+  },
+  {
+   "id": "shortjoin",
+   "q": "How do I join a short course session?",
+   "k": [
+    "joining link",
+    "meeting link",
+    "meet link",
+    "google meet link",
+    "class link",
+    "how to join class",
+    "join the session",
+    "zoom link",
+    "how do i join"
+   ],
+   "a": "Sessions are live online. After you pay, the joining link appears on the course page (sign in with the same account) and in My courses, and we also share the details on WhatsApp.",
+   "act": [
+    {
+     "label": "My courses",
+     "type": "link",
+     "target": "pages/dashboard.html"
+    }
+   ],
+   "rel": [
+    "code",
+    "refund"
+   ]
+  },
+  {
+   "id": "code",
+   "q": "Will I get the source code?",
+   "k": [
+    "source code",
+    "get the code",
+    "code shared",
+    "github repo",
+    "share the code",
+    "code access"
+   ],
+   "a": "Yes. In the Bloc Crash Course and the Clean Architecture course, the full source code of everything we build is shared on GitHub after the course. In Flutter in 10 Days you put your own app on your GitHub as you build it.",
+   "act": [],
+   "rel": [
+    "courses",
+    "career"
+   ]
+  },
+  {
+   "id": "mock",
+   "q": "Do you offer mock interviews?",
+   "k": [
+    "mock interview",
+    "mock interviews",
+    "mock",
+    "interview practice",
+    "practice interview",
+    "interview preparation",
+    "interview prep",
+    "interview questions"
+   ],
+   "a": "Yes. Book a one-to-one mock interview with a working engineer in the Widgetry app: Settings, then Mock interviews. You pick your track and level, get a scorecard afterwards, and can show the result on your Widgetry profile. Our free interview questions guide helps you prepare.",
+   "act": [
+    {
+     "label": "Interview questions guide",
+     "type": "link",
+     "target": "blog/flutter-interview-questions.html"
+    }
+   ],
+   "rel": [
+    "jobs",
+    "career"
+   ]
+  },
+  {
+   "id": "jobs",
+   "q": "Where can I find Flutter jobs?",
+   "k": [
+    "widgetry jobs",
+    "job board",
+    "find jobs",
+    "find a job",
+    "job openings",
+    "openings",
+    "vacancy",
+    "vacancies",
+    "flutter jobs",
+    "android jobs",
+    "ios jobs",
+    "resume builder",
+    "free resume",
+    "post a job"
+   ],
+   "a": "Widgetry Jobs lists Flutter, Android, iOS and React Native jobs, including fresher, remote and internship roles. You can also make a free ATS-friendly resume and join our talent network so companies can find you.",
+   "act": [
+    {
+     "label": "Browse jobs",
+     "type": "link",
+     "target": "jobs.html"
+    },
+    {
+     "label": "Free resume builder",
+     "type": "link",
+     "target": "resume-builder.html"
+    }
+   ],
+   "rel": [
+    "mock",
+    "career"
+   ]
+  },
+  {
+   "id": "myorders",
+   "q": "Where can I see my courses and receipts?",
+   "k": [
+    "my courses",
+    "my course",
+    "receipt",
+    "receipts",
+    "invoice",
+    "my orders",
+    "orders",
+    "purchased",
+    "bought",
+    "dashboard",
+    "my account",
+    "payment proof"
+   ],
+   "a": "Log in and open My courses. It lists every course you've bought, with the class link, schedule and brochure, and every order with a receipt you can download as a PDF. In the Widgetry app, it's Settings, then Orders & receipts.",
+   "act": [
+    {
+     "label": "My courses",
+     "type": "link",
+     "target": "pages/dashboard.html"
+    }
+   ],
+   "rel": [
+    "account",
+    "refund"
+   ]
+  },
+  {
+   "id": "account",
+   "q": "How do I log in?",
+   "k": [
+    "login",
+    "log in",
+    "sign in",
+    "signin",
+    "password",
+    "forgot password",
+    "reset password",
+    "create account",
+    "google login",
+    "account"
+   ],
+   "a": "Use one account on the website and in the Widgetry app: Continue with Google, or email and password. Forgot your password? Tap Forgot password on the login page and we'll email you a link.",
+   "act": [
+    {
+     "label": "Log in",
+     "type": "link",
+     "target": "pages/login.html"
+    }
+   ],
+   "rel": [
+    "myorders",
+    "register"
    ]
   },
   {
@@ -801,7 +1221,7 @@
     "good evening",
     "good afternoon"
    ],
-   "a": "Hi! Ask me anything about Flutter in 10 Days, or pick a question below.",
+   "a": "Hi! Ask me anything about our courses, or pick a question below.",
    "act": [],
    "rel": [
     "fee",

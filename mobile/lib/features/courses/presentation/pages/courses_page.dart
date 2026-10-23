@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:widgetry_academy/core/config/app_config.dart';
 import 'package:widgetry_academy/core/di/injection.dart';
 import 'package:widgetry_academy/core/theme/app_colors.dart';
 import 'package:widgetry_academy/core/theme/app_theme.dart';
@@ -20,9 +21,9 @@ class CoursesPage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         floatingActionButton: FloatingActionButton.extended(
           heroTag: 'ask',
-          onPressed: () => context.push('/tutor'),
-          icon: const Icon(Icons.auto_awesome_rounded, size: 20),
-          label: const Text('Ask Widgetry Tutor'),
+          onPressed: () => context.push(AppConfig.tutorEnabled ? '/tutor' : '/assistant'),
+          icon: Icon(AppConfig.tutorEnabled ? Icons.auto_awesome_rounded : Icons.chat_bubble_outline_rounded, size: 20),
+          label: Text(AppConfig.tutorEnabled ? 'Ask Widgetry Tutor' : 'Ask a question'),
         ),
         body: BlocBuilder<CoursesCubit, CoursesState>(
           builder: (context, s) {

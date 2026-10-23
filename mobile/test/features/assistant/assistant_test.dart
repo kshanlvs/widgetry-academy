@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:widgetry_academy/core/config/app_config.dart';
 import 'package:widgetry_academy/core/result/result.dart';
 import 'package:widgetry_academy/core/usecase/usecase.dart';
 import 'package:widgetry_academy/features/assistant/data/assistant_data.dart';
@@ -41,6 +42,14 @@ void main() {
       expect(answer('is there a refund'), 'refund');
       expect(answer('Do I need a MacBook?'), 'mac');
       expect(answer('can I pay with UPI'), 'pay');
+      // Every course has its own answers
+      expect(answer('What courses do you offer?'), 'courses');
+      expect(answer('Tell me about the Bloc crash course'), 'bloc');
+      expect(answer('bloc course syllabus'), 'blocsyllabus');
+      expect(answer('clean architecture course syllabus'), 'cleansyllabus');
+      expect(answer('do I need to know cricket'), 'cleanwho');
+      expect(answer('which course should I take'), 'which');
+      expect(answer('where is my receipt'), 'myorders');
     });
 
     test('a real question beats a greeting', () {
@@ -96,7 +105,7 @@ void main() {
     );
 
     blocTest<AssistantCubit, AssistantState>(
-      'unknown question offers the AI tutor and WhatsApp, with the question filled in',
+      'unknown question offers WhatsApp with the question filled in (and the AI tutor once it is switched on)',
       build: build,
       act: (c) async {
         await c.start();
@@ -104,7 +113,7 @@ void main() {
       },
       verify: (c) {
         final last = c.state.messages.last as BotMessage;
-        expect(last.actions.map((a) => a.type), ['tutor', 'wa']);
+        expect(last.actions.map((a) => a.type), [if (AppConfig.tutorEnabled) 'tutor', 'wa']);
         expect(last.actions.every((a) => a.target.contains('asdfgh qwerty')), isTrue);
       },
     );

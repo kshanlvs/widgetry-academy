@@ -23,6 +23,9 @@ abstract final class AppConfig {
   static const String businessOwner = 'Kishan Kumar Sharma';
   static const String businessAddress = 'Kolkata, West Bengal, India';
   static const String businessEmail = 'kishantechdev@gmail.com';
+  /// Widgetry Tutor (AI, /tutor). Hidden for now: set true to show it in the Courses tab and Settings.
+  static const bool tutorEnabled = false;
+
   static const String udyam = 'UDYAM-WB-22-0009252';
 
   /// Setup guide students follow before Day 1.

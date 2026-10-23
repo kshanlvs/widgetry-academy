@@ -66,7 +66,19 @@ class _AssistantViewState extends State<_AssistantView> {
       case 'wa':
         _links.openExternal('https://wa.me/${AppConfig.whatsappNumber}?text=${Uri.encodeComponent(a.target)}');
       case 'link':
-        _links.openInApp('${AppConfig.siteUrl}/${a.target}');
+        // Website pages that exist in the app open the app screen; anything else opens in the in-app browser
+        final short = RegExp(r'^([a-z0-9-]+-course)\.html').firstMatch(a.target);
+        if (short != null) {
+          context.push('/short-courses/${short.group(1)}');
+        } else if (a.target.startsWith('pages/dashboard.html')) {
+          context.push('/payments');
+        } else if (a.target.startsWith('pages/login.html')) {
+          context.push('/sign-in');
+        } else if (a.target.startsWith('jobs.html')) {
+          context.go('/jobs');
+        } else {
+          _links.openInApp('${AppConfig.siteUrl}/${a.target}');
+        }
       default:
         final courses = context.read<CoursesCubit>().state.courses;
         final main = courses.where((c) => c.flagship && c.isOpen).firstOrNull ?? courses.where((c) => c.isOpen).firstOrNull;
