@@ -96,7 +96,7 @@ void main() {
     );
 
     blocTest<AssistantCubit, AssistantState>(
-      'unknown question offers WhatsApp with the question filled in',
+      'unknown question offers the AI tutor and WhatsApp, with the question filled in',
       build: build,
       act: (c) async {
         await c.start();
@@ -104,8 +104,8 @@ void main() {
       },
       verify: (c) {
         final last = c.state.messages.last as BotMessage;
-        expect(last.actions.single.type, 'wa');
-        expect(last.actions.single.target, contains('asdfgh qwerty'));
+        expect(last.actions.map((a) => a.type), ['tutor', 'wa']);
+        expect(last.actions.every((a) => a.target.contains('asdfgh qwerty')), isTrue);
       },
     );
 

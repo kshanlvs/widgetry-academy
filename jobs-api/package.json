@@ -15,7 +15,8 @@
     "migrate": "node dist/migrate.js",
     "migrate:dev": "tsx src/migrate.ts",
     "test": "tsx --test test/*.test.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "knowledge": "node scripts/build-knowledge.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.1.0",

@@ -89,12 +89,17 @@ export const workshopsRouter = Router();
 
 /** Short courses to show in the app: open ones first, then ones with dates coming soon. */
 workshopsRouter.get("/workshops", wrap(async (_req, res) => {
+  res.set("Cache-Control", "public, max-age=60");
+  res.json({ items: await publicWorkshops() });
+}));
+
+/** Open short courses, then ones with dates coming soon, as shown to students (also used by the AI tutor). */
+export async function publicWorkshops() {
   const rows = await query<any>("SELECT * FROM workshops WHERE status IN ('open','draft') ORDER BY (status = 'open') DESC, COALESCE(starts_at, '2999-01-01'), id");
   const items = [];
   for (const w of rows) items.push(workshopOut(w, await seatInfo(w)));
-  res.set("Cache-Control", "public, max-age=60");
-  res.json({ items });
-}));
+  return items;
+}
 
 /** Course details for the course page. Signed in: also your enrolment, and the joining link once paid. */
 workshopsRouter.get("/workshops/:slug", wrap(async (req, res) => {

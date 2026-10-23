@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
-import 'package:widgetry_academy/features/workshops/presentation/workshop_page.dart';
 import 'package:widgetry_academy/features/assistant/presentation/assistant_page.dart';
 import 'package:widgetry_academy/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:widgetry_academy/features/auth/presentation/pages/sign_in_page.dart';
@@ -12,6 +11,12 @@ import 'package:widgetry_academy/features/blog/presentation/blog_page.dart';
 import 'package:widgetry_academy/features/courses/presentation/pages/course_detail_page.dart';
 import 'package:widgetry_academy/features/courses/presentation/pages/courses_page.dart';
 import 'package:widgetry_academy/features/courses/presentation/pages/registration_page.dart';
+import 'package:widgetry_academy/features/interviews/presentation/book_interview_page.dart';
+import 'package:widgetry_academy/features/interviews/presentation/interview_detail_page.dart';
+import 'package:widgetry_academy/features/interviews/presentation/interviewer_page.dart';
+import 'package:widgetry_academy/features/interviews/presentation/interviews_cubits.dart';
+import 'package:widgetry_academy/features/interviews/presentation/interviews_page.dart';
+import 'package:widgetry_academy/features/interviews/presentation/scorecard_form_page.dart';
 import 'package:widgetry_academy/features/jobs/presentation/pages/job_detail_page.dart';
 import 'package:widgetry_academy/features/jobs/presentation/pages/jobs_page.dart';
 import 'package:widgetry_academy/features/jobs/presentation/pages/saved_jobs_page.dart';
@@ -21,12 +26,8 @@ import 'package:widgetry_academy/features/profile/presentation/pages/profile_edi
 import 'package:widgetry_academy/features/profile/presentation/pages/profile_page.dart';
 import 'package:widgetry_academy/features/profile/presentation/pages/resume_page.dart';
 import 'package:widgetry_academy/features/settings/settings_page.dart';
-import 'package:widgetry_academy/features/interviews/presentation/book_interview_page.dart';
-import 'package:widgetry_academy/features/interviews/presentation/interview_detail_page.dart';
-import 'package:widgetry_academy/features/interviews/presentation/interviewer_page.dart';
-import 'package:widgetry_academy/features/interviews/presentation/interviews_cubits.dart';
-import 'package:widgetry_academy/features/interviews/presentation/interviews_page.dart';
-import 'package:widgetry_academy/features/interviews/presentation/scorecard_form_page.dart';
+import 'package:widgetry_academy/features/tutor/presentation/tutor_page.dart';
+import 'package:widgetry_academy/features/workshops/presentation/workshop_page.dart';
 
 /// All routes in one place. Four tabs (Jobs, Courses, Guides, Profile) keep their own history.
 /// Screens that need an account send signed-out users to /sign-in and bring them back after.
@@ -36,7 +37,7 @@ class AppRouter {
   final AuthCubit _auth;
 
   static final rootKey = GlobalKey<NavigatorState>();
-  static const _needsAccount = ['/profile/edit', '/profile/resume', '/payments'];
+  static const _needsAccount = ['/profile/edit', '/profile/resume', '/payments', '/tutor'];
 
   late final GoRouter router = GoRouter(
     navigatorKey: rootKey,
@@ -95,6 +96,7 @@ class AppRouter {
       GoRoute(path: '/sign-in', parentNavigatorKey: rootKey, builder: (_, s) => SignInPage(redirectTo: s.uri.queryParameters['from'])),
       GoRoute(path: '/settings', parentNavigatorKey: rootKey, builder: (_, __) => const SettingsPage()),
       GoRoute(path: '/assistant', parentNavigatorKey: rootKey, builder: (_, __) => const AssistantPage()),
+      GoRoute(path: '/tutor', parentNavigatorKey: rootKey, builder: (_, s) => TutorPage(question: s.uri.queryParameters['q'])),
       GoRoute(path: '/payments', parentNavigatorKey: rootKey, builder: (_, __) => const PaymentsPage()),
       GoRoute(path: '/short-courses/:slug', parentNavigatorKey: rootKey, builder: (_, s) => WorkshopPage(slug: s.pathParameters['slug']!)),
       GoRoute(

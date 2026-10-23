@@ -20,9 +20,9 @@ class CoursesPage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         floatingActionButton: FloatingActionButton.extended(
           heroTag: 'ask',
-          onPressed: () => context.push('/assistant'),
-          icon: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
-          label: const Text('Ask a question'),
+          onPressed: () => context.push('/tutor'),
+          icon: const Icon(Icons.auto_awesome_rounded, size: 20),
+          label: const Text('Ask Widgetry Tutor'),
         ),
         body: BlocBuilder<CoursesCubit, CoursesState>(
           builder: (context, s) {

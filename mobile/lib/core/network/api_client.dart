@@ -15,7 +15,9 @@ class ApiClient {
   Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? query}) =>
       _send(() => _dio.get<Object?>(path, queryParameters: _clean(query)));
 
-  Future<Map<String, dynamic>> post(String path, {Object? body}) => _send(() => _dio.post<Object?>(path, data: body));
+  /// [timeout] overrides the usual wait for slow calls (e.g. the AI tutor, which thinks before it answers).
+  Future<Map<String, dynamic>> post(String path, {Object? body, Duration? timeout}) =>
+      _send(() => _dio.post<Object?>(path, data: body, options: timeout == null ? null : Options(receiveTimeout: timeout)));
 
   Future<Map<String, dynamic>> put(String path, {Object? body}) => _send(() => _dio.put<Object?>(path, data: body));
 

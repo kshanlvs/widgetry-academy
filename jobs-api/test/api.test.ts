@@ -1138,3 +1138,51 @@ test("AI tutor chat: history is resent, usage is returned, other users can't rea
     assert.equal((await call("POST", "/chat", { conversationId: a.body.conversationId, message: "x" }, other)).status, 404);
   } finally { setChatModel(null); }
 });
+
+test("AI tutor RAG: Widgetry passages and live fees go into the prompt, sources come back and are saved", async () => {
+  const { setChatModel } = await import("../src/chat.js");
+  const { clearFactsCache } = await import("../src/facts.js");
+  clearFactsCache();
+  const systems: string[] = [];
+  setChatModel(async (system, messages) => { systems.push(system); return { text: `answer ${messages.length}`, stopReason: "end_turn", inputTokens: 500, outputTokens: 40 }; });
+  try {
+    const me = "dev:rag1:rag@test.dev:Rag";
+    const a = await call("POST", "/chat", { message: "What is the difference between Cubit and Bloc?" }, me);
+    assert.equal(a.status, 200);
+    assert.ok(a.body.sources.some((s: any) => s.url.endsWith("/blog/flutter-bloc-tutorial.html")), "the Bloc tutorial is a source");
+    assert.match(systems[0], /<reference id="1"/);
+    assert.match(systems[0], /Cubit vs Bloc/, "the matching section is pasted into the prompt");
+    assert.match(systems[0], /<academy_facts>[\s\S]*Flutter in 10 Days[\s\S]*₹[\d,]+[\s\S]*<\/academy_facts>/, "live fees are in the prompt");
+    assert.ok(a.body.usage.retrieved.length > 0 && a.body.usage.retrieved.length <= 4);
+
+    // A follow-up with no topic words still finds the topic from the previous question
+    const b = await call("POST", "/chat", { conversationId: a.body.conversationId, message: "Show me a short example please" }, me);
+    assert.ok(b.body.sources.some((s: any) => s.url.includes("flutter-bloc-tutorial")));
+
+    // Nothing relevant in our material: no passages, no sources (Claude answers from its own knowledge, or declines)
+    const c = await call("POST", "/chat", { message: "How do I bake a pizza?" }, me);
+    assert.deepEqual(c.body.sources, []);
+    assert.doesNotMatch(systems[2], /<reference id=/);
+
+    // Sources are saved with the answer, so a reopened chat still shows them
+    const msgs = await call("GET", `/chat/conversations/${a.body.conversationId}/messages`, undefined, me);
+    assert.deepEqual(msgs.body.messages[1].sources, a.body.sources);
+    assert.deepEqual(msgs.body.messages[0].sources, [], "questions have no sources");
+  } finally { setChatModel(null); }
+});
+
+test("RAG retrieval: chunks keep code whole, BM25 ranks the right section, unrelated questions find nothing", async () => {
+  const { KnowledgeIndex, chunkDocument, tokens } = await import("../src/rag.js");
+  const doc = `---\ntitle: "State guide"\nurl: "https://x.test/state"\n---\nIntro text.\n\n## Cubit vs Bloc\n\nCubit uses methods. Bloc uses events.\n\n## Testing\n\n${"Long paragraph about tests. ".repeat(40)}\n\n\`\`\`dart\nvoid main() {\n\n  print('a');\n}\n\`\`\`\n`;
+  const chunks = chunkDocument(doc, "x");
+  assert.equal(chunks[0].section, null, "the intro is its own chunk");
+  assert.ok(chunks.some(c => c.section === "Cubit vs Bloc"));
+  assert.ok(chunks.some(c => /```dart[\s\S]*print\('a'\);\n}\n```/.test(c.text)), "a code block is never split");
+  assert.deepEqual(tokens("Testing the States of a Bloc"), ["test", "state", "bloc"]);
+
+  const other = `---\ntitle: "Jobs"\nurl: "https://x.test/jobs"\n---\n## Salaries\n\nFlutter developers in India earn well.`;
+  const kb = new KnowledgeIndex([{ name: "a", raw: doc }, { name: "b", raw: other }]);
+  assert.equal(kb.search("cubit or bloc which one", 4, 0.5)[0].chunk.section, "Cubit vs Bloc");
+  assert.equal(kb.search("salary of flutter developer", 4, 0.5)[0].chunk.url, "https://x.test/jobs");
+  assert.deepEqual(kb.search("pizza recipe", 4, 0.5), []);
+});

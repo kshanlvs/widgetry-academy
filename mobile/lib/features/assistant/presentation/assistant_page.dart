@@ -61,6 +61,8 @@ class _AssistantViewState extends State<_AssistantView> {
   /// Website actions mapped to app screens: course sections open the course, pages open in the in-app browser.
   void _run(ChatAction a) {
     switch (a.type) {
+      case 'tutor':
+        context.push('/tutor?q=${Uri.encodeQueryComponent(a.target)}');
       case 'wa':
         _links.openExternal('https://wa.me/${AppConfig.whatsappNumber}?text=${Uri.encodeComponent(a.target)}');
       case 'link':
