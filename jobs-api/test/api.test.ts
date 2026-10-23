@@ -42,6 +42,7 @@ before(async () => {
   for (const t of ["mock_scorecards", "mock_bookings", "interview_slots", "interviewers"]) await pool.query(`DELETE FROM ${t}`);
   await pool.query("DELETE FROM workshop_enrollments");
   await pool.query("DELETE FROM workshops WHERE slug <> 'bloc-crash-course'");
+  await pool.query("DELETE FROM chat_messages"); await pool.query("DELETE FROM chat_conversations");
   await pool.query("UPDATE workshops SET status = 'draft', starts_at = NULL, price = 99900, early_price = 79900, early_seats = 15, early_until = NULL, seats = 40, meeting_link = NULL, brochure = 'brochures/bloc-crash-course.pdf' WHERE slug = 'bloc-crash-course'");
   server = createApp().listen(0);
   await new Promise(r => server.once("listening", r));
@@ -1085,4 +1086,35 @@ test("city names: other names and Delhi NCR", async () => {
   assert.deepEqual(cityNames("bangalore"), ["Bengaluru", "Bangalore"]);
   assert.deepEqual(cityNames("Delhi NCR"), ["Delhi", "Noida", "Gurugram", "Gurgaon", "Ghaziabad", "Faridabad"]);
   assert.deepEqual(cityNames("Noida"), ["Noida"]);
+});
+
+test("AI tutor chat: history is resent, usage is returned, other users can't read it", async () => {
+  const { setChatModel } = await import("../src/chat.js");
+  const seen: number[] = [];
+  setChatModel(async (_system, messages) => { seen.push(messages.length); return { text: `answer ${messages.length}`, stopReason: "end_turn", inputTokens: 100 + messages.length, outputTokens: 20 }; });
+  try {
+    const me = "dev:chat1:chat@test.dev:Chat", other = "dev:chat2:other@test.dev:Other";
+    assert.equal((await call("POST", "/chat", { message: "hi" })).status, 401, "sign-in needed");
+    assert.equal((await call("POST", "/chat", { message: "  " }, me)).status, 400, "empty question");
+
+    const a = await call("POST", "/chat", { message: "What is a widget?" }, me);
+    assert.equal(a.status, 200);
+    assert.equal(a.body.reply, "answer 1");
+    assert.equal(a.body.usage.contextMessages, 0, "first question: nothing earlier to resend");
+    assert.equal(a.body.usage.inputTokens, 101);
+
+    const b = await call("POST", "/chat", { conversationId: a.body.conversationId, message: "And a StatefulWidget?" }, me);
+    assert.equal(b.body.usage.contextMessages, 2, "the earlier question and answer are resent");
+    assert.deepEqual(seen, [1, 3]);
+    assert.equal(b.body.usage.questionsLeftToday, a.body.usage.questionsLeftToday - 1, "one question fewer left");
+
+    const list = await call("GET", "/chat/conversations", undefined, me);
+    assert.equal(list.body.conversations.length, 1);
+    const msgs = await call("GET", `/chat/conversations/${a.body.conversationId}/messages`, undefined, me);
+    assert.deepEqual(msgs.body.messages.map((m: any) => m.role), ["user", "assistant", "user", "assistant"]);
+    assert.equal(msgs.body.messages[3].inputTokens, 103);
+
+    assert.equal((await call("GET", `/chat/conversations/${a.body.conversationId}/messages`, undefined, other)).status, 404, "someone else's chat");
+    assert.equal((await call("POST", "/chat", { conversationId: a.body.conversationId, message: "x" }, other)).status, 404);
+  } finally { setChatModel(null); }
 });

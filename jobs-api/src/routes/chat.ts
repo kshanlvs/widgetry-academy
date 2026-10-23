@@ -68,6 +68,16 @@ chatRouter.post("/chat", requireAuth, wrap(async (req, res) => {
     reply: reply.text,
     // "max_tokens" means the answer was cut off by our length cap; the app can say "ask me to continue"
     truncated: reply.stopReason === "max_tokens",
+    // What happened behind the scenes, for learning and cost tracking
+    usage: {
+      model: config.anthropic.model,
+      contextMessages: history.length,      // earlier messages resent with this question (the model has no memory)
+      inputTokens: reply.inputTokens,       // everything sent: system prompt + history + question
+      outputTokens: reply.outputTokens,     // the answer
+      maxTokens: config.anthropic.maxTokens,
+      stopReason: reply.stopReason,
+      questionsLeftToday: Math.max(0, config.anthropic.dailyLimit - Number(n) - 1),
+    },
   });
 }));
 
@@ -81,6 +91,6 @@ chatRouter.get("/chat/conversations", requireAuth, wrap(async (req, res) => {
 chatRouter.get("/chat/conversations/:id/messages", requireAuth, wrap(async (req, res) => {
   const id = idParam.parse(req.params.id);
   await ownConversation(id, req.user!.uid);
-  const rows = await query("SELECT role, content, created_at AS createdAt FROM chat_messages WHERE conversation_id = ? ORDER BY created_at, id", [id]);
+  const rows = await query("SELECT role, content, input_tokens AS inputTokens, output_tokens AS outputTokens, created_at AS createdAt FROM chat_messages WHERE conversation_id = ? ORDER BY created_at, id", [id]);
   res.json({ messages: rows });
 }));
