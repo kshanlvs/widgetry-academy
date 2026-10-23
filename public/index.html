@@ -785,6 +785,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 .gbtn:hover{background:#f3f4f6}.gbtn[disabled]{opacity:.6;cursor:wait}
 #regStart .btn{width:100%;text-align:center}
 .navout{color:var(--accent)!important;font-weight:600!important}
+.navlinks a[hidden]{display:none!important}
 .linkbtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
 .regdlg{border:0;padding:0;border-radius:22px;width:min(460px,calc(100% - 24px));max-height:calc(100dvh - 24px);background:var(--deep);color:var(--deep-fg);box-shadow:0 40px 100px -20px rgba(0,0,0,.6)}
 .regdlg::backdrop{background:rgba(4,19,14,.62);backdrop-filter:blur(3px)}
@@ -823,6 +824,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
       <a href="resume-builder.html">Free resume</a>
       <a href="#fees">Fees</a>
       <a href="#faq">FAQ</a>
+      <a href="pages/dashboard.html" id="navMine" class="navout" hidden>My courses</a>
       <a href="#" id="navOut" class="navout" hidden>Log out</a>
       <a class="btn" href="#register">Reserve seat</a>
     </div>
@@ -1595,7 +1597,7 @@ function finish(msg){
 function render(){
   const r = me.reg;
   document.body.dataset.registered = r ? "1" : "0";
-  const no = $("navOut"); no.hidden = !me.user;
+  const no = $("navOut"); no.hidden = !me.user; $("navMine").hidden = !me.user;
   if (me.user) { const first = ((r && r.name) || me.user.displayName || "").split(" ")[0]; no.textContent = "Log out"; no.title = first ? "Signed in as " + first : ""; }
   $("regStart").hidden = !!r; $("pDone").hidden = !r;
   if (r) { $("doneName").textContent = r.name || ""; $("donePhone").textContent = r.phone || ""; $("doneCourse").textContent = r.batch || "Flutter in 10 Days"; }
