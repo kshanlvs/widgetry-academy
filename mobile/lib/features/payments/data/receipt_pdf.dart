@@ -16,7 +16,10 @@ class PdfReceiptBuilder implements ReceiptBuilder {
   static final _line = PdfColor.fromInt(0xFFE2E8E4);
 
   @override
-  Future<List<int>> build(PaymentHistory h, Receipt r) async {
+  Future<List<int>> build(PaymentHistory h, PurchaseOrder o) async {
+    final r = o.asReceipt;
+    // The fee summary (paid so far, balance) only makes sense on a main course fee receipt
+    final feeSummary = o.kind == 'course_fee' && h.total != null;
     pw.Font? regular, bold;
     try {
       regular = await PdfGoogleFonts.robotoRegular();
@@ -54,7 +57,7 @@ class PdfReceiptBuilder implements ReceiptBuilder {
             ]),
           ),
           pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.end, children: [
-            pw.Text('PAYMENT RECEIPT', style: st(size: 11, b: true, color: _green)),
+            pw.Text(o.isPaid ? 'PAYMENT RECEIPT' : o.status == 'refund_pending' ? 'PAYMENT RECEIPT · REFUND DUE' : 'PAYMENT RECEIPT · REFUNDED', style: st(size: 11, b: true, color: _green)),
             pw.SizedBox(height: 4),
             pw.Text(Fmt.date(paid), style: st(size: 9, color: _muted)),
           ]),
@@ -73,7 +76,7 @@ class PdfReceiptBuilder implements ReceiptBuilder {
           decoration: pw.BoxDecoration(border: pw.Border.all(color: _line), borderRadius: pw.BorderRadius.circular(6)),
           child: pw.Column(children: [
             pw.Row(children: [
-              pw.Expanded(child: pw.Text('${h.course}: ${r.title}', style: st(b: true, size: 11))),
+              pw.Expanded(child: pw.Text('${o.title}: ${o.item}', style: st(b: true, size: 11))),
               pw.Text(money(r.amount), style: st(b: true, size: 11)),
             ]),
             pw.SizedBox(height: 10),
@@ -83,10 +86,11 @@ class PdfReceiptBuilder implements ReceiptBuilder {
             if (r.orderId != r.paymentId) row('Order ID', r.orderId),
             row('Paid by', r.paidWith),
             row('Date', Fmt.date(paid)),
+            if (!o.isPaid) row('Status', o.status == 'refund_pending' ? 'Refund on its way' : 'Refunded'),
           ]),
         ),
         pw.SizedBox(height: 18),
-        if (h.total != null) ...[
+        if (feeSummary) ...[
           row('Course fee', money(h.total!)),
           row('Paid so far', money(h.amountPaid)),
           row('Balance due', money(h.due ?? (h.total! - h.amountPaid).clamp(0, h.total!)), strong: true),

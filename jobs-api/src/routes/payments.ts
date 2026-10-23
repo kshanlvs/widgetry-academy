@@ -8,6 +8,7 @@ import { requireAuth } from "../auth.js";
 import { fulfilMock } from "../mock.js";
 import { fulfilWorkshop } from "./workshops.js";
 import { INDIA_STATES, PLAY_PRODUCTS, planForProduct, playAccountId, playApi, playConfig } from "../play.js";
+import { purchasesFor } from "../purchases.js";
 import { COURSE, PLAN_TITLE, bookingAmount, coursePrice, fulfil, gateway, paymentsEnabled, plansFor, razorpayConfig, reconcile, store, validPaymentSignature, validWebhookSignature } from "../payments.js";
 
 /**
@@ -125,6 +126,12 @@ paymentsRouter.post("/payments/webhook", wrap(async (req, res) => {
     await query("UPDATE payments SET status = 'failed' WHERE order_id = ? AND status = 'created'", [p.order_id]);
   }
   res.json({ ok: true }); // always 200 for events we don't use, so Razorpay doesn't retry them
+}));
+
+/** Everything the signed-in person has bought, all kinds: enrolled courses and every order, with receipt details.
+ *  Read by the website dashboard and the app's Orders & receipts. */
+paymentsRouter.get("/me/purchases", requireAuth, wrap(async (req, res) => {
+  res.json(await purchasesFor(req.user!.uid));
 }));
 
 /** The signed-in student's fee summary and receipts (payments made in the app), newest first. */

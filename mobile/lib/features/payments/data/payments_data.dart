@@ -49,6 +49,50 @@ class PaymentsRepositoryImpl implements PaymentsRepository {
       });
 
   @override
+  Future<Result<Purchases>> purchases() => guard(() async => purchasesFromJson(await _api.get('/me/purchases')));
+
+  /// Unknown kinds and statuses are kept as they are, so the server can add new ones.
+  static Purchases purchasesFromJson(Map<String, dynamic> j) {
+    int n(Object? v) => (v as num?)?.round() ?? 0;
+    String? str(Object? v) => v == null || '$v'.isEmpty ? null : '$v';
+    DateTime? at(Object? v) => v == null ? null : DateTime.tryParse('$v')?.toLocal();
+    return Purchases(
+      courses: [
+        for (final c in (j['courses'] as List? ?? const []).whereType<Map<String, dynamic>>())
+          EnrolledCourse(
+            kind: '${c['kind'] ?? 'short_course'}',
+            slug: '${c['slug'] ?? ''}',
+            title: '${c['title'] ?? 'Course'}',
+            status: '${c['status'] ?? 'enrolled'}',
+            amountPaid: n(c['amountPaid']),
+            startsAt: at(c['startsAt']),
+            schedule: str(c['schedule']),
+            meetingLink: str(c['meetingLink']),
+            brochureUrl: str(c['brochureUrl']),
+            appPath: str(c['appPath']),
+          ),
+      ],
+      orders: [
+        for (final o in (j['orders'] as List? ?? const []).whereType<Map<String, dynamic>>())
+          PurchaseOrder(
+            id: '${o['id']}',
+            kind: '${o['kind'] ?? 'course_fee'}',
+            title: '${o['title'] ?? 'Course'}',
+            item: '${o['item'] ?? 'Course fee'}',
+            amount: n(o['amount']),
+            status: '${o['status'] ?? 'paid'}',
+            plan: str(o['plan']),
+            orderId: str(o['orderId']),
+            paymentId: str(o['paymentId']),
+            method: str(o['method']),
+            paidAt: at(o['paidAt']),
+            appPath: str(o['appPath']),
+          ),
+      ],
+    );
+  }
+
+  @override
   Future<Result<PaymentOptions>> options() => guard(() async {
         final j = await _api.get('/payments/plans');
         final a = j['android'] as Map?;

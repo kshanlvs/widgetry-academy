@@ -509,6 +509,26 @@ test("course payments: plans from the server, order, signature check, idempotent
   assert.deepEqual(mine.body.summary, { status: "paid", plan: "booking", amountPaid: 4999, total: 4999, due: 0, name: "Stu", email: "stu@test.dev", phone: "+919876543210" });
   assert.deepEqual(mine.body.items.map((i: any) => [i.title, i.amount]).sort(), [["Balance payment", 2499], ["Booking (part payment)", 2500]]);
 
+  // Everything bought, in one list: the course fee, a short course and a mock interview
+  await pool.query("DELETE FROM workshop_enrollments WHERE uid = 'stu1'"); await pool.query("DELETE FROM mock_bookings WHERE uid = 'stu1'");
+  const [[bloc]] = await pool.query("SELECT id, title FROM workshops WHERE slug = 'bloc-crash-course'") as any;
+  await pool.query("INSERT INTO workshop_enrollments (workshop_id, uid, amount, early, status, order_id, payment_id, method, paid_at) VALUES (?, 'stu1', 79900, 1, 'confirmed', 'order_W_p1', 'pay_W_p1', 'upi', NOW() + INTERVAL 1 SECOND)", [bloc.id]);
+  await pool.query(`INSERT INTO mock_bookings (uid, slot_id, interviewer_uid, starts_at, duration_min, track, level, format, amount, status, order_id, payment_id, method, paid_at)
+                    VALUES ('stu1', 1, 'iv1', NOW() + INTERVAL 2 DAY, 45, 'flutter', 'mid', 'technical', 99900, 'refund_due', 'order_M_p1', 'pay_M_p1', 'card', NOW() + INTERVAL 2 SECOND)`);
+  const all = await call("GET", "/me/purchases", undefined, STU);
+  assert.equal(all.status, 200);
+  assert.deepEqual(all.body.courses.map((c: any) => [c.slug, c.status]), [["flutter-in-10-days", "enrolled"], ["bloc-crash-course", "enrolled"]]);
+  assert.equal(all.body.courses[1].title, bloc.title, "short course names come from the database");
+  // Newest first (the two course fees were paid in the same second, so their order is not checked)
+  assert.deepEqual(all.body.orders.slice(0, 2).map((o: any) => [o.kind, o.status, o.amount]), [["mock_interview", "refund_pending", 999], ["short_course", "paid", 799]]);
+  assert.deepEqual(all.body.orders.slice(2).map((o: any) => [o.kind, o.status, o.amount]).sort(), [["course_fee", "paid", 2499], ["course_fee", "paid", 2500]]);
+  assert.equal(all.body.orders[1].appPath, "/short-courses/bloc-crash-course");
+  assert.deepEqual((await call("GET", "/me/purchases", undefined, OTHER)).body, { courses: [], orders: [] }, "only your own purchases");
+  assert.equal((await call("GET", "/me/purchases")).status, 401);
+  // /payments/mine stays the main course fee summary only (older apps label every item as that course)
+  assert.deepEqual((await call("GET", "/payments/mine", undefined, STU)).body.items.map((i: any) => i.amount).sort(), [2499, 2500]);
+  await pool.query("DELETE FROM workshop_enrollments WHERE uid = 'stu1'"); await pool.query("DELETE FROM mock_bookings WHERE uid = 'stu1'");
+
   // Recovery: the app closed after paying and the webhook never came. The next visit finds the payment, so nobody pays twice.
   const STU3 = "dev:stu3:three@test.dev:Three";
   regs.set("stu3", { name: "Three", payStatus: "pending", amountPaid: 0 });

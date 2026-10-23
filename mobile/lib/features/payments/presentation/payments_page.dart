@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
@@ -19,27 +20,44 @@ import 'package:widgetry_academy/features/courses/presentation/cubit/courses_cub
 import 'package:widgetry_academy/features/payments/domain/payments.dart';
 
 class PaymentsState extends Equatable {
-  const PaymentsState({this.loading = true, this.history, this.error});
+  const PaymentsState({this.loading = true, this.history, this.purchases, this.error});
   final bool loading;
+  /// Main course fee summary and the buyer's details.
   final PaymentHistory? history;
+  /// Every order, all kinds. Null if it couldn't be loaded (the main course receipts still show).
+  final Purchases? purchases;
   final String? error;
+
+  /// All orders, newest first.
+  List<PurchaseOrder> get orders =>
+      purchases?.orders ??
+      [
+        for (final r in history?.items ?? const <Receipt>[])
+          PurchaseOrder(id: 'course_fee-${r.orderId}', kind: 'course_fee', title: history!.course, item: r.title, amount: r.amount, plan: r.plan, orderId: r.orderId, paymentId: r.paymentId.isEmpty ? null : r.paymentId, method: r.method, paidAt: r.paidAt),
+      ];
+
   @override
-  List<Object?> get props => [loading, history, error];
+  List<Object?> get props => [loading, history, purchases, error];
 }
 
 @injectable
 class PaymentsCubit extends Cubit<PaymentsState> {
-  PaymentsCubit(this._get) : super(const PaymentsState());
+  PaymentsCubit(this._get, this._purchases) : super(const PaymentsState());
   final GetPaymentHistory _get;
+  final GetPurchases _purchases;
 
   Future<void> load() async {
-    final r = await _get(const NoParams());
+    final (h, all) = await (_get(const NoParams()), _purchases(const NoParams())).wait;
     if (isClosed) return;
-    r.fold((f) => emit(PaymentsState(loading: false, history: state.history, error: f.message)), (h) => emit(PaymentsState(loading: false, history: h)));
+    h.fold(
+      (f) => emit(PaymentsState(loading: false, history: state.history, purchases: all.valueOrNull ?? state.purchases, error: f.message)),
+      (v) => emit(PaymentsState(loading: false, history: v, purchases: all.valueOrNull ?? state.purchases)),
+    );
   }
 }
 
-/// Fee summary and receipts. Opening it also recovers any payment that wasn't confirmed.
+/// Every order (course fees, short courses, mock interviews) with PDF receipts.
+/// Opening it also recovers any payment that wasn't confirmed.
 class PaymentsPage extends StatelessWidget {
   const PaymentsPage({super.key});
 
@@ -48,18 +66,18 @@ class PaymentsPage extends StatelessWidget {
         create: (_) => getIt<PaymentsCubit>()..load(),
         child: BlocConsumer<PaymentsCubit, PaymentsState>(
           // The server may have just recovered a payment: keep the course screens in step
-          listenWhen: (a, b) => a.history?.status != b.history?.status && b.history != null,
+          listenWhen: (a, b) => b.history != null && (a.history?.status != b.history?.status || a.purchases != b.purchases),
           listener: (context, s) => context.read<CoursesCubit>().load(),
           builder: (context, s) {
             final h = s.history;
             final cubit = context.read<PaymentsCubit>();
             return Scaffold(
-              appBar: AppBar(title: const Text('Payments & receipts'), titleSpacing: 0),
+              appBar: AppBar(title: const Text('Orders & receipts'), titleSpacing: 0),
               body: s.loading
                   ? const SkeletonList(count: 3, leading: false)
                   : h == null
-                      ? ErrorView(message: s.error ?? 'Could not load your payments.', onRetry: cubit.load)
-                      : RefreshIndicator(onRefresh: cubit.load, child: _Body(h: h)),
+                      ? ErrorView(message: s.error ?? 'Could not load your orders.', onRetry: cubit.load)
+                      : RefreshIndicator(onRefresh: cubit.load, child: _Body(h: h, orders: s.orders, shortCourses: s.purchases?.activeShortCourses ?? const [])),
             );
           },
         ),
@@ -67,8 +85,10 @@ class PaymentsPage extends StatelessWidget {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.h});
+  const _Body({required this.h, required this.orders, required this.shortCourses});
   final PaymentHistory h;
+  final List<PurchaseOrder> orders;
+  final List<EnrolledCourse> shortCourses;
 
   @override
   Widget build(BuildContext context) {
@@ -87,8 +107,8 @@ class _Body extends StatelessWidget {
     };
 
     return ListView(padding: const EdgeInsets.only(bottom: Space.xxxl), children: [
-      // Summary
-      Padding(
+      // Main course fee summary, for students who registered for it
+      if (h.status != 'unregistered') Padding(
         padding: const EdgeInsets.fromLTRB(Space.lg, Space.sm, Space.lg, 0),
         child: Card(
           child: Padding(
@@ -129,20 +149,35 @@ class _Body extends StatelessWidget {
         ),
       ),
 
-      // Receipts
-      const SectionLabel('Receipts'),
-      if (h.items.isEmpty)
+      // Short courses bought
+      if (shortCourses.isNotEmpty) ...[
+        const SectionLabel('My short courses'),
+        Group(children: [
+          for (final c in shortCourses)
+            ListTile(
+              leading: const Icon(Icons.school_outlined, size: 22),
+              title: Text(c.title),
+              subtitle: Text(c.schedule ?? (c.startsAt == null ? 'Enrolled' : 'Starts ${Fmt.date(c.startsAt!)}')),
+              trailing: Icon(Icons.chevron_right_rounded, color: p.faint),
+              onTap: c.appPath == null ? null : () => context.push(c.appPath!),
+            ),
+        ]),
+      ],
+
+      // Every order
+      const SectionLabel('Orders'),
+      if (orders.isEmpty)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: Space.page),
           child: Text(
             h.amountPaid > 0
                 ? 'Your payment was recorded by our team. You got a receipt by email; for a copy, message us on WhatsApp.'
-                : 'No payments yet. Receipts for payments made in the app appear here.',
+                : 'No orders yet. Everything you buy, with its receipt, appears here.',
             style: t.bodyMedium?.copyWith(color: p.muted),
           ),
         )
       else
-        Group(children: [for (final r in h.items) _ReceiptRow(h: h, r: r)]),
+        Group(children: [for (final o in orders) _OrderRow(h: h, o: o)]),
 
       // Help
       const SectionLabel('Help'),
@@ -152,7 +187,7 @@ class _Body extends StatelessWidget {
           title: const Text('Problem with a payment?'),
           subtitle: const Text('Money taken but not showing? We fix it the same day.'),
           trailing: Icon(Icons.north_east_rounded, size: 18, color: p.faint),
-          onTap: () => links.openExternal('https://wa.me/${AppConfig.whatsappNumber}?text=${Uri.encodeComponent('Hi, I need help with my payment for ${h.course}. My email: ${h.email ?? ''}')}'),
+          onTap: () => links.openExternal('https://wa.me/${AppConfig.whatsappNumber}?text=${Uri.encodeComponent('Hi, I need help with a payment. My email: ${h.email ?? ''}')}'),
         ),
         ListTile(
           leading: const Icon(Icons.replay_rounded, size: 22),
@@ -173,37 +208,50 @@ class _Body extends StatelessWidget {
   }
 }
 
-class _ReceiptRow extends StatelessWidget {
-  const _ReceiptRow({required this.h, required this.r});
+class _OrderRow extends StatelessWidget {
+  const _OrderRow({required this.h, required this.o});
   final PaymentHistory h;
-  final Receipt r;
+  final PurchaseOrder o;
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final p = Palette.of(context);
+    final color = o.isPaid ? AppColors.ok : o.status == 'refund_pending' ? AppColors.warn : p.muted;
+    final icon = switch (o.kind) {
+      'short_course' => Icons.school_outlined,
+      'mock_interview' => Icons.record_voice_over_outlined,
+      _ => Icons.receipt_long_rounded,
+    };
     return ListTile(
       leading: Container(
         width: 40,
         height: 40,
-        decoration: BoxDecoration(color: AppColors.ok.withValues(alpha: 0.10), borderRadius: BorderRadius.circular(Radii.md)),
-        child: const Icon(Icons.receipt_long_rounded, size: 20, color: AppColors.ok),
+        decoration: BoxDecoration(color: color.withValues(alpha: 0.10), borderRadius: BorderRadius.circular(Radii.md)),
+        child: Icon(icon, size: 20, color: color),
       ),
-      title: Text(r.title),
-      subtitle: Text([if (r.paidAt != null) Fmt.date(r.paidAt!), r.methodLabel].join(' · ')),
+      title: Text(o.title),
+      subtitle: Text([o.item, if (o.paidAt != null) Fmt.date(o.paidAt!), if (!o.isPaid) _statusText(o.status)].join(' · ')),
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        Text(Fmt.rupees(r.amount), style: t.titleSmall?.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+        Text(Fmt.rupees(o.amount), style: t.titleSmall?.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
         Icon(Icons.chevron_right_rounded, color: p.faint),
       ]),
-      onTap: () => showModalBottomSheet<void>(context: context, showDragHandle: true, useSafeArea: true, builder: (_) => _ReceiptSheet(h: h, r: r)),
+      onTap: () => showModalBottomSheet<void>(context: context, showDragHandle: true, useSafeArea: true, builder: (_) => _ReceiptSheet(h: h, o: o)),
     );
   }
 }
 
+String _statusText(String status) => switch (status) {
+      'paid' => 'Payment received',
+      'refund_pending' => 'Refund on its way',
+      'refunded' => 'Refunded',
+      _ => status,
+    };
+
 class _ReceiptSheet extends StatefulWidget {
-  const _ReceiptSheet({required this.h, required this.r});
+  const _ReceiptSheet({required this.h, required this.o});
   final PaymentHistory h;
-  final Receipt r;
+  final PurchaseOrder o;
   @override
   State<_ReceiptSheet> createState() => _ReceiptSheetState();
 }
@@ -214,8 +262,8 @@ class _ReceiptSheetState extends State<_ReceiptSheet> {
   Future<void> _pdf() async {
     setState(() => _busy = true);
     try {
-      final bytes = await getIt<ReceiptBuilder>().build(widget.h, widget.r);
-      await Printing.sharePdf(bytes: Uint8List.fromList(bytes), filename: 'Widgetry-receipt-${widget.r.paymentId}.pdf');
+      final bytes = await getIt<ReceiptBuilder>().build(widget.h, widget.o);
+      await Printing.sharePdf(bytes: Uint8List.fromList(bytes), filename: 'Widgetry-receipt-${widget.o.reference}.pdf');
     } catch (_) {
       if (mounted) showMessage(context, "Couldn't create the receipt. Please try again.");
     } finally {
@@ -226,28 +274,30 @@ class _ReceiptSheetState extends State<_ReceiptSheet> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final r = widget.r;
+    final o = widget.o;
+    final r = o.asReceipt;
+    final path = o.appPath;
     return Padding(
       padding: const EdgeInsets.fromLTRB(Space.page, 0, Space.page, Space.lg),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          const Icon(Icons.check_circle_rounded, color: AppColors.ok, size: 22),
+          Icon(o.isPaid ? Icons.check_circle_rounded : Icons.undo_rounded, color: o.isPaid ? AppColors.ok : AppColors.warn, size: 22),
           const SizedBox(width: Space.sm),
-          Text('Payment received', style: t.titleMedium),
+          Text(_statusText(o.status), style: t.titleMedium),
         ]),
         const SizedBox(height: Space.md),
-        Text(Fmt.rupees(r.amount), style: t.headlineMedium),
-        Text('${widget.h.course} · ${r.title}', style: t.bodySmall),
+        Text(Fmt.rupees(o.amount), style: t.headlineMedium),
+        Text('${o.title} · ${o.item}', style: t.bodySmall),
         const SizedBox(height: Space.lg),
-        Fact(label: 'Payment ID', value: r.paymentId),
+        Fact(label: 'Payment ID', value: o.reference),
         const SizedBox(height: Space.md),
-        Fact(label: 'Paid on', value: [if (r.paidAt != null) Fmt.date(r.paidAt!), r.paidWith].join(' · ')),
+        Fact(label: 'Paid on', value: [if (o.paidAt != null) Fmt.date(o.paidAt!), r.paidWith].join(' · ')),
         const SizedBox(height: Space.xl),
         Row(children: [
           Expanded(
             child: OutlinedButton(
               onPressed: () {
-                Clipboard.setData(ClipboardData(text: r.paymentId));
+                Clipboard.setData(ClipboardData(text: o.reference));
                 showMessage(context, 'Payment ID copied');
               },
               child: const Text('Copy ID'),
@@ -256,6 +306,20 @@ class _ReceiptSheetState extends State<_ReceiptSheet> {
           const SizedBox(width: Space.sm),
           Expanded(child: FilledButton(onPressed: _busy ? null : _pdf, child: BusyLabel(busy: _busy, label: 'PDF receipt'))),
         ]),
+        if (path != null && path != '/courses') ...[
+          const SizedBox(height: Space.sm),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () {
+                final router = GoRouter.of(context);
+                Navigator.of(context).pop();
+                router.push(path);
+              },
+              child: Text(o.kind == 'mock_interview' ? 'Open interview' : 'Open course'),
+            ),
+          ),
+        ],
       ]),
     );
   }

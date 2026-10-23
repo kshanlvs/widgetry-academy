@@ -336,7 +336,7 @@ class _Done extends StatelessWidget {
         SizedBox(width: double.infinity, child: FilledButton(onPressed: () => context.go('/courses'), child: const Text('Go to my course'))),
         if (outcome.kind != PaymentOutcomeKind.cancelled) ...[
           const SizedBox(height: Space.sm),
-          SizedBox(width: double.infinity, child: OutlinedButton(onPressed: () => context.pushReplacement('/payments'), child: Text(outcome.paymentId == null ? 'Payments & receipts' : 'View receipt'))),
+          SizedBox(width: double.infinity, child: OutlinedButton(onPressed: () => context.pushReplacement('/payments'), child: Text(outcome.paymentId == null ? 'Orders & receipts' : 'View receipt'))),
         ],
         const SizedBox(height: Space.xs),
         SizedBox(

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receipt | Widgetry Academy</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+  <style>
+    :root { --green: #0f6b56; --deep: #0c2a23; --muted: #5b6b63; --line: #e2e8e4; --bg: #f3f6f4; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--deep); font: 15px/1.5 "DM Sans", "Segoe UI", system-ui, sans-serif; }
+    .bar { max-width: 760px; margin: 24px auto 0; padding: 0 16px; display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
+    .bar a, .bar button { font: inherit; font-weight: 700; padding: 10px 18px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; color: var(--deep); text-decoration: none; cursor: pointer; }
+    .bar button { background: var(--green); color: #fff; border-color: var(--green); }
+    .paper { max-width: 760px; margin: 16px auto 40px; background: #fff; padding: 48px; border-radius: 12px; border: 1px solid var(--line); }
+    .top { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+    .biz b { font-size: 22px; display: block; margin-bottom: 4px; }
+    .biz div, .muted { color: var(--muted); font-size: 13px; }
+    .tag { text-align: right; }
+    .tag b { color: var(--green); letter-spacing: .06em; display: block; }
+    hr { border: 0; border-top: 1px solid var(--line); margin: 24px 0; }
+    .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+    .who b { font-size: 17px; }
+    .box { border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-top: 24px; }
+    .line { display: flex; justify-content: space-between; gap: 16px; }
+    .line.head { font-weight: 700; font-size: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+    .row { display: flex; justify-content: space-between; gap: 16px; padding: 5px 0; }
+    .row span:first-child { color: var(--muted); }
+    .row span:last-child { text-align: right; word-break: break-all; }
+    .total { font-size: 18px; font-weight: 700; margin-top: 16px; }
+    .status { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: #e3efe9; color: var(--green); text-transform: uppercase; }
+    .status.warn { background: #fdf0d9; color: #a86400; }
+    .status.muted { background: #eef1ef; color: var(--muted); }
+    .foot { margin-top: 40px; font-size: 12px; color: var(--muted); }
+    .msg { max-width: 760px; margin: 60px auto; text-align: center; color: var(--muted); padding: 0 16px; }
+    @media (max-width: 600px) { .paper { padding: 24px; margin-inline: 12px; } .tag { text-align: left; } }
+    @media print {
+      body { background: #fff; }
+      .bar { display: none; }
+      .paper { border: 0; margin: 0; padding: 0; max-width: none; }
+      @page { size: A4; margin: 18mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <a href="dashboard.html#orders-section">← Back to orders</a>
+    <button id="print" hidden>Download / print PDF</button>
+  </div>
+  <div id="out"><p class="msg">Loading receipt…</p></div>
+
+  <script src="../site-config.js"></script>
+  <script type="module">
+    import { onAuthReady } from '../js/auth.js';
+    import { JOBS_API } from '../jobs-api-url.js';
+
+    const W = window.WIDGETRY || {};
+    const BIZ = {
+      name: 'Widgetry Academy',
+      owner: W.ownerName || 'Kishan Kumar Sharma',
+      address: W.address || 'Kolkata, West Bengal, India',
+      email: W.contactEmail || 'kishantechdev@gmail.com',
+      udyam: W.udyam || 'UDYAM-WB-22-0009252',
+      whatsapp: W.whatsapp || '',
+    };
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const inr = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+    const date = iso => iso ? new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+    const METHOD = { upi: 'UPI', card: 'Card', netbanking: 'Net banking', wallet: 'Wallet', emi: 'EMI', google_play: 'Google Play' };
+    const STATUS = { paid: ['', 'Paid'], refunded: ['muted', 'Refunded'], refund_pending: ['warn', 'Refund on its way'] };
+    const out = document.getElementById('out');
+    const fail = text => { out.innerHTML = `<p class="msg">${esc(text)}</p>`; };
+
+    const id = new URLSearchParams(location.search).get('id') || '';
+
+    onAuthReady().then(async user => {
+      if (!user) { location.href = 'login.html?next=' + encodeURIComponent(location.pathname + location.search); return; }
+      let data;
+      try {
+        const r = await fetch(JOBS_API + '/me/purchases', { headers: { authorization: 'Bearer ' + (await user.getIdToken()) } });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        data = await r.json();
+      } catch (_) { return fail("Couldn't load this receipt right now. Check your connection and refresh."); }
+
+      const o = (data.orders || []).find(x => x.id === id);
+      if (!o) return fail("We couldn't find this order on your account.");
+
+      const [cls, label] = STATUS[o.status] || ['muted', o.status];
+      const ref = o.paymentId || o.orderId || o.id;
+      document.title = `Receipt ${ref} | Widgetry Academy`;
+      const via = o.method === 'google_play' ? 'Google Play' : 'Razorpay';
+      out.innerHTML = `<div class="paper">
+        <div class="top">
+          <div class="biz">
+            <b>${esc(BIZ.name)}</b>
+            <div>${esc(BIZ.owner)} · ${esc(BIZ.address)}</div>
+            <div>${esc(BIZ.email)} · widgetryacademy.in</div>
+            <div>Udyam: ${esc(BIZ.udyam)}</div>
+          </div>
+          <div class="tag"><b>PAYMENT RECEIPT</b><span class="muted">${esc(date(o.paidAt))}</span></div>
+        </div>
+        <hr>
+        <div class="who">
+          <div class="label">Received from</div>
+          <b>${esc(user.displayName || '')}</b>
+          <div>${esc(user.email || '')}</div>
+        </div>
+        <div class="box">
+          <div class="line head"><span>${esc(o.title)}: ${esc(o.item)}</span><span>${inr(o.amount)}</span></div>
+          ${o.paymentId ? `<div class="row"><span>Payment ID</span><span>${esc(o.paymentId)}</span></div>` : ''}
+          ${o.orderId && o.orderId !== o.paymentId ? `<div class="row"><span>Order ID</span><span>${esc(o.orderId)}</span></div>` : ''}
+          ${o.method ? `<div class="row"><span>Paid by</span><span>${esc(METHOD[o.method] || o.method)}</span></div>` : ''}
+          <div class="row"><span>Date</span><span>${esc(date(o.paidAt))}</span></div>
+          <div class="row"><span>Status</span><span><span class="status ${cls}">${esc(label)}</span></span></div>
+        </div>
+        <div class="row total"><span>Amount paid</span><span>${inr(o.amount)}</span></div>
+        <div class="foot">This is a payment acknowledgement from ${esc(BIZ.name)}. ${via} also emails a receipt for every payment.
+          Refunds follow our refund policy at widgetryacademy.in/refund.html.${BIZ.whatsapp ? ` Questions: WhatsApp +${esc(BIZ.whatsapp)}.` : ''}</div>
+      </div>`;
+      const btn = document.getElementById('print');
+      btn.hidden = false;
+      btn.onclick = () => window.print();
+    });
+  </script>
+</body>
+</html>

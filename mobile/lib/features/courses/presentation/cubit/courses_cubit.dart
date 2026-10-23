@@ -9,18 +9,24 @@ import 'package:widgetry_academy/features/auth/domain/entities/app_user.dart';
 import 'package:widgetry_academy/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:widgetry_academy/features/courses/domain/entities/course.dart';
 import 'package:widgetry_academy/features/courses/domain/usecases/courses_usecases.dart';
+import 'package:widgetry_academy/features/payments/domain/payments.dart';
 import 'package:widgetry_academy/features/workshops/domain/workshops.dart';
 
 class CoursesState extends Equatable {
-  const CoursesState({this.loading = true, this.courses = const [], this.batch = const BatchInfo(), this.registration, this.signedIn = false, this.error, this.submitting = false, this.message});
+  const CoursesState({this.loading = true, this.courses = const [], this.batch = const BatchInfo(), this.registration, this.purchases, this.signedIn = false, this.error, this.submitting = false, this.message});
   final bool loading;
   final List<Course> courses;
   final BatchInfo batch;
   final Registration? registration;
+  /// Everything bought (short courses included), when signed in.
+  final Purchases? purchases;
   final bool signedIn;
   final String? error;
   final bool submitting;
   final String? message;
+
+  /// Short courses the student has paid for.
+  List<EnrolledCourse> get myShortCourses => purchases?.activeShortCourses ?? const [];
 
   Course? byId(String id) => courses.where((c) => c.id == id).firstOrNull;
 
@@ -31,11 +37,12 @@ class CoursesState extends Equatable {
     return courses.where((c) => c.title == r.course).firstOrNull ?? courses.where((c) => c.flagship).firstOrNull ?? courses.where((c) => c.isOpen).firstOrNull;
   }
 
-  CoursesState copyWith({bool? loading, List<Course>? courses, BatchInfo? batch, Registration? registration, bool clearRegistration = false, bool? signedIn, String? error, bool? submitting, String? message}) => CoursesState(
+  CoursesState copyWith({bool? loading, List<Course>? courses, BatchInfo? batch, Registration? registration, bool clearRegistration = false, Purchases? purchases, bool clearPurchases = false, bool? signedIn, String? error, bool? submitting, String? message}) => CoursesState(
         loading: loading ?? this.loading,
         courses: courses ?? this.courses,
         batch: batch ?? this.batch,
         registration: clearRegistration ? null : (registration ?? this.registration),
+        purchases: clearPurchases ? null : (purchases ?? this.purchases),
         signedIn: signedIn ?? this.signedIn,
         error: error,
         submitting: submitting ?? this.submitting,
@@ -43,17 +50,17 @@ class CoursesState extends Equatable {
       );
 
   @override
-  List<Object?> get props => [loading, courses, batch, registration, signedIn, error, submitting, message];
+  List<Object?> get props => [loading, courses, batch, registration, purchases, signedIn, error, submitting, message];
 }
 
 /// Courses, next batch and the user's registration. App-wide so the tab, detail and registration screens agree.
 @lazySingleton
 class CoursesCubit extends Cubit<CoursesState> {
-  CoursesCubit(WatchAuthState watchAuth, this._courses, this._batch, this._mine, this._register, this._shortCourses) : super(const CoursesState()) {
+  CoursesCubit(WatchAuthState watchAuth, this._courses, this._batch, this._mine, this._register, this._shortCourses, this._purchases) : super(const CoursesState()) {
     _sub = watchAuth(const NoParams()).listen((u) {
       final signedIn = u != null;
       if (signedIn == state.signedIn && !state.loading) return;
-      emit(state.copyWith(signedIn: signedIn, clearRegistration: !signedIn));
+      emit(state.copyWith(signedIn: signedIn, clearRegistration: !signedIn, clearPurchases: !signedIn));
       if (signedIn) _loadRegistration();
     });
     load();
@@ -64,6 +71,7 @@ class CoursesCubit extends Cubit<CoursesState> {
   final GetMyRegistration _mine;
   final RegisterForCourse _register;
   final WorkshopsRepository _shortCourses;
+  final GetPurchases _purchases;
   StreamSubscription<AppUser?>? _sub;
 
   Future<void> load() async {
@@ -77,9 +85,10 @@ class CoursesCubit extends Cubit<CoursesState> {
   }
 
   Future<void> _loadRegistration() async {
-    final r = await _mine(const NoParams());
+    final (r, bought) = await (_mine(const NoParams()), _purchases(const NoParams())).wait;
     final reg = r.valueOrNull;
-    emit(state.copyWith(registration: reg, clearRegistration: reg == null));
+    // A failed purchases call keeps what we had
+    emit(state.copyWith(registration: reg, clearRegistration: reg == null, purchases: bought.valueOrNull));
   }
 
   Future<bool> register(Registration r) async {

@@ -210,13 +210,113 @@ class PaymentHistory extends Equatable {
   List<Object?> get props => [course, status, plan, amountPaid, total, due, name, email, phone, items];
 }
 
-/// Makes a PDF receipt the student can save or share.
+/// Anything bought: the main course fee, a short course or a mock interview.
+/// Built by the server from its records, so a new course needs no app update.
+class PurchaseOrder extends Equatable {
+  const PurchaseOrder({
+    required this.id,
+    required this.kind,
+    required this.title,
+    required this.item,
+    required this.amount,
+    this.status = 'paid',
+    this.plan,
+    this.orderId,
+    this.paymentId,
+    this.method,
+    this.paidAt,
+    this.appPath,
+  });
+
+  /// Unique across kinds, e.g. "short_course-12".
+  final String id;
+  /// "course_fee", "short_course" or "mock_interview" (new kinds may appear; they show like any other).
+  final String kind;
+  /// What was bought, e.g. "Bloc Crash Course" or "Mock interview".
+  final String title;
+  /// The line on the receipt, e.g. "Course fee (early bird)".
+  final String item;
+  /// Rupees.
+  final int amount;
+  /// "paid", "refunded" or "refund_pending".
+  final String status;
+  final String? plan;
+  final String? orderId;
+  final String? paymentId;
+  final String? method;
+  final DateTime? paidAt;
+  /// Where it lives in the app, e.g. "/short-courses/bloc-crash-course".
+  final String? appPath;
+
+  bool get isPaid => status == 'paid';
+  /// The id to quote to support.
+  String get reference => paymentId ?? orderId ?? id;
+
+  /// Same wording as [Receipt].
+  Receipt get asReceipt => Receipt(orderId: orderId ?? reference, paymentId: reference, plan: plan ?? kind, title: item, amount: amount, method: method, paidAt: paidAt);
+
+  @override
+  List<Object?> get props => [id, kind, title, item, amount, status, plan, orderId, paymentId, method, paidAt, appPath];
+}
+
+/// A course the student is in (or was, if refunded).
+class EnrolledCourse extends Equatable {
+  const EnrolledCourse({
+    required this.kind,
+    required this.slug,
+    required this.title,
+    required this.status,
+    this.amountPaid = 0,
+    this.startsAt,
+    this.schedule,
+    this.meetingLink,
+    this.brochureUrl,
+    this.appPath,
+  });
+  /// "flagship" or "short_course".
+  final String kind;
+  final String slug;
+  final String title;
+  /// "enrolled", "booked" (part paid), "registered" (not paid) or "refunded".
+  final String status;
+  final int amountPaid;
+  final DateTime? startsAt;
+  final String? schedule;
+  /// Class link, once paid.
+  final String? meetingLink;
+  final String? brochureUrl;
+  final String? appPath;
+
+  bool get isShortCourse => kind == 'short_course';
+  bool get isActive => status == 'enrolled' || status == 'booked';
+
+  @override
+  List<Object?> get props => [kind, slug, title, status, amountPaid, startsAt, schedule, meetingLink, brochureUrl, appPath];
+}
+
+/// Everything a student has bought, newest order first.
+class Purchases extends Equatable {
+  const Purchases({this.courses = const [], this.orders = const []});
+  final List<EnrolledCourse> courses;
+  final List<PurchaseOrder> orders;
+
+  /// Short courses the student is in, for the Courses tab.
+  List<EnrolledCourse> get activeShortCourses => courses.where((c) => c.isShortCourse && c.isActive).toList();
+
+  @override
+  List<Object?> get props => [courses, orders];
+}
+
+/// Makes a PDF receipt the student can save or share. [history] gives the buyer's details and,
+/// for the main course fee, the fee summary.
 abstract interface class ReceiptBuilder {
-  Future<List<int>> build(PaymentHistory history, Receipt receipt);
+  Future<List<int>> build(PaymentHistory history, PurchaseOrder order);
 }
 
 abstract interface class PaymentsRepository {
   Future<Result<PaymentHistory>> history();
+  /// Every course and order on the account, all kinds.
+  Future<Result<Purchases>> purchases();
   Future<Result<PaymentOptions>> options();
   /// [externalToken] and [state] are set when the student chose Razorpay on Google's screen.
   Future<Result<CheckoutOrder>> createOrder(String planId, {String? externalToken, String? state});
@@ -232,6 +332,14 @@ class GetPaymentHistory implements UseCase<PaymentHistory, NoParams> {
   final PaymentsRepository _repo;
   @override
   Future<Result<PaymentHistory>> call(NoParams p) => _repo.history();
+}
+
+@injectable
+class GetPurchases implements UseCase<Purchases, NoParams> {
+  const GetPurchases(this._repo);
+  final PaymentsRepository _repo;
+  @override
+  Future<Result<Purchases>> call(NoParams p) => _repo.purchases();
 }
 
 @injectable

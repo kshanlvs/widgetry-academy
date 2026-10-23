@@ -11,6 +11,7 @@ import 'package:widgetry_academy/core/widgets/common.dart';
 import 'package:widgetry_academy/core/widgets/state_views.dart';
 import 'package:widgetry_academy/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:widgetry_academy/features/courses/domain/entities/course.dart';
+import 'package:widgetry_academy/features/courses/presentation/cubit/courses_cubit.dart';
 import 'package:widgetry_academy/features/payments/presentation/checkout_page.dart' show TaxStateField;
 import 'package:widgetry_academy/features/workshops/domain/workshops.dart';
 import 'package:widgetry_academy/features/workshops/presentation/workshops_cubits.dart';
@@ -62,8 +63,10 @@ class _ViewState extends State<_View> {
     }
     final links = getIt<LinkLauncher>();
     return BlocConsumer<WorkshopCubit, WorkshopState>(
-      listenWhen: (a, b) => (b.message != null && b.message != a.message) || (b.justEnrolled && !a.justEnrolled),
+      listenWhen: (a, b) => (b.message != null && b.message != a.message) || (b.justEnrolled && !a.justEnrolled) || (a.detail != null && a.detail?.mine?.confirmed != true && b.detail?.mine?.confirmed == true),
       listener: (context, s) {
+        // Just paid: the Courses tab and Orders show this course now
+        if (s.detail?.mine?.confirmed == true && (s.justEnrolled || s.message == null)) context.read<CoursesCubit>().load();
         final m = s.justEnrolled && s.message == null ? "You're enrolled! See you in class." : s.message;
         if (m != null) ScaffoldMessenger.of(context)..hideCurrentSnackBar()..showSnackBar(SnackBar(content: Text(m)));
         if (s.justEnrolled) HapticFeedback.mediumImpact();

@@ -180,7 +180,7 @@ class CourseDetailPage extends StatelessWidget {
                             ? OutlinedButton.icon(
                                 onPressed: () => context.push('/payments'),
                                 icon: const Icon(Icons.receipt_long_outlined, size: 19),
-                                label: const Text('Payments & receipts'),
+                                label: const Text('Orders & receipts'),
                               )
                             : FilledButton(
                                 onPressed: () => context.push('/courses/${c.id}/pay'),
