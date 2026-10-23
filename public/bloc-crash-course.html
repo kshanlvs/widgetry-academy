@@ -298,6 +298,7 @@ function render() {
           : `<span>The joining link will appear here before the first session. We'll also message you on WhatsApp.</span>`}
       </div>
       <p class="small muted" style="margin:0">Paid ${inr(mine.amount)}${mine.paymentId ? ` · Payment ID ${esc(mine.paymentId)}` : ""}</p>
+      <a class="small" href="pages/dashboard.html" style="font-weight:700">My courses &amp; receipts →</a>
       <a class="small" href="${waHref("Hi! I'm enrolled in the Bloc crash course and have a question.")}" target="_blank" rel="noopener">Questions? Message us on WhatsApp</a>`);
   }
   if (w.status === "draft") {

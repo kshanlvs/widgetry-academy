@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login | Widgetry Academy</title>
+  <title>Log in | Widgetry Academy</title>
   <meta name="robots" content="noindex">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;600&display=swap">
   <link rel="stylesheet" href="../styles/base.css">
@@ -112,6 +112,22 @@
       height: 1px;
       background: var(--line);
     }
+    .gbtn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 13px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; font-size: 16px; cursor: pointer; }
+    .gbtn:hover { background: var(--soft); }
+    .gbtn:disabled { opacity: .6; cursor: default; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--soft); border-radius: 999px; padding: 4px; margin-bottom: var(--sp-lg); }
+    .tabs button { border: 0; background: transparent; padding: 9px; border-radius: 999px; font: inherit; font-weight: 700; color: var(--muted); cursor: pointer; }
+    .tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .field { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 14px; }
+    .field input { font: inherit; font-weight: 400; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: var(--radius-md); background: var(--surface); color: var(--ink); }
+    .field input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+    .hint { font-weight: 400; font-size: 12.5px; color: var(--muted); }
+    .msg { margin: var(--sp-md) 0 0; padding: 10px 14px; border-radius: var(--radius-md); font-size: 14px; }
+    .msg.err { background: color-mix(in srgb, var(--bad) 12%, transparent); color: var(--bad); }
+    .msg.ok { background: color-mix(in srgb, var(--ok) 12%, transparent); color: var(--ok); }
+    .linkbtn { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .fine { text-align: center; font-size: 13px; color: var(--muted); margin-top: var(--sp-lg); }
+    @media (max-width: 480px) { .login-card { padding: var(--sp-lg); } section { padding-block: var(--sp-lg); } }
   </style>
 </head>
 <body>
@@ -119,112 +135,131 @@
     <div class="login-container">
       <div class="login-card">
         <div class="login-header">
-          <h1>👋 Welcome Back</h1>
-          <p>Log in to your Widgetry Academy account</p>
+          <h1 id="title">Welcome back</h1>
+          <p id="subtitle">One account for the Widgetry website and app.</p>
         </div>
 
-        <form class="login-form" id="loginForm">
-          <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" required placeholder="your@email.com">
-            <div class="form-error"></div>
-          </div>
+        <button class="gbtn" type="button" id="google">
+          <svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+          Continue with Google
+        </button>
+        <div class="divider">or with email</div>
 
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required placeholder="••••••••">
-            <div class="form-error"></div>
-          </div>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" id="tabIn" aria-selected="true">Log in</button>
+          <button type="button" role="tab" id="tabUp" aria-selected="false">Create account</button>
+        </div>
 
-          <div class="forgot-password">
-            <a href="../pages/reset-password.html">Forgot password?</a>
-          </div>
-
-          <div class="form-submit">
-            <button type="submit" class="btn large" style="width: 100%;">
-              Log In
-            </button>
-
-            <div class="loading-state" id="loadingState">
-              <div class="spinner"></div>
-              <span>Logging in...</span>
-            </div>
-          </div>
+        <form class="login-form" id="form" novalidate>
+          <label class="field" id="nameRow" hidden>Full name<input id="name" autocomplete="name" maxlength="80" placeholder="e.g. Ananya Das"></label>
+          <label class="field">Email<input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+          <label class="field">Password<input id="password" type="password" autocomplete="current-password" required placeholder="Your password">
+            <span class="hint" id="pwHint" hidden>At least 8 characters. Use it on the website and in the app.</span></label>
+          <div class="forgot-password" id="forgotRow"><button type="button" class="linkbtn" id="forgot">Forgot password?</button></div>
+          <button type="submit" class="btn large" id="submit" style="width:100%">Log in</button>
+          <p class="msg" id="msg" role="alert" hidden></p>
         </form>
 
-        <div class="signup-link">
-          New to Widgetry Academy? <a href="../pages/register.html">Sign up now</a>
-        </div>
+        <p class="fine">Joining a course? You'll add your phone number and class when you enrol.</p>
       </div>
     </div>
   </section>
 
   <script type="module">
-    import { loginUser, onAuthReady } from '../js/auth.js';
-    import { showToast, showFormError, clearFormError, validateEmail, setButtonDisabled } from '../js/ui.js';
+    import { auth } from '../js/firebase-init.js';
+    import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail,
+             GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
 
+    const $ = id => document.getElementById(id);
     // Where to go after login: ?next=/... (same site only), otherwise the dashboard
     const params = new URLSearchParams(location.search);
     const nextRaw = params.get('next') || '';
-    const NEXT = /^\/(?!\/)/.test(nextRaw) ? nextRaw : '../pages/dashboard.html';
-    if (params.get('email')) document.getElementById('email').value = params.get('email');
+    const NEXT = /^\/(?!\/)/.test(nextRaw) ? nextRaw : '/pages/dashboard.html';
+    if (params.get('email')) $('email').value = params.get('email');
 
-    // Check if already logged in
-    onAuthReady().then(user => {
-      if (user) {
-        window.location.href = NEXT;
-      }
-    });
+    // Same wording as the app
+    const MESSAGES = {
+      'auth/invalid-credential': "That email and password don't match. If you signed up with Google, use Continue with Google. Otherwise tap Forgot password.",
+      'auth/wrong-password': "That email and password don't match. Try again or tap Forgot password.",
+      'auth/user-not-found': "No account with this email yet. Tap Create account.",
+      'auth/invalid-email': 'Please enter a valid email address.',
+      'auth/email-already-in-use': 'An account already exists with this email. Log in instead (or use Continue with Google if you signed up with it).',
+      'auth/weak-password': 'Please choose a password of at least 8 characters.',
+      'auth/too-many-requests': 'Too many attempts. Please wait a few minutes and try again.',
+      'auth/network-request-failed': 'Network problem. Check your internet connection and try again.',
+      'auth/account-exists-with-different-credential': 'This email is linked to a different sign-in method. Try email and password.',
+      'auth/popup-blocked': 'Your browser blocked the Google window. Allow pop-ups and try again.',
+    };
+    const friendly = e => MESSAGES[e?.code] || 'Something went wrong. Please try again.';
+    const say = (text, ok = false) => { const m = $('msg'); m.textContent = text || ''; m.className = 'msg ' + (ok ? 'ok' : 'err'); m.hidden = !text; };
 
-    const form = document.getElementById('loginForm');
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const loadingState = document.getElementById('loadingState');
+    let creating = false, busy = false, leaving = false;
+    function setMode(c) {
+      creating = c; say('');
+      $('tabIn').setAttribute('aria-selected', String(!c)); $('tabUp').setAttribute('aria-selected', String(c));
+      $('nameRow').hidden = !c; $('pwHint').hidden = !c; $('forgotRow').hidden = c;
+      $('password').autocomplete = c ? 'new-password' : 'current-password';
+      $('password').placeholder = c ? 'Choose a password' : 'Your password';
+      $('submit').textContent = c ? 'Create account' : 'Log in';
+      $('title').textContent = c ? 'Create your account' : 'Welcome back';
+    }
+    $('tabIn').onclick = () => setMode(false);
+    $('tabUp').onclick = () => setMode(true);
+    setMode(params.get('mode') === 'signup');
 
-    form.addEventListener('submit', async (e) => {
+    const go = () => { leaving = true; location.href = NEXT; };
+    onAuthStateChanged(auth, u => { if (u && !busy && !leaving) go(); });
+
+    function setBusy(on) {
+      busy = on;
+      $('submit').disabled = on; $('google').disabled = on;
+      if (on) $('submit').textContent = creating ? 'Creating account…' : 'Logging in…'; else setMode(creating);
+    }
+
+    $('form').addEventListener('submit', async e => {
       e.preventDefault();
-
-      // Clear previous errors
-      document.querySelectorAll('.form-group').forEach(group => clearFormError(group));
-
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-
-      // Validation
-      let hasError = false;
-
-      if (!validateEmail(email)) {
-        showFormError(document.getElementById('email').parentElement, 'Please enter a valid email');
-        hasError = true;
-      }
-
-      if (!password) {
-        showFormError(document.getElementById('password').parentElement, 'Please enter your password');
-        hasError = true;
-      }
-
-      if (hasError) return;
-
+      const name = $('name').value.trim(), email = $('email').value.trim().toLowerCase(), pw = $('password').value;
+      if (creating && !name) return say('Please enter your name.');
+      if (!/^\S+@\S+\.\S+$/.test(email)) return say('Please enter a valid email address.');
+      if (creating && pw.length < 8) return say('Please choose a password of at least 8 characters.');
+      if (!pw) return say('Please enter your password.');
+      setBusy(true);
       try {
-        setButtonDisabled(submitBtn, true);
-        submitBtn.style.display = 'none';
-        loadingState.style.display = 'flex';
-
-        await loginUser(email, password);
-
-        showToast('✓ Logged in successfully! Redirecting...', 'success', 1500);
-
-        // Redirect to dashboard
-        setTimeout(() => {
-          window.location.href = NEXT;
-        }, 1500);
-      } catch (error) {
-        console.error('Login error:', error);
-        showToast(`✗ ${error.message}`, 'error', 5000);
-        setButtonDisabled(submitBtn, false);
-        submitBtn.style.display = 'block';
-        loadingState.style.display = 'none';
+        if (creating) {
+          const { user } = await createUserWithEmailAndPassword(auth, email, pw);
+          await updateProfile(user, { displayName: name.slice(0, 99) }).catch(() => {});
+        } else {
+          await signInWithEmailAndPassword(auth, email, pw);
+        }
+        go();
+      } catch (x) {
+        setBusy(false);
+        say(friendly(x));
+        if (x?.code === 'auth/email-already-in-use') setMode(false), say(friendly(x));
       }
     });
+
+    $('forgot').onclick = async () => {
+      const email = $('email').value.trim().toLowerCase();
+      if (!/^\S+@\S+\.\S+$/.test(email)) return say('Enter your email above, then tap Forgot password.');
+      try {
+        const back = { url: location.origin + '/pages/login.html?email=' + encodeURIComponent(email) + (nextRaw ? '&next=' + encodeURIComponent(nextRaw) : '') };
+        try { await sendPasswordResetEmail(auth, email, back); }
+        catch (x1) { if (/continue-uri|unauthorized/.test(x1?.code || '')) await sendPasswordResetEmail(auth, email); else throw x1; }
+        say('If ' + email + ' has an account, a link to set a new password is on its way. Check Spam too.', true);
+      } catch (x) { say(friendly(x)); }
+    };
+
+    $('google').onclick = async () => {
+      say(''); setBusy(true);
+      try { await signInWithPopup(auth, new GoogleAuthProvider()); go(); }
+      catch (x) {
+        if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(x?.code)) return signInWithRedirect(auth, new GoogleAuthProvider());
+        setBusy(false);
+        if (!['auth/popup-closed-by-user', 'auth/cancelled-popup-request'].includes(x?.code)) say(friendly(x));
+      }
+    };
+    getRedirectResult(auth).then(r => { if (r && r.user) go(); }).catch(x => say(friendly(x)));
   </script>
 </body>
 </html>

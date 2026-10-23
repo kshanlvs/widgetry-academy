@@ -86,8 +86,8 @@ class FirebaseAuthDataSource implements AuthDataSource {
   }
 
   String _message(String code) => switch (code) {
-        'invalid-credential' || 'wrong-password' || 'user-not-found' || 'invalid-email' => 'That email and password don\'t match. Try again or reset your password.',
-        'email-already-in-use' => 'An account already exists with this email. Sign in instead.',
+        'invalid-credential' || 'wrong-password' || 'user-not-found' || 'invalid-email' => 'That email and password don\'t match. If you signed up with Google, use Continue with Google. Otherwise tap Forgot password.',
+        'email-already-in-use' => 'An account already exists with this email. Sign in instead (or use Continue with Google if you signed up with it).',
         'weak-password' => 'Choose a stronger password (at least 8 characters).',
         'user-disabled' => 'This account has been disabled. Contact us for help.',
         'too-many-requests' => 'Too many attempts. Please wait a few minutes and try again.',

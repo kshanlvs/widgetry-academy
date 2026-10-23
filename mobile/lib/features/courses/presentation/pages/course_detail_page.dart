@@ -174,7 +174,10 @@ class CourseDetailPage extends StatelessWidget {
                               ConstrainedBox(constraints: const BoxConstraints(maxWidth: 120), child: Text(c.priceNote!, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.bodySmall)),
                           ]),
                     child: shortCourseSlug(c.ctaLink) != null
-                        ? FilledButton(onPressed: () => context.push('/short-courses/${shortCourseSlug(c.ctaLink)}'), child: const Text('See dates & enrol'))
+                        ? FilledButton(
+                            onPressed: () => context.push('/short-courses/${shortCourseSlug(c.ctaLink)}'),
+                            child: Text(s.myShortCourses.any((m) => m.slug == shortCourseSlug(c.ctaLink)) ? "You're enrolled · Open course" : 'See dates & enrol'),
+                          )
                         : registered
                         ? (s.registration!.isPaid || s.registration!.isClosed
                             ? OutlinedButton.icon(

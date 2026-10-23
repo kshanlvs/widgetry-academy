@@ -9,7 +9,7 @@ import {
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { auth } from "./firebase-init.js";
 
 // Enable persistence
