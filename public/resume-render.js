@@ -6,7 +6,12 @@ export const TEMPLATES = {
   classic: "Classic",     // serif, centered, black: accepted everywhere (banks, MNCs, service companies)
   modern: "Modern",       // clean sans with a green accent: product companies and startups
   compact: "Compact",     // tighter spacing: fits 4+ years of experience on one page
+  executive: "Executive", // Premium: strong serif name, ruled sections, for senior and lead roles
+  minimal: "Minimal",     // Premium: airy, light rules, quiet accent: design-led startups
+  elegant: "Elegant",     // Premium: serif headings over a sans body, accent rule beside each heading
 };
+/** Templates that need Resume Premium. Same ATS-safe structure as the free ones: only the styling differs. */
+export const PRO_TEMPLATES = new Set(["executive", "minimal", "elegant"]);
 
 const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -160,6 +165,27 @@ export const RESUME_CSS = `
 .resume.t-compact section{margin-top:7pt}
 .resume.t-compact .item{margin-bottom:5pt}
 .resume.t-compact h2{font-size:9.5pt;margin-bottom:3pt}
+/* Executive (Premium): serif name, double rule under the header, ruled small-caps-style sections */
+.resume.t-executive{font-family:"DM Sans",Arial,Helvetica,sans-serif;font-size:10.4pt;--rs-accent:#1d3557;--rs-rule:#1d3557}
+.resume.t-executive h1{font-family:"Source Serif 4",Georgia,serif;font-size:26pt;font-weight:600;letter-spacing:0}
+.resume.t-executive header{border-bottom:3px double var(--rs-accent);padding-bottom:8pt}
+.resume.t-executive header .title{color:var(--rs-accent);font-weight:700;font-size:11pt;text-transform:uppercase;letter-spacing:.04em}
+.resume.t-executive h2{font-family:"Source Serif 4",Georgia,serif;text-transform:none;font-size:12pt;letter-spacing:0;color:var(--rs-ink);border-bottom:1px solid var(--rs-rule);padding-bottom:2pt}
+.resume.t-executive .what b{color:var(--rs-accent)}
+/* Minimal (Premium): light name, lots of air, hairline rules, quiet accent */
+.resume.t-minimal{font-family:"DM Sans",Arial,Helvetica,sans-serif;font-size:10.2pt;line-height:1.5;--rs-accent:#0f6b56;--rs-rule:#e3e7e5}
+.resume.t-minimal h1{font-size:27pt;font-weight:400;letter-spacing:-.01em}
+.resume.t-minimal header{padding-bottom:10pt;border-bottom:1px solid var(--rs-rule)}
+.resume.t-minimal section{margin-top:13pt}
+.resume.t-minimal h2{border:none;text-transform:none;letter-spacing:0;font-size:11pt;font-weight:600;color:var(--rs-accent);margin-bottom:6pt}
+.resume.t-minimal .item{margin-bottom:9pt}
+/* Elegant (Premium): serif headings, sans body, accent bar beside each heading */
+.resume.t-elegant{font-family:"DM Sans",Arial,Helvetica,sans-serif;font-size:10.3pt;--rs-accent:#7a1f2b;--rs-rule:#7a1f2b}
+.resume.t-elegant header{text-align:center;padding-bottom:6pt}
+.resume.t-elegant.has-photo header{text-align:left}
+.resume.t-elegant h1{font-family:"Source Serif 4",Georgia,serif;font-size:25pt;font-weight:600;font-style:italic;letter-spacing:0}
+.resume.t-elegant header .title{color:var(--rs-accent);font-weight:600}
+.resume.t-elegant h2{font-family:"Source Serif 4",Georgia,serif;text-transform:none;letter-spacing:0;font-size:12pt;color:var(--rs-ink);border:none;border-left:3px solid var(--rs-accent);padding:0 0 0 7pt;margin-bottom:6pt}
 @media (max-width:600px){.resume .row{flex-direction:column;gap:0}.resume .when{white-space:normal}}
 `;
 

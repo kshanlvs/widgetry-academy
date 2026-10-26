@@ -4,32 +4,33 @@
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500;1,8..60,600&display=swap">
 <style>
-:root{--ink:#14201b;--muted:#5b6b63;--line:#dde5e0;--accent:#0f6b56;--bg:#eef2ef}
+:root{--ink:#14201b;--muted:#56695f;--faint:#7d8c85;--line:#dde5e0;--accent:#0f6b56;--accent-2:#3fc79f;--gold:#f2a900;--bg:#eef2ef;--ok:#1a7f4e;--warn:#b26a00;--bad:#c23b3b;--deep:#0c2a23}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "DM Sans",system-ui,sans-serif}
-.bar{position:sticky;top:0;z-index:2;background:#0c2a23;color:#eaf3ee}
-.bar .in{max-width:1100px;margin:auto;padding:10px 16px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.bar a,.bar button{font:600 14px "DM Sans",sans-serif;border-radius:999px;padding:9px 16px;text-decoration:none;cursor:pointer;border:1.5px solid #2c5a4c;color:#eaf3ee;background:transparent}
-.bar .primary{background:#3fc79f;border-color:#3fc79f;color:#04130e}
-.seg{display:inline-flex;border:1.5px solid #2c5a4c;border-radius:999px;padding:3px;gap:2px}
-.seg button{border:0;padding:6px 13px;font-size:13.5px}
-.seg button[aria-pressed="true"]{background:#eaf3ee;color:#0c2a23}
-.layout{max-width:1100px;margin:18px auto 50px;padding:0 16px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+button{font:inherit}
+.bar{position:sticky;top:0;z-index:5;background:var(--deep);color:#eaf3ee}
+.bar .in{max-width:1240px;margin:auto;padding:10px 16px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.bar a,.bar .btn{font:600 14px "DM Sans",sans-serif;border-radius:999px;padding:9px 16px;text-decoration:none;cursor:pointer;border:1.5px solid #2c5a4c;color:#eaf3ee;background:transparent;display:inline-flex;align-items:center;gap:6px}
+.bar .primary{background:var(--accent-2);border-color:var(--accent-2);color:#04130e}
+.seg{display:inline-flex;border:1.5px solid #2c5a4c;border-radius:999px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;border-radius:999px;padding:6px 12px;font-size:13.5px;font-weight:600;color:#eaf3ee;background:transparent;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.seg button[aria-pressed="true"]{background:#eaf3ee;color:var(--deep)}
+.seg .pro{font-size:10px;font-weight:800;letter-spacing:.04em;background:var(--gold);color:#1d1400;border-radius:4px;padding:1px 4px}
+.layout{max-width:1240px;margin:18px auto 50px;padding:0 16px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
 .paper{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08),0 12px 34px rgba(0,0,0,.08);border-radius:4px;padding:15mm 15mm 18mm;min-height:297mm;max-width:210mm;width:100%;justify-self:center}
-.side{position:sticky;top:76px;display:grid;gap:14px}
+.side{position:sticky;top:70px;display:grid;gap:14px;max-height:calc(100vh - 86px);overflow-y:auto;padding-bottom:4px}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:#fff;border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px}
+.tabs button{border:0;background:transparent;border-radius:10px;padding:9px 6px;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer;display:inline-flex;gap:6px;align-items:center;justify-content:center}
+.tabs button[aria-selected="true"]{background:var(--deep);color:#fff}
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
-.card h3{margin:0 0 8px;font-size:15px}
-.meter{height:9px;border-radius:9px;background:#e4ebe7;overflow:hidden;margin:8px 0}
-.meter i{display:block;height:100%;background:linear-gradient(90deg,#f2a900,#0f6b56);border-radius:9px}
-.score{font-size:28px;font-weight:800;line-height:1}
-.tips{margin:8px 0 0;padding-left:18px;font-size:13.5px;color:var(--muted)}
-.tips li{margin:4px 0}
+.card h3{margin:0 0 8px;font-size:15.5px}
 .small{font-size:13px;color:var(--muted);margin:0}
 .card a{color:var(--accent);font-weight:700}
 .fld{display:grid;gap:6px;font-weight:700;font-size:14px;margin-bottom:12px}
-.fld input:not([type]){font:inherit;font-weight:500;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px}
+.fld input:not([type]),.fld textarea,.fld select,.inp{font:inherit;font-weight:500;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);width:100%}
+.fld textarea{resize:vertical;min-height:110px;font-size:13.5px}
 .fld .small{font-weight:500}
 .sw{display:flex;gap:8px;flex-wrap:wrap}
 .sw button{width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--line);cursor:pointer}
@@ -37,13 +38,58 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "DM Sans",syst
 .tg{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-weight:500}
 .tg label{display:flex;gap:7px;align-items:center;cursor:pointer}
 .tg .dis{opacity:.5;cursor:not-allowed}
+.btn2{border:1.5px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;justify-content:center}
+.btn2:hover{border-color:var(--accent)}
+.btn2.go{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn2.gold{background:var(--gold);border-color:var(--gold);color:#1d1400}
+.btn2:disabled{opacity:.55;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .msg{max-width:560px;margin:60px auto;text-align:center;padding:0 16px}
 .msg a{color:var(--accent);font-weight:700}
-@media (max-width:900px){.layout{grid-template-columns:1fr}.side{position:static;order:-1}.paper{padding:22px 18px;min-height:0}}
+/* ATS */
+.score{display:flex;gap:16px;align-items:center}
+.ring{width:92px;height:92px;flex:none;position:relative}
+.ring svg{transform:rotate(-90deg)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:26px;font-weight:800}
+.grade{font-size:18px;font-weight:800;margin:0}
+.cats{display:grid;gap:10px;margin-top:12px}
+.cat .top{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:13.5px}
+.cat .bar{height:6px;background:#e7eeea;border-radius:6px;overflow:hidden;margin:5px 0 3px}
+.cat .bar i{display:block;height:100%;border-radius:6px}
+.cat ul{margin:4px 0 0;padding-left:17px;font-size:13px;color:var(--muted)}
+.cat li{margin:2px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:12.5px;font-weight:700;border-radius:999px;padding:3px 10px;border:1.5px solid}
+.chip.have{color:var(--ok);border-color:#b5dcc7;background:#eef8f2}
+.chip.miss{color:var(--warn);border-color:#f0d29a;background:#fff8ea}
+.chip .k{color:var(--gold)}
+.jobs{display:grid;gap:6px;margin-top:8px;max-height:220px;overflow:auto}
+.jobs button{text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;font-size:13.5px}
+.jobs button:hover{border-color:var(--accent)}
+.jobs b{display:block}
+.picked{display:flex;justify-content:space-between;gap:8px;align-items:center;background:#f3f7f5;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px}
+/* AI */
+.prem{background:linear-gradient(160deg,#0c2a23,#123a30);color:#eaf3ee;border:0}
+.prem h3{color:#fff;font-size:18px}
+.prem ul{margin:8px 0 12px;padding-left:18px;font-size:14px;color:#cfe2d9}
+.prem li{margin:4px 0}
+.price{font-size:30px;font-weight:800;color:#fff}
+.price small{font-size:14px;font-weight:600;color:#a8c2b6}
+.badge{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;font-weight:800;color:#1d1400;background:var(--gold);border-radius:999px;padding:3px 10px}
+.out{border:1.5px dashed #b9d3c8;background:#f6fbf8;border-radius:12px;padding:12px;margin-top:10px;font-size:13.8px}
+.out ul{margin:6px 0;padding-left:18px}
+.out li{margin:3px 0}
+.out textarea{width:100%;min-height:260px;font:13.5px/1.55 "DM Sans",sans-serif;border:1.5px solid var(--line);border-radius:10px;padding:10px}
+.ph{background:#fff1c7;border-radius:4px;padding:0 2px}
+.note{font-size:12.5px;color:var(--faint);margin:8px 0 0}
+.spin{width:14px;height:14px;border:2px solid #cfe2d9;border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--deep);color:#fff;padding:11px 18px;border-radius:12px;font-weight:600;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+@media (max-width:980px){.layout{grid-template-columns:1fr}.side{position:static;order:-1;max-height:none;overflow:visible}.paper{padding:22px 18px;min-height:0}}
 @page{size:A4;margin:12mm 14mm}
 @media print{
   body{background:#fff}
-  .bar,.side{display:none!important}
+  .bar,.side,.toast{display:none!important}
   .layout{display:block;margin:0;padding:0;max-width:none}
   .paper{box-shadow:none;padding:0;min-height:0;max-width:none;border-radius:0}
 }
@@ -53,59 +99,193 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "DM Sans",syst
 <div class="bar"><div class="in">
   <a href="my-profile.html">← My profile</a>
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-    <div class="seg" id="tpl" role="group" aria-label="Resume style" hidden></div>
-    <button type="button" id="bPrint" class="primary" hidden>Download PDF</button>
+    <div class="seg" id="tpl" role="group" aria-label="Resume template" hidden></div>
+    <button type="button" id="bPrint" class="btn primary" hidden>Download PDF</button>
   </div>
 </div></div>
 <div id="root"><p class="msg">Loading your resume…</p></div>
+<div class="toast" id="toast" role="status" hidden></div>
 
 <script type="module">
 import { $, esc, api, onUser } from "./jobs.js";
-import { renderResume, strength, TEMPLATES, RESUME_CSS, ACCENTS } from "./resume-render.js";
+import { renderResume, TEMPLATES, PRO_TEMPLATES, RESUME_CSS, ACCENTS } from "./resume-render.js";
+import { atsCheck } from "./resume-ats.js";
 $("resumeCss").textContent = RESUME_CSS;
 
-let profile = null;
-let st = { template: "modern", accent: "green", title: "", showPhoto: false, hide: [] };
-const TOGGLES = [["photo", "Photo"], ["phone", "Phone"], ["email", "Email"], ["city", "City"], ["summary", "Summary"], ["projects", "Projects"], ["education", "Education"], ["certifications", "Certifications"]];
+const attr = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const toast = m => { const t = $("toast"); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 3200); };
+const dateIn = iso => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+// [placeholders] the AI leaves for numbers only the person knows
+const marks = t => esc(t).replace(/\[[^\]]{1,40}\]/g, m => `<span class="ph">${m}</span>`);
 
+let profile = null, premium = { active: false, price: 299, days: 90 };
+let st = { template: "modern", accent: "green", title: "", showPhoto: false, hide: [] };
+let tab = "ats", job = null, ats = null, ai = {}, busy = "";
+const TOGGLES = [["photo", "Photo"], ["phone", "Phone"], ["email", "Email"], ["city", "City"], ["summary", "Summary"], ["projects", "Projects"], ["education", "Education"], ["certifications", "Certifications"]];
+const canUse = t => !PRO_TEMPLATES.has(t) || premium.active;
+
+// ---------- Template bar ----------
 function drawTpl() {
-  $("tpl").innerHTML = Object.entries(TEMPLATES).map(([k, v]) => `<button type="button" data-t="${k}" aria-pressed="${k === st.template}">${v}</button>`).join("");
-  $("tpl").querySelectorAll("button").forEach(b => b.onclick = () => { st.template = b.dataset.t; changed(); });
+  $("tpl").innerHTML = Object.entries(TEMPLATES).map(([k, v]) => `<button type="button" data-t="${k}" aria-pressed="${k === (preview || st.template)}">${v}${PRO_TEMPLATES.has(k) ? `<span class="pro">${premium.active ? "PRO" : "🔒 PRO"}</span>` : ""}</button>`).join("");
+  $("tpl").querySelectorAll("button").forEach(b => b.onclick = () => {
+    if (!canUse(b.dataset.t)) { preview = b.dataset.t; drawPaper(); show("ai"); toast(`${TEMPLATES[b.dataset.t]} is a Premium template. Preview it, then upgrade to download.`); return; }
+    preview = null; st.template = b.dataset.t; changed();
+  });
 }
+let preview = null;   // a Premium template being previewed without Premium
 
 let saveT = null;
-// Clicks save straight away; typing waits until the person pauses
-function changed(redraw = true) { drawTpl(); drawPaper(); if (redraw) drawCustom(); $("saveState").textContent = "Saving…"; clearTimeout(saveT); saveT = setTimeout(save, redraw ? 0 : 600); }
+function changed(redraw = true) { drawTpl(); drawPaper(); if (tab === "design" && redraw) drawSide(); const s = $("saveState"); if (s) s.textContent = "Saving…"; clearTimeout(saveT); saveT = setTimeout(save, redraw ? 0 : 600); }
 async function save() {
-  try { await api("/talent/me/resume-settings", { method: "PUT", body: { ...st, title: st.title || "" }, auth: true }); $("saveState").textContent = "Saved to your account ✓"; }
-  catch (x) { $("saveState").textContent = x.message; }
+  try { await api("/talent/me/resume-settings", { method: "PUT", body: { ...st, title: st.title || "" }, auth: true }); const s = $("saveState"); if (s) s.textContent = "Saved to your account ✓"; }
+  catch (x) { const s = $("saveState"); if (s) s.textContent = x.message; }
 }
 
 function drawPaper() {
-  const opts = { ...st, showPhoto: st.showPhoto };
-  $("paper").innerHTML = renderResume(profile, st.template, opts);
-  const s = strength(profile);
-  const label = s.score >= 85 ? "Excellent" : s.score >= 65 ? "Good" : s.score >= 45 ? "Getting there" : "Needs work";
-  $("strength").innerHTML = `<h3>Resume strength</h3><div style="display:flex;align-items:baseline;gap:8px"><span class="score">${s.score}</span><span class="small">/ 100 · ${label}</span></div>
-    <div class="meter"><i style="width:${s.score}%"></i></div>
-    ${s.tips.length ? `<ul class="tips">${s.tips.slice(0, 4).map(t => `<li>${esc(t)}</li>`).join("")}</ul><p class="small" style="margin-top:10px"><a href="talent.html?edit=1">Improve it in your profile →</a></p>` : `<p class="small">Everything recruiters look for is here. Nice work.</p>`}`;
+  const t = preview || st.template;
+  $("paper").innerHTML = renderResume(profile, t, st);
+  ats = atsCheck(profile, job, st);
+  if (tab === "ats") drawSide();
 }
 
-function drawCustom() {
+// ---------- Side panel ----------
+function show(t) { tab = t; document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t))); drawSide(); }
+
+function drawSide() {
+  const el = $("panel");
+  if (tab === "ats") el.innerHTML = atsPanel();
+  else if (tab === "ai") el.innerHTML = aiPanel();
+  else el.innerHTML = designPanel();
+  wire();
+}
+
+const color = s => (s === "good" ? "var(--ok)" : s === "ok" ? "var(--warn)" : "var(--bad)");
+function atsPanel() {
+  const r = ats, c = 2 * Math.PI * 40, col = r.score >= 85 ? "#1a7f4e" : r.score >= 70 ? "#0f6b56" : r.score >= 50 ? "#b26a00" : "#c23b3b";
+  const kw = r.keywords;
+  return `<div class="card">
+      <div class="score"><div class="ring" role="img" aria-label="ATS score ${r.score} out of 100"><svg width="92" height="92" viewBox="0 0 92 92" aria-hidden="true"><circle cx="46" cy="46" r="40" fill="none" stroke="#e7eeea" stroke-width="9"/><circle cx="46" cy="46" r="40" fill="none" stroke="${col}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - r.score / 100)}"/></svg><b>${r.score}</b></div>
+        <div><p class="grade" style="color:${col}">${r.grade}</p><p class="small">ATS score out of 100 · ${r.mode === "job" ? "checked against the job below" : "checked against what recruiters expect for your role"}</p></div></div>
+    </div>
+    <div class="card"><h3>Check against a job</h3>
+      ${job ? `<div class="picked"><span><b>${esc(job.title || "Pasted job description")}</b>${job.company ? ` · ${esc(job.company)}` : ""}</span><button type="button" class="btn2" id="jClear" style="padding:5px 10px">Change</button></div>`
+      : `<p class="small" style="margin-bottom:8px">Paste any job description, or pick a job from Widgetry Jobs. Your score and missing keywords update instantly.</p>
+        <div class="fld" style="margin:0"><textarea id="jText" placeholder="Paste the job description here…" aria-label="Job description"></textarea></div>
+        <div class="row" style="margin-top:8px"><button type="button" class="btn2 go" id="jUse">Check my resume</button><span class="small">or</span><input class="inp" id="jSearch" placeholder="Search Widgetry jobs" aria-label="Search Widgetry jobs" style="flex:1;min-width:150px"></div>
+        <div class="jobs" id="jList"></div>`}
+    </div>
+    ${kw.matched.length || kw.missing.length ? `<div class="card"><h3>Keywords ${r.mode === "job" ? "from the job" : "for your role"}</h3>
+      ${kw.missing.length ? `<p class="small"><b style="color:var(--warn)">Missing (${kw.missing.length})</b>: add the ones you really have${kw.key.length ? `; <span class="k" style="color:var(--gold)">★</span> = key for this job` : ""}</p><div class="chips">${kw.missing.map(k => `<span class="chip miss">${kw.key.includes(k) ? '<span class="k">★</span> ' : ""}${esc(k)}</span>`).join("")}</div>` : ""}
+      ${kw.matched.length ? `<p class="small" style="margin-top:10px"><b style="color:var(--ok)">On your resume (${kw.matched.length})</b></p><div class="chips">${kw.matched.map(k => `<span class="chip have">${esc(k)}</span>`).join("")}</div>` : ""}
+      ${kw.missing.length ? `<div class="row" style="margin-top:12px"><a href="talent.html?edit=1" class="btn2">Edit skills</a>${job ? `<button type="button" class="btn2 gold" id="goTailor">✨ Tailor with AI</button>` : ""}</div>` : ""}
+    </div>` : ""}
+    <div class="card"><h3>What the score is made of</h3><div class="cats">${r.categories.map(cat => `<div class="cat">
+        <div class="top"><span>${esc(cat.label)}</span><span style="color:${color(cat.status)}">${cat.score}/${cat.max}</span></div>
+        <div class="bar"><i style="width:${(cat.score / cat.max) * 100}%;background:${color(cat.status)}"></i></div>
+        <p class="small">${esc(cat.detail)}</p>${cat.tips.length ? `<ul>${cat.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}</div>`).join("")}</div>
+      <p class="note">Every ATS scores a little differently; this check follows what most of them look for. <a href="talent.html?edit=1">Edit your profile</a> to fix gaps, or let <button type="button" class="linkish" id="goAi" style="border:0;background:none;padding:0;color:var(--accent);font-weight:700;cursor:pointer">AI rewrite them</button>.</p>
+    </div>`;
+}
+
+function upsell() {
+  return `<div class="card prem">
+    <span class="badge">✨ RESUME PREMIUM</span>
+    <h3 style="margin-top:10px">Get shortlisted faster with AI</h3>
+    <ul>
+      <li><b>Tailor your resume to any job</b> in one click: summary, bullets and missing keywords</li>
+      <li><b>Rewrite weak bullets</b> into results recruiters notice</li>
+      <li><b>AI cover letter</b> for each application</li>
+      <li><b>3 pro templates</b>: Executive, Minimal and Elegant</li>
+      <li>Free ATS check stays free, always</li>
+    </ul>
+    <div class="row" style="justify-content:space-between"><div class="price">₹${premium.price} <small>one-time · ${premium.days} days</small></div>
+      <button type="button" class="btn2 gold" id="buy" ${busy === "buy" ? "disabled" : ""}>${busy === "buy" ? '<span class="spin"></span> Opening…' : "Upgrade now"}</button></div>
+    <p class="small" style="color:#a8c2b6;margin-top:10px">No subscription, nothing renews. Pay with UPI, card or net banking (Razorpay). ${premium.paymentsEnabled === false ? "<b>Payments open soon.</b>" : ""}</p>
+  </div>`;
+}
+
+function aiOut(kind) {
+  const o = ai[kind];
+  if (busy === kind) return `<div class="out"><span class="spin"></span> Writing… this takes a few seconds.</div>`;
+  if (!o) return "";
+  if (o.error) return `<div class="out" style="border-color:#f0c4c4;background:#fff6f6">${esc(o.error)}</div>`;
+  const r = o.result;
+  if (kind === "summary") return `<div class="out"><p style="margin:0">${marks(r.summary)}</p><div class="row" style="margin-top:10px"><button type="button" class="btn2 go" data-apply="summary">Use this summary</button><button type="button" class="btn2" data-copy="summary">Copy</button></div></div>`;
+  if (kind === "bullets") return `<div class="out"><ul>${r.points.map(p => `<li>${marks(p)}</li>`).join("")}</ul>${r.note ? `<p class="note">${esc(r.note)}</p>` : ""}<div class="row" style="margin-top:8px"><button type="button" class="btn2 go" data-apply="bullets">Replace these points</button><button type="button" class="btn2" data-copy="bullets">Copy</button></div></div>`;
+  if (kind === "tailor") return `<div class="out">
+      <b>Summary for this job</b><p style="margin:4px 0 10px">${marks(r.summary)}</p>
+      ${r.jobs.map(j => `<b>${esc(profile.experience[j.index]?.role || "")} · ${esc(profile.experience[j.index]?.company || "")}</b><ul>${j.points.map(p => `<li>${marks(p)}</li>`).join("")}</ul>`).join("")}
+      ${r.addSkills.length ? `<b>Skills to add</b> <span class="small">(your resume shows them)</span><div class="chips" style="margin-bottom:8px">${r.addSkills.map(k => `<span class="chip have">${esc(k)}</span>`).join("")}</div>` : ""}
+      ${r.gaps.length ? `<b>Gaps</b> <span class="small">(add only if true, or learn them)</span><div class="chips" style="margin-bottom:8px">${r.gaps.map(k => `<span class="chip miss">${esc(k)}</span>`).join("")}</div>` : ""}
+      ${r.tips.length ? `<b>Tips</b><ul>${r.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
+      <div class="row" style="margin-top:8px"><button type="button" class="btn2 go" data-apply="tailor">Apply all to my resume</button></div>
+      <p class="note">Applying replaces your summary and those jobs' points, and adds the skills. Fill in any <span class="ph">[highlighted]</span> numbers in your profile.</p></div>`;
+  if (kind === "cover") return `<div class="out"><textarea id="coverText" aria-label="Cover letter">${attr(r.letter)}</textarea>
+      <div class="row" style="margin-top:8px"><button type="button" class="btn2 go" id="coverPdf">Download PDF</button><button type="button" class="btn2" data-copy="cover">Copy</button></div>
+      <p class="note">Edit it here first: replace [Your Name] and anything in brackets.</p></div>`;
+  return "";
+}
+
+function aiPanel() {
+  if (!premium.active) return upsell() + `<div class="card"><h3>See it in action</h3><p class="small">Paste a job in the <b>ATS check</b> tab to see your keyword gaps for free. Premium then rewrites your resume to close them.</p></div>`;
+  const exp = profile.experience || [];
+  const needJob = `<p class="small" style="margin:6px 0 0">Needs a job: <button type="button" id="toAts" style="border:0;background:none;padding:0;color:var(--accent);font-weight:700;cursor:pointer">add one in ATS check</button>.</p>`;
+  return `<div class="card"><div class="row" style="justify-content:space-between"><span class="badge">✨ PREMIUM</span><span class="small">until ${dateIn(premium.expiresAt)} · ${premium.aiLeftToday ?? "–"} AI requests left today</span></div>
+      <p class="note">AI sees your resume text, not your phone or email. It never makes up numbers: it leaves <span class="ph">[placeholders]</span> for you to fill. Check every line before you apply it.</p></div>
+    <div class="card"><h3>Tailor to ${job ? esc(job.title || "this job") : "a job"}</h3><p class="small">Rewrites your summary and most relevant bullets for this job, and finds skills to add.</p>
+      ${job ? `<button type="button" class="btn2 gold" data-ai="tailor" style="margin-top:8px">✨ Tailor my resume</button>` : needJob}${aiOut("tailor")}</div>
+    <div class="card"><h3>Professional summary</h3><p class="small">A sharp 3–4 line summary${job ? " aimed at this job" : ""}.</p><button type="button" class="btn2" data-ai="summary" style="margin-top:8px">✨ Write my summary</button>${aiOut("summary")}</div>
+    <div class="card"><h3>Improve bullet points</h3>${exp.length ? `<div class="fld" style="margin:6px 0 8px"><select id="expPick" aria-label="Job to improve">${exp.map((w, i) => `<option value="${i}" ${i === (ai.expIndex ?? 0) ? "selected" : ""}>${attr(w.role)} · ${attr(w.company)}</option>`).join("")}</select></div>
+      <button type="button" class="btn2" data-ai="bullets">✨ Rewrite these points</button>` : `<p class="small">Add work experience in your profile first.</p>`}${aiOut("bullets")}</div>
+    <div class="card"><h3>Cover letter</h3><p class="small">A short, specific letter for ${job ? esc(job.company || "this company") : "the job you're applying to"}.</p>${job ? `<button type="button" class="btn2" data-ai="cover" style="margin-top:8px">✨ Write cover letter</button>` : needJob}${aiOut("cover")}</div>`;
+}
+
+function designPanel() {
   const hidden = new Set(st.hide);
-  $("custom").innerHTML = `<h3>Customize</h3>
-    <label class="fld">Target job title <span class="small">(shown under your name)</span><input id="cTitle" maxlength="140" placeholder="${esc(profile.headline)}" value="${esc(st.title || "")}"></label>
-    <div class="fld">Colour ${st.template === "classic" ? `<span class="small">(line under your name)</span>` : ""}<div class="sw">${Object.entries(ACCENTS).map(([k, c]) => `<button type="button" data-a="${k}" aria-label="${k}" aria-pressed="${k === st.accent}" style="background:${c}"></button>`).join("")}</div></div>
+  return `<div class="card"><h3>Design</h3>
+    <label class="fld">Target job title <span class="small">(shown under your name)</span><input id="cTitle" maxlength="140" placeholder="${attr(profile.headline)}" value="${attr(st.title || "")}"></label>
+    <div class="fld">Colour<div class="sw">${Object.entries(ACCENTS).map(([k, c]) => `<button type="button" data-a="${k}" aria-label="${k}" aria-pressed="${k === st.accent}" style="background:${c}"></button>`).join("")}</div></div>
     <div class="fld">Show on resume<div class="tg">${TOGGLES.map(([k, l]) => {
       const on = k === "photo" ? st.showPhoto && !hidden.has("photo") : !hidden.has(k);
       const dis = k === "photo" && !profile.photo;
       return `<label class="${dis ? "dis" : ""}"><input type="checkbox" data-k="${k}" ${on && !dis ? "checked" : ""} ${dis ? "disabled" : ""}> ${l}</label>`;
     }).join("")}</div>
     ${!profile.photo ? `<p class="small" style="margin:6px 0 0"><a href="my-profile.html">Add a photo</a> to use it here.</p>` : `<p class="small" style="margin:6px 0 0">Tip: most Indian IT companies and ATS don't need a photo. Leave it off unless asked.</p>`}</div>
-    <p class="small" id="saveState" style="margin:4px 0 0">${$("saveState")?.textContent || "Changes save to your account automatically."}</p>`;
-  $("cTitle").oninput = e => { st.title = e.target.value; changed(false); };
-  $("custom").querySelectorAll("[data-a]").forEach(b => b.onclick = () => { st.accent = b.dataset.a; changed(); });
-  $("custom").querySelectorAll("[data-k]").forEach(c => c.onchange = () => {
+    <p class="small" id="saveState" style="margin:4px 0 0">Changes save to your account automatically.</p></div>
+    <div class="card"><h3>Saving the PDF</h3><p class="small">Click <b>Download PDF</b>, choose <b>Save as PDF</b>, and turn off <b>Headers and footers</b> under More settings. Every template is ATS-friendly: one column, real text, standard headings.</p></div>`;
+}
+
+// ---------- Actions ----------
+let searchT = null;
+function wire() {
+  const on = (id, ev, fn) => { const e = $(id); if (e) e[ev] = fn; };
+  on("goAi", "onclick", () => show("ai"));
+  on("toAts", "onclick", () => show("ats"));
+  on("goTailor", "onclick", () => { show("ai"); if (premium.active) runAi("tailor"); });
+  on("jClear", "onclick", () => { job = null; history.replaceState(null, "", "resume.html"); drawPaper(); drawSide(); });
+  on("jUse", "onclick", () => {
+    const t = $("jText").value.trim();
+    if (t.length < 80) return toast("Paste the full job description (at least a few lines).");
+    const first = t.split("\n").find(l => l.trim().length > 3) || "";
+    job = { text: t, title: first.length <= 90 ? first.trim() : "Pasted job description", company: "" };
+    drawPaper(); drawSide();
+  });
+  on("jSearch", "oninput", e => { clearTimeout(searchT); searchT = setTimeout(() => searchJobs(e.target.value), 300); });
+  if ($("jSearch") && !$("jList").innerHTML) searchJobs("");
+  on("buy", "onclick", buy);
+  document.querySelectorAll("[data-ai]").forEach(b => b.onclick = () => runAi(b.dataset.ai));
+  on("expPick", "onchange", e => { ai.expIndex = Number(e.target.value); delete ai.bullets; drawSide(); });
+  document.querySelectorAll("[data-apply]").forEach(b => b.onclick = () => applyAi(b.dataset.apply, b));
+  document.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => {
+    const k = b.dataset.copy, r = ai[k]?.result;
+    const text = k === "summary" ? r.summary : k === "bullets" ? r.points.map(p => "• " + p).join("\n") : $("coverText").value;
+    navigator.clipboard?.writeText(text); toast("Copied");
+  });
+  on("coverPdf", "onclick", coverPdf);
+  // Design tab
+  on("cTitle", "oninput", e => { st.title = e.target.value; changed(false); });
+  document.querySelectorAll("[data-a]").forEach(b => b.onclick = () => { st.accent = b.dataset.a; changed(); });
+  document.querySelectorAll("[data-k]").forEach(c => c.onchange = () => {
     const k = c.dataset.k;
     if (k === "photo") { st.showPhoto = c.checked; st.hide = st.hide.filter(x => x !== "photo"); }
     else st.hide = c.checked ? st.hide.filter(x => x !== k) : [...new Set([...st.hide, k])];
@@ -113,22 +293,132 @@ function drawCustom() {
   });
 }
 
+async function searchJobs(q) {
+  const list = $("jList"); if (!list) return;
+  try {
+    const cat = (profile.categories || [])[0];
+    const r = await api(`/jobs?pageSize=8${q.trim() ? "&q=" + encodeURIComponent(q.trim()) : cat ? "&category=" + cat : ""}`);
+    if (!$("jList")) return;
+    $("jList").innerHTML = r.items.length ? r.items.map(j => `<button type="button" data-job="${attr(j.id)}"><b>${esc(j.title)}</b><span class="small">${esc(j.company.name)}${j.city ? " · " + esc(j.city) : j.mode === "remote" ? " · Remote" : ""}</span></button>`).join("") : `<p class="small">No jobs found.</p>`;
+    $("jList").querySelectorAll("[data-job]").forEach(b => b.onclick = () => pickJob(b.dataset.job));
+  } catch { /* the paste box still works */ }
+}
+
+async function pickJob(id) {
+  try {
+    const j = await api(`/jobs/${encodeURIComponent(id)}`);
+    job = { id: j.id, title: j.title, company: j.company.name, text: `${j.title}\n${j.description || ""}\nSkills: ${(j.skills || []).join(", ")}` };
+    history.replaceState(null, "", `resume.html?job=${encodeURIComponent(j.id)}`);
+    drawPaper(); drawSide();
+  } catch (e) { toast(e.message); }
+}
+
+async function runAi(action) {
+  if (busy) return;
+  busy = action; ai[action] = null; drawSide();
+  try {
+    const body = { action, ...(action === "bullets" ? { experienceIndex: ai.expIndex ?? 0 } : {}), ...(job ? { jobText: job.text.slice(0, 12000), jobTitle: job.title || "", company: job.company || "" } : {}) };
+    const r = await api("/resume/ai", { method: "POST", body, auth: true });
+    ai[action] = r; if (action === "bullets") ai[action].index = ai.expIndex ?? 0;
+    premium.aiLeftToday = r.aiLeftToday;
+  } catch (e) {
+    ai[action] = { error: e.status === 402 ? "Your Premium has ended. Renew to keep using AI." : e.message };
+    if (e.status === 402) { premium.active = false; }
+  } finally { busy = ""; drawSide(); }
+}
+
+async function applyAi(kind, btn) {
+  const r = ai[kind]?.result; if (!r) return;
+  const body = kind === "summary" ? { about: r.summary }
+    : kind === "bullets" ? { points: [{ index: ai.bullets.index, points: r.points.join("\n") }] }
+    : { about: r.summary, points: r.jobs.map(j => ({ index: j.index, points: j.points.join("\n") })), addSkills: r.addSkills };
+  btn.disabled = true; btn.textContent = "Saving…";
+  try {
+    const res = await api("/talent/me/resume-content", { method: "PATCH", body, auth: true });
+    const before = ats.score;
+    profile = { ...profile, ...res.profile };
+    delete ai[kind]; drawPaper();
+    toast(`Saved to your profile · ATS score ${before} → ${ats.score}`);
+    drawSide();
+  } catch (e) { btn.disabled = false; btn.textContent = "Try again"; toast(e.message); }
+}
+
+function coverPdf() {
+  const text = $("coverText").value;
+  const w = window.open("", "_blank");
+  if (!w) return toast("Allow pop-ups to download the PDF.");
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${attr(profile.fullName)} - Cover letter</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,700&display=swap">
+    <style>@page{size:A4;margin:22mm}body{font:11pt/1.6 "DM Sans",Arial,sans-serif;color:#111;max-width:170mm;margin:24px auto}h1{font-size:18pt;margin:0}p.c{color:#555;margin:2px 0 22px;font-size:10pt}p{margin:0 0 11pt;white-space:pre-wrap}</style></head>
+    <body><h1>${esc(profile.fullName)}</h1><p class="c">${[profile.email, profile.phone, profile.city].filter(Boolean).map(esc).join(" · ")}</p>
+    ${text.split(/\n{2,}/).map(p => `<p>${esc(p.trim())}</p>`).join("")}<script>setTimeout(()=>print(),400)<\/script></body></html>`);
+  w.document.close();
+}
+
+function loadRazorpay() {
+  return window.Razorpay ? Promise.resolve() : new Promise((ok, fail) => {
+    const s = document.createElement("script"); s.src = "https://checkout.razorpay.com/v1/checkout.js"; s.onload = ok; s.onerror = () => fail(new Error("Couldn't open the payment window. Check your connection."));
+    document.head.appendChild(s);
+  });
+}
+
+async function buy() {
+  busy = "buy"; drawSide();
+  try {
+    const o = await api("/resume/premium/order", { method: "POST", body: {}, auth: true });
+    await loadRazorpay();
+    const rzp = new window.Razorpay({
+      key: o.keyId, order_id: o.orderId, amount: o.amount, currency: o.currency, name: o.name, description: o.description,
+      prefill: { name: profile.fullName || o.prefill?.name || "", email: o.prefill?.email || "", contact: profile.phone || "" },
+      theme: { color: "#0F6B56" },
+      handler: async resp => {
+        try {
+          const v = await api("/resume/premium/verify", { method: "POST", body: { orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature }, auth: true });
+          premium = { ...premium, ...v }; await refreshPremium();
+          toast("Premium is on ✨ Enjoy!");
+        } catch (e) { toast(e.message); setTimeout(refreshPremium, 15000); }
+        busy = ""; drawTpl(); show("ai");
+      },
+      modal: { ondismiss: () => { busy = ""; drawSide(); } },
+    });
+    rzp.open();
+  } catch (e) { busy = ""; drawSide(); toast(e.message); }
+}
+
+async function refreshPremium() {
+  try { premium = { ...premium, ...(await api("/resume/premium", { auth: true })) }; } catch { /* keep what we had */ }
+  if (!profile) return;
+  if (preview && canUse(preview)) { st.template = preview; preview = null; save(); }
+  drawTpl(); drawPaper();
+}
+
 onUser(async u => {
   if (!u) { $("root").innerHTML = `<p class="msg">Please <a href="talent.html">sign in and create your profile</a> to get your resume.</p>`; return; }
   try {
-    const r = await api("/talent/me", { auth: true });
+    const [r] = await Promise.all([api("/talent/me", { auth: true }), refreshPremium().catch(() => {})]);
     if (!r.profile) { $("root").innerHTML = `<p class="msg">You don't have a profile yet. <a href="talent.html">Create your profile</a> and your resume is built automatically.</p>`; return; }
     profile = r.profile;
     st = { ...st, ...(profile.resumeSettings || {}) };
     st.title = st.title || "";
     if (!TEMPLATES[st.template]) st.template = "modern";
+    if (!canUse(st.template)) { preview = st.template; }
     document.title = `${profile.fullName} - Resume`;   // becomes the PDF file name
     $("root").innerHTML = `<div class="layout"><div class="paper" id="paper"></div>
-      <aside class="side"><div class="card" id="custom"></div><div class="card" id="strength"></div>
-        <div class="card"><h3>Saving the PDF</h3><p class="small">Click <b>Download PDF</b>, choose <b>Save as PDF</b>, and turn off <b>Headers and footers</b> under More settings. ATS-friendly: one column, real text, standard headings.</p></div></aside></div>`;
-    $("tpl").hidden = false; $("bPrint").hidden = false; drawTpl(); drawPaper(); drawCustom();
+      <aside class="side"><div class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="ats" aria-selected="true">ATS check</button>
+        <button type="button" role="tab" data-tab="ai" aria-selected="false">✨ AI writer</button>
+        <button type="button" role="tab" data-tab="design" aria-selected="false">Design</button></div>
+        <div id="panel" style="display:grid;gap:14px"></div></aside></div>`;
+    document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => show(b.dataset.tab));
+    const jid = new URLSearchParams(location.search).get("job");
+    drawTpl(); drawPaper(); show(new URLSearchParams(location.search).get("tab") === "ai" ? "ai" : "ats");
+    $("tpl").hidden = false; $("bPrint").hidden = false;
+    if (jid) pickJob(jid);
   } catch (e) { $("root").innerHTML = `<p class="msg">${esc(e.message)}</p>`; }
 });
-$("bPrint").onclick = () => print();
+$("bPrint").onclick = () => {
+  if (preview) { show("ai"); return toast(`${TEMPLATES[preview]} is a Premium template. Upgrade to download it, or pick a free one.`); }
+  print();
+};
 </script>
 </body></html>

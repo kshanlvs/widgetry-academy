@@ -43,6 +43,7 @@ before(async () => {
   await pool.query("DELETE FROM workshop_enrollments");
   await pool.query("DELETE FROM workshops WHERE slug <> 'bloc-crash-course'");
   await pool.query("DELETE FROM chat_messages"); await pool.query("DELETE FROM chat_conversations");
+  await pool.query("DELETE FROM resume_premium"); await pool.query("DELETE FROM resume_ai_usage");
   await pool.query("UPDATE workshops SET status = 'draft', starts_at = NULL, price = 99900, early_price = 79900, early_seats = 15, early_until = NULL, seats = 40, meeting_link = NULL, brochure = 'brochures/bloc-crash-course.pdf' WHERE slug = 'bloc-crash-course'");
   server = createApp().listen(0);
   await new Promise(r => server.once("listening", r));
@@ -1185,4 +1186,101 @@ test("RAG retrieval: chunks keep code whole, BM25 ranks the right section, unrel
   assert.equal(kb.search("cubit or bloc which one", 4, 0.5)[0].chunk.section, "Cubit vs Bloc");
   assert.equal(kb.search("salary of flutter developer", 4, 0.5)[0].chunk.url, "https://x.test/jobs");
   assert.deepEqual(kb.search("pizza recipe", 4, 0.5), []);
+});
+
+test("Resume Premium: ₹299 for 90 days via Razorpay, AI help only with Premium, daily cap, suggestions saved, pro templates, orders list", async () => {
+  process.env.RAZORPAY_KEY_ID = "rzp_test_abc"; process.env.RAZORPAY_KEY_SECRET = "test_secret"; process.env.RAZORPAY_WEBHOOK_SECRET = "hook_secret";
+  process.env.RESUME_AI_DAILY = "3";
+  const rzp = new Map<string, { id: string; order_id: string; amount: number; status: string; method?: string }>();
+  let n = 500;
+  setPaymentServices({
+    async createOrder(o) { n++; return { id: "order_R" + n, amount: o.amount, currency: "INR" }; },
+    async fetchPayment(id) { return rzp.get(id)!; },
+    async orderPayments(orderId) { return [...rzp.values()].filter(p => p.order_id === orderId); },
+  }, { async get() { return null; }, async addPayment() { return "paid"; }, async earlyBirdOpen() { return false; } });
+  const sign = (o: string, p: string) => createHmac("sha256", "test_secret").update(`${o}|${p}`).digest("hex");
+  const { setChatModel } = await import("../src/chat.js");
+  const prompts: string[] = [];
+  setChatModel(async (_s, messages) => {
+    const ask = messages[0].content; prompts.push(ask);
+    const text = ask.includes("cover letter") ? JSON.stringify({ letter: "Dear [Hiring Manager],\n\nI am applying..." })
+      : ask.includes("Tailor this resume") ? "```json\n" + JSON.stringify({ summary: "Flutter developer aimed at fintech.", jobs: [{ index: 0, points: ["Built payments with Riverpod"] }, { index: 7, points: ["bad index"] }], addSkills: ["Riverpod"], gaps: ["GraphQL"], tips: ["Lead with payments"] }) + "\n```"
+      : ask.includes("achievement points") ? "Here you go: " + JSON.stringify({ points: ["Built checkout used by [N]k+ users", "Cut crashes by [X]%"], note: "Fill in the numbers." })
+      : JSON.stringify({ summary: "Flutter developer with 3 years shipping apps." });
+    return { text, stopReason: "end_turn", inputTokens: 900, outputTokens: 200 };
+  });
+  const ME = "dev:rp1:rp@test.dev:Resume Person", OTHER = "dev:rp2:rp2@test.dev:Other";
+  const JOB = "We are hiring a Flutter developer with Riverpod, REST APIs and payments experience for our fintech app in Bengaluru. 2+ years.";
+  try {
+    assert.equal((await call("PUT", "/talent/me", profile({ experience: [{ company: "Acme Apps", role: "Flutter Developer", start: "2023-01", end: "", points: "Worked on payments\nHelped with tests" }] }), ME)).status, 200);
+
+    // Price is public; status needs sign-in
+    let g = await call("GET", "/resume/premium");
+    assert.deepEqual([g.body.price, g.body.days, g.body.active], [299, 90, false]);
+    g = await call("GET", "/resume/premium", undefined, ME);
+    assert.deepEqual([g.body.active, g.body.aiLeftToday], [false, 3]);
+
+    // No Premium: AI and pro templates are refused
+    assert.equal((await call("POST", "/resume/ai", { action: "summary" }, ME)).status, 402);
+    assert.equal((await call("PUT", "/talent/me/resume-settings", { template: "executive" }, ME)).status, 402);
+    assert.equal((await call("PUT", "/talent/me/resume-settings", { template: "classic" }, ME)).status, 200, "free templates still work");
+
+    // Buy: order, then verify (bad signature, someone else, then the real one)
+    assert.equal((await call("POST", "/resume/premium/order", {})).status, 401);
+    const o = await call("POST", "/resume/premium/order", {}, ME);
+    assert.deepEqual([o.status, o.body.amount, o.body.description], [201, 29900, "Resume Premium · 90 days"]);
+    rzp.set("pay_R1", { id: "pay_R1", order_id: o.body.orderId, amount: 29900, status: "captured", method: "upi" });
+    assert.equal((await call("POST", "/resume/premium/verify", { orderId: o.body.orderId, paymentId: "pay_R1", signature: "0".repeat(64) }, ME)).status, 400);
+    assert.equal((await call("POST", "/resume/premium/verify", { orderId: o.body.orderId, paymentId: "pay_R1", signature: sign(o.body.orderId, "pay_R1") }, OTHER)).status, 404);
+    const v = await call("POST", "/resume/premium/verify", { orderId: o.body.orderId, paymentId: "pay_R1", signature: sign(o.body.orderId, "pay_R1") }, ME);
+    assert.equal(v.status, 200);
+    assert.equal(v.body.active, true);
+    const days = (new Date(v.body.expiresAt).getTime() - Date.now()) / 86_400_000;
+    assert.ok(days > 89.9 && days <= 90, `about 90 days, got ${days}`);
+    assert.equal((await call("POST", "/resume/premium/verify", { orderId: o.body.orderId, paymentId: "pay_R1", signature: sign(o.body.orderId, "pay_R1") }, ME)).body.expiresAt, v.body.expiresAt, "verifying twice changes nothing");
+
+    // Buying again while active adds 90 days on top, confirmed by the webhook alone
+    const o2 = await call("POST", "/resume/premium/order", {}, ME);
+    const raw = JSON.stringify({ event: "payment.captured", payload: { payment: { entity: { id: "pay_R2", order_id: o2.body.orderId, amount: 29900, status: "captured", method: "card" } } } });
+    assert.equal((await fetch(base + "/payments/webhook", { method: "POST", headers: { "content-type": "application/json", "x-razorpay-signature": createHmac("sha256", "hook_secret").update(raw).digest("hex") }, body: raw })).status, 200);
+    g = await call("GET", "/resume/premium", undefined, ME);
+    assert.ok(Math.abs((new Date(g.body.expiresAt).getTime() - new Date(v.body.expiresAt).getTime()) / 86_400_000 - 90) < 0.01, "extended by 90 days");
+
+    // Pro template now allowed
+    assert.equal((await call("PUT", "/talent/me/resume-settings", { template: "executive" }, ME)).status, 200);
+
+    // AI: bullets need a real job index; the reply is cleaned; contact details never reach the model
+    assert.equal((await call("POST", "/resume/ai", { action: "bullets", experienceIndex: 5 }, ME)).status, 400);
+    let a = await call("POST", "/resume/ai", { action: "bullets", experienceIndex: 0, jobText: JOB }, ME);
+    assert.equal(a.status, 200);
+    assert.deepEqual(a.body.result.points, ["Built checkout used by [N]k+ users", "Cut crashes by [X]%"]);
+    assert.equal(a.body.aiLeftToday, 2);
+    assert.match(prompts[0], /Worked on payments/);
+    assert.doesNotMatch(prompts[0], /98765|rp@test\.dev/, "no phone or email sent to the AI");
+    assert.equal((await call("POST", "/resume/ai", { action: "tailor" }, ME)).status, 400, "tailoring needs a job");
+    a = await call("POST", "/resume/ai", { action: "tailor", jobText: JOB, jobTitle: "Flutter Developer", company: "PayCo" }, ME);
+    assert.deepEqual(a.body.result.jobs, [{ index: 0, points: ["Built payments with Riverpod"] }], "out-of-range jobs dropped");
+    assert.deepEqual([a.body.result.addSkills, a.body.result.gaps], [["Riverpod"], ["GraphQL"]]);
+    a = await call("POST", "/resume/ai", { action: "cover", jobText: JOB, company: "PayCo" }, ME);
+    assert.match(a.body.result.letter, /Hiring Manager/);
+    assert.equal((await call("POST", "/resume/ai", { action: "summary" }, ME)).status, 429, "daily cap of 3");
+
+    // Saving suggestions: summary, one job's points and new skills; nothing else changes
+    assert.equal((await call("PATCH", "/talent/me/resume-content", {}, ME)).status, 400);
+    assert.equal((await call("PATCH", "/talent/me/resume-content", { points: [{ index: 4, points: "x" }] }, ME)).status, 400);
+    const s = await call("PATCH", "/talent/me/resume-content", { about: "Flutter developer aimed at fintech.", points: [{ index: 0, points: "Built payments with Riverpod" }], addSkills: ["Riverpod", "bloc"] }, ME);
+    assert.equal(s.status, 200);
+    assert.equal(s.body.profile.about, "Flutter developer aimed at fintech.");
+    assert.equal(s.body.profile.experience[0].points, "Built payments with Riverpod");
+    assert.equal(s.body.profile.experience[0].company, "Acme Apps");
+    assert.ok(s.body.profile.skills.includes("Riverpod"));
+    assert.equal(s.body.profile.skills.filter((k: string) => k.toLowerCase() === "bloc").length, 1, "no duplicate skills");
+
+    // Both payments show in Orders & receipts
+    const mine = await call("GET", "/me/purchases", undefined, ME);
+    const rp = mine.body.orders.filter((x: any) => x.kind === "resume_premium");
+    assert.equal(rp.length, 2);
+    assert.match(rp[0].item, /^90 days · until /);
+    assert.equal(rp[0].amount, 299);
+  } finally { setChatModel(null); delete process.env.RESUME_AI_DAILY; await pool.query("DELETE FROM candidates WHERE uid = 'rp1'"); }
 });

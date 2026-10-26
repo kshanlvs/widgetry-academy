@@ -6,6 +6,7 @@ import { HttpError, wrap } from "../errors.js";
 import { requireAuth } from "../auth.js";
 import { assertCategories } from "../categories.js";
 import { candidateInput, publicId, resumeSettingsInput, photoInput, openToWorkInput } from "../validate.js";
+import { PRO_TEMPLATES, premiumFor } from "../resume.js";
 
 export const talentRouter = Router();
 
@@ -126,6 +127,8 @@ talentRouter.delete("/talent/me/photo", requireAuth, wrap(async (req, res) => {
 talentRouter.put("/talent/me/resume-settings", requireAuth, wrap(async (req, res) => {
   const id = await myId(req.user!.uid);
   const s = resumeSettingsInput.parse(req.body);
+  if ((PRO_TEMPLATES as readonly string[]).includes(s.template) && !(await premiumFor(req.user!.uid)).active)
+    throw new HttpError(402, "This template is part of Resume Premium.");
   await query("UPDATE candidates SET resume_settings = ? WHERE id = ?", [JSON.stringify(s), id]);
   res.json({ ok: true, resumeSettings: s });
 }));

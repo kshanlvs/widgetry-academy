@@ -6,7 +6,8 @@ import { HttpError } from "./errors.js";
 export type ChatRole = "user" | "assistant";
 export interface ChatTurn { role: ChatRole; content: string }
 export interface ChatReply { text: string; stopReason: string | null; inputTokens: number; outputTokens: number }
-export type ChatModel = (system: string, messages: ChatTurn[]) => Promise<ChatReply>;
+/** maxTokens: this call's cap on the reply (defaults to CHAT_MAX_TOKENS). */
+export type ChatModel = (system: string, messages: ChatTurn[], opts?: { maxTokens?: number }) => Promise<ChatReply>;
 
 // The rules every reply follows. The user never sees or changes this; it lives only on the server.
 export const SYSTEM_PROMPT = `You are Widgetry Tutor, the AI tutor of Widgetry Academy, helping students learn Flutter and Dart.
@@ -35,13 +36,13 @@ let override: ChatModel | null = null;
 /** Tests replace the real model with a fake one; pass null to restore. */
 export function setChatModel(m: ChatModel | null) { override = m; }
 
-const claude: ChatModel = async (system, messages) => {
-  if (!config.anthropic.apiKey) throw new HttpError(503, "The tutor isn't set up yet. Please try again later.");
+const claude: ChatModel = async (system, messages, opts) => {
+  if (!config.anthropic.apiKey) throw new HttpError(503, "The AI assistant isn't set up yet. Please try again later.");
   client ??= new Anthropic({ apiKey: config.anthropic.apiKey });
   try {
     const res = await client.messages.create({
       model: config.anthropic.model,
-      max_tokens: config.anthropic.maxTokens,
+      max_tokens: opts?.maxTokens ?? config.anthropic.maxTokens,
       system,
       messages,
     });
@@ -60,6 +61,6 @@ const claude: ChatModel = async (system, messages) => {
   }
 };
 
-export function askModel(system: string, messages: ChatTurn[]): Promise<ChatReply> {
-  return (override ?? claude)(system, messages);
+export function askModel(system: string, messages: ChatTurn[], opts?: { maxTokens?: number }): Promise<ChatReply> {
+  return (override ?? claude)(system, messages, opts);
 }

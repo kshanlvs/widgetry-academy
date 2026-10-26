@@ -9,6 +9,7 @@ import { fulfilMock } from "../mock.js";
 import { fulfilWorkshop } from "./workshops.js";
 import { INDIA_STATES, PLAY_PRODUCTS, planForProduct, playAccountId, playApi, playConfig } from "../play.js";
 import { purchasesFor } from "../purchases.js";
+import { fulfilResumePremium } from "../resume.js";
 import { COURSE, PLAN_TITLE, bookingAmount, coursePrice, fulfil, gateway, paymentsEnabled, plansFor, razorpayConfig, reconcile, store, validPaymentSignature, validWebhookSignature } from "../payments.js";
 
 /**
@@ -121,6 +122,9 @@ paymentsRouter.post("/payments/webhook", wrap(async (req, res) => {
     // Short courses (workshops) too
     const [ws] = row || mock ? [] : await query<{ amount: number }>("SELECT amount FROM workshop_enrollments WHERE order_id = ?", [p.order_id]);
     if (ws && ws.amount === p.amount) await fulfilWorkshop(p.order_id, p.id, p.method);
+    // Resume Premium
+    const [rp] = row || mock || ws ? [] : await query<{ amount: number }>("SELECT amount FROM resume_premium WHERE order_id = ?", [p.order_id]);
+    if (rp && rp.amount === p.amount) await fulfilResumePremium(p.order_id, p.id, p.method);
   }
   if (event?.event === "payment.failed" && p?.order_id) {
     await query("UPDATE payments SET status = 'failed' WHERE order_id = ? AND status = 'created'", [p.order_id]);

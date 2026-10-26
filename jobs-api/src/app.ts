@@ -6,6 +6,7 @@ import { config } from "./config.js";
 import { pool } from "./db.js";
 import { errorHandler } from "./errors.js";
 import { optionalAuth } from "./auth.js";
+import { resumeRouter } from "./routes/resume.js";
 import { jobsRouter } from "./routes/jobs.js";
 import { talentRouter } from "./routes/talent.js";
 import { adminRouter } from "./routes/admin.js";
@@ -65,6 +66,7 @@ export function createApp() {
   api.use(mentorsRouter);
   api.use(workshopsRouter);
   api.use(chatRouter);
+  api.use(resumeRouter);
   api.use("/admin", requireAdmin, mockAdminRouter);
   api.use("/admin", requireAdmin, overviewRouter);
   api.use("/admin", requireAdmin, workshopsAdminRouter);

@@ -6,12 +6,13 @@ import { COURSE, PLAN_TITLE, reconcile, store, type Registration } from "./payme
 import { reconcileWorkshops } from "./routes/workshops.js";
 import { reconcileMock, trackName, levelName } from "./mock.js";
 import { SITE } from "./notify.js";
+import { reconcileResume } from "./resume.js";
 
 const rupees = (paise: number | null | undefined) => Math.round(Number(paise ?? 0) / 100);
 const iso = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString() : null);
 const brochureUrl = (b: string | null | undefined) => (!b ? null : /^https:\/\//i.test(b) ? b : `${SITE}/${b.replace(/^\/+/, "")}`);
 
-export type OrderKind = "course_fee" | "short_course" | "mock_interview";
+export type OrderKind = "course_fee" | "short_course" | "mock_interview" | "resume_premium";
 
 export interface Order {
   /** Unique across kinds, e.g. "short_course-12" */
@@ -65,9 +66,9 @@ const flagshipStatus = (r: Registration) => {
 
 /** Courses and orders for one person, newest first. Recent unconfirmed payments are checked first, so nothing paid is missing. */
 export async function purchasesFor(uid: string): Promise<{ courses: EnrolledCourse[]; orders: Order[] }> {
-  await Promise.all([reconcile(uid), reconcileWorkshops(uid), reconcileMock(uid)].map(p => p.catch(() => 0)));
+  await Promise.all([reconcile(uid), reconcileWorkshops(uid), reconcileMock(uid), reconcileResume(uid)].map(p => p.catch(() => 0)));
 
-  const [reg, fees, shorts, mocks] = await Promise.all([
+  const [reg, fees, shorts, mocks, premium] = await Promise.all([
     store().get(uid).catch(() => null),
     query<any>("SELECT order_id, plan, amount, currency, payment_id, method, paid_at FROM payments WHERE uid = ? AND status = 'paid' ORDER BY paid_at DESC LIMIT 100", [uid]),
     query<any>(`SELECT e.id, e.amount, e.early, e.status, e.order_id, e.payment_id, e.method, e.paid_at,
@@ -77,6 +78,8 @@ export async function purchasesFor(uid: string): Promise<{ courses: EnrolledCour
                  ORDER BY e.paid_at DESC LIMIT 100`, [uid]),
     query<any>(`SELECT id, track, level, duration_min, starts_at, amount, status, order_id, payment_id, method, paid_at
                   FROM mock_bookings WHERE uid = ? AND paid_at IS NOT NULL ORDER BY paid_at DESC LIMIT 100`, [uid]),
+    query<any>(`SELECT id, amount, days, status, order_id, payment_id, method, paid_at, expires_at
+                  FROM resume_premium WHERE uid = ? AND paid_at IS NOT NULL ORDER BY paid_at DESC LIMIT 50`, [uid]),
   ]);
 
   const courses: EnrolledCourse[] = [];
@@ -120,6 +123,13 @@ export async function purchasesFor(uid: string): Promise<{ courses: EnrolledCour
       status: m.status === "refund_due" ? "refund_pending" : m.status === "cancelled" ? "refunded" : "paid",
       orderId: m.order_id, paymentId: m.payment_id, method: m.method, paidAt: iso(m.paid_at),
       webPath: null, appPath: `/interviews/${m.id}`,
+    })),
+    ...premium.map((r): Order => ({
+      id: `resume_premium-${r.id}`, kind: "resume_premium", plan: null, title: "Resume Premium",
+      item: `${r.days} days${r.expires_at ? ` · until ${new Date(r.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : ""}`,
+      amount: rupees(r.amount), currency: "INR", status: r.status === "refunded" ? "refunded" : "paid",
+      orderId: r.order_id, paymentId: r.payment_id, method: r.method, paidAt: iso(r.paid_at),
+      webPath: "/resume.html", appPath: null,
     })),
   ].sort((a, b) => (b.paidAt ?? "").localeCompare(a.paidAt ?? ""));
 

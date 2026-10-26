@@ -128,7 +128,7 @@ export type CandidateInput = z.infer<typeof candidateInput>;
 export const ACCENTS = ["green", "navy", "black", "maroon", "teal", "purple"] as const;
 export const HIDEABLE = ["photo", "phone", "email", "city", "summary", "projects", "education", "certifications"] as const;
 export const resumeSettingsInput = z.object({
-  template: z.enum(["classic", "modern", "compact"]).default("modern"),
+  template: z.enum(["classic", "modern", "compact", "executive", "minimal", "elegant"]).default("modern"),   // the last three are Resume Premium
   accent: z.enum(ACCENTS).default("green"),
   title: optText(140),                                  // target role shown instead of the headline
   showPhoto: z.boolean().default(false),
