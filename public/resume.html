@@ -118,7 +118,7 @@ const dateIn = iso => new Date(iso).toLocaleDateString("en-IN", { day: "numeric"
 // [placeholders] the AI leaves for numbers only the person knows
 const marks = t => esc(t).replace(/\[[^\]]{1,40}\]/g, m => `<span class="ph">${m}</span>`);
 
-let profile = null, premium = { active: false, price: 299, days: 90 };
+let profile = null, premium = { active: false, price: 299, days: 30 };
 let st = { template: "modern", accent: "green", title: "", showPhoto: false, hide: [] };
 let tab = "ats", job = null, ats = null, ai = {}, busy = "";
 const TOGGLES = [["photo", "Photo"], ["phone", "Phone"], ["email", "Email"], ["city", "City"], ["summary", "Summary"], ["projects", "Projects"], ["education", "Education"], ["certifications", "Certifications"]];
@@ -128,7 +128,7 @@ const canUse = t => !PRO_TEMPLATES.has(t) || premium.active;
 function drawTpl() {
   $("tpl").innerHTML = Object.entries(TEMPLATES).map(([k, v]) => `<button type="button" data-t="${k}" aria-pressed="${k === (preview || st.template)}">${v}${PRO_TEMPLATES.has(k) ? `<span class="pro">${premium.active ? "PRO" : "🔒 PRO"}</span>` : ""}</button>`).join("");
   $("tpl").querySelectorAll("button").forEach(b => b.onclick = () => {
-    if (!canUse(b.dataset.t)) { preview = b.dataset.t; drawPaper(); show("ai"); toast(`${TEMPLATES[b.dataset.t]} is a Premium template. Preview it, then upgrade to download.`); return; }
+    if (!canUse(b.dataset.t)) { preview = b.dataset.t; drawPaper(); show("ai"); toast(`${TEMPLATES[b.dataset.t]} is a Premium template: this preview has a watermark. Upgrade to download it clean.`); return; }
     preview = null; st.template = b.dataset.t; changed();
   });
 }
@@ -143,7 +143,9 @@ async function save() {
 
 function drawPaper() {
   const t = preview || st.template;
-  $("paper").innerHTML = renderResume(profile, t, st);
+  // A Premium template without (or after) Premium: watermarked preview, no download
+  $("paper").innerHTML = renderResume(profile, t, { ...st, watermark: !!preview });
+  $("bPrint").textContent = preview ? "🔒 Unlock to download" : "Download PDF";
   ats = atsCheck(profile, job, st);
   if (tab === "ats") drawSide();
 }
@@ -191,17 +193,18 @@ function atsPanel() {
 function upsell() {
   return `<div class="card prem">
     <span class="badge">✨ RESUME PREMIUM</span>
+    ${premium.expiresAt && !premium.active ? `<p class="small" style="color:#ffd98a;margin:10px 0 0"><b>Your Premium ended on ${dateIn(premium.expiresAt)}.</b> Your resume is safe: free templates still download without a watermark. Renew to edit and download with Premium templates and AI again.</p>` : ""}
     <h3 style="margin-top:10px">Get shortlisted faster with AI</h3>
     <ul>
       <li><b>Tailor your resume to any job</b> in one click: summary, bullets and missing keywords</li>
       <li><b>Rewrite weak bullets</b> into results recruiters notice</li>
       <li><b>AI cover letter</b> for each application</li>
-      <li><b>3 pro templates</b>: Executive, Minimal and Elegant</li>
+      <li><b>3 pro templates</b>: Executive, Minimal and Elegant, downloaded without the watermark</li>
       <li>Free ATS check stays free, always</li>
     </ul>
     <div class="row" style="justify-content:space-between"><div class="price">₹${premium.price} <small>one-time · ${premium.days} days</small></div>
-      <button type="button" class="btn2 gold" id="buy" ${busy === "buy" ? "disabled" : ""}>${busy === "buy" ? '<span class="spin"></span> Opening…' : "Upgrade now"}</button></div>
-    <p class="small" style="color:#a8c2b6;margin-top:10px">No subscription, nothing renews. Pay with UPI, card or net banking (Razorpay). ${premium.paymentsEnabled === false ? "<b>Payments open soon.</b>" : ""}</p>
+      <button type="button" class="btn2 gold" id="buy" ${busy === "buy" ? "disabled" : ""}>${busy === "buy" ? '<span class="spin"></span> Opening…' : premium.expiresAt && !premium.active ? "Renew now" : "Upgrade now"}</button></div>
+    <p class="small" style="color:#a8c2b6;margin-top:10px">No subscription, nothing renews automatically: buy again any time to add ${premium.days} more days. Pay with UPI, card or net banking (Razorpay). ${premium.paymentsEnabled === false ? "<b>Payments open soon.</b>" : ""}</p>
   </div>`;
 }
 
@@ -232,6 +235,7 @@ function aiPanel() {
   const exp = profile.experience || [];
   const needJob = `<p class="small" style="margin:6px 0 0">Needs a job: <button type="button" id="toAts" style="border:0;background:none;padding:0;color:var(--accent);font-weight:700;cursor:pointer">add one in ATS check</button>.</p>`;
   return `<div class="card"><div class="row" style="justify-content:space-between"><span class="badge">✨ PREMIUM</span><span class="small">until ${dateIn(premium.expiresAt)} · ${premium.aiLeftToday ?? "–"} AI requests left today</span></div>
+    ${(new Date(premium.expiresAt) - Date.now()) < 5 * 86400000 ? `<div class="row" style="justify-content:space-between;margin-top:8px;background:#fff8ea;border-radius:10px;padding:8px 10px"><span class="small"><b>Ends soon.</b> Extend by ${premium.days} days for ₹${premium.price}; the days add on top.</span><button type="button" class="btn2 gold" id="buy" style="padding:6px 12px">Extend</button></div>` : ""}
       <p class="note">AI sees your resume text, not your phone or email. It never makes up numbers: it leaves <span class="ph">[placeholders]</span> for you to fill. Check every line before you apply it.</p></div>
     <div class="card"><h3>Tailor to ${job ? esc(job.title || "this job") : "a job"}</h3><p class="small">Rewrites your summary and most relevant bullets for this job, and finds skills to add.</p>
       ${job ? `<button type="button" class="btn2 gold" data-ai="tailor" style="margin-top:8px">✨ Tailor my resume</button>` : needJob}${aiOut("tailor")}</div>

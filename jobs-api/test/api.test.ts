@@ -1204,7 +1204,7 @@ test("RAG retrieval: chunks keep code whole, BM25 ranks the right section, unrel
   assert.deepEqual(kb.search("pizza recipe", 4, 0.5), []);
 });
 
-test("Resume Premium: ₹299 for 90 days via Razorpay, AI help only with Premium, daily cap, suggestions saved, pro templates, orders list", async () => {
+test("Resume Premium: ₹299 for 30 days via Razorpay, AI help only with Premium, daily cap, suggestions saved, pro templates, orders list", async () => {
   process.env.RAZORPAY_KEY_ID = "rzp_test_abc"; process.env.RAZORPAY_KEY_SECRET = "test_secret"; process.env.RAZORPAY_WEBHOOK_SECRET = "hook_secret";
   process.env.RESUME_AI_DAILY = "3";
   const rzp = new Map<string, { id: string; order_id: string; amount: number; status: string; method?: string }>();
@@ -1232,7 +1232,7 @@ test("Resume Premium: ₹299 for 90 days via Razorpay, AI help only with Premium
 
     // Price is public; status needs sign-in
     let g = await call("GET", "/resume/premium");
-    assert.deepEqual([g.body.price, g.body.days, g.body.active], [299, 90, false]);
+    assert.deepEqual([g.body.price, g.body.days, g.body.active], [299, 30, false]);
     g = await call("GET", "/resume/premium", undefined, ME);
     assert.deepEqual([g.body.active, g.body.aiLeftToday], [false, 3]);
 
@@ -1244,7 +1244,7 @@ test("Resume Premium: ₹299 for 90 days via Razorpay, AI help only with Premium
     // Buy: order, then verify (bad signature, someone else, then the real one)
     assert.equal((await call("POST", "/resume/premium/order", {})).status, 401);
     const o = await call("POST", "/resume/premium/order", {}, ME);
-    assert.deepEqual([o.status, o.body.amount, o.body.description], [201, 29900, "Resume Premium · 90 days"]);
+    assert.deepEqual([o.status, o.body.amount, o.body.description], [201, 29900, "Resume Premium · 30 days"]);
     rzp.set("pay_R1", { id: "pay_R1", order_id: o.body.orderId, amount: 29900, status: "captured", method: "upi" });
     assert.equal((await call("POST", "/resume/premium/verify", { orderId: o.body.orderId, paymentId: "pay_R1", signature: "0".repeat(64) }, ME)).status, 400);
     assert.equal((await call("POST", "/resume/premium/verify", { orderId: o.body.orderId, paymentId: "pay_R1", signature: sign(o.body.orderId, "pay_R1") }, OTHER)).status, 404);
@@ -1252,15 +1252,15 @@ test("Resume Premium: ₹299 for 90 days via Razorpay, AI help only with Premium
     assert.equal(v.status, 200);
     assert.equal(v.body.active, true);
     const days = (new Date(v.body.expiresAt).getTime() - Date.now()) / 86_400_000;
-    assert.ok(days > 89.9 && days < 90.01, `about 90 days, got ${days}`);
+    assert.ok(days > 29.9 && days < 30.01, `about 30 days, got ${days}`);
     assert.equal((await call("POST", "/resume/premium/verify", { orderId: o.body.orderId, paymentId: "pay_R1", signature: sign(o.body.orderId, "pay_R1") }, ME)).body.expiresAt, v.body.expiresAt, "verifying twice changes nothing");
 
-    // Buying again while active adds 90 days on top, confirmed by the webhook alone
+    // Buying again while active adds 30 days on top, confirmed by the webhook alone
     const o2 = await call("POST", "/resume/premium/order", {}, ME);
     const raw = JSON.stringify({ event: "payment.captured", payload: { payment: { entity: { id: "pay_R2", order_id: o2.body.orderId, amount: 29900, status: "captured", method: "card" } } } });
     assert.equal((await fetch(base + "/payments/webhook", { method: "POST", headers: { "content-type": "application/json", "x-razorpay-signature": createHmac("sha256", "hook_secret").update(raw).digest("hex") }, body: raw })).status, 200);
     g = await call("GET", "/resume/premium", undefined, ME);
-    assert.ok(Math.abs((new Date(g.body.expiresAt).getTime() - new Date(v.body.expiresAt).getTime()) / 86_400_000 - 90) < 0.01, "extended by 90 days");
+    assert.ok(Math.abs((new Date(g.body.expiresAt).getTime() - new Date(v.body.expiresAt).getTime()) / 86_400_000 - 30) < 0.01, "extended by 30 days");
 
     // Pro template now allowed
     assert.equal((await call("PUT", "/talent/me/resume-settings", { template: "executive" }, ME)).status, 200);
@@ -1296,7 +1296,7 @@ test("Resume Premium: ₹299 for 90 days via Razorpay, AI help only with Premium
     const mine = await call("GET", "/me/purchases", undefined, ME);
     const rp = mine.body.orders.filter((x: any) => x.kind === "resume_premium");
     assert.equal(rp.length, 2);
-    assert.match(rp[0].item, /^90 days · until /);
+    assert.match(rp[0].item, /^30 days · until /);
     assert.equal(rp[0].amount, 299);
   } finally { setChatModel(null); delete process.env.RESUME_AI_DAILY; await pool.query("DELETE FROM candidates WHERE uid = 'rp1'"); }
 });

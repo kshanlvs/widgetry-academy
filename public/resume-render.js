@@ -59,8 +59,14 @@ export function autoSummary(p) {
 
 export const ACCENTS = { green: "#0f6b56", navy: "#1d3557", black: "#111111", maroon: "#7a1f2b", teal: "#0e6d7a", purple: "#53389e" };
 
+// Premium templates seen without Premium carry a watermark, on screen and in print. It's a background image,
+// so there's no extra text for ATS software or copy-paste to pick up.
+const WM_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="330" height="210"><text x="165" y="112" text-anchor="middle" transform="rotate(-30 165 105)" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="700" letter-spacing="2" fill="#0f6b56" fill-opacity="0.17">WIDGETRY PREMIUM · PREVIEW</text></svg>`;
+const WM_URL = "data:image/svg+xml," + encodeURIComponent(WM_SVG);
+
 /**
  * opts (all optional, saved per seeker): { accent, title, showPhoto, hide: ["photo","phone","email","city","summary","projects","education","certifications"] }
+ * Not saved: watermark (true for a Premium template viewed without Premium).
  */
 export function renderResume(p, template = "modern", opts = {}) {
   const t = TEMPLATES[template] ? template : "modern";
@@ -90,7 +96,7 @@ export function renderResume(p, template = "modern", opts = {}) {
   const certs = certList.map(c => `<li><b>${esc(c.name)}</b>${c.issuer ? ` – ${esc(c.issuer)}` : ""}${c.year ? ` (${esc(c.year)})` : ""}</li>`).join("");
 
   const sec = (title, body) => (body ? `<section><h2>${title}</h2>${body}</section>` : "");
-  return `<article class="resume t-${t}${photo ? " has-photo" : ""}"${style}>
+  return `<article class="resume t-${t}${photo ? " has-photo" : ""}${opts.watermark ? " wm" : ""}"${style}>
     <header>${photo}<div class="hd"><h1>${esc(p.fullName)}</h1><p class="title">${esc((opts.title || "").trim() || p.headline)}</p><p class="contact">${contact}</p></div></header>
     ${show("summary") ? sec("Professional Summary", `<p>${esc(summary)}</p>`) : ""}
     ${sec("Technical Skills", skills && `<ul class="skills">${skills}</ul>`)}
@@ -98,6 +104,7 @@ export function renderResume(p, template = "modern", opts = {}) {
     ${show("projects") ? sec("Projects", projects) : ""}
     ${show("education") ? sec("Education", edu) : ""}
     ${show("certifications") ? sec("Certifications", certs && `<ul>${certs}</ul>`) : ""}
+    ${opts.watermark ? '<div class="rs-wm" aria-hidden="true"></div>' : ""}
   </article>`;
 }
 
@@ -123,6 +130,8 @@ export function strength(p) {
 
 // Styles shared by the resume page and the builder preview. Sizes in pt so print matches screen.
 export const RESUME_CSS = `
+.resume.wm{position:relative}
+.resume .rs-wm{position:absolute;inset:-8mm;z-index:3;pointer-events:none;user-select:none;background:url("${WM_URL}") repeat;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .resume{--rs-ink:#111;--rs-muted:#444;--rs-accent:#111;--rs-rule:#111;color:var(--rs-ink);background:#fff;font-size:10.5pt;line-height:1.42}
 .resume a{color:inherit;text-decoration:none}
 .resume header{margin-bottom:6pt}

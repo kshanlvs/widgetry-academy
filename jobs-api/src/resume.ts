@@ -8,9 +8,9 @@ import { notifyUser } from "./notify.js";
 import { askModel } from "./chat.js";
 
 const env = process.env;
-/** Price in rupees (RESUME_PREMIUM_PRICE) and how long it lasts (RESUME_PREMIUM_DAYS). */
+/** Price in rupees (RESUME_PREMIUM_PRICE) and how long it lasts (RESUME_PREMIUM_DAYS). Each order keeps the days it was bought with. */
 export const premiumPrice = () => Number(env.RESUME_PREMIUM_PRICE || 299);
-export const premiumDays = () => Number(env.RESUME_PREMIUM_DAYS || 90);
+export const premiumDays = () => Number(env.RESUME_PREMIUM_DAYS || 30);
 /** AI requests per person per rolling 24 hours (RESUME_AI_DAILY). */
 export const aiDailyLimit = () => Number(env.RESUME_AI_DAILY || 30);
 export const PRO_TEMPLATES = ["executive", "minimal", "elegant"] as const;

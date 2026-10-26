@@ -95,7 +95,7 @@
       <div class="card plan"><b class="pn">Free</b><span class="pp">₹0 <small>forever</small></span>
         <ul><li>ATS score against any job description</li><li>Missing keywords and step-by-step fixes</li><li>Classic, Modern and Compact templates</li><li>PDF download, no watermark</li><li>Talent Network profile</li></ul>
         <a class="btn ghost" href="talent.html">Start free</a></div>
-      <div class="card plan pro"><b class="pn">Resume Premium <span class="pbadge">✨ AI</span></b><span class="pp" id="pPrice">₹299 <small>one-time · 90 days</small></span>
+      <div class="card plan pro"><b class="pn">Resume Premium <span class="pbadge">✨ AI</span></b><span class="pp" id="pPrice">₹299 <small>one-time · 30 days</small></span>
         <ul><li>Everything in Free</li><li><b>Tailor your resume to a job</b> in one click</li><li><b>AI rewrites your bullet points</b> into results</li><li><b>AI professional summary and cover letters</b></li><li>Executive, Minimal and Elegant templates</li></ul>
         <a class="btn gold" href="resume.html?tab=ai">Get Premium</a>
         <span class="muted small">No subscription, nothing renews. AI never invents numbers: it leaves blanks for you to fill.</span></div>
@@ -113,7 +113,8 @@
 
   <section class="faq" style="display:grid;gap:10px">
     <h2>Questions</h2>
-    <details><summary>Is it really free?</summary><p>Yes. The resume, the ATS check, three templates and the PDF are free, with no watermark and no trial. Resume Premium is optional: a one-time payment that adds AI writing help and three more templates for 90 days. Nothing renews automatically.</p></details>
+    <details><summary>Is it really free?</summary><p>Yes. The resume, the ATS check, three templates and the PDF are free, with no watermark and no trial. Free templates never have a watermark. Resume Premium is optional: a one-time payment that adds AI writing help and three more templates for 30 days. You can preview Premium templates any time (with a watermark) and download them clean while Premium is on. Nothing renews automatically, and your resume stays yours after it ends.</p></details>
+    <details><summary>What happens when Premium ends?</summary><p>Your resume and everything in it stay yours, and the free templates keep downloading without a watermark. Premium templates go back to a watermarked preview and the AI writer pauses. Buy again any time to switch them back on; if you renew early, the new days are added on top.</p></details>
     <details><summary>How is the ATS score worked out?</summary><p>We check what screening software and recruiters look for: how many of the job's skills appear on your resume (key skills count double), your title and years of experience, contact details, standard sections, results with numbers, clear bullet points, length and format. Every ATS scores a little differently, so treat it as a guide to improve, not a guarantee.</p></details>
     <details><summary>Does the AI make things up?</summary><p>No. It only rewrites what's already in your profile and never invents employers, numbers or skills. Where a number would help, it leaves a blank like [X]% for you to fill in. Nothing is saved until you click Apply, and it never sees your phone number or email.</p></details>
     <details><summary>Will ATS software read my resume correctly?</summary><p>Yes. Every template uses one column, real selectable text, standard section names (Professional Summary, Technical Skills, Professional Experience, Projects, Education) and consistent dates, which is what screening systems expect.</p></details>
@@ -142,7 +143,7 @@ let tpl = "modern";
 function draw() {
   $("tpl").innerHTML = Object.entries(TEMPLATES).map(([k, v]) => `<button type="button" data-t="${k}" aria-pressed="${k === tpl}">${v}${PRO_TEMPLATES.has(k) ? " ✨" : ""}</button>`).join("");
   $("tpl").querySelectorAll("button").forEach(b => b.onclick = () => { tpl = b.dataset.t; draw(); });
-  $("sheet").innerHTML = renderResume(SAMPLE, tpl);
+  $("sheet").innerHTML = renderResume(SAMPLE, tpl, { watermark: PRO_TEMPLATES.has(tpl) });
 }
 $("peek").innerHTML = renderResume(SAMPLE, "modern");
 draw();
