@@ -146,71 +146,28 @@
 <script type="module">
 import { $, esc, api, mountWho, onUser } from "./jobs.js";
 import { atsCheckText } from "./resume-ats.js";
+import { readResumeFile } from "./resume-file.js";
 mountWho($("who"));
 
 let doc = null;   // { name, type, text, pages }
 let job = null;   // { id?, title, company, text }
 let hasProfile = false;
-const MAX = 5 * 1024 * 1024;
 const ev = (n, p) => { try { if (typeof gtag === "function") gtag("event", n, p || {}); } catch {} };
 
 // ---------- Reading files in the browser ----------
-const loaded = {};
-function script(src) {
-  return (loaded[src] ??= new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => no(new Error("Couldn't load the file reader. Check your connection and try again.")); document.head.appendChild(s); }));
-}
-async function readPdf(buf) {
-  await script("vendor/pdf-3.11.174.min.js");
-  const lib = window.pdfjsLib;
-  lib.GlobalWorkerOptions.workerSrc = "vendor/pdf-3.11.174.worker.min.js";
-  const pdf = await lib.getDocument({ data: buf }).promise;
-  const out = [];
-  for (let i = 1; i <= Math.min(pdf.numPages, 8); i++) {
-    const page = await pdf.getPage(i);
-    const { items } = await page.getTextContent();
-    // Rebuild lines: items on the same baseline join with spaces, a new baseline starts a new line
-    let line = "", y = null, lastEnd = null;
-    for (const it of items) {
-      const iy = Math.round(it.transform[5]), x = it.transform[4];
-      if (y !== null && Math.abs(iy - y) > 2) { out.push(line); line = ""; lastEnd = null; }
-      if (line && lastEnd !== null && x - lastEnd > 1.5 && !/\s$/.test(line) && !/^\s/.test(it.str)) line += " ";
-      line += it.str; y = iy; lastEnd = x + (it.width || 0);
-      if (it.hasEOL) { out.push(line); line = ""; y = null; lastEnd = null; }
-    }
-    if (line) out.push(line);
-    out.push("");
-  }
-  return { text: out.join("\n"), pages: pdf.numPages };
-}
-async function readDocx(buf) {
-  await script("vendor/mammoth-1.6.0.browser.min.js");
-  const r = await window.mammoth.extractRawText({ arrayBuffer: buf });
-  const text = r.value || "";
-  return { text, pages: Math.max(1, Math.round(text.split(/\s+/).filter(Boolean).length / 480)) };
-}
-
 async function takeFile(f) {
   $("err").textContent = "";
   if (!f) return;
-  const name = f.name || "resume";
-  const type = /\.pdf$/i.test(name) || f.type === "application/pdf" ? "pdf" : /\.docx$/i.test(name) ? "docx" : /\.doc$/i.test(name) ? "doc" : "";
-  if (type === "doc") return ($("err").textContent = "Old .doc files can't be read here. Save it as .docx or PDF and upload again.");
-  if (!type) return ($("err").textContent = "Upload a PDF or a Word (.docx) file.");
-  if (f.size > MAX) return ($("err").textContent = "That file is over 5 MB. Upload a smaller PDF or Word file.");
   $("picked").hidden = false; $("pick").hidden = true;
-  $("picked").innerHTML = `<span><span class="spin"></span> Reading <b>${esc(name)}</b>…</span>`;
+  $("picked").innerHTML = `<span><span class="spin"></span> Reading <b>${esc(f.name || "your file")}</b>…</span>`;
   try {
-    const buf = await f.arrayBuffer();
-    const r = type === "pdf" ? await readPdf(buf) : await readDocx(buf);
-    doc = { name, type, ...r };
-    $("picked").innerHTML = `<span>📄 <b>${esc(name)}</b> · ${r.pages} page${r.pages > 1 ? "s" : ""}</span><button type="button" class="lnk" id="unpick">Change</button>`;
+    const r = await readResumeFile(f);
+    doc = r;
+    $("picked").innerHTML = `<span>📄 <b>${esc(r.name)}</b> · ${r.pages} page${r.pages > 1 ? "s" : ""}</span><button type="button" class="lnk" id="unpick">Change</button>`;
     $("unpick").onclick = clearFile;
-    ev("ats_upload", { file_type: type });
+    ev("ats_upload", { file_type: r.type });
     run();
-  } catch (e) {
-    clearFile();
-    $("err").textContent = /password/i.test(e?.message || "") ? "This PDF is password-protected. Remove the password and upload again." : (e?.message?.startsWith("Couldn't") ? e.message : "We couldn't read that file. Try saving it again as PDF or .docx, or paste the text.");
-  }
+  } catch (e) { clearFile(); fail(e.message); }
 }
 function clearFile() { doc = null; $("picked").hidden = true; $("pick").hidden = false; $("file").value = ""; }
 
@@ -286,7 +243,7 @@ function draw(r) {
   const c = 2 * Math.PI * 52, col = r.score >= 85 ? "#1a7f4e" : r.score >= 70 ? "#0f6b56" : r.score >= 50 ? "#b26a00" : "#c23b3b";
   const kw = r.keywords;
   const worst = [...r.categories].sort((a, b) => a.score / a.max - b.score / b.max).filter(x => x.tips.length).slice(0, 3);
-  const build = hasProfile ? `<a class="btn" href="resume.html${job?.id ? "?job=" + encodeURIComponent(job.id) : ""}">Open my Widgetry resume</a>` : `<a class="btn" href="talent.html">Build my resume free</a>`;
+  const build = hasProfile ? `<a class="btn" href="resume.html${job?.id ? "?job=" + encodeURIComponent(job.id) : ""}">Open my Widgetry resume</a>` : `<a class="btn" href="talent.html" id="toBuilder">${doc ? "Turn this file into a clean resume" : "Build my resume free"}</a>`;
   $("res").hidden = false;
   $("res").innerHTML = `
     <div class="card"><div class="sum">
@@ -308,9 +265,11 @@ function draw(r) {
       <p class="small muted" style="margin:4px 0 0">Every ATS scores a little differently; this check follows what most of them look for.</p>
     </div>
     <div class="next">
-      <div class="card"><h2>Fix it in 5 minutes</h2><p class="small muted" style="margin:0">The free Widgetry resume builder makes a one-column, ATS-friendly PDF with the standard headings, and re-scores it live against any job as you edit.</p><div>${build}</div></div>
+      <div class="card"><h2>Fix it in 2 minutes</h2><p class="small muted" style="margin:0">${doc || !hasProfile ? "The free Widgetry resume builder fills itself in from this resume: you check it and download a one-column, ATS-friendly PDF that scores live as you edit." : "The free Widgetry resume builder makes a one-column, ATS-friendly PDF with the standard headings, and re-scores it live against any job as you edit."}</p><div>${build}</div></div>
       <div class="card pro"><h2>✨ Let AI tailor it to this job</h2><p class="small muted" style="margin:0">Resume Premium rewrites your summary and bullets for a job, adds the missing keywords you really have, and writes a cover letter. One-time payment, no subscription.</p><div><a class="btn gold" href="resume-builder.html#premium">See Resume Premium</a></div></div>
     </div>`;
+  // Carry this resume over so the builder fills itself in (same tab, never leaves the browser)
+  $("toBuilder")?.addEventListener("click", () => { try { sessionStorage.setItem("wa_import", JSON.stringify({ text: doc ? doc.text : $("paste").value, name: doc ? doc.name : "your pasted resume" })); } catch {} ev("ats_to_builder"); });
   $("res").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 

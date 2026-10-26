@@ -184,9 +184,24 @@ const profile = (over: Record<string, unknown> = {}) => ({
   about: "I build Flutter apps.", skills: ["flutter", "Bloc", "Firebase"], openToWork: true, hiddenCompanies: "Acme Apps", consent: true, ...over,
 });
 
-test("talent profile: consent required, create, update, private to owner", async () => {
+test("resume without joining the Talent Network; joining is a separate opt-in", async () => {
+  const tok = "dev:resume-only:ravi@test.dev";
+  const base = { fullName: "Ravi Das", headline: "Flutter Developer", experienceYears: 1, skills: ["Flutter"] };
+  const r = await call("PUT", "/talent/me", base, tok);
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.equal(r.body.profile.talentNetwork, false); assert.match(r.body.message, /resume is saved/);
+  assert.equal((await call("GET", "/admin/candidates", undefined, ADMIN)).body.items.some((c: any) => c.fullName === "Ravi Das"), false, "not offered to employers");
+  assert.equal((await call("GET", "/admin/candidates?network=no", undefined, ADMIN)).body.items.length, 1);
+  // Saving again without saying keeps the choice; the profile page can switch it on
+  assert.equal((await call("PUT", "/talent/me", { ...base, headline: "Flutter Dev" }, tok)).body.profile.talentNetwork, false);
+  assert.equal((await call("PATCH", "/talent/me", { talentNetwork: true }, tok)).body.talentNetwork, true);
+  assert.equal((await call("GET", "/talent/me", undefined, tok)).body.profile.talentNetwork, true);
+  assert.equal((await call("PUT", "/talent/me", { ...base, talentNetwork: false }, tok)).body.profile.talentNetwork, false);
+  assert.equal((await call("DELETE", "/talent/me", undefined, tok)).status, 200);
+});
+
+test("talent profile: create, update, private to owner", async () => {
   assert.equal((await call("PUT", "/talent/me", profile())).status, 401);
-  assert.equal((await call("PUT", "/talent/me", profile({ consent: false }), SEEK)).status, 400);
   assert.equal((await call("PUT", "/talent/me", profile({ skills: [] }), SEEK)).status, 400);
   assert.equal((await call("GET", "/talent/me", undefined, SEEK)).body.profile, null);
   const c = await call("PUT", "/talent/me", profile(), SEEK);
@@ -195,6 +210,7 @@ test("talent profile: consent required, create, update, private to owner", async
   assert.equal(c.body.profile.phone, "+919876543210");
   assert.deepEqual(c.body.profile.skills, ["Bloc", "Firebase", "Flutter"]);
   assert.equal(c.body.profile.verification, "self");
+  assert.equal(c.body.profile.talentNetwork, true, "consent: true from older apps still means joining");
   const u = await call("PUT", "/talent/me", profile({ headline: "Senior Flutter Developer", openToWork: false }), SEEK);
   assert.equal(u.body.profile.headline, "Senior Flutter Developer"); assert.equal(u.body.profile.openToWork, false);
   assert.equal(u.body.profile.id, c.body.profile.id, "same profile updated");
@@ -1236,7 +1252,7 @@ test("Resume Premium: ₹299 for 90 days via Razorpay, AI help only with Premium
     assert.equal(v.status, 200);
     assert.equal(v.body.active, true);
     const days = (new Date(v.body.expiresAt).getTime() - Date.now()) / 86_400_000;
-    assert.ok(days > 89.9 && days <= 90, `about 90 days, got ${days}`);
+    assert.ok(days > 89.9 && days < 90.01, `about 90 days, got ${days}`);
     assert.equal((await call("POST", "/resume/premium/verify", { orderId: o.body.orderId, paymentId: "pay_R1", signature: sign(o.body.orderId, "pay_R1") }, ME)).body.expiresAt, v.body.expiresAt, "verifying twice changes nothing");
 
     // Buying again while active adds 90 days on top, confirmed by the webhook alone

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Free ATS Resume + Mobile Developer Talent Network | Widgetry Jobs</title>
-<meta name="description" content="Flutter, Android, iOS or React Native developer looking for a job? Build a free ATS resume and join the Widgetry Talent Network: private and verified by working engineers.">
+<title>Build Your Resume Free: Import from PDF, Word or LinkedIn | Widgetry Jobs</title>
+<meta name="description" content="Upload your old resume or LinkedIn PDF and get a clean, ATS-friendly developer resume in 2 minutes, with a live ATS score. Free for Flutter, Android, iOS and React Native developers.">
 <link rel="canonical" href="https://widgetryacademy.in/talent.html">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Widgetry Jobs"><meta property="og:title" content="Widgetry Talent Network for Flutter developers">
 <meta property="og:url" content="https://widgetryacademy.in/talent.html"><meta property="og:image" content="https://widgetryacademy.in/og-image.jpg">
@@ -23,96 +23,176 @@
   </div>
 </div></nav>
 
+<style id="resumeCss"></style>
+<style>
+.start{background:var(--surface);border:2px solid color-mix(in srgb,var(--accent-2) 55%,var(--line));border-radius:20px;padding:clamp(16px,3.5vw,26px);display:grid;gap:14px}
+.start-in{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:center}
+.start h2{margin:2px 0 6px;font-size:clamp(20px,3vw,26px)}
+.start p{margin:0}
+.drop{border:2px dashed color-mix(in srgb,var(--accent) 45%,var(--line));border-radius:16px;background:color-mix(in srgb,var(--accent) 5%,var(--surface));padding:22px 14px;text-align:center;cursor:pointer;display:grid;gap:4px;justify-items:center;transition:border-color .15s,background .15s}
+.drop:hover,.drop:focus-visible,.drop.over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface));outline:none}
+.drop .ic{font-size:30px;line-height:1}
+.drop b{font-size:17px}
+.drop .small{color:var(--muted)}
+.start details{font-size:14.5px}
+.start summary{cursor:pointer;font-weight:700;color:var(--accent)}
+.start ol{margin:8px 0 0;padding-left:20px;display:grid;gap:4px;color:var(--muted)}
+.privacy{font-size:13px;color:var(--muted)}
+.notice{border-radius:14px;padding:12px 14px;font-size:14.5px;display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.notice.ok{background:color-mix(in srgb,var(--ok) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--ok) 35%,var(--line))}
+.notice.warn{background:#fff8ea;border:1px solid #f0d29a;color:#5c3d00}
+.notice .lnk{border:0;background:none;padding:0;font:inherit;font-weight:700;color:var(--accent);cursor:pointer}
+.need{border-color:#e0a400!important;background:#fffaf0!important;box-shadow:0 0 0 3px #f2a90033}
+#netMore{display:grid;gap:14px}
+.check.big{align-items:flex-start;font-weight:500}
+.check.big input{margin-top:3px}
+.levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.level{display:grid;gap:4px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
+@media (max-width:760px){.start-in,.levels{grid-template-columns:1fr}}
+/* Sticky bar: live ATS score, preview, save */
+.savebar{position:sticky;bottom:0;z-index:6;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.06)}
+.sb-in{display:flex;gap:10px;align-items:center;justify-content:flex-end;padding-block:10px;max-width:860px}
+.scorepill{margin-right:auto;display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:700;font-size:14.5px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;cursor:pointer}
+.scorepill b{font-size:17px}
+.scorepill .dot{width:10px;height:10px;border-radius:50%;background:var(--muted)}
+@media (max-width:520px){.sb-in .btn{padding-inline:12px;font-size:14px}.scorepill{padding:6px 10px}.scorepill .lbl{display:none}}
+/* Dialogs */
+dialog{border:0;border-radius:18px;padding:0;max-width:min(560px,calc(100vw - 24px));width:100%;box-shadow:0 30px 70px rgba(0,0,0,.35);color:var(--ink);background:var(--surface)}
+dialog::backdrop{background:rgba(8,20,16,.55)}
+.dlg{padding:22px;display:grid;gap:12px}
+.dlg h2{margin:0;font-size:22px}
+.dlg p{margin:0}
+dialog.pv{max-width:min(900px,calc(100vw - 16px));height:min(92vh,1100px)}
+.pv[open]{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto}
+.pv-head{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+.pv-tips{padding:10px 18px;font-size:14px;color:var(--muted);border-bottom:1px solid var(--line)}
+.pv-tips ul{margin:4px 0 0;padding-left:18px}
+.pv-body{overflow:auto;background:#e9eeeb;padding:16px}
+.pv-sheet{background:#fff;width:794px;padding:44px 50px 54px;transform-origin:top left;box-shadow:0 1px 3px rgba(0,0,0,.08),0 10px 30px rgba(0,0,0,.1)}
+.pv-foot{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line)}
+.x{border:0;background:none;font-size:22px;cursor:pointer;color:var(--muted);padding:4px 8px}
+</style>
+
 <header class="jhero"><div class="wrap">
   <p class="eyebrow">For Flutter, Android, iOS &amp; React Native developers · free</p>
-  <h1>Your ATS-ready resume, <em>and a way in.</em></h1>
-  <p>Fill this once: you get a premium, ATS-friendly resume as a PDF, and a place in the Widgetry Talent Network where Flutter companies find you. Your profile stays private until you say yes.</p>
+  <h1>Your ATS-ready resume <em>in 2 minutes.</em></h1>
+  <p>Upload the resume you have (or your LinkedIn PDF) and we fill everything in. Check it, hit save, download a clean ATS-friendly PDF. No typing it all again.</p>
 </div></header>
 
-<main class="wrap" style="padding-block:28px 60px;display:grid;gap:22px;max-width:860px">
-  <section>
-    <p class="eyebrow">How verification works</p>
-    <div class="levels" style="margin-top:10px">
-      <div class="level"><span class="badge mute">Step 1</span><b>Self-declared</b><span class="muted small">Create your profile. You're in the network straight away.</span></div>
-      <div class="level"><span class="badge ok">Step 2</span><b>✓ Portfolio checked</b><span class="muted small">A Widgetry engineer reviews your Play Store apps and GitHub.</span></div>
-      <div class="level"><span class="badge feat">Step 3</span><b>★ Widgetry verified</b><span class="muted small">A short technical call with a mentor. Companies trust this badge most.</span></div>
-    </div>
-  </section>
-
-  <section class="formcard" id="gate" hidden>
-    <h2>Sign in to create your profile</h2>
-    <p class="muted" style="margin:0">Use the same account as Widgetry Academy. Your email comes from your sign-in.</p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="gbtn" type="button" id="bGoogle"></button><a class="btn ghost" id="lLogin" href="#">Use email instead</a></div>
-    <p class="err" id="gErr" hidden></p>
-  </section>
-
+<main class="wrap" style="padding-block:24px 30px;display:grid;gap:20px;max-width:860px">
+  <a href="my-profile.html" id="backLink" hidden style="font-weight:700;text-decoration:none">← Back to my profile</a>
   <div id="statusBox" hidden></div>
 
-  <a href="my-profile.html" id="backLink" hidden style="font-weight:700;text-decoration:none">← Back to my profile</a>
-  <form class="formcard" id="fProfile" novalidate hidden>
+  <section class="start" id="start" aria-labelledby="startH">
+    <div class="start-in">
+      <div>
+        <p class="eyebrow" style="color:var(--accent)">Fastest way</p>
+        <h2 id="startH">Have a resume already? We'll fill this in for you.</h2>
+        <p class="muted">Upload a PDF or Word file. You check what we filled in and save. That's it.</p>
+      </div>
+      <div class="drop" id="drop" tabindex="0" role="button" aria-describedby="dropHelp">
+        <span class="ic" aria-hidden="true">📄</span>
+        <b id="dropLabel">Upload my resume</b>
+        <span class="small" id="dropHelp">PDF or Word (.docx) · or drop it here</span>
+      </div>
+      <input type="file" id="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+    </div>
+    <details><summary>No resume? Use your LinkedIn profile</summary>
+      <ol><li>Open your LinkedIn profile on a computer.</li><li>Click <b>More</b> (or <b>Resources</b>), then <b>Save to PDF</b>.</li><li>Upload that PDF here.</li></ol>
+    </details>
+    <div id="impMsg" aria-live="polite"></div>
+    <p class="privacy">🔒 Your file is read on your device and isn't uploaded. Nothing is saved until you press Save. No resume at all? Just fill in the form below.</p>
+  </section>
+
+  <form class="formcard" id="fProfile" novalidate>
     <fieldset><legend>About you</legend>
-      <div><span style="font-weight:700;font-size:14.5px">I work with <span class="opt">(pick all that apply: we use this to match jobs and suggest skills)</span></span><div class="checks" id="roleCats" style="margin-top:8px"></div></div>
+      <div><span style="font-weight:700;font-size:14.5px">I work with <span class="opt">(pick all that apply: we use this to suggest skills)</span></span><div class="checks" id="roleCats" style="margin-top:8px"></div></div>
       <div class="row2">
         <label>Full name<input id="fullName" maxlength="100" required autocomplete="name"></label>
-        <label><span>Phone / WhatsApp <span class="opt">(private)</span></span><input id="phone" type="tel" maxlength="20" autocomplete="tel" placeholder="+91 98765 43210"></label>
+        <label><span>Phone / WhatsApp <span class="opt">(shown on your resume)</span></span><input id="phone" type="tel" maxlength="20" autocomplete="tel" placeholder="+91 98765 43210"></label>
       </div>
-      <label>Headline<input id="headline" maxlength="140" required placeholder="e.g. Flutter Developer · 3 years · Bloc & Firebase  /  Android Developer · Kotlin & Compose"></label>
+      <label><span>Headline <span class="opt">(the line under your name)</span></span><input id="headline" maxlength="140" required placeholder="e.g. Flutter Developer · 3 years · Bloc & Firebase"></label>
       <div class="row3">
-        <label>Mobile development experience (years)<input id="experienceYears" type="number" min="0" max="40" step="0.5" required value="0"></label>
+        <label>Experience (years)<input id="experienceYears" type="number" min="0" max="40" step="0.5" required value="0"></label>
         <label><span>Current company <span class="opt">(optional)</span></span><input id="currentCompany" maxlength="120"></label>
         <label><span>City <span class="opt">(optional)</span></span><input id="city" maxlength="80" placeholder="e.g. Kolkata"></label>
       </div>
-      <label><span>About <span class="opt">(optional)</span></span><textarea id="about" maxlength="2000" style="min-height:110px" placeholder="What have you built? What are you looking for next?"></textarea></label>
+      <label><span>Summary <span class="opt">(optional: leave empty and we write one from your details)</span></span><textarea id="about" maxlength="2000" style="min-height:100px" placeholder="2–3 lines: what you build, with what, and what you're good at."></textarea></label>
     </fieldset>
     <fieldset><legend>Skills</legend>
+      <p class="muted small" style="margin:0">Tap to select, up to 15.</p>
       <div class="chiprow" id="skillChips"></div>
       <div class="skillin"><input id="skillOther" maxlength="40" placeholder="Add another skill" aria-label="Add another skill"><button class="btn ghost small" type="button" id="bAddSkill">Add</button></div>
     </fieldset>
-    <fieldset><legend>Work experience <span class="opt">(for your resume)</span></legend>
-      <p class="muted small" style="margin:0">Newest first. Freshers can skip this and add internships or projects instead.</p>
+    <fieldset><legend>Work experience</legend>
+      <p class="muted small" style="margin:0">Newest first. Freshers: add internships here, or skip to projects.</p>
       <div id="work" style="display:grid;gap:12px"></div>
       <button class="btn ghost small" type="button" id="bAddWork" style="justify-self:start">+ Add a job</button>
     </fieldset>
-    <fieldset><legend>Education <span class="opt">(for your resume)</span></legend>
+    <fieldset><legend>Projects &amp; apps</legend>
+      <div id="apps" style="display:grid;gap:10px"></div>
+      <button class="btn ghost small" type="button" id="bAddApp" style="justify-self:start">+ Add a project</button>
+    </fieldset>
+    <fieldset><legend>Education</legend>
       <div id="edu" style="display:grid;gap:12px"></div>
       <button class="btn ghost small" type="button" id="bAddEdu" style="justify-self:start">+ Add education</button>
+    </fieldset>
+    <fieldset><legend>Links <span class="opt">(optional)</span></legend>
+      <div class="row3">
+        <label>GitHub<input id="githubUrl" type="url" maxlength="300" placeholder="github.com/you"></label>
+        <label>LinkedIn<input id="linkedinUrl" type="url" maxlength="300" placeholder="linkedin.com/in/you"></label>
+        <label>Portfolio<input id="portfolioUrl" type="url" maxlength="300" placeholder="yoursite.dev"></label>
+      </div>
     </fieldset>
     <fieldset><legend>Certifications <span class="opt">(optional)</span></legend>
       <div id="certs" style="display:grid;gap:10px"></div>
       <button class="btn ghost small" type="button" id="bAddCert" style="justify-self:start">+ Add a certificate</button>
     </fieldset>
-    <fieldset><legend>Proof of work (this is what gets you verified)</legend>
-      <div class="row3">
-        <label><span>GitHub <span class="opt">(optional)</span></span><input id="githubUrl" type="url" maxlength="300" placeholder="https://github.com/you"></label>
-        <label><span>LinkedIn <span class="opt">(optional)</span></span><input id="linkedinUrl" type="url" maxlength="300" placeholder="https://linkedin.com/in/you"></label>
-        <label><span>Portfolio <span class="opt">(optional)</span></span><input id="portfolioUrl" type="url" maxlength="300" placeholder="https://"></label>
-      </div>
-      <div><span style="font-weight:700;font-size:14.5px">Apps you've built or worked on</span>
-        <div id="apps" style="display:grid;gap:10px;margin-top:8px"></div>
-        <button class="btn ghost small" type="button" id="bAddApp" style="margin-top:10px">+ Add an app</button>
+    <fieldset id="netBox"><legend>Talent Network <span class="opt">(optional)</span></legend>
+      <label class="check big"><input type="checkbox" id="joinNet"> <span><b>Also let mobile teams hiring through Widgetry find me</b><br><span class="muted small">Free. We review your profile and introduce you to companies only with your approval. Your resume works the same either way, and you can leave any time.</span></span></label>
+      <div id="netMore" hidden>
+        <div><span style="font-weight:700;font-size:14.5px">Job type</span><div class="checks" id="jobTypes" style="margin-top:8px"></div></div>
+        <div><span style="font-weight:700;font-size:14.5px">Work mode</span><div class="checks" id="workModes" style="margin-top:8px"></div></div>
+        <div class="row2">
+          <label><span>Notice period <span class="opt">(optional)</span></span><select id="noticePeriod"><option value="">Choose…</option></select></label>
+          <label><span>Expected salary (LPA) <span class="opt">(optional, never on your resume)</span></span><input id="expectedSalaryLpa" type="number" min="0" max="500" step="0.5" inputmode="decimal"></label>
+        </div>
+        <label class="check"><input type="checkbox" id="openToWork" checked> <span>I'm open to work. Turn off any time to pause.</span></label>
+        <label><span>Never show my profile to these companies <span class="opt">(e.g. your current employer, comma separated)</span></span><input id="hiddenCompanies" maxlength="400"></label>
+        <div class="levels">
+          <div class="level"><span class="badge mute">Step 1</span><b>Self-declared</b><span class="muted small">You're in the network as soon as you save.</span></div>
+          <div class="level"><span class="badge ok">Step 2</span><b>✓ Portfolio checked</b><span class="muted small">A Widgetry engineer reviews your apps and GitHub.</span></div>
+          <div class="level"><span class="badge feat">Step 3</span><b>★ Widgetry verified</b><span class="muted small">A short technical call with a mentor.</span></div>
+        </div>
       </div>
     </fieldset>
-    <fieldset><legend>What you're looking for</legend>
-      <div><span style="font-weight:700;font-size:14.5px">Job type</span><div class="checks" id="jobTypes" style="margin-top:8px"></div></div>
-      <div><span style="font-weight:700;font-size:14.5px">Work mode</span><div class="checks" id="workModes" style="margin-top:8px"></div></div>
-      <div class="row2">
-        <label><span>Notice period <span class="opt">(optional)</span></span><select id="noticePeriod"><option value="">Choose…</option></select></label>
-        <label><span>Expected salary (LPA) <span class="opt">(optional, private)</span></span><input id="expectedSalaryLpa" type="number" min="0" max="500" step="0.5" inputmode="decimal"></label>
-      </div>
-    </fieldset>
-    <fieldset><legend>Privacy</legend>
-      <label class="check"><input type="checkbox" id="openToWork" checked> <span>I'm open to work. Turn off any time to pause your profile.</span></label>
-      <label><span>Never show my profile to these companies <span class="opt">(e.g. your current employer, comma separated)</span></span><input id="hiddenCompanies" maxlength="400"></label>
-      <label class="check" style="font-weight:600"><input type="checkbox" id="consent"> <span>I agree that Widgetry may review my profile and share it with Flutter employers <b>only with my approval</b>, as described in the <a href="privacy.html" target="_blank">privacy policy</a>. I can delete it any time.</span></label>
-    </fieldset>
-    <p class="err" id="err" hidden></p>
+    <p class="small muted" style="margin:0">By saving you agree to the <a href="jobs-terms.html" target="_blank">terms</a> and <a href="privacy.html" target="_blank">privacy policy</a>. You can delete everything any time.</p>
+    <p class="err" id="err" hidden role="alert"></p>
     <p class="okmsg" id="ok" hidden></p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center">
-      <button class="btn" id="bSave" type="submit">Save my profile</button>
-      <button class="btn danger small" id="bDelete" type="button" hidden>Delete my profile</button>
-    </div>
+    <button class="btn danger small" id="bDelete" type="button" hidden style="justify-self:start">Delete my profile</button>
   </form>
 </main>
+
+<div class="savebar"><div class="wrap sb-in">
+  <button type="button" class="scorepill" id="scoreBtn" aria-label="ATS score: open preview"><span class="dot" id="scoreDot"></span><span class="lbl">ATS score</span> <b id="scoreN">–</b></button>
+  <button type="button" class="btn ghost small" id="bPreview">Preview</button>
+  <button class="btn" form="fProfile" type="submit" id="bSave">Save &amp; get my resume</button>
+</div></div>
+
+<dialog id="signin" aria-labelledby="siH"><div class="dlg">
+  <div style="display:flex;justify-content:space-between;align-items:start;gap:10px"><h2 id="siH">Save your resume</h2><button type="button" class="x" id="siClose" aria-label="Close">✕</button></div>
+  <p class="muted">Sign in so your resume is saved and you can download it any time. Everything you've filled in stays as it is.</p>
+  <button type="button" class="gbtn" id="bGoogle"></button>
+  <a class="btn ghost" id="lEmail" href="pages/login.html?mode=signup&amp;next=%2Ftalent.html%3Ffinish%3D1">Use email instead</a>
+  <p class="err" id="gErr" hidden></p>
+</div></dialog>
+
+<dialog id="pv" class="pv" aria-labelledby="pvH">
+  <div class="pv-head"><b id="pvH">Your resume</b><span id="pvScore" class="small"></span><button type="button" class="x" id="pvClose" aria-label="Close preview">✕</button></div>
+  <div class="pv-tips" id="pvTips"></div>
+  <div class="pv-body" id="pvBody"><div id="pvWrap"><div class="pv-sheet" id="pvSheet"></div></div></div>
+  <div class="pv-foot"><span class="small muted">After saving you can pick from 6 templates and download the PDF.</span><button type="button" class="btn" id="pvSave">Save &amp; get my resume</button></div>
+</dialog>
 
 <footer class="jfoot"><div class="wrap">
   <span>© 2026 Widgetry Jobs · a part of <a href="./">Widgetry Academy</a> · Kolkata, India</span>
@@ -120,51 +200,67 @@
 </div></footer>
 
 <script type="module">
-import { $, esc, api, LABEL, onUser, googleSignIn, loginLink, GOOGLE_SVG, mountWho, toast, getCategories } from "./jobs.js";
+import { $, esc, api, LABEL, onUser, googleSignIn, GOOGLE_SVG, mountWho, toast, getCategories, auth } from "./jobs.js";
+import { readResumeFile } from "./resume-file.js";
+import { parseResume } from "./resume-parse.js";
+import { atsCheck } from "./resume-ats.js";
+import { renderResume, RESUME_CSS } from "./resume-render.js";
 mountWho($("who"));
+$("resumeCss").textContent = RESUME_CSS;
 $("bGoogle").innerHTML = GOOGLE_SVG + "Continue with Google";
-$("lLogin").href = loginLink();
 for (const [v, t] of Object.entries(LABEL.notice)) $("noticePeriod").add(new Option(t, v));
 const checks = (el, obj, name) => { el.innerHTML = Object.entries(obj).map(([v, t]) => `<label class="check"><input type="checkbox" name="${name}" value="${v}"> ${esc(t)}</label>`).join(""); };
 checks($("jobTypes"), LABEL.type, "jt"); checks($("workModes"), LABEL.mode, "wm");
 
-let skills = ["Flutter", "Dart"];
-let suggested = ["Flutter", "Dart", "Firebase", "Bloc", "Provider", "Riverpod", "GetX", "REST APIs", "Clean Architecture", "Testing", "CI/CD", "Google Maps", "Push Notifications", "Animations", "Flame", "Git"];
+const params = new URLSearchParams(location.search);
+const EDIT = params.has("edit"), FINISH = params.has("finish");
+// A draft lives in this browser until it's saved to an account; it survives a sign-in round trip
+const DRAFT = "wa_resume_draft", PENDING = "wa_resume_pending";
+const store = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del: k => { try { localStorage.removeItem(k); } catch {} },
+};
+let user = null, profile = null, authKnown = false, dirty = false, importedEmail = "";
 
-// Role types (Flutter / Android / iOS …) come from the server; skill suggestions follow the ones ticked
+// ---------- Skills and role types ----------
+let skills = ["Flutter", "Dart"];
+let suggested = ["Flutter", "Dart", "Firebase", "Bloc", "Provider", "Riverpod", "GetX", "REST APIs", "Clean Architecture", "Unit Testing", "CI/CD", "Google Maps", "Push Notifications", "Animations", "Git"];
 let cats = [];
 const pickedCats = () => [...document.querySelectorAll('input[name="rc"]:checked')].map(c => c.value);
 function drawRoleCats(selected = ["flutter"]) {
   $("roleCats").innerHTML = cats.map(c => `<label class="check"><input type="checkbox" name="rc" value="${esc(c.slug)}"${selected.includes(c.slug) ? " checked" : ""}> ${esc(c.name)}</label>`).join("");
-  $("roleCats").querySelectorAll("input").forEach(i => i.onchange = refreshSuggestions);
+  $("roleCats").querySelectorAll("input").forEach(i => i.onchange = () => { refreshSuggestions(); changed(); });
   refreshSuggestions();
 }
 function refreshSuggestions() {
-  const sel = cats.filter(c => pickedCats().includes(c.slug));
-  const list = [...new Set(sel.flatMap(c => c.suggestedSkills))];
+  const list = [...new Set(cats.filter(c => pickedCats().includes(c.slug)).flatMap(c => c.suggestedSkills))];
   if (list.length) { suggested = list.slice(0, 24); drawSkills(); }
 }
 const catsReady = getCategories().then(list => { cats = list; drawRoleCats(); });
 function drawSkills() {
-  $("skillChips").innerHTML = [...new Set([...suggested, ...skills])].map(s => `<button class="chipbtn" type="button" data-s="${esc(s)}" aria-pressed="${skills.includes(s)}">${esc(s)}</button>`).join("");
-  $("skillChips").querySelectorAll("button").forEach(b => b.onclick = () => { const s = b.dataset.s; skills = skills.includes(s) ? skills.filter(x => x !== s) : skills.length < 15 ? [...skills, s] : skills; drawSkills(); });
+  $("skillChips").innerHTML = [...new Set([...skills, ...suggested])].map(s => `<button class="chipbtn" type="button" data-s="${esc(s)}" aria-pressed="${skills.includes(s)}">${esc(s)}</button>`).join("");
+  $("skillChips").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const s = b.dataset.s;
+    if (!skills.includes(s) && skills.length >= 15) return toast("Up to 15 skills: remove one first.");
+    skills = skills.includes(s) ? skills.filter(x => x !== s) : [...skills, s]; drawSkills(); changed();
+  });
 }
-const addOther = () => { const v = $("skillOther").value.trim(); if (v && skills.length < 15 && !skills.some(s => s.toLowerCase() === v.toLowerCase())) { skills.push(v); drawSkills(); } $("skillOther").value = ""; };
+const addOther = () => { const v = $("skillOther").value.trim(); if (v && skills.length < 15 && !skills.some(s => s.toLowerCase() === v.toLowerCase())) { skills.push(v); drawSkills(); changed(); } $("skillOther").value = ""; };
 $("bAddSkill").onclick = addOther;
 $("skillOther").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addOther(); } });
 
+// ---------- Repeating rows ----------
 function addApp(a = {}) {
   if ($("apps").children.length >= 8) return;
-  const row = document.createElement("div"); row.className = "row3 app";
-  row.innerHTML = `<input class="aName" maxlength="80" placeholder="App or project name" value="${esc(a.name || "")}" aria-label="App name">
-    <input class="aUrl" type="url" maxlength="400" placeholder="Play Store / App Store / GitHub link" value="${esc(a.url || "")}" aria-label="App link">
-    <div style="display:flex;gap:8px"><input class="aRole" maxlength="80" placeholder="Your role" value="${esc(a.role || "")}" aria-label="Your role"><button class="btn ghost small" type="button" aria-label="Remove app">✕</button></div>
-    <input class="aAbout" maxlength="400" style="grid-column:1/-1" placeholder="One line: what it does and the tech, e.g. Food delivery app with live tracking · Flutter, Firebase, Google Maps" value="${esc(a.about || "")}" aria-label="What the app does">`;
-  row.querySelector("button").onclick = () => row.remove();
+  const row = document.createElement("div"); row.className = "subcard app";
+  row.innerHTML = `<div class="row3"><input class="aName" maxlength="80" placeholder="App or project name" value="${esc(a.name || "")}" aria-label="Project name">
+    <input class="aUrl" type="url" maxlength="400" placeholder="Play Store / App Store / GitHub link" value="${esc(a.url || "")}" aria-label="Project link">
+    <div style="display:flex;gap:8px"><input class="aRole" maxlength="80" placeholder="Your role" value="${esc(a.role || "")}" aria-label="Your role"><button class="btn ghost small" type="button" aria-label="Remove project">✕</button></div></div>
+    <input class="aAbout" maxlength="400" placeholder="One line: what it does and the tech, e.g. Food delivery app with live tracking · Flutter, Firebase, Google Maps" value="${esc(a.about || "")}" aria-label="What the project does">`;
+  row.querySelector("button").onclick = () => { row.remove(); changed(); };
   $("apps").appendChild(row);
 }
-$("bAddApp").onclick = () => addApp();
-
 function addWork(w = {}) {
   if ($("work").children.length >= 10) return;
   const box = document.createElement("div"); box.className = "subcard work";
@@ -172,12 +268,12 @@ function addWork(w = {}) {
       <label>Role<input class="wRole" maxlength="100" placeholder="e.g. Flutter Developer" value="${esc(w.role || "")}"></label></div>
     <div class="row3"><label>From<input class="wStart" type="month" value="${esc(w.start || "")}" placeholder="2023-06"></label>
       <label>To<input class="wEnd" type="month" value="${esc(w.end || "")}" placeholder="2024-12"></label>
-      <label class="check" style="align-self:end;padding-bottom:10px"><input type="checkbox" class="wNow"${w.company && !w.end ? " checked" : ""}> I work here now</label></div>
-    <label><span>What you did <span class="opt">(one point per line: features you built, results, tech used)</span></span><textarea class="wPoints" maxlength="1500" style="min-height:90px" placeholder="Built the order tracking screen with Google Maps and Firebase&#10;Reduced app crashes by 40% with error handling and tests">${esc(w.points || "")}</textarea></label>
+      <label class="check" style="align-self:end;padding-bottom:10px"><input type="checkbox" class="wNow"${(w.company || w.role) && !w.end ? " checked" : ""}> I work here now</label></div>
+    <label><span>What you did <span class="opt">(one point per line: what you built, results, tech used)</span></span><textarea class="wPoints" maxlength="1500" style="min-height:90px" placeholder="Built the order tracking screen with Google Maps and Firebase&#10;Reduced app crashes by 40% with error handling and tests">${esc(w.points || "")}</textarea></label>
     <button class="btn ghost small" type="button" style="justify-self:end">Remove</button>`;
   const now = box.querySelector(".wNow"), end = box.querySelector(".wEnd");
-  const sync = () => { end.disabled = now.checked; if (now.checked) end.value = ""; }; now.onchange = sync; sync();
-  box.querySelector("button").onclick = () => box.remove();
+  const sync = () => { end.disabled = now.checked; if (now.checked) end.value = ""; }; now.onchange = () => { sync(); changed(); }; sync();
+  box.querySelector("button.btn").onclick = () => { box.remove(); changed(); };
   $("work").appendChild(box);
 }
 function addEdu(e = {}) {
@@ -188,7 +284,7 @@ function addEdu(e = {}) {
     <div class="row3"><label><span>Year <span class="opt">(passing)</span></span><input class="eYear" type="number" min="1970" max="2040" inputmode="numeric" value="${esc(e.year ?? "")}"></label>
       <label><span>Score <span class="opt">(optional)</span></span><input class="eScore" maxlength="40" placeholder="8.1 CGPA / 78%" value="${esc(e.score || "")}"></label>
       <button class="btn ghost small" type="button" style="align-self:end;justify-self:end">Remove</button></div>`;
-  box.querySelector("button").onclick = () => box.remove();
+  box.querySelector("button").onclick = () => { box.remove(); changed(); };
   $("edu").appendChild(box);
 }
 function addCert(c = {}) {
@@ -197,98 +293,274 @@ function addCert(c = {}) {
   row.innerHTML = `<input class="cName" maxlength="120" placeholder="Certificate, e.g. Flutter in 10 Days" value="${esc(c.name || "")}" aria-label="Certificate name">
     <input class="cIssuer" maxlength="120" placeholder="Issued by, e.g. Widgetry Academy" value="${esc(c.issuer || "")}" aria-label="Issued by">
     <div style="display:flex;gap:8px"><input class="cYear" type="number" min="1970" max="2040" placeholder="Year" value="${esc(c.year ?? "")}" aria-label="Year"><button class="btn ghost small" type="button" aria-label="Remove certificate">✕</button></div>`;
-  row.querySelector("button").onclick = () => row.remove();
+  row.querySelector("button").onclick = () => { row.remove(); changed(); };
   $("certs").appendChild(row);
 }
-$("bAddCert").onclick = () => addCert();
-const collectCerts = () => [...document.querySelectorAll(".cert")].map(r => ({ name: r.querySelector(".cName").value.trim(), issuer: r.querySelector(".cIssuer").value.trim(),
-  year: r.querySelector(".cYear").value ? Number(r.querySelector(".cYear").value) : null })).filter(c => c.name);
-$("bAddWork").onclick = () => addWork();
-$("bAddEdu").onclick = () => addEdu();
-const collectWork = () => [...document.querySelectorAll(".work")].map(b => ({
-  company: b.querySelector(".wCompany").value.trim(), role: b.querySelector(".wRole").value.trim(),
-  start: b.querySelector(".wStart").value.trim(), end: b.querySelector(".wNow").checked ? "" : b.querySelector(".wEnd").value.trim(),
-  points: b.querySelector(".wPoints").value.trim() })).filter(w => w.company || w.role);
-const collectEdu = () => [...document.querySelectorAll(".edu")].map(b => ({
-  degree: b.querySelector(".eDegree").value.trim(), institute: b.querySelector(".eInst").value.trim(),
-  year: b.querySelector(".eYear").value ? Number(b.querySelector(".eYear").value) : null, score: b.querySelector(".eScore").value.trim() })).filter(e => e.degree || e.institute);
+$("bAddApp").onclick = () => { addApp(); changed(); };
+$("bAddWork").onclick = () => { addWork(); changed(); };
+$("bAddEdu").onclick = () => { addEdu(); changed(); };
+$("bAddCert").onclick = () => { addCert(); changed(); };
 
-const BADGE = { self: ["mute", "Self-declared"], portfolio: ["ok", "✓ Portfolio checked"], verified: ["feat", "★ Widgetry verified"] };
-function showStatus(p) {
-  if (!p) { $("statusBox").hidden = true; return; }
-  const [cls, txt] = BADGE[p.verification] || BADGE.self;
-  $("statusBox").innerHTML = `<div class="card" style="display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
-    <div><b>Your profile is ${p.openToWork ? "active" : "paused"}</b><div class="muted small">Verification: <span class="badge ${cls}">${txt}</span>${p.verification === "self" ? " · Add your apps and GitHub so we can check your portfolio." : ""}</div></div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="badge ${p.openToWork ? "ok" : "mute"}">${p.openToWork ? "Open to work" : "Paused"}</span>
-      <a class="btn small" href="resume.html">📄 View &amp; download resume</a></div></div>`;
-  $("statusBox").hidden = false;
-}
+const syncNet = () => { $("netMore").hidden = !$("joinNet").checked; };
+$("joinNet").onchange = syncNet;
 
-function fill(p) {
-  for (const k of ["fullName", "phone", "headline", "currentCompany", "city", "about", "githubUrl", "linkedinUrl", "portfolioUrl", "hiddenCompanies"]) $(k).value = p[k] || "";
-  $("experienceYears").value = p.experienceYears ?? 0;
-  $("noticePeriod").value = p.noticePeriod || "";
-  $("expectedSalaryLpa").value = p.expectedSalaryLpa ?? "";
-  $("openToWork").checked = p.openToWork;
-  document.querySelectorAll('input[name="jt"]').forEach(c => (c.checked = p.jobTypes.includes(c.value)));
-  catsReady.then(() => drawRoleCats(p.categories?.length ? p.categories : ["flutter"]));
-  document.querySelectorAll('input[name="wm"]').forEach(c => (c.checked = p.workModes.includes(c.value)));
-  skills = p.skills.length ? p.skills : skills; drawSkills();
-  $("apps").innerHTML = ""; (p.apps.length ? p.apps : [{}]).forEach(addApp);
-  $("work").innerHTML = ""; (p.experience || []).forEach(addWork);
-  $("edu").innerHTML = ""; (p.education?.length ? p.education : [{}]).forEach(addEdu);
-  $("certs").innerHTML = ""; (p.certifications || []).forEach(addCert);
-  $("consent").checked = true; $("bDelete").hidden = false; $("bSave").textContent = "Update my profile";
-}
-
-onUser(async u => {
-  $("gate").hidden = !!u; $("fProfile").hidden = !u;
-  if (!u) { $("statusBox").hidden = true; return; }
-  if (!$("fullName").value) $("fullName").value = u.displayName || "";
-  try {
-    const r = await api("/talent/me", { auth: true });
-    // People who already have a profile land on their profile page; ?edit=1 opens this form
-    if (r.profile && !new URLSearchParams(location.search).has("edit")) { location.replace("my-profile.html"); return; }
-    if (r.profile) { $("backLink").hidden = false; document.title = "Edit profile | Widgetry Jobs"; }
-    if (r.profile) fill(r.profile); else { if (!$("apps").children.length) addApp(); if (!$("edu").children.length) addEdu(); } showStatus(r.profile); }
-  catch (e) { $("err").textContent = e.message; $("err").hidden = false; }
-});
-drawSkills();
-$("bGoogle").onclick = async () => { $("gErr").hidden = true; try { await googleSignIn(); } catch (e) { $("gErr").textContent = e.message; $("gErr").hidden = false; } };
-
-$("fProfile").addEventListener("submit", async e => {
-  e.preventDefault(); $("err").hidden = true; $("ok").hidden = true;
-  if (!$("consent").checked) { $("err").textContent = "Please tick the consent box so we can review your profile."; $("err").hidden = false; return; }
-  const apps = [...document.querySelectorAll(".app")].map(r => ({ name: r.querySelector(".aName").value.trim(), url: r.querySelector(".aUrl").value.trim(), role: r.querySelector(".aRole").value.trim(), about: r.querySelector(".aAbout").value.trim() })).filter(a => a.name);
-  const body = {
-    fullName: $("fullName").value, phone: $("phone").value, headline: $("headline").value, currentCompany: $("currentCompany").value,
-    experienceYears: Number($("experienceYears").value || 0), city: $("city").value, about: $("about").value,
-    githubUrl: $("githubUrl").value, linkedinUrl: $("linkedinUrl").value, portfolioUrl: $("portfolioUrl").value, apps, skills,
-    experience: collectWork(), education: collectEdu(), certifications: collectCerts(),
+// ---------- Form <-> data ----------
+const val = (el, sel) => el.querySelector(sel).value.trim();
+const withScheme = v => (v && !/^https?:\/\//i.test(v) ? "https://" + v.replace(/^\/+/, "") : v);
+function collect() {
+  return {
+    fullName: $("fullName").value.trim(), phone: $("phone").value.trim(), headline: $("headline").value.trim(), currentCompany: $("currentCompany").value.trim(),
+    experienceYears: Number($("experienceYears").value || 0), city: $("city").value.trim(), about: $("about").value.trim(),
+    githubUrl: withScheme($("githubUrl").value.trim()), linkedinUrl: withScheme($("linkedinUrl").value.trim()), portfolioUrl: withScheme($("portfolioUrl").value.trim()),
+    apps: [...document.querySelectorAll(".app")].map(r => ({ name: val(r, ".aName"), url: withScheme(val(r, ".aUrl")), role: val(r, ".aRole"), about: val(r, ".aAbout") })).filter(a => a.name),
+    skills,
+    experience: [...document.querySelectorAll(".work")].map(b => ({ company: val(b, ".wCompany"), role: val(b, ".wRole"), start: val(b, ".wStart"),
+      end: b.querySelector(".wNow").checked ? "" : val(b, ".wEnd"), points: b.querySelector(".wPoints").value.trim() })).filter(w => w.company || w.role || w.points),
+    education: [...document.querySelectorAll(".edu")].map(b => ({ degree: val(b, ".eDegree"), institute: val(b, ".eInst"),
+      year: val(b, ".eYear") ? Number(val(b, ".eYear")) : null, score: val(b, ".eScore") })).filter(e => e.degree || e.institute),
+    certifications: [...document.querySelectorAll(".cert")].map(r => ({ name: val(r, ".cName"), issuer: val(r, ".cIssuer"), year: val(r, ".cYear") ? Number(val(r, ".cYear")) : null })).filter(c => c.name),
     jobTypes: [...document.querySelectorAll('input[name="jt"]:checked')].map(c => c.value),
     categories: pickedCats().length ? pickedCats() : ["flutter"],
     workModes: [...document.querySelectorAll('input[name="wm"]:checked')].map(c => c.value),
     noticePeriod: $("noticePeriod").value || null, expectedSalaryLpa: $("expectedSalaryLpa").value === "" ? null : Number($("expectedSalaryLpa").value),
-    openToWork: $("openToWork").checked, hiddenCompanies: $("hiddenCompanies").value, consent: true,
+    openToWork: $("openToWork").checked, hiddenCompanies: $("hiddenCompanies").value.trim(), talentNetwork: $("joinNet").checked,
   };
-  const b = $("bSave"); b.disabled = true;
+}
+function fillForm(p) {
+  for (const k of ["fullName", "phone", "headline", "currentCompany", "city", "about", "githubUrl", "linkedinUrl", "portfolioUrl", "hiddenCompanies"]) $(k).value = p[k] || "";
+  $("experienceYears").value = p.experienceYears ?? 0;
+  $("noticePeriod").value = p.noticePeriod || "";
+  $("expectedSalaryLpa").value = p.expectedSalaryLpa ?? "";
+  $("openToWork").checked = p.openToWork ?? true;
+  document.querySelectorAll('input[name="jt"]').forEach(c => (c.checked = (p.jobTypes || []).includes(c.value)));
+  document.querySelectorAll('input[name="wm"]').forEach(c => (c.checked = (p.workModes || []).includes(c.value)));
+  catsReady.then(() => drawRoleCats(p.categories?.length ? p.categories : ["flutter"]));
+  if (p.skills?.length) skills = p.skills.slice(0, 15);
+  drawSkills();
+  $("apps").innerHTML = ""; (p.apps?.length ? p.apps : [{}]).forEach(addApp);
+  $("work").innerHTML = ""; (p.experience || []).forEach(addWork);
+  $("edu").innerHTML = ""; (p.education?.length ? p.education : [{}]).forEach(addEdu);
+  $("certs").innerHTML = ""; (p.certifications || []).forEach(addCert);
+  $("joinNet").checked = !!p.talentNetwork; syncNet();
+}
+function blank() { fillForm({ skills: ["Flutter", "Dart"], openToWork: true }); }
+
+// ---------- Live score, draft ----------
+let tick;
+function changed() { dirty = true; clearTimeout(tick); tick = setTimeout(update, 350); }
+$("fProfile").addEventListener("input", e => { e.target.classList?.remove("need"); changed(); });
+$("fProfile").addEventListener("change", changed);
+const asProfile = () => ({ ...collect(), email: user?.email || importedEmail || "" });
+function update() {
+  const r = atsCheck(asProfile());
+  $("scoreN").textContent = dirty || profile ? r.score : "–";
+  $("scoreDot").style.background = r.score >= 85 ? "#1a7f4e" : r.score >= 70 ? "#0f6b56" : r.score >= 50 ? "#b26a00" : "#c23b3b";
+  if (!profile && dirty) store.set(DRAFT, { ...collect(), email: importedEmail, at: Date.now() });
+  return r;
+}
+
+// ---------- Preview ----------
+function openPreview() {
+  const r = update(), p = asProfile();
+  if (!p.headline) p.headline = autoHeadline();
+  $("pvScore").innerHTML = `ATS score <b>${r.score}</b>/100 · ${esc(r.grade)}`;
+  const tips = r.categories.filter(c => c.tips.length).sort((a, b) => a.score / a.max - b.score / b.max).slice(0, 3).map(c => c.tips[0]);
+  $("pvTips").innerHTML = tips.length ? `<b>Quick wins</b><ul>${tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : "<b>Looks great.</b> Save it and download your PDF.";
+  $("pvSheet").innerHTML = renderResume(p, "modern", {});
+  $("pv").showModal(); fitPreview();
+}
+function fitPreview() {
+  const body = $("pvBody"), sheet = $("pvSheet"), s = Math.min(1, (body.clientWidth - 32) / 794);
+  sheet.style.transform = `scale(${s})`; $("pvWrap").style.height = sheet.offsetHeight * s + "px";
+}
+addEventListener("resize", () => { if ($("pv").open) fitPreview(); });
+$("bPreview").onclick = openPreview; $("scoreBtn").onclick = openPreview;
+$("pvClose").onclick = () => $("pv").close();
+$("pvSave").onclick = () => { $("pv").close(); save(); };
+
+// ---------- Import from a resume file ----------
+function notice(kind, html) { $("impMsg").innerHTML = `<div class="notice ${kind}">${html}</div>`; }
+function markNeeds() {
+  const need = [];
+  const mark = el => { if (el && !el.value.trim()) { el.classList.add("need"); need.push(el); } };
+  mark($("fullName")); mark($("headline"));
+  document.querySelectorAll(".work").forEach(b => { mark(b.querySelector(".wCompany")); mark(b.querySelector(".wRole")); mark(b.querySelector(".wStart")); });
+  document.querySelectorAll(".edu").forEach(b => { if (val(b, ".eDegree") || val(b, ".eInst")) { mark(b.querySelector(".eDegree")); mark(b.querySelector(".eInst")); } });
+  return need;
+}
+function applyImport(parsed, source) {
+  if (dirty && collect().fullName && !confirm("Replace what you've filled in with the details from your resume?")) return;
+  const keep = collect();
+  importedEmail = parsed.email || "";
+  fillForm({
+    ...parsed,
+    // Keep choices the resume can't tell us
+    jobTypes: keep.jobTypes, workModes: keep.workModes, noticePeriod: keep.noticePeriod, expectedSalaryLpa: keep.expectedSalaryLpa,
+    openToWork: keep.openToWork, hiddenCompanies: keep.hiddenCompanies, talentNetwork: keep.talentNetwork,
+    fullName: parsed.fullName || keep.fullName || user?.displayName || "",
+    skills: parsed.skills?.length ? parsed.skills : keep.skills,
+    categories: parsed.categories?.length ? parsed.categories : keep.categories,
+  });
+  dirty = true; update();
+  const need = markNeeds();
+  if (parsed.found.length < 3) {
+    notice("warn", `<span>We couldn't read much from <b>${esc(source)}</b>. It may be a scanned image. Try the Word file or your LinkedIn PDF, or fill in the form below.</span>`);
+    return;
+  }
+  notice("ok", `<span>✓ Filled in from <b>${esc(source)}</b>: ${esc(parsed.found.join(", "))}.${need.length ? ` <b>${need.length} field${need.length > 1 ? "s" : ""} to check</b> (highlighted in yellow).` : " Check it over, then save."}</span>
+    <span style="display:flex;gap:14px"><button type="button" class="lnk" id="impGo">${need.length ? "Show me" : "Preview"}</button><button type="button" class="lnk" id="impUndo">Start over</button></span>`);
+  $("impGo").onclick = () => { const n = document.querySelector(".need"); if (n) { n.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => n.focus(), 350); } else openPreview(); };
+  $("impUndo").onclick = () => { blank(); importedEmail = ""; dirty = false; store.del(DRAFT); $("impMsg").innerHTML = ""; update(); };
+  if (typeof gtag === "function") gtag("event", "resume_import", { found: parsed.found.length });
+}
+async function takeFile(f) {
+  if (!f) return;
+  $("dropLabel").textContent = "Reading your resume…";
+  try {
+    const doc = await readResumeFile(f);
+    applyImport(parseResume(doc.text), doc.name);
+  } catch (e) { notice("warn", `<span>${esc(e.message)}</span>`); }
+  finally { $("dropLabel").textContent = "Upload a different file"; $("file").value = ""; }
+}
+const drop = $("drop");
+drop.onclick = () => $("file").click();
+drop.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("file").click(); } };
+$("file").onchange = e => takeFile(e.target.files[0]);
+["dragenter", "dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => takeFile(e.dataTransfer.files[0]));
+addEventListener("dragover", e => e.preventDefault());
+addEventListener("drop", e => { e.preventDefault(); if (e.dataTransfer?.files?.[0]) takeFile(e.dataTransfer.files[0]); });
+
+// ---------- Saving ----------
+const autoHeadline = () => {
+  const c = cats.find(x => x.slug === (pickedCats()[0] || "flutter"));
+  const y = Number($("experienceYears").value || 0);
+  return `${c ? c.name.replace(/ developer$/i, "") : "Flutter"} Developer${y >= 1 ? ` · ${y} year${y === 1 ? "" : "s"}` : ""}`;
+};
+function problem() {
+  document.querySelectorAll(".need").forEach(e => e.classList.remove("need"));
+  const flag = (el, msg) => { el.classList.add("need"); return { el, msg }; };
+  if ($("fullName").value.trim().length < 2) return flag($("fullName"), "Add your full name.");
+  if ($("headline").value.trim().length < 4) $("headline").value = autoHeadline();   // lazy-friendly: write one for them
+  if (!skills.length) return flag($("skillOther"), "Pick at least one skill.");
+  if ($("phone").value.trim() && !/^\+?\d[\d\s-]{7,16}$/.test($("phone").value.trim())) return flag($("phone"), "That phone number doesn't look right. Use digits, e.g. +91 98765 43210.");
+  for (const b of document.querySelectorAll(".work")) {
+    const any = val(b, ".wCompany") || val(b, ".wRole") || b.querySelector(".wPoints").value.trim();
+    if (!any) continue;
+    if (!val(b, ".wCompany")) return flag(b.querySelector(".wCompany"), "Add the company name for each job.");
+    if (!val(b, ".wRole")) return flag(b.querySelector(".wRole"), "Add your role for each job.");
+    if (!/^\d{4}-\d{2}$/.test(val(b, ".wStart"))) return flag(b.querySelector(".wStart"), "Add the month you started each job.");
+    const end = val(b, ".wEnd");
+    if (!b.querySelector(".wNow").checked && end && end < val(b, ".wStart")) return flag(b.querySelector(".wEnd"), "The end date is before the start date.");
+  }
+  for (const b of document.querySelectorAll(".edu")) {
+    if (!val(b, ".eDegree") && !val(b, ".eInst")) continue;
+    if (!val(b, ".eDegree")) return flag(b.querySelector(".eDegree"), "Add the degree or course.");
+    if (!val(b, ".eInst")) return flag(b.querySelector(".eInst"), "Add the college or school.");
+  }
+  return null;
+}
+function showErr(msg, el) {
+  $("err").textContent = msg; $("err").hidden = false;
+  (el || $("err")).scrollIntoView({ behavior: "smooth", block: "center" });
+  if (el) setTimeout(() => el.focus(), 350);
+}
+// Server field paths like "experience.0.start" point at a row in the form
+function fieldEl(path) {
+  const [k, i, f] = String(path || "").split(".");
+  const rows = { experience: [".work", { company: ".wCompany", role: ".wRole", start: ".wStart", end: ".wEnd", points: ".wPoints" }],
+    education: [".edu", { degree: ".eDegree", institute: ".eInst", year: ".eYear" }], apps: [".app", { name: ".aName", url: ".aUrl" }], certifications: [".cert", { name: ".cName" }] };
+  if (rows[k]) return document.querySelectorAll(rows[k][0])[Number(i)]?.querySelector(rows[k][1][f] || "input");
+  return $(k);
+}
+let saving = false;
+async function save() {
+  if (saving) return;
+  $("err").hidden = true; $("ok").hidden = true;
+  const bad = problem();
+  if (bad) return showErr(bad.msg, bad.el);
+  const body = collect();
+  if (!user) {
+    store.set(DRAFT, { ...body, email: importedEmail, at: Date.now() }); store.set(PENDING, 1);
+    $("gErr").hidden = true; $("signin").showModal(); return;
+  }
+  saving = true; $("bSave").disabled = true; $("bSave").textContent = "Saving…";
+  const isNew = !profile;
   try {
     await api("/talent/me", { method: "PUT", body, auth: true });
-    $("ok").textContent = "Saved! Opening your profile…"; $("ok").hidden = false;
-    location.href = "my-profile.html?saved=1";
+    store.del(DRAFT); store.del(PENDING);
+    if (typeof gtag === "function") gtag("event", isNew ? "resume_created" : "resume_updated", { talent_network: body.talentNetwork });
+    $("ok").textContent = isNew ? "Saved! Opening your resume…" : "Saved!"; $("ok").hidden = false;
+    location.href = isNew ? "resume.html?new=1" : "my-profile.html?saved=1";
   } catch (x) {
-    const f = x.issues?.[0]?.field; if (f && $(f)) $(f).focus();
-    $("err").textContent = x.message; $("err").hidden = false;
-  } finally { b.disabled = false; }
-});
+    store.del(PENDING);
+    showErr(x.message, fieldEl(x.issues?.[0]?.field));
+    fieldEl(x.issues?.[0]?.field)?.classList.add("need");
+  } finally { saving = false; $("bSave").disabled = false; $("bSave").textContent = profile ? "Save changes" : "Save & get my resume"; }
+}
+$("fProfile").addEventListener("submit", e => { e.preventDefault(); save(); });
+$("siClose").onclick = () => { store.del(PENDING); $("signin").close(); };
+$("bGoogle").onclick = async () => {
+  $("gErr").hidden = true;
+  try { await googleSignIn(); } catch (e) { $("gErr").textContent = e.message; $("gErr").hidden = false; }
+};
 
 $("bDelete").onclick = async () => {
-  if (!confirm("Delete your Talent Network profile? This removes everything you've added and can't be undone.")) return;
+  if (!confirm("Delete your profile and resume? This removes everything you've added and can't be undone.")) return;
   try {
     await api("/talent/me", { method: "DELETE", auth: true });
-    $("fProfile").reset(); $("apps").innerHTML = ""; addApp(); $("work").innerHTML = ""; $("edu").innerHTML = ""; addEdu(); $("certs").innerHTML = ""; skills = ["Flutter", "Dart"]; drawSkills();
-    $("bDelete").hidden = true; $("bSave").textContent = "Save my profile"; showStatus(null); toast("Your profile has been deleted");
-  } catch (x) { $("err").textContent = x.message; $("err").hidden = false; }
+    profile = null; blank(); dirty = false; $("bDelete").hidden = true; $("backLink").hidden = true; $("statusBox").hidden = true;
+    $("bSave").textContent = "Save & get my resume"; toast("Your profile has been deleted"); update();
+  } catch (x) { showErr(x.message); }
 };
+
+function showStatus(p) {
+  const [cls, txt] = { portfolio: ["ok", "✓ Portfolio checked"], verified: ["feat", "★ Widgetry verified"] }[p.verification] || ["mute", "Self-declared"];
+  $("statusBox").innerHTML = `<div class="card" style="display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+    <div><b>Editing your profile</b><div class="muted small">${p.talentNetwork ? `Talent Network: <span class="badge ${cls}">${txt}</span>` : "Resume only (not in the Talent Network)"}</div></div>
+    <a class="btn small" href="resume.html">📄 View &amp; download resume</a></div>`;
+  $("statusBox").hidden = false;
+}
+
+// ---------- Start ----------
+// 1. A draft from earlier in this browser, or a resume carried over from the ATS checker
+const draft = store.get(DRAFT);
+let carried = null;
+try { carried = JSON.parse(sessionStorage.getItem("wa_import") || "null"); sessionStorage.removeItem("wa_import"); } catch {}
+if (draft && !carried) {
+  importedEmail = draft.email || ""; fillForm(draft); dirty = true;
+  if (!FINISH) notice("ok", `<span>We kept what you filled in last time.</span><button type="button" class="lnk" id="dStart">Start over</button>`);
+  $("dStart")?.addEventListener("click", () => { blank(); store.del(DRAFT); dirty = false; $("impMsg").innerHTML = ""; update(); });
+} else blank();
+if (carried?.text) applyImport(parseResume(carried.text), carried.name || "your resume");
+update();
+
+// 2. Who's here
+onUser(async u => {
+  user = u;
+  if (!u) { authKnown = true; return; }
+  if (!$("fullName").value) $("fullName").value = u.displayName || "";
+  try {
+    const r = await api("/talent/me", { auth: true });
+    profile = r.profile;
+    const pending = store.get(PENDING) || FINISH;
+    if (profile && pending && store.get(DRAFT)) {
+      // Built a new one while signed out, but already has a saved resume
+      if (confirm("You already have a saved resume. Replace it with the one you just filled in?")) { profile = null; return save(); }
+      store.del(PENDING); store.del(DRAFT);
+    }
+    if (profile && !EDIT) { location.replace("my-profile.html"); return; }
+    if (profile) {
+      fillForm(profile); dirty = false; $("impMsg").innerHTML = "";
+      $("backLink").hidden = false; $("bDelete").hidden = false; $("bSave").textContent = "Save changes"; document.title = "Edit profile | Widgetry Jobs";
+      showStatus(profile); update();
+    } else if (pending && store.get(DRAFT)) {
+      $("signin").open && $("signin").close();
+      save();   // signed in from the save dialog: finish saving
+    }
+  } catch (e) { showErr(e.message); }
+  finally { authKnown = true; }
+});
 </script>
 </body></html>

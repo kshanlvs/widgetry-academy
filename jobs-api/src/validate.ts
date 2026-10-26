@@ -120,8 +120,10 @@ export const candidateInput = z.object({
   skills: skillList.refine(s => s.length > 0, "Add at least one skill"),
   openToWork: z.boolean().default(true),
   hiddenCompanies: optText(400),
-  consent: z.literal(true, { errorMap: () => ({ message: "Please agree to how we use your profile" }) }),
-});
+  // Join the Talent Network (employers can be introduced to you, with your approval). Separate from building a resume.
+  talentNetwork: z.boolean().optional(),
+  consent: z.boolean().optional(),   // older app versions: consent: true meant joining the network
+}).transform(({ consent, ...p }) => ({ ...p, talentNetwork: p.talentNetwork ?? (consent === true ? true : undefined) }));
 export type CandidateInput = z.infer<typeof candidateInput>;
 
 // Resume look, saved per seeker
@@ -138,7 +140,8 @@ export const resumeSettingsInput = z.object({
 // Profile photo: the browser resizes to a small JPEG/PNG/WebP first
 export const photoInput = z.object({ dataUrl: z.string().max(400_000).regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, "Upload a JPG, PNG or WebP image") });
 
-export const openToWorkInput = z.object({ openToWork: z.boolean() });
+export const openToWorkInput = z.object({ openToWork: z.boolean().optional(), talentNetwork: z.boolean().optional() })
+  .refine(b => b.openToWork !== undefined || b.talentNetwork !== undefined, { message: "Nothing to change" });
 
 export const employerJobPatch = z.object({ status: z.enum(["filled"]) });
 

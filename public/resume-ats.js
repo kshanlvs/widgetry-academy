@@ -240,12 +240,14 @@ export function atsCheck(p, job = null, opts = {}) {
 
 // Headings ATS look for, and the other names people give them
 const SECTION_NAMES = {
-  summary: /^(professional\s+)?(summary|profile|objective|career objective|about me|about)$/i,
-  skills: /^(technical\s+|key\s+|core\s+)?(skills|skill set|technologies|tech stack|competencies|expertise)$/i,
-  experience: /^(professional\s+|work\s+|relevant\s+)?(experience|employment|work history|internships?|employment history)$/i,
-  projects: /^(personal\s+|academic\s+|key\s+)?(projects|portfolio|apps)$/i,
-  education: /^(education|academic background|academics|qualifications?|educational qualifications?)$/i,
-  certifications: /^(certifications?|certificates|courses|training|licenses)$/i,
+  summary: /^(professional\s+|career\s+|profile\s+)?(summary|profile|objective|career objective|about me|about|overview)$/i,
+  skills: /^(technical\s+|key\s+|core\s+|professional\s+)?(skills|skill set|skillset|technologies|tech stack|competencies|expertise|tools)(\s*(&|and)\s*(tools|technologies|expertise|languages|frameworks))?$/i,
+  experience: /^(professional\s+|work\s+|relevant\s+|industry\s+)?(experience|employment|work history|internships?|employment history|career history)(\s*(&|and)\s*internships?)?$/i,
+  projects: /^(personal\s+|academic\s+|key\s+|notable\s+|side\s+|selected\s+|major\s+)?(projects|portfolio|apps|apps built|applications)$/i,
+  education: /^(education|academic background|academics|academic details|qualifications?|educational qualifications?|education\s*(&|and)\s*training)$/i,
+  certifications: /^(certifications?|certificates|courses|training|licenses|licenses\s*(&|and)\s*certifications|certifications?\s*(&|and)\s*(courses|training))$/i,
+  // Headings that end a section but aren't scored
+  other: /^(achievements?|awards?|honou?rs|awards\s*(&|and)\s*achievements|languages( known)?|hobbies|interests|hobbies\s*(&|and)\s*interests|personal details|personal information|personal profile|declaration|references|strengths|extra[- ]curricular( activities)?|activities|volunteering|publications|contact|contact details)$/i,
 };
 const CITY = /\b(bengaluru|bangalore|mumbai|pune|hyderabad|chennai|kolkata|delhi|new delhi|noida|gurugram|gurgaon|ahmedabad|jaipur|indore|kochi|coimbatore|chandigarh|lucknow|bhubaneswar|nagpur|surat|vadodara|india)\b/i;
 
@@ -277,7 +279,7 @@ function resumeYears(text, expLines) {
  * info: { pages, fileType: "pdf"|"docx"|"text" } from the file reader.
  */
 export function atsCheckText(rawText, job = null, info = {}) {
-  const text = String(rawText || "").replace(/ /g, " ");
+  const text = String(rawText || "").replace(/\u00a0/g, " ");
   const jd = job && String(job.text || "").trim().length >= 80 ? job : null;
   const { sections, headings } = splitSections(text);
   const n = norm(text);
@@ -290,7 +292,7 @@ export function atsCheckText(rawText, job = null, info = {}) {
   const pages = info.pages || Math.max(1, Math.round(wc / 450));
   const perPage = wc / pages;
   const spaced = /(?:\b[A-Z] ){4,}[A-Z]\b/.test(text);                       // "S K I L L S"
-  const junk = (text.match(/[�-]/g) || []).length;          // unreadable characters (icon fonts, broken encodings)
+  const junk = (text.match(/[\uFFFD\uE000-\uF8FF]/g) || []).length;          // unreadable characters (icon fonts, broken encodings)
   const readable = perPage >= 60 && junk < 8 && !spaced;
   add("parse", "ATS can read it", readable ? 10 : perPage < 40 ? 0 : 5, 10,
     perPage < 40 ? "Almost no text could be read: it's probably a scanned image or a design export" : readable ? `Text extracted cleanly${info.fileType && info.fileType !== "text" ? ` from your ${info.fileType === "pdf" ? "PDF" : "Word file"}` : ""}` : "Some text couldn't be read cleanly",

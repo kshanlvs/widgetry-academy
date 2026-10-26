@@ -171,8 +171,9 @@ function render() {
         <div class="mini" aria-hidden="true"><div class="scale" id="miniScale">${renderResume(p, rs.template || "modern", rs)}</div></div>
         <a class="btn" href="resume.html" style="width:100%">Customize &amp; download PDF</a>
       </section>
-      <section class="pcard">
-        <label class="switch"><span><b>Open to work</b><br><span class="small muted">Turn off to pause your profile.</span></span><input type="checkbox" id="otw" ${p.openToWork ? "checked" : ""} aria-label="Open to work"></label>
+      <section class="pcard" style="display:grid;gap:14px">
+        <label class="switch"><span><b>Talent Network</b><br><span class="small muted">${p.talentNetwork ? "Mobile teams hiring through Widgetry can be introduced to you, only with your approval." : "Off: your resume is only for you. Turn on to let mobile teams hiring through Widgetry find you (only with your approval)."}</span></span><input type="checkbox" id="tnet" ${p.talentNetwork ? "checked" : ""} aria-label="Join the Talent Network"></label>
+        ${p.talentNetwork ? `<label class="switch"><span><b>Open to work</b><br><span class="small muted">Turn off to pause your profile.</span></span><input type="checkbox" id="otw" ${p.openToWork ? "checked" : ""} aria-label="Open to work"></label>` : ""}
       </section>
       <p class="small muted" style="margin:0;text-align:center">Want to leave? <a href="${EDIT}#bDelete">Delete your profile</a></p>
     </aside>
@@ -180,7 +181,12 @@ function render() {
 
   requestAnimationFrame(() => { $("ring").style.setProperty("--v", sc.score); });
   fitMini();
-  $("otw").onchange = async e => {
+  $("tnet").onchange = async e => {
+    const v = e.target.checked;
+    try { const r = await api("/talent/me", { method: "PATCH", body: { talentNetwork: v }, auth: true }); toast(r.message); p.talentNetwork = v; render(); }
+    catch (x) { e.target.checked = !v; toast(x.message); }
+  };
+  if ($("otw")) $("otw").onchange = async e => {
     const v = e.target.checked;
     try { const r = await api("/talent/me", { method: "PATCH", body: { openToWork: v }, auth: true }); p.openToWork = v; const b = $("otwBadge"); b.className = "badge " + (v ? "ok" : "mute"); b.textContent = v ? "● Open to work" : "Paused"; toast(r.message); }
     catch (x) { e.target.checked = !v; toast(x.message); }
@@ -225,10 +231,10 @@ $("file").onchange = async e => {
 };
 
 onUser(async u => {
-  if (!u) { $("root").innerHTML = `<div class="msg" style="margin-top:0;padding-top:30px"><h2>Sign in to see your profile</h2><a class="btn" href="talent.html">Sign in</a></div>`; return; }
+  if (!u) { $("root").innerHTML = `<div class="msg" style="margin-top:0;padding-top:30px"><h2>Sign in to see your profile</h2><p class="muted" style="margin:0">No profile yet? <a href="talent.html">Build your resume</a>: upload your old one and we fill everything in.</p><a class="btn" href="pages/login.html?next=%2Fmy-profile.html">Sign in</a></div>`; return; }
   try {
     const r = await api("/talent/me", { auth: true });
-    if (!r.profile) { $("root").innerHTML = `<div class="msg pcard" style="margin-top:-70px"><h2>Create your profile</h2><p class="muted" style="margin:0">Takes 5 minutes. You get an ATS-ready resume and a place in the Widgetry Talent Network.</p><a class="btn gold" href="talent.html?edit=1">Create my profile</a></div>`; return; }
+    if (!r.profile) { $("root").innerHTML = `<div class="msg pcard" style="margin-top:-70px"><h2>Build your resume</h2><p class="muted" style="margin:0">Upload your old resume and we fill everything in, or start fresh. Takes about 2 minutes.</p><a class="btn gold" href="talent.html">Build my resume</a></div>`; return; }
     p = r.profile; render();
     if (new URLSearchParams(location.search).get("saved")) { toast("Profile saved"); history.replaceState(null, "", "my-profile.html"); }
   } catch (x) { $("root").innerHTML = `<div class="msg"><p>${esc(x.message)}</p></div>`; }

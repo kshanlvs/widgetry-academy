@@ -394,10 +394,10 @@ async function refreshPremium() {
 }
 
 onUser(async u => {
-  if (!u) { $("root").innerHTML = `<p class="msg">Please <a href="talent.html">sign in and create your profile</a> to get your resume.</p>`; return; }
+  if (!u) { $("root").innerHTML = `<p class="msg">Please <a href="pages/login.html?next=%2Fresume.html">sign in</a> to see your resume. No resume yet? <a href="talent.html">Build one in 2 minutes</a>: upload your old resume and we fill everything in.</p>`; return; }
   try {
     const [r] = await Promise.all([api("/talent/me", { auth: true }), refreshPremium().catch(() => {})]);
-    if (!r.profile) { $("root").innerHTML = `<p class="msg">You don't have a profile yet. <a href="talent.html">Create your profile</a> and your resume is built automatically.</p>`; return; }
+    if (!r.profile) { $("root").innerHTML = `<p class="msg">You don't have a resume yet. <a href="talent.html">Build one in 2 minutes</a>: upload your old resume and we fill everything in.</p>`; return; }
     profile = r.profile;
     st = { ...st, ...(profile.resumeSettings || {}) };
     st.title = st.title || "";
@@ -415,6 +415,7 @@ onUser(async u => {
     drawTpl(); drawPaper(); show(new URLSearchParams(location.search).get("tab") === "ai" ? "ai" : "ats");
     $("tpl").hidden = false; $("bPrint").hidden = false;
     if (jid) pickJob(jid);
+    if (new URLSearchParams(location.search).has("new")) { toast("Your resume is ready ✓ Pick a template, then press Download PDF."); history.replaceState(null, "", "resume.html"); }
   } catch (e) { $("root").innerHTML = `<p class="msg">${esc(e.message)}</p>`; }
 });
 $("bPrint").onclick = () => {

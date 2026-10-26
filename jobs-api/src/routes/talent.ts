@@ -26,7 +26,7 @@ export function candidateOut(r: any, skills: string[], forAdmin = false, cats: s
     apps: json(r.apps), experience: json(r.experience), education: json(r.education), certifications: json(r.certifications),
     about: r.about ?? null, skills, categories: cats,
     resumeSettings: r.resume_settings ? (typeof r.resume_settings === "string" ? JSON.parse(r.resume_settings) : r.resume_settings) : null,
-    openToWork: !!r.open_to_work, hiddenCompanies: r.hidden_companies ?? null,
+    openToWork: !!r.open_to_work, hiddenCompanies: r.hidden_companies ?? null, talentNetwork: r.talent_network == null ? true : !!r.talent_network,
     verification: r.verification, status: r.status,
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
@@ -71,19 +71,22 @@ talentRouter.put("/talent/me", requireAuth, wrap(async (req, res) => {
       await c.query(`UPDATE candidates SET full_name=?, email=?, phone=?, headline=?, current_company=?, experience_years=?, city=?,
         work_modes=?, job_types=?, notice_period=?, expected_salary_lpa=?, github_url=?, linkedin_url=?, portfolio_url=?, apps=?, experience=?, education=?, certifications=?, about=?,
         open_to_work=?, hidden_companies=? WHERE id=?`, [...vals, id]);
+      // Not sent: keep what they chose before
+      if (p.talentNetwork !== undefined) await c.query("UPDATE candidates SET talent_network = ? WHERE id = ?", [p.talentNetwork ? 1 : 0, id]);
       await c.query("DELETE FROM candidate_skills WHERE candidate_id = ?", [id]);
     } else {
       const [ins] = await c.query(`INSERT INTO candidates (public_id, uid, full_name, email, phone, headline, current_company, experience_years, city,
         work_modes, job_types, notice_period, expected_salary_lpa, github_url, linkedin_url, portfolio_url, apps, experience, education, certifications, about,
-        open_to_work, hidden_companies, consent_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP())`,
-        [publicId(), u.uid, ...vals]);
+        open_to_work, hidden_companies, talent_network, consent_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP())`,
+        [publicId(), u.uid, ...vals, p.talentNetwork ? 1 : 0]);
       id = (ins as mysql.ResultSetHeader).insertId;
     }
     await c.query("INSERT INTO candidate_skills (candidate_id, skill) VALUES ?", [p.skills.map(s => [id, s])]);
     await c.query("DELETE FROM candidate_categories WHERE candidate_id = ?", [id]);
     await c.query("INSERT INTO candidate_categories (candidate_id, category) VALUES ?", [p.categories.map(k => [id, k])]);
   });
-  res.json({ profile: await loadProfile(u.uid), message: "Your Talent Network profile is saved." });
+  const saved = await loadProfile(u.uid);
+  res.json({ profile: saved, message: saved?.talentNetwork ? "Your profile is saved and you're in the Talent Network." : "Your resume is saved." });
 }));
 
 // Delete everything we hold for this profile (right to erasure)
@@ -135,7 +138,10 @@ talentRouter.put("/talent/me/resume-settings", requireAuth, wrap(async (req, res
 
 talentRouter.patch("/talent/me", requireAuth, wrap(async (req, res) => {
   const id = await myId(req.user!.uid);
-  const { openToWork } = openToWorkInput.parse(req.body);
-  await query("UPDATE candidates SET open_to_work = ? WHERE id = ?", [openToWork ? 1 : 0, id]);
-  res.json({ ok: true, openToWork, message: openToWork ? "You're open to work." : "Your profile is paused." });
+  const { openToWork, talentNetwork } = openToWorkInput.parse(req.body);
+  if (openToWork !== undefined) await query("UPDATE candidates SET open_to_work = ? WHERE id = ?", [openToWork ? 1 : 0, id]);
+  if (talentNetwork !== undefined) await query("UPDATE candidates SET talent_network = ? WHERE id = ?", [talentNetwork ? 1 : 0, id]);
+  const message = talentNetwork !== undefined ? (talentNetwork ? "You've joined the Talent Network." : "You've left the Talent Network. Your resume stays.")
+    : openToWork ? "You're open to work." : "Your profile is paused.";
+  res.json({ ok: true, ...(openToWork !== undefined && { openToWork }), ...(talentNetwork !== undefined && { talentNetwork }), message });
 }));

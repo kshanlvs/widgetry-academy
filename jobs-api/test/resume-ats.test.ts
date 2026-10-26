@@ -11,6 +11,7 @@ const dir = mkdtempSync(join(tmpdir(), "ats-"));
 const pub = new URL("../../public/", import.meta.url);
 writeFileSync(join(dir, "resume-render.mjs"), readFileSync(new URL("resume-render.js", pub), "utf8"));
 writeFileSync(join(dir, "resume-ats.mjs"), readFileSync(new URL("resume-ats.js", pub), "utf8").replace("./resume-render.js", "./resume-render.mjs"));
+writeFileSync(join(dir, "resume-parse.mjs"), readFileSync(new URL("resume-parse.js", pub), "utf8").replace("./resume-ats.js", "./resume-ats.mjs"));
 const { atsCheck, findSkills, jobYears, jobRole, norm } = await import(pathToFileURL(join(dir, "resume-ats.mjs")).href);
 const { SAMPLE } = await import(pathToFileURL(join(dir, "resume-render.mjs")).href);
 
@@ -99,4 +100,125 @@ B.Tech, Computer Science | VIT | 2022`;
   const scanned = atsCheckText("Priya Nair", null, { pages: 1, fileType: "pdf" });
   assert.equal(scanned.categories.find((c: any) => c.id === "parse").score, 0);
   assert.match(scanned.categories[0].tips[0], /can't read images/);
+});
+
+// ---------- Importing an existing resume ----------
+const RES_A = `PRIYA NAIR
+Flutter Developer
+Bengaluru, India | priya@example.com | +91 98765 43210 | linkedin.com/in/priya | github.com/priya
+PROFESSIONAL SUMMARY
+Flutter developer with 3 years of experience building fintech apps.
+TECHNICAL SKILLS
+Flutter, Dart, Bloc, Riverpod, Firebase, REST APIs, Git, CI/CD
+EXPERIENCE
+Flutter Developer | PayCo | Jan 2023 – Present
+• Built UPI checkout used by 200k+ users with Bloc and clean architecture
+• Cut app start time by 40% by lazy-loading modules
+• Responsible for code reviews
+Junior Android Developer | TechSoft Solutions, Pune | Jul 2021 - Dec 2022
+• Developed 12 screens in Kotlin and Jetpack Compose for a
+logistics app with 50k downloads
+PROJECTS
+QuickBite – food delivery app on Play Store
+• Shipped live order tracking with Google Maps and Firebase for 10k+ downloads
+EDUCATION
+B.Tech, Computer Science | VIT University | 2022 | 8.4 CGPA
+Class 12 | DPS Kolkata | 2018 | 91%
+CERTIFICATIONS
+Flutter in 10 Days - Widgetry Academy (2024)
+Associate Android Developer, Google, 2022`;
+
+const RES_B = `Rahul Verma
+rahul.verma99@gmail.com
+9876501234
+Kolkata
+
+Career Objective
+To work as a mobile app developer in a growing company where I can use my Flutter skills.
+
+Skills: Flutter, Dart, Firebase, Provider, GetX, Java, Problem Solving, Communication
+
+Internship
+Mobile App Developer Intern
+Sparks Infotech, Kolkata
+June 2024 to Dec 2024
+Built login, cart and payment screens with Razorpay for an e-commerce app used by 3,000 customers.
+Fixed 25 bugs reported by the QA team and wrote widget tests for the cart flow.
+
+Academic Projects
+Expense Tracker (Flutter, Hive) - Offline expense tracker with charts. github.com/rahulv/expense-tracker
+Chat App - Real-time chat with Firebase and push notifications
+
+Education
+Bachelor of Computer Applications (BCA)
+Techno India University, Kolkata
+2021 - 2024 | CGPA: 8.1
+
+Hobbies
+Cricket, Music`;
+
+const RES_C = `Contact
+www.linkedin.com/in/amit-shah-dev (LinkedIn)
+amit.shah@outlook.com
+Top Skills
+Kotlin
+Jetpack Compose
+MVVM
+Amit Shah
+Senior Android Engineer at FinBank | Kotlin | Compose
+Mumbai, Maharashtra, India
+Summary
+Android engineer with 6+ years building banking apps used by millions.
+Experience
+FinBank
+Senior Android Engineer
+March 2022 - Present (2 years 8 months)
+Mumbai, Maharashtra, India
+Led migration of 40 screens from XML to Jetpack Compose, cutting UI bugs by 30%.
+Introduced Hilt and coroutines across 6 modules.
+Zeta Payments
+Android Developer
+August 2018 - February 2022 (3 years 7 months)
+Built the card controls feature with Retrofit and Room used by 2M users.
+Education
+University of Mumbai
+Bachelor of Engineering - BE, Computer Engineering · (2014 - 2018)`;
+
+test("import: a classic resume fills every part of the profile", async () => {
+  const { parseResume } = await import(pathToFileURL(join(dir, "resume-parse.mjs")).href);
+  const p = parseResume(RES_A);
+  assert.equal(p.fullName, "Priya Nair"); assert.equal(p.headline, "Flutter Developer"); assert.equal(p.city, "Bengaluru");
+  assert.equal(p.email, "priya@example.com"); assert.equal(p.phone, "+91 98765 43210");
+  assert.equal(p.linkedinUrl, "https://linkedin.com/in/priya"); assert.equal(p.githubUrl, "https://github.com/priya");
+  assert.equal(p.experienceYears, 3); assert.equal(p.currentCompany, "PayCo"); assert.deepEqual(p.categories, ["flutter"]);
+  assert.deepEqual(p.experience.map((j: any) => [j.role, j.company, j.start, j.end]), [["Flutter Developer", "PayCo", "2023-01", ""], ["Junior Android Developer", "TechSoft Solutions", "2021-07", "2022-12"]]);
+  assert.equal(p.experience[0].points.split("\n").length, 3);
+  assert.match(p.experience[1].points, /for a logistics app/, "a bullet wrapped onto the next line is joined");
+  assert.equal(p.apps[0].name, "QuickBite");
+  assert.deepEqual(p.education[0], { degree: "B.Tech, Computer Science", institute: "VIT University", year: 2022, score: "8.4 CGPA" });
+  assert.deepEqual(p.certifications[1], { name: "Associate Android Developer", issuer: "Google", year: 2022 });
+  assert.deepEqual(p.skills.slice(0, 8), ["Flutter", "Dart", "Bloc", "Riverpod", "Firebase", "REST APIs", "Git", "CI/CD"]);
+  assert.ok(p.skills.length <= 15);
+});
+
+test("import: a fresher's resume without bullets, and a LinkedIn PDF", async () => {
+  const { parseResume, toMonth } = await import(pathToFileURL(join(dir, "resume-parse.mjs")).href);
+  const b = parseResume(RES_B);
+  assert.equal(b.fullName, "Rahul Verma"); assert.equal(b.phone, "9876501234");
+  assert.ok(!/Skills:/.test(b.about), "a 'Skills: …' line isn't part of the summary");
+  assert.ok(b.skills.includes("GetX") && b.skills.includes("Problem Solving"));
+  assert.deepEqual([b.experience[0].role, b.experience[0].company, b.experience[0].start, b.experience[0].end], ["Mobile App Developer Intern", "Sparks Infotech", "2024-06", "2024-12"]);
+  assert.equal(b.experience[0].points.split("\n").length, 2);
+  assert.deepEqual(b.apps.map((a: any) => a.name), ["Expense Tracker", "Chat App"]);
+  assert.equal(b.apps[0].url, "https://github.com/rahulv/expense-tracker"); assert.match(b.apps[0].about, /Tech: Flutter, Hive/);
+  assert.equal(b.education[0].degree, "Bachelor of Computer Applications (BCA)"); assert.equal(b.education[0].year, 2024);
+
+  const c = parseResume(RES_C);
+  assert.equal(c.fullName, "Amit Shah"); assert.equal(c.city, "Mumbai"); assert.equal(c.experienceYears, 6);
+  assert.deepEqual(c.experience.map((j: any) => [j.role, j.company]), [["Senior Android Engineer", "FinBank"], ["Android Developer", "Zeta Payments"]]);
+  assert.equal(c.experience[0].points.split("\n").length, 2);
+  assert.equal(c.education[0].degree, "Bachelor of Engineering, Computer Engineering"); assert.deepEqual(c.categories, ["android"]);
+
+  assert.equal(toMonth("Sept 2021"), "2021-09"); assert.equal(toMonth("03/2020"), "2020-03"); assert.equal(toMonth("Jan'23"), "2023-01"); assert.equal(toMonth("2019", true), "2019-12");
+  assert.deepEqual(parseResume("").experience, []);
 });

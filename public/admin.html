@@ -418,6 +418,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
   <section id="tapp" hidden>
     <div class="tools">
       <label>Role<select id="tCat"><option value="">All</option></select></label>
+      <label>Talent Network<select id="tNet"><option value="yes">Joined</option><option value="no">Resume only</option><option value="all">Everyone</option></select></label>
       <label>Verification<select id="tVer"><option value="">All</option><option value="self">Self-declared</option><option value="portfolio">Portfolio checked</option><option value="verified">Widgetry verified</option></select></label>
       <label>Search<input id="tq" placeholder="Name, email, headline, company"></label>
       <button class="btn ghost" id="tReload" type="button">Refresh</button>
@@ -1074,7 +1075,7 @@ $("jq").addEventListener("keydown", e => { if (e.key === "Enter") loadJobs(); })
 
 let titems = [];
 async function loadTalent() {
-  const p = new URLSearchParams(); if ($("tVer").value) p.set("verification", $("tVer").value); if ($("tCat").value) p.set("category", $("tCat").value); if ($("tq").value.trim()) p.set("q", $("tq").value.trim());
+  const p = new URLSearchParams(); p.set("network", $("tNet").value); if ($("tVer").value) p.set("verification", $("tVer").value); if ($("tCat").value) p.set("category", $("tCat").value); if ($("tq").value.trim()) p.set("q", $("tq").value.trim());
   try {
     titems = (await japi("/admin/candidates?" + p)).items;
     $("tList").innerHTML = titems.length ? titems.map(c => {
@@ -1082,7 +1083,7 @@ async function loadTalent() {
       const apps = (c.apps || []).map(a => safe(a.url) ? `<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.name)}</a>${a.role ? " (" + esc(a.role) + ")" : ""}` : `${esc(a.name)}${a.role ? " (" + esc(a.role) + ")" : ""}`).join(", ");
       return `<div class="ji">
         <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3>${esc(c.fullName)} ${(c.categories || []).map(k => `<span class="pill cat">${esc(catLabel(k))}</span>`).join(" ")}</h3><span class="pill v-${esc(c.verification)}">${esc(VL[c.verification])}</span></div>
-        <div class="meta"><b style="color:var(--ink)">${esc(c.headline)}</b><span>${c.experienceYears} yrs</span>${c.currentCompany ? `<span>${esc(c.currentCompany)}</span>` : ""}${c.city ? `<span>${esc(c.city)}</span>` : ""}<span>${c.openToWork ? "Open to work" : "Paused"}</span>${c.status === "hidden" ? '<span style="color:var(--bad)">Hidden</span>' : ""}</div>
+        <div class="meta"><b style="color:var(--ink)">${esc(c.headline)}</b><span>${c.experienceYears} yrs</span>${c.currentCompany ? `<span>${esc(c.currentCompany)}</span>` : ""}${c.city ? `<span>${esc(c.city)}</span>` : ""}<span>${c.openToWork ? "Open to work" : "Paused"}</span>${c.talentNetwork ? "" : '<span style="color:var(--bad)">Resume only: not in the network</span>'}${c.status === "hidden" ? '<span style="color:var(--bad)">Hidden</span>' : ""}</div>
         <div class="meta"><a href="mailto:${esc(c.email)}">${esc(c.email)}</a>${c.phone ? `<a href="https://wa.me/${esc(c.phone.replace(/\D/g, ""))}" target="_blank" rel="noopener">${esc(c.phone)}</a>` : ""}${c.expectedSalaryLpa != null ? `<span>Expects ${c.expectedSalaryLpa} LPA</span>` : ""}${c.noticePeriod ? `<span>Notice ${esc(c.noticePeriod.replace("_", " "))}</span>` : ""}</div>
         ${c.skills.length ? `<div class="tags">${c.skills.map(s => `<span>${esc(s)}</span>`).join("")}</div>` : ""}
         ${links ? `<div class="meta">${links}</div>` : ""}${apps ? `<div class="meta">Apps: ${apps}</div>` : ""}
@@ -1103,7 +1104,7 @@ async function loadTalent() {
     $("tList").querySelectorAll("[data-thide]").forEach(b => b.onclick = async () => { try { await japi(`/admin/candidates/${b.dataset.thide}`, { method: "PATCH", body: { status: b.dataset.st } }); loadTalent(); } catch (x) { alert(x.message); } });
   } catch (x) { $("tList").innerHTML = `<p class="note">${esc(x.message)}</p>`; }
 }
-$("tReload").onclick = loadTalent; $("tVer").onchange = loadTalent; $("tCat").onchange = loadTalent;
+$("tReload").onclick = loadTalent; $("tVer").onchange = loadTalent; $("tNet").onchange = loadTalent; $("tCat").onchange = loadTalent;
 $("tq").addEventListener("keydown", e => { if (e.key === "Enter") loadTalent(); });
 
 /* ---------- Overview ---------- */

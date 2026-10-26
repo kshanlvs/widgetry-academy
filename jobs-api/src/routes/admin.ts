@@ -188,11 +188,13 @@ adminRouter.patch("/reports/:id", wrap(async (req, res) => {
   res.json({ ok: true });
 }));
 
-const candQ = z.object({ verification: z.enum(VERIFICATION).optional(), category: z.string().trim().max(30).optional(), q: z.string().trim().max(100).optional(), page: z.coerce.number().int().min(1).default(1) });
+const candQ = z.object({ network: z.enum(["yes", "no", "all"]).default("yes"), verification: z.enum(VERIFICATION).optional(), category: z.string().trim().max(30).optional(), q: z.string().trim().max(100).optional(), page: z.coerce.number().int().min(1).default(1) });
 
 adminRouter.get("/candidates", wrap(async (req, res) => {
   const f = candQ.parse(req.query);
   const where: string[] = [], params: unknown[] = [];
+  // Only people who joined the Talent Network can be introduced to employers; others just built a resume
+  if (f.network !== "all") where.push(f.network === "yes" ? "talent_network = 1" : "talent_network = 0");
   if (f.verification) { where.push("verification = ?"); params.push(f.verification); }
   if (f.category) { where.push("EXISTS (SELECT 1 FROM candidate_categories cc WHERE cc.candidate_id = candidates.id AND cc.category = ?)"); params.push(f.category); }
   if (f.q) { const l = `%${f.q.replace(/[\\%_]/g, m => "\\" + m)}%`; where.push("(full_name LIKE ? OR email LIKE ? OR headline LIKE ? OR current_company LIKE ?)"); params.push(l, l, l, l); }
