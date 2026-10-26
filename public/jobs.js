@@ -103,3 +103,19 @@ export function showIssues(errEl, e) {
   errEl.textContent = e.message; errEl.hidden = false;
   errEl.scrollIntoView({ behavior: "smooth", block: "center" });
 }
+
+// Phones and tablets: a ☰ button opens the nav links as a menu (the CSS shows it below 980px)
+(function navMenu() {
+  const nav = document.querySelector(".jnav .wrap"), links = nav && nav.querySelector(".jlinks");
+  if (!links || nav.querySelector(".navburger")) return;
+  links.id ||= "jlinks";
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "navburger"; b.setAttribute("aria-controls", links.id); b.setAttribute("aria-expanded", "false"); b.setAttribute("aria-label", "Open menu");
+  b.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  const set = open => { links.classList.toggle("open", open); b.setAttribute("aria-expanded", String(open)); b.setAttribute("aria-label", open ? "Close menu" : "Open menu"); };
+  b.onclick = e => { e.stopPropagation(); set(!links.classList.contains("open")); };
+  links.addEventListener("click", e => { if (e.target.closest("a")) set(false); });
+  document.addEventListener("click", e => { if (!nav.contains(e.target)) set(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") set(false); });
+  nav.insertBefore(b, links);
+})();

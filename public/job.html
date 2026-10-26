@@ -15,6 +15,7 @@
   <div class="jlinks">
     <a href="jobs.html">Jobs</a>
     <a href="resume-builder.html">Free resume</a>
+    <a href="ats-checker.html">ATS checker</a>
     <a href="post-job.html">Post a job</a>
     <a href="talent.html" class="hide-m">Talent Network</a>
     <a href="./" class="hide-m">Academy</a>
@@ -96,7 +97,7 @@ function render(j) {
       <div class="card" style="display:grid;gap:14px">
         ${open ? (url ? `<a class="btn" href="${esc(url)}" target="_blank" rel="noopener nofollow">Apply on company site ↗</a>` : "") + (mail ? `<a class="btn ${url ? "ghost" : ""}" href="${esc(mailHref)}">Apply by email</a>` : "")
                : `<a class="btn" href="jobs.html">See open jobs</a>`}
-        ${open ? `<a class="btn ghost" href="resume.html?job=${encodeURIComponent(j.id)}" style="font-size:14.5px">📊 Check my resume for this job</a><p class="muted small" style="margin:-6px 0 0;font-size:13px">Free ATS score and the keywords you're missing, before you apply.</p>` : ""}
+        ${open ? `<a class="btn ghost" href="ats-checker.html?job=${encodeURIComponent(j.id)}" style="font-size:14.5px">📊 Check my resume for this job</a><p class="muted small" style="margin:-6px 0 0;font-size:13px">Free ATS score and the keywords you're missing, before you apply.</p>` : ""}
         <dl class="facts">
           <div><dt>Posted</dt><dd>${timeAgo(j.postedAt)}</dd></div>
           ${j.expiresAt && open ? `<div><dt>Apply by</dt><dd>${new Date(j.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</dd></div>` : ""}

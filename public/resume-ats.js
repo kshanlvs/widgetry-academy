@@ -235,3 +235,159 @@ export function atsCheck(p, job = null, opts = {}) {
     stats: { words: wc, bullets: bullets.length, quantified: quant, actionStarts: strong },
   };
 }
+
+// ---------- Checking an uploaded resume (PDF, Word or pasted text) ----------
+
+// Headings ATS look for, and the other names people give them
+const SECTION_NAMES = {
+  summary: /^(professional\s+)?(summary|profile|objective|career objective|about me|about)$/i,
+  skills: /^(technical\s+|key\s+|core\s+)?(skills|skill set|technologies|tech stack|competencies|expertise)$/i,
+  experience: /^(professional\s+|work\s+|relevant\s+)?(experience|employment|work history|internships?|employment history)$/i,
+  projects: /^(personal\s+|academic\s+|key\s+)?(projects|portfolio|apps)$/i,
+  education: /^(education|academic background|academics|qualifications?|educational qualifications?)$/i,
+  certifications: /^(certifications?|certificates|courses|training|licenses)$/i,
+};
+const CITY = /\b(bengaluru|bangalore|mumbai|pune|hyderabad|chennai|kolkata|delhi|new delhi|noida|gurugram|gurgaon|ahmedabad|jaipur|indore|kochi|coimbatore|chandigarh|lucknow|bhubaneswar|nagpur|surat|vadodara|india)\b/i;
+
+/** Splits plain resume text into sections by their headings. */
+export function splitSections(text) {
+  const out = { _top: [] }; let cur = "_top";
+  const found = [];
+  for (const raw of String(text).split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    const clean = line.replace(/[:|•·\-–—_=*#]+$/g, "").replace(/^[\s•·\-*#]+/, "").trim();
+    const key = clean.length <= 40 && Object.keys(SECTION_NAMES).find(k => SECTION_NAMES[k].test(clean));
+    if (key) { cur = key; out[cur] ||= []; found.push(clean); continue; }
+    (out[cur] ||= []).push(line);
+  }
+  return { sections: out, headings: found };
+}
+
+/** Years of experience from "3+ years" in the text, else from the earliest year in the experience section. */
+function resumeYears(text, expLines) {
+  const m = /(\d{1,2})\+?\s*(?:years?|yrs?)\s+(?:of\s+)?(?:experience|exp)/i.exec(text);
+  if (m) return Number(m[1]);
+  const years = (expLines.join(" ").match(/\b(19[89]\d|20[0-4]\d)\b/g) || []).map(Number);
+  return years.length ? Math.max(0, new Date().getFullYear() - Math.min(...years)) : null;
+}
+
+/**
+ * Scores an uploaded resume's text out of 100, the same way as atsCheck.
+ * info: { pages, fileType: "pdf"|"docx"|"text" } from the file reader.
+ */
+export function atsCheckText(rawText, job = null, info = {}) {
+  const text = String(rawText || "").replace(/ /g, " ");
+  const jd = job && String(job.text || "").trim().length >= 80 ? job : null;
+  const { sections, headings } = splitSections(text);
+  const n = norm(text);
+  const have = findSkills(text);
+  const wc = words(text).length;
+  const cats = [];
+  const add = (id, label, got, max, detail, tips = []) => cats.push({ id, label, score: got, max, status: status(got, max), detail, tips });
+
+  // 1. Can ATS read it at all?
+  const pages = info.pages || Math.max(1, Math.round(wc / 450));
+  const perPage = wc / pages;
+  const spaced = /(?:\b[A-Z] ){4,}[A-Z]\b/.test(text);                       // "S K I L L S"
+  const junk = (text.match(/[�-]/g) || []).length;          // unreadable characters (icon fonts, broken encodings)
+  const readable = perPage >= 60 && junk < 8 && !spaced;
+  add("parse", "ATS can read it", readable ? 10 : perPage < 40 ? 0 : 5, 10,
+    perPage < 40 ? "Almost no text could be read: it's probably a scanned image or a design export" : readable ? `Text extracted cleanly${info.fileType && info.fileType !== "text" ? ` from your ${info.fileType === "pdf" ? "PDF" : "Word file"}` : ""}` : "Some text couldn't be read cleanly",
+    [perPage < 40 && "ATS can't read images. Export your resume as a text PDF from Word or Google Docs, or build one with Widgetry.",
+     spaced && "Letter-spaced headings (S K I L L S) are read as single letters. Use normal spacing.",
+     junk >= 8 && "Icons or special fonts came out as unreadable symbols. Replace icons with plain text (Email:, Phone:).",
+     readable && pages > 2 && "Keep it to 1–2 pages."].filter(Boolean));
+
+  // 2. Keywords
+  let wanted, key = [];
+  if (jd) {
+    const inJob = findSkills(`${jd.title || ""}\n${jd.text}`, true);
+    wanted = [...inJob.keys()];
+    key = wanted.filter(k => inJob.get(k) >= 2 || norm(jd.title || "").includes(" " + norm(k).trim() + " "));
+  } else {
+    const role = jobRole((sections._top || []).slice(0, 6).join(" ") + " " + text.slice(0, 1500)) || "flutter";
+    wanted = ROLE_KEYWORDS[role];
+  }
+  const matched = wanted.filter(k => have.has(k)), missing = wanted.filter(k => !have.has(k));
+  const weight = k => (key.includes(k) ? 2 : 1);
+  const total = wanted.reduce((s, k) => s + weight(k), 0) || 1;
+  const kwMax = jd ? 30 : 25;
+  add("keywords", jd ? "Job keyword match" : "Role keywords", rate((matched.reduce((s, k) => s + weight(k), 0) / total) / 0.85, kwMax), kwMax,
+    wanted.length ? `${matched.length} of ${wanted.length} ${jd ? "skills from the job" : "skills recruiters look for"} are on your resume` : "No technical skills found in this job description",
+    missing.length ? [`Add the skills you really have: ${missing.slice(0, 8).join(", ")}. Put them in your skills section and in a point that shows how you used them.`] : []);
+
+  // 3. Fit (job only)
+  if (jd) {
+    const role = jobRole(`${jd.title || ""} ${jd.text.slice(0, 400)}`);
+    const top = norm((sections._top || []).slice(0, 5).join(" "));
+    const titleOk = !role || has(top, role === "react-native" ? "react native" : role) || has(top, "mobile");
+    const yrs = jobYears(jd.text), mine = resumeYears(text, sections.experience || []);
+    const yrsOk = !yrs || mine == null || mine >= yrs.min - 1;
+    add("fit", "Title and experience fit", (titleOk ? 5 : 0) + (yrsOk ? 5 : 2), 10,
+      [titleOk ? "Your headline matches the role" : "Your headline doesn't name the role", yrs ? `job asks for ${yrs.min}${yrs.max ? "–" + yrs.max : "+"} years${mine != null ? `, your resume shows about ${mine}` : ""}` : ""].filter(Boolean).join(" · "),
+      [!titleOk && "Put the role's title under your name, e.g. \"Flutter Developer\" or \"Android Developer\".",
+       !yrsOk && "You have less experience than asked: lead with projects and measurable results."].filter(Boolean));
+  }
+
+  // 4. Contact details
+  const contact = [
+    [/[\w.+-]+@[\w-]+\.[\w.-]+/.test(text), "an email address"],
+    [/(\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}\b/.test(text) || /\+\d[\d\s-]{8,}\d/.test(text), "a phone number"],
+    [CITY.test(text.slice(0, 600)), "your city"],
+    [/linkedin\.com\//i.test(text), "your LinkedIn"],
+    [/github\.com\/|portfolio|play\.google\.com|apps\.apple\.com/i.test(text), "GitHub, a portfolio or an app link"],
+  ];
+  const cOk = contact.filter(c => c[0]).length;
+  add("contact", "Contact details", rate(cOk / contact.length, 10), 10, `${cOk} of ${contact.length} found`,
+    contact.filter(c => !c[0]).length ? [`Add ${contact.filter(c => !c[0]).map(c => c[1]).join(", ")} as plain text near the top (not in a header, footer or icon).`] : []);
+
+  // 5. Standard sections
+  const need = [["summary", "Professional Summary"], ["skills", "Skills"], ["experience", "Experience"], ["projects", "Projects"], ["education", "Education"]];
+  const hasSec = k => (sections[k] || []).length > 0 || (k === "projects" && (sections.experience || []).length > 0);
+  const sOk = need.filter(([k]) => hasSec(k)).length;
+  add("sections", "Standard section headings", rate(sOk / need.length, 10), 10,
+    headings.length ? `Found: ${[...new Set(headings)].slice(0, 6).join(", ")}` : "No standard headings found",
+    need.filter(([k]) => !hasSec(k)).map(([, l]) => `Add a section called "${l}" (ATS look for these exact names).`));
+
+  // 6. Impact: points with numbers and strong verbs
+  const body = [...(sections.experience || []), ...(sections.projects || [])];
+  // Marked bullet points; if the file lost its bullet symbols, sentence-like lines that aren't job/date headers
+  const BUL = /^[•·\-*▪●◦‣–➢►✓]\s*/;
+  const marked = body.filter(l => BUL.test(l));
+  const bullets = (marked.length >= 2 ? marked : body.filter(l => words(l).length >= 7 && !/\||\b(19|20)\d\d\b/.test(l)))
+    .map(l => l.replace(BUL, "").trim()).filter(l => words(l).length >= 4);
+  const quant = bullets.filter(b => /\d/.test(b)).length;
+  const strong = bullets.filter(b => ACTION_VERBS.has((b.match(/^[A-Za-z]+/) || [""])[0].toLowerCase())).length;
+  const weak = bullets.filter(b => WEAK_STARTS.test(b));
+  const qR = bullets.length ? quant / bullets.length : 0, vR = bullets.length ? strong / bullets.length : 0;
+  const impactMax = jd ? 15 : 20;
+  add("impact", "Impact and results", bullets.length ? rate((Math.min(qR / 0.5, 1) * 0.6) + (Math.min(vR / 0.7, 1) * 0.4), impactMax) : 0, impactMax,
+    bullets.length ? `${quant} of ${bullets.length} points have numbers · ${strong} start with an action verb` : "No achievement points found under Experience or Projects",
+    [!bullets.length && "Under each job and project, add 2–4 bullet points that start with a verb and show a result.",
+     bullets.length && qR < 0.5 && "Add numbers: users, downloads, % faster, crash rate, screens built, time saved.",
+     bullets.length && vR < 0.7 && "Start each point with an action verb: Built, Led, Cut, Shipped, Migrated, Improved.",
+     weak.length && `Rewrite points that start with "${(weak[0].match(WEAK_STARTS) || [""])[0]}": say what you did and the result.`].filter(Boolean));
+
+  // 7. Clarity
+  const tooLong = bullets.filter(b => words(b).length > 35).length;
+  const firstPerson = (text.match(/(^|[\s(])(I|my|me)\s/g) || []).length >= 3;
+  const cliches = CLICHES.filter(c => n.includes(" " + c + " ") || n.includes(" " + c.replace(/-/g, " ") + " "));
+  let clarity = 10 - Math.min(4, tooLong * 2) - (firstPerson ? 2 : 0) - Math.min(3, cliches.length);
+  add("clarity", "Clear, scannable writing", Math.max(0, clarity), 10,
+    [tooLong && `${tooLong} point${tooLong > 1 ? "s are" : " is"} too long`, firstPerson && "uses \"I\"/\"my\" a lot", cliches.length && `clichés: ${cliches.slice(0, 3).join(", ")}`].filter(Boolean).join(" · ") || "Points are short and direct",
+    [tooLong && "Keep each point to one or two lines (under 30 words).", firstPerson && "Drop \"I\" and \"my\": start points with the verb.",
+     cliches.length && `Replace "${cliches[0]}" with evidence: a result, a project, a number.`].filter(Boolean));
+
+  // 8. Length
+  const lenOk = wc >= 250 && wc <= 1100 && pages <= 2;
+  add("length", "Length", lenOk ? 5 : wc < 150 || pages > 3 ? 1 : 3, 5, `About ${wc} words${info.pages ? ` on ${info.pages} page${info.pages > 1 ? "s" : ""}` : ""}`,
+    [wc < 250 && "Your resume is thin: add projects, achievements and skills.", (wc > 1100 || pages > 2) && "Trim to 1–2 pages: keep the last 5–7 years and your strongest points."].filter(Boolean));
+
+  const max = cats.reduce((s, c) => s + c.max, 0), got = cats.reduce((s, c) => s + c.score, 0);
+  const score = Math.round((got / max) * 100);
+  return {
+    score, grade: score >= 85 ? "Excellent" : score >= 70 ? "Strong" : score >= 50 ? "Fair" : "Needs work", mode: jd ? "job" : "role",
+    categories: cats, keywords: { matched, missing, key }, stats: { words: wc, bullets: bullets.length, quantified: quant, actionStarts: strong, pages },
+  };
+}

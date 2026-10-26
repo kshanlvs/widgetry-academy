@@ -64,3 +64,39 @@ test("a thin resume scores low with concrete tips; without a job it checks the r
   const withPhoto = atsCheck({ ...SAMPLE, photo: "data:image/png;base64,AA==" }, null, { showPhoto: true });
   assert.equal(withPhoto.categories.find((c: any) => c.id === "format").score, 2);
 });
+
+test("an uploaded resume's text: sections, contact, bullets and keywords are found; scanned files are flagged", async () => {
+  const { atsCheckText, splitSections } = await import(pathToFileURL(join(dir, "resume-ats.mjs")).href);
+  const resume = `PRIYA NAIR
+Flutter Developer
+Bengaluru, India | priya@example.com | +91 98765 43210 | linkedin.com/in/priya | github.com/priya
+PROFESSIONAL SUMMARY
+Flutter developer with 3 years of experience building fintech apps.
+TECHNICAL SKILLS
+Flutter, Dart, Bloc, Riverpod, Firebase, REST APIs, Git, CI/CD
+EXPERIENCE
+Flutter Developer | PayCo | Jan 2023 – Present
+• Built UPI checkout used by 200k+ users with Bloc and clean architecture
+• Cut app start time by 40% by lazy-loading modules
+• Responsible for code reviews
+PROJECTS
+QuickBite – food delivery app on Play Store
+• Shipped live order tracking with Google Maps and Firebase for 10k+ downloads
+EDUCATION
+B.Tech, Computer Science | VIT | 2022`;
+  const { sections, headings } = splitSections(resume);
+  assert.deepEqual(Object.keys(sections).filter(k => k !== "_top"), ["summary", "skills", "experience", "projects", "education"]);
+  assert.equal(headings.length, 5);
+  const r = atsCheckText(resume, { title: "Senior Flutter Developer", text: JD }, { pages: 1, fileType: "pdf" });
+  assert.ok(r.score >= 60, `score ${r.score}`);
+  assert.equal(r.categories.find((c: any) => c.id === "contact").score, 10);
+  assert.equal(r.categories.find((c: any) => c.id === "sections").score, 10);
+  assert.ok(r.keywords.matched.includes("Riverpod") && r.keywords.matched.includes("Google Maps"));
+  assert.equal(r.stats.bullets, 4);
+  assert.match(r.categories.flatMap((c: any) => c.tips).join(" "), /Responsible for/);
+  assert.equal(r.categories.reduce((s: number, c: any) => s + c.max, 0), 100);
+
+  const scanned = atsCheckText("Priya Nair", null, { pages: 1, fileType: "pdf" });
+  assert.equal(scanned.categories.find((c: any) => c.id === "parse").score, 0);
+  assert.match(scanned.categories[0].tips[0], /can't read images/);
+});

@@ -32,7 +32,7 @@
 .feat .card{padding:18px}
 .feat b{display:block;font-size:16px;margin-bottom:4px}
 .preview{display:grid;gap:14px;justify-items:center}
-.preview .seg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;padding:3px;gap:2px;background:var(--surface)}
+.preview .seg{display:inline-flex;flex-wrap:wrap;justify-content:center;max-width:100%;border:1.5px solid var(--line);border-radius:999px;padding:3px;gap:2px;background:var(--surface)}
 .preview .seg button{border:0;background:transparent;font:600 14px var(--body);color:var(--muted);padding:7px 16px;border-radius:999px;cursor:pointer}
 .preview .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .paper{background:#fff;width:100%;max-width:794px;padding:44px 50px 54px;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.08),0 14px 40px rgba(0,0,0,.10);position:relative}
@@ -54,6 +54,7 @@
   <div class="jlinks">
     <a href="jobs.html">Jobs</a>
     <a href="resume-builder.html" aria-current="page">Resume builder</a>
+    <a href="ats-checker.html">ATS checker</a>
     <a href="post-job.html" class="hide-m">Post a job</a>
     <a href="./" class="hide-m">Academy</a>
     <span class="who" id="who"></span>
@@ -66,12 +67,13 @@
     <h1>A resume that gets you <em>shortlisted,</em> not filtered out.</h1>
     <p style="color:var(--deep-muted);max-width:560px;margin:0">Companies screen resumes with ATS software before a human ever reads them. Build an ATS-friendly, premium mobile developer resume in 5 minutes and download it as a PDF.</p>
     <div class="ctas"><a class="btn gold" href="talent.html" id="cta1">Create my resume free</a><a class="btn ghost" href="#sample" style="color:#fff;border-color:var(--deep-line)">See a sample</a></div>
+    <p style="margin:14px 0 0;color:var(--deep-muted)">Already have a resume? <a href="ats-checker.html" style="color:var(--accent-2);font-weight:700">Upload it and check its ATS score free →</a></p>
     <ul class="ticks"><li>Free ATS score: check your resume against any job and see the keywords you're missing</li><li>Passes ATS screening: one column, real text, standard headings</li><li>Optional Resume Premium: AI tailoring, cover letters and 3 pro templates</li></ul>
   </div>
   <div class="peek" aria-hidden="true"><div class="sheet" id="peek"></div></div>
 </div></header>
 
-<main class="wrap" style="padding-block:34px 60px;display:grid;gap:44px">
+<main class="wrap" style="padding-block:34px 60px;display:grid;grid-template-columns:minmax(0,1fr);gap:44px">
   <section class="feat">
     <div class="card"><b>ATS-friendly</b><span class="muted small">Built the way screening software reads: no tables, columns, icons or images.</span></div>
     <div class="card"><b>Made for mobile devs</b><span class="muted small">Skills grouped the way tech recruiters scan: Flutter, Kotlin and Swift, UI, state management, testing.</span></div>

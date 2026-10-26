@@ -183,6 +183,7 @@ function atsPanel() {
         <div class="top"><span>${esc(cat.label)}</span><span style="color:${color(cat.status)}">${cat.score}/${cat.max}</span></div>
         <div class="bar"><i style="width:${(cat.score / cat.max) * 100}%;background:${color(cat.status)}"></i></div>
         <p class="small">${esc(cat.detail)}</p>${cat.tips.length ? `<ul>${cat.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}</div>`).join("")}</div>
+      <p class="note">Have a resume made somewhere else? <a href="ats-checker.html">Upload a PDF or Word file to check it</a>.</p>
       <p class="note">Every ATS scores a little differently; this check follows what most of them look for. <a href="talent.html?edit=1">Edit your profile</a> to fix gaps, or let <button type="button" class="linkish" id="goAi" style="border:0;background:none;padding:0;color:var(--accent);font-weight:700;cursor:pointer">AI rewrite them</button>.</p>
     </div>`;
 }
