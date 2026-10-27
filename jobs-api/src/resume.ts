@@ -7,6 +7,7 @@ import { gateway, paymentsEnabled } from "./payments.js";
 import { reportExternalResume } from "./play.js";
 import { notifyUser } from "./notify.js";
 import { askModel } from "./chat.js";
+import { applyVersion as sharedApplyVersion } from "./shared/resume-render.js";
 
 const env = process.env;
 /** Price in rupees (RESUME_PREMIUM_PRICE) and how long it lasts (RESUME_PREMIUM_DAYS). Each order keeps the days it was bought with. */
@@ -155,14 +156,8 @@ Shape: {"letter": "..."} with paragraphs separated by \\n\\n.`;
 export interface VersionData { title?: string | null; about?: string | null; skills?: string[] | null; points?: { index: number; points: string }[] }
 export const MAX_VERSIONS = () => Number(env.RESUME_MAX_VERSIONS || 5);
 
-export function applyVersion(p: any, data: VersionData | null | undefined) {
-  if (!data) return p;
-  const q = { ...p, experience: (p.experience || []).map((w: any) => ({ ...w })) };
-  if (data.about != null && data.about !== "") q.about = data.about;
-  if (data.skills?.length) q.skills = data.skills;
-  for (const x of data.points || []) if (q.experience[x.index]) q.experience[x.index].points = x.points || null;
-  return q;
-}
+/** Same function the website uses (public/resume-render.js). */
+export const applyVersion = (p: any, data: VersionData | null | undefined): any => sharedApplyVersion(p, data as any);
 const parse = (v: any) => (typeof v === "string" ? JSON.parse(v) : v);
 export const versionOut = (r: any) => ({
   id: Number(r.id), name: r.name, jobId: r.job_id ?? null, jobTitle: r.job_title ?? null, company: r.company ?? null,

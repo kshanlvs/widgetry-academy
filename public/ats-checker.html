@@ -145,13 +145,13 @@
 
 <script type="module">
 import { $, esc, api, mountWho, onUser } from "./jobs.js";
-import { atsCheckText } from "./resume-ats.js";
+import { atsCheckText, atsCheck } from "./resume-ats.js";
 import { readResumeFile } from "./resume-file.js";
 mountWho($("who"));
 
 let doc = null;   // { name, type, text, pages }
 let job = null;   // { id?, title, company, text }
-let hasProfile = false;
+let hasProfile = false, myProfile = null;
 const ev = (n, p) => { try { if (typeof gtag === "function") gtag("event", n, p || {}); } catch {} };
 
 // ---------- Reading files in the browser ----------
@@ -243,6 +243,9 @@ function draw(r) {
   const c = 2 * Math.PI * 52, col = r.score >= 85 ? "#1a7f4e" : r.score >= 70 ? "#0f6b56" : r.score >= 50 ? "#b26a00" : "#c23b3b";
   const kw = r.keywords;
   const worst = [...r.categories].sort((a, b) => a.score / a.max - b.score / b.max).filter(x => x.tips.length).slice(0, 3);
+  // Signed in with a Widgetry resume: show both scores, so the numbers never look inconsistent
+  const mine = myProfile ? atsCheck(myProfile, job, myProfile.resumeSettings || {}) : null;
+  const both = mine ? `<p class="small" style="margin:6px 0 0">This file: <b>${r.score}</b> · Your Widgetry resume: <b style="color:${mine.score >= r.score ? "#1a7f4e" : "#b26a00"}">${mine.score}</b>${mine.score > r.score ? " (it's ahead: send that one)" : mine.score < r.score ? " (update it with what's in this file)" : ""}</p>` : "";
   const build = hasProfile ? `<a class="btn" href="resume.html${job?.id ? "?job=" + encodeURIComponent(job.id) : ""}">Open my Widgetry resume</a>` : `<a class="btn" href="talent.html" id="toBuilder">${doc ? "Turn this file into a clean resume" : "Build my resume free"}</a>`;
   $("res").hidden = false;
   $("res").innerHTML = `
@@ -251,7 +254,7 @@ function draw(r) {
       <div style="display:grid;gap:4px;flex:1;min-width:220px">
         <p class="grade" style="color:${col}">${r.grade}</p>
         <p class="small muted" style="margin:0">ATS score out of 100 · ${r.mode === "job" ? `checked against <b>${esc(job?.title || "the job")}</b>` : "checked against what recruiters expect for your role"} · ${r.stats.words} words, ${r.stats.bullets} achievement points</p>
-        ${worst.length ? `<p class="small" style="margin:6px 0 0"><b>Fix first:</b> ${worst.map(w => esc(w.label)).join(" · ")}</p>` : ""}
+        ${worst.length ? `<p class="small" style="margin:6px 0 0"><b>Fix first:</b> ${worst.map(w => esc(w.label)).join(" · ")}</p>` : ""}${both}
       </div>
     </div></div>
     ${kw.matched.length || kw.missing.length ? `<div class="card"><h2>Keywords ${r.mode === "job" ? "from the job" : "for your role"}</h2>
@@ -279,7 +282,7 @@ const qid = new URLSearchParams(location.search).get("job");
 if (qid) pickJob(qid);
 onUser(async u => {
   if (!u) return;
-  try { const r = await api("/talent/me", { auth: true }); hasProfile = !!r.profile; if (lastResult) draw(lastResult); } catch {}
+  try { const r = await api("/talent/me", { auth: true }); hasProfile = !!r.profile; myProfile = r.profile; if (lastResult) draw(lastResult); } catch {}
 });
 </script>
 </body></html>

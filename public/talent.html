@@ -71,6 +71,7 @@ dialog.pv{max-width:min(900px,calc(100vw - 16px));height:min(92vh,1100px)}
 .pv-sheet{background:#fff;width:794px;padding:44px 50px 54px;transform-origin:top left;box-shadow:0 1px 3px rgba(0,0,0,.08),0 10px 30px rgba(0,0,0,.1)}
 .pv-foot{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line)}
 .x{border:0;background:none;font-size:22px;cursor:pointer;color:var(--muted);padding:4px 8px}
+@keyframes sp{to{transform:rotate(360deg)}}
 </style>
 
 <header class="jhero"><div class="wrap">
@@ -136,6 +137,10 @@ dialog.pv{max-width:min(900px,calc(100vw - 16px));height:min(92vh,1100px)}
     <fieldset><legend>Education</legend>
       <div id="edu" style="display:grid;gap:12px"></div>
       <button class="btn ghost small" type="button" id="bAddEdu" style="justify-self:start">+ Add education</button>
+    </fieldset>
+    <fieldset><legend>Achievements &amp; languages <span class="opt">(optional)</span></legend>
+      <label><span>Achievements <span class="opt">(one per line: awards, hackathons, rankings, positions of responsibility)</span></span><textarea id="achievements" maxlength="2100" style="min-height:90px" placeholder="Winner, Smart India Hackathon 2024 (team of 6)&#10;Google Developer Student Club lead, ran 8 Flutter workshops"></textarea></label>
+      <label><span>Languages you speak <span class="opt">(comma separated)</span></span><input id="languages" maxlength="200" placeholder="English, Hindi, Bengali"></label>
     </fieldset>
     <fieldset><legend>Links <span class="opt">(optional)</span></legend>
       <div class="row3">
@@ -324,6 +329,8 @@ function collect() {
     workModes: [...document.querySelectorAll('input[name="wm"]:checked')].map(c => c.value),
     noticePeriod: $("noticePeriod").value || null, expectedSalaryLpa: $("expectedSalaryLpa").value === "" ? null : Number($("expectedSalaryLpa").value),
     openToWork: $("openToWork").checked, hiddenCompanies: $("hiddenCompanies").value.trim(), talentNetwork: $("joinNet").checked,
+    achievements: $("achievements").value.split("\n").map(s => s.replace(/^\s*[-•*·]\s*/, "").trim()).filter(Boolean).slice(0, 10).map(s => s.slice(0, 200)),
+    languages: [...new Set($("languages").value.split(/[,;\n]/).map(s => s.trim()).filter(Boolean))].slice(0, 8).map(s => s.slice(0, 40)),
   };
 }
 function fillForm(p) {
@@ -342,6 +349,8 @@ function fillForm(p) {
   $("edu").innerHTML = ""; (p.education?.length ? p.education : [{}]).forEach(addEdu);
   $("certs").innerHTML = ""; (p.certifications || []).forEach(addCert);
   $("joinNet").checked = !!p.talentNetwork; syncNet();
+  $("achievements").value = (p.achievements || []).join("\n");
+  $("languages").value = (p.languages || []).join(", ");
 }
 function blank() { fillForm({ skills: ["Flutter", "Dart"], openToWork: true }); }
 
@@ -388,7 +397,9 @@ function markNeeds() {
   document.querySelectorAll(".edu").forEach(b => { if (val(b, ".eDegree") || val(b, ".eInst")) { mark(b.querySelector(".eDegree")); mark(b.querySelector(".eInst")); } });
   return need;
 }
-function applyImport(parsed, source) {
+let lastImport = null;   // { text, source }: kept so AI can read the same resume again
+function applyImport(parsed, source, text) {
+  if (text) lastImport = { text, source };
   if (dirty && collect().fullName && !confirm("Replace what you've filled in with the details from your resume?")) return;
   const keep = collect();
   importedEmail = parsed.email || "";
@@ -403,22 +414,36 @@ function applyImport(parsed, source) {
   });
   dirty = true; update();
   const need = markNeeds();
+  const aiBtn = lastImport && !parsed.ai ? `<button type="button" class="lnk" id="impAi">✨ Not right? Let AI read it</button>` : "";
   if (parsed.found.length < 3) {
-    notice("warn", `<span>We couldn't read much from <b>${esc(source)}</b>. It may be a scanned image. Try the Word file or your LinkedIn PDF, or fill in the form below.</span>`);
+    notice("warn", `<span>We couldn't read much from <b>${esc(source)}</b>. It may be a scanned image or an unusual layout. ${aiBtn || "Try the Word file or your LinkedIn PDF, or fill in the form below."}</span>`);
+    $("impAi")?.addEventListener("click", importWithAi);
     return;
   }
   notice("ok", `<span>✓ Filled in from <b>${esc(source)}</b>: ${esc(parsed.found.join(", "))}.${need.length ? ` <b>${need.length} field${need.length > 1 ? "s" : ""} to check</b> (highlighted in yellow).` : " Check it over, then save."}</span>
-    <span style="display:flex;gap:14px"><button type="button" class="lnk" id="impGo">${need.length ? "Show me" : "Preview"}</button><button type="button" class="lnk" id="impUndo">Start over</button></span>`);
+    <span style="display:flex;gap:14px;flex-wrap:wrap"><button type="button" class="lnk" id="impGo">${need.length ? "Show me" : "Preview"}</button>${aiBtn}<button type="button" class="lnk" id="impUndo">Start over</button></span>`);
+  $("impAi")?.addEventListener("click", importWithAi);
   $("impGo").onclick = () => { const n = document.querySelector(".need"); if (n) { n.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => n.focus(), 350); } else openPreview(); };
   $("impUndo").onclick = () => { blank(); importedEmail = ""; dirty = false; store.del(DRAFT); $("impMsg").innerHTML = ""; update(); };
   if (typeof gtag === "function") gtag("event", "resume_import", { found: parsed.found.length });
+}
+async function importWithAi() {
+  if (!lastImport) return;
+  notice("ok", `<span><span class="spin" style="display:inline-block;width:14px;height:14px;border:2px solid #cfe2d9;border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px"></span> AI is reading your resume… about 10 seconds.</span>`);
+  try {
+    const r = await api("/resume/import", { method: "POST", body: { text: lastImport.text.slice(0, 40000), ai: true } });
+    if (!r.profile) throw new Error(r.message || "Couldn't read this resume.");
+    dirty = false;   // replacing our own earlier import, no need to ask
+    applyImport({ ...r.profile, ai: true }, lastImport.source + " (read by AI)");
+    if (typeof gtag === "function") gtag("event", "resume_import_ai");
+  } catch (e) { notice("warn", `<span>${esc(e.message)}</span>`); }
 }
 async function takeFile(f) {
   if (!f) return;
   $("dropLabel").textContent = "Reading your resume…";
   try {
     const doc = await readResumeFile(f);
-    applyImport(parseResume(doc.text), doc.name);
+    applyImport(parseResume(doc.text), doc.name, doc.text);
   } catch (e) { notice("warn", `<span>${esc(e.message)}</span>`); }
   finally { $("dropLabel").textContent = "Upload a different file"; $("file").value = ""; }
 }
@@ -533,7 +558,7 @@ if (draft && !carried) {
   if (!FINISH) notice("ok", `<span>We kept what you filled in last time.</span><button type="button" class="lnk" id="dStart">Start over</button>`);
   $("dStart")?.addEventListener("click", () => { blank(); store.del(DRAFT); dirty = false; $("impMsg").innerHTML = ""; update(); });
 } else blank();
-if (carried?.text) applyImport(parseResume(carried.text), carried.name || "your resume");
+if (carried?.text) applyImport(parseResume(carried.text), carried.name || "your resume", carried.text);
 update();
 
 // 2. Who's here

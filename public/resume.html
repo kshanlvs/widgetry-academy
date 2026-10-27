@@ -19,6 +19,21 @@ button{font:inherit}
 .seg button[aria-pressed="true"]{background:#eaf3ee;color:var(--deep)}
 .seg .pro{font-size:10px;font-weight:800;letter-spacing:.04em;background:var(--gold);color:#1d1400;border-radius:4px;padding:1px 4px}
 .layout{max-width:1240px;margin:18px auto 50px;padding:0 16px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
+.paperwrap{position:relative;justify-self:center;width:100%;max-width:210mm}
+#measure .resume .row{flex-direction:row!important;gap:10pt}#measure .resume .when{white-space:nowrap}
+.pbreak{position:absolute;left:0;right:0;border-top:2px dashed #e0a400;pointer-events:none;z-index:4}
+.pbreak span{position:absolute;right:8px;top:-11px;background:#fff8ea;color:#5c3d00;border:1px solid #f0d29a;border-radius:999px;font:700 11px "DM Sans",sans-serif;padding:2px 8px}
+.pages{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px;font-size:13px;color:var(--muted)}
+.pages b{color:var(--ink)}
+.fitbtn{border:1.5px solid #f0d29a;background:#fff8ea;color:#5c3d00;border-radius:999px;padding:4px 10px;font:700 12.5px "DM Sans",sans-serif;cursor:pointer}
+.ver{font:600 14px "DM Sans",sans-serif;border-radius:999px;padding:8px 12px;border:1.5px solid #2c5a4c;background:transparent;color:#eaf3ee;max-width:220px}
+.ver option{color:#111}
+.dens{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.dens button{border:0;border-radius:999px;padding:6px 12px;font:600 13px "DM Sans",sans-serif;background:transparent;color:var(--muted);cursor:pointer}
+.dens button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.vlist{display:grid;gap:8px}
+.vrow{display:flex;justify-content:space-between;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px}
+.vrow.cur{border-color:var(--accent);background:#f3faf7}
 .paper{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08),0 12px 34px rgba(0,0,0,.08);border-radius:4px;padding:15mm 15mm 18mm;min-height:297mm;max-width:210mm;width:100%;justify-self:center}
 .side{position:sticky;top:70px;display:grid;gap:14px;max-height:calc(100vh - 86px);overflow-y:auto;padding-bottom:4px}
 .tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:#fff;border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px}
@@ -85,11 +100,11 @@ button{font:inherit}
 .spin{width:14px;height:14px;border:2px solid #cfe2d9;border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--deep);color:#fff;padding:11px 18px;border-radius:12px;font-weight:600;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,.2)}
-@media (max-width:980px){.layout{grid-template-columns:1fr}.side{position:static;order:-1;max-height:none;overflow:visible}.paper{padding:22px 18px;min-height:0}}
+@media (max-width:980px){.paperwrap{max-width:none}.layout{grid-template-columns:1fr}.side{position:static;order:-1;max-height:none;overflow:visible}.paper{padding:22px 18px;min-height:0}}
 @page{size:A4;margin:12mm 14mm}
 @media print{
   body{background:#fff}
-  .bar,.side,.toast{display:none!important}
+  .bar,.side,.toast,.pbreak,.pages{display:none!important}
   .layout{display:block;margin:0;padding:0;max-width:none}
   .paper{box-shadow:none;padding:0;min-height:0;max-width:none;border-radius:0}
 }
@@ -99,7 +114,9 @@ button{font:inherit}
 <div class="bar"><div class="in">
   <a href="my-profile.html">← My profile</a>
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <select class="ver" id="ver" aria-label="Which resume" hidden></select>
     <div class="seg" id="tpl" role="group" aria-label="Resume template" hidden></div>
+    <button type="button" id="bWord" class="btn" hidden title="Download a Word file">Word</button>
     <button type="button" id="bPrint" class="btn primary" hidden>Download PDF</button>
   </div>
 </div></div>
@@ -107,8 +124,8 @@ button{font:inherit}
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script type="module">
-import { $, esc, api, onUser } from "./jobs.js";
-import { renderResume, TEMPLATES, PRO_TEMPLATES, RESUME_CSS, ACCENTS } from "./resume-render.js";
+import { $, esc, api, onUser, downloadFile } from "./jobs.js";
+import { renderResume, TEMPLATES, PRO_TEMPLATES, RESUME_CSS, ACCENTS, DENSITY_LABELS, applyVersion } from "./resume-render.js";
 import { atsCheck } from "./resume-ats.js";
 $("resumeCss").textContent = RESUME_CSS;
 
@@ -119,9 +136,13 @@ const dateIn = iso => new Date(iso).toLocaleDateString("en-IN", { day: "numeric"
 const marks = t => esc(t).replace(/\[[^\]]{1,40}\]/g, m => `<span class="ph">${m}</span>`);
 
 let profile = null, premium = { active: false, price: 299, days: 30 };
-let st = { template: "modern", accent: "green", title: "", showPhoto: false, hide: [] };
+let st = { template: "modern", accent: "green", title: "", showPhoto: false, hide: [], density: "normal" };
 let tab = "ats", job = null, ats = null, ai = {}, busy = "";
-const TOGGLES = [["photo", "Photo"], ["phone", "Phone"], ["email", "Email"], ["city", "City"], ["summary", "Summary"], ["projects", "Projects"], ["education", "Education"], ["certifications", "Certifications"]];
+let versions = [], cur = null, pageCount = 1;   // saved copies (Premium) and the one being viewed
+const TOGGLES = [["photo", "Photo"], ["phone", "Phone"], ["email", "Email"], ["city", "City"], ["summary", "Summary"], ["projects", "Projects"], ["achievements", "Achievements"], ["education", "Education"], ["certifications", "Certifications"], ["languages", "Languages"]];
+// What's on screen: the main resume, or a saved copy of it
+const view = () => (cur ? applyVersion(profile, cur.data) : profile);
+const look = () => ({ ...st, title: (cur && cur.data.title) || st.title });
 const canUse = t => !PRO_TEMPLATES.has(t) || premium.active;
 
 // ---------- Template bar ----------
@@ -144,11 +165,37 @@ async function save() {
 function drawPaper() {
   const t = preview || st.template;
   // A Premium template without (or after) Premium: watermarked preview, no download
-  $("paper").innerHTML = renderResume(profile, t, { ...st, watermark: !!preview });
+  $("paper").innerHTML = renderResume(view(), t, { ...look(), watermark: !!preview });
   $("bPrint").textContent = preview ? "🔒 Unlock to download" : "Download PDF";
-  ats = atsCheck(profile, job, st);
+  ats = atsCheck(view(), job, look());
+  requestAnimationFrame(markPages);
   if (tab === "ats") drawSide();
 }
+
+// How many A4 pages the PDF will have, and where page 2 starts. Measured on an A4-width copy (182 mm of
+// text between the 14 mm margins), so phones get the same answer as the real PDF.
+function markPages() {
+  const paper = $("paper"), r = paper && paper.querySelector(".resume");
+  if (!r) return;
+  paper.parentElement.querySelectorAll(".pbreak").forEach(e => e.remove());
+  let m = $("measure");
+  if (!m) { m = Object.assign(document.createElement("div"), { id: "measure" }); m.setAttribute("aria-hidden", "true"); m.style.cssText = "position:absolute;left:-10000px;top:0;width:182mm;visibility:hidden"; document.body.appendChild(m); }
+  m.innerHTML = r.outerHTML;
+  const mmPx = m.getBoundingClientRect().width / 182, h = m.firstElementChild.getBoundingClientRect().height / mmPx;   // in mm
+  pageCount = Math.max(1, Math.ceil((h - 0.5) / 273));
+  // Dashed "page 2" lines only where the preview is A4-shaped (desktop)
+  const cs = getComputedStyle(paper), padL = parseFloat(cs.paddingLeft), padT = parseFloat(cs.paddingTop);
+  const screenMm = (paper.clientWidth - padL - parseFloat(cs.paddingRight)) / 182;
+  if (Math.abs(screenMm - mmPx) / mmPx < 0.08) for (let k = 1; k < pageCount; k++) {
+    const line = document.createElement("div"); line.className = "pbreak"; line.style.top = `${padT + paper.offsetTop + k * 273 * screenMm}px`;
+    line.innerHTML = `<span>Page ${k + 1} starts here</span>`; paper.parentElement.appendChild(line);
+  }
+  const over = pageCount > 1 ? (h - 273) / 273 : 0;
+  const tip = pageCount === 2 && over < 0.3 && st.density !== "tight";
+  $("pages").innerHTML = `<span><b>${pageCount} page${pageCount > 1 ? "s" : ""}</b> as a PDF${pageCount === 1 ? " · fits on one page ✓" : pageCount > 2 ? " · recruiters prefer 1–2 pages" : ""}</span>${tip ? `<button type="button" class="fitbtn" id="fitOne">Fit to one page</button>` : ""}`;
+  const f = $("fitOne"); if (f) f.onclick = () => { st.density = st.density === "compact" ? "tight" : "compact"; changed(); toast("Made it a little smaller to fit. Change it any time under Design."); };
+}
+addEventListener("resize", () => { clearTimeout(markPages.t); markPages.t = setTimeout(markPages, 200); });
 
 // ---------- Side panel ----------
 function show(t) { tab = t; document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t))); drawSide(); }
@@ -199,6 +246,7 @@ function upsell() {
       <li><b>Tailor your resume to any job</b> in one click: summary, bullets and missing keywords</li>
       <li><b>Rewrite weak bullets</b> into results recruiters notice</li>
       <li><b>AI cover letter</b> for each application</li>
+      <li><b>A saved copy for each job</b>, so your main resume stays as it is</li>
       <li><b>3 pro templates</b>: Executive, Minimal and Elegant, downloaded without the watermark</li>
       <li>Free ATS check stays free, always</li>
     </ul>
@@ -222,8 +270,8 @@ function aiOut(kind) {
       ${r.addSkills.length ? `<b>Skills to add</b> <span class="small">(your resume shows them)</span><div class="chips" style="margin-bottom:8px">${r.addSkills.map(k => `<span class="chip have">${esc(k)}</span>`).join("")}</div>` : ""}
       ${r.gaps.length ? `<b>Gaps</b> <span class="small">(add only if true, or learn them)</span><div class="chips" style="margin-bottom:8px">${r.gaps.map(k => `<span class="chip miss">${esc(k)}</span>`).join("")}</div>` : ""}
       ${r.tips.length ? `<b>Tips</b><ul>${r.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
-      <div class="row" style="margin-top:8px"><button type="button" class="btn2 go" data-apply="tailor">Apply all to my resume</button></div>
-      <p class="note">Applying replaces your summary and those jobs' points, and adds the skills. Fill in any <span class="ph">[highlighted]</span> numbers in your profile.</p></div>`;
+      <div class="row" style="margin-top:8px">${cur ? `<button type="button" class="btn2 go" data-apply="tailor">Apply to "${esc(cur.name)}"</button>` : `<button type="button" class="btn2 gold" id="saveCopy">Save as a copy for this job</button><button type="button" class="btn2" data-apply="tailor">Apply to my main resume</button>`}</div>
+      <p class="note">${cur ? "Updates this copy only." : "A copy keeps your main resume as it is, and you can download either."} Fill in any <span class="ph">[highlighted]</span> numbers before you send it.</p></div>`;
   if (kind === "cover") return `<div class="out"><textarea id="coverText" aria-label="Cover letter">${attr(r.letter)}</textarea>
       <div class="row" style="margin-top:8px"><button type="button" class="btn2 go" id="coverPdf">Download PDF</button><button type="button" class="btn2" data-copy="cover">Copy</button></div>
       <p class="note">Edit it here first: replace [Your Name] and anything in brackets.</p></div>`;
@@ -249,6 +297,7 @@ function designPanel() {
   const hidden = new Set(st.hide);
   return `<div class="card"><h3>Design</h3>
     <label class="fld">Target job title <span class="small">(shown under your name)</span><input id="cTitle" maxlength="140" placeholder="${attr(profile.headline)}" value="${attr(st.title || "")}"></label>
+    <div class="fld">Fit to one page <span class="small">(same resume, slightly smaller)</span><div class="dens" role="group" aria-label="Size">${Object.entries(DENSITY_LABELS).map(([k, l]) => `<button type="button" data-d="${k}" aria-pressed="${(st.density || "normal") === k}">${l}</button>`).join("")}</div></div>
     <div class="fld">Colour<div class="sw">${Object.entries(ACCENTS).map(([k, c]) => `<button type="button" data-a="${k}" aria-label="${k}" aria-pressed="${k === st.accent}" style="background:${c}"></button>`).join("")}</div></div>
     <div class="fld">Show on resume<div class="tg">${TOGGLES.map(([k, l]) => {
       const on = k === "photo" ? st.showPhoto && !hidden.has("photo") : !hidden.has(k);
@@ -257,7 +306,62 @@ function designPanel() {
     }).join("")}</div>
     ${!profile.photo ? `<p class="small" style="margin:6px 0 0"><a href="my-profile.html">Add a photo</a> to use it here.</p>` : `<p class="small" style="margin:6px 0 0">Tip: most Indian IT companies and ATS don't need a photo. Leave it off unless asked.</p>`}</div>
     <p class="small" id="saveState" style="margin:4px 0 0">Changes save to your account automatically.</p></div>
-    <div class="card"><h3>Saving the PDF</h3><p class="small">Click <b>Download PDF</b>, choose <b>Save as PDF</b>, and turn off <b>Headers and footers</b> under More settings. Every template is ATS-friendly: one column, real text, standard headings.</p></div>`;
+    ${versionsCard()}
+    <div class="card"><h3>Downloads</h3><p class="small"><b>Download PDF</b> saves a ready A4 file with real text, so ATS software can read it. Some recruiters ask for Word: use <b>Word</b> for a .docx. Every template is ATS-friendly: one column, standard headings.</p></div>`;
+}
+
+// ---------- Saved copies ----------
+function versionsCard() {
+  if (!premium.active && !versions.length) return `<div class="card"><h3>A copy for each job <span class="badge" style="font-size:11px">✨ PREMIUM</span></h3><p class="small">Tailor your resume to a job and keep it as its own copy, so your main resume stays as it is. Up to ${premium.maxVersions || 5} copies.</p></div>`;
+  return `<div class="card"><h3>Your resumes</h3><div class="vlist">
+    <div class="vrow ${cur ? "" : "cur"}"><span><b>Main resume</b></span>${cur ? `<button type="button" class="btn2" data-vopen="" style="padding:4px 10px">Open</button>` : `<span class="small">Showing</span>`}</div>
+    ${versions.map(v => `<div class="vrow ${cur?.id === v.id ? "cur" : ""}"><span><b>${esc(v.name)}</b>${v.company || v.jobTitle ? `<br><span class="small">${esc([v.jobTitle, v.company].filter(Boolean).join(" · "))}</span>` : ""}</span>
+      <span class="row" style="gap:6px;flex-wrap:nowrap">${cur?.id === v.id ? `<span class="small">Showing</span>` : `<button type="button" class="btn2" data-vopen="${v.id}" style="padding:4px 10px">Open</button>`}<button type="button" class="btn2" data-vren="${v.id}" style="padding:4px 8px" aria-label="Rename">✎</button><button type="button" class="btn2" data-vdel="${v.id}" style="padding:4px 8px" aria-label="Delete">🗑</button></span></div>`).join("")}
+  </div>${premium.active ? `<p class="small" style="margin-top:8px">Make a copy from <b>✨ AI writer → Tailor</b>, then <b>Save as a copy for this job</b>. ${versions.length}/${premium.maxVersions || 5} used.</p>` : `<p class="small" style="margin-top:8px">Your copies stay yours. Renew Premium to make new ones or edit them.</p>`}</div>`;
+}
+function drawVer() {
+  const sel = $("ver");
+  sel.hidden = !versions.length;
+  sel.innerHTML = `<option value="">Main resume</option>${versions.map(v => `<option value="${v.id}" ${cur?.id === v.id ? "selected" : ""}>${attr(v.name)}</option>`).join("")}`;
+}
+function openVersion(id) {
+  cur = id ? versions.find(v => String(v.id) === String(id)) || null : null;
+  ai = {}; drawVer(); drawPaper(); drawSide();
+  toast(cur ? `Showing "${cur.name}". Downloads and ATS use this copy.` : "Showing your main resume.");
+}
+async function loadVersions() {
+  try { const r = await api("/resume/versions", { auth: true }); versions = r.items; if (cur) cur = versions.find(v => v.id === cur.id) || null; drawVer(); }
+  catch { /* copies are optional */ }
+}
+async function saveCopy(btn) {
+  const r = ai.tailor?.result; if (!r) return;
+  const name = prompt("Name this copy", (job?.company || job?.title || "Copy").slice(0, 80));
+  if (!name) return;
+  const skills = [...new Set([...(view().skills || []), ...r.addSkills])].slice(0, 15);
+  btn.disabled = true; btn.textContent = "Saving…";
+  try {
+    const res = await api("/resume/versions", { method: "POST", auth: true, body: { name, jobId: job?.id || null, jobTitle: job?.title || null, company: job?.company || null,
+      data: { title: job?.title ? job.title.slice(0, 140) : null, about: r.summary, skills, points: r.jobs.map(j => ({ index: j.index, points: j.points.join("\n") })) } } });
+    versions = [res.version, ...versions]; cur = res.version; delete ai.tailor;
+    drawVer(); drawPaper(); drawSide(); toast(`Saved "${name}" · ATS score ${ats.score}. Your main resume is unchanged.`);
+  } catch (e) { btn.disabled = false; btn.textContent = "Save as a copy for this job"; toast(e.message); }
+}
+
+// ---------- Downloads ----------
+async function download(kind) {
+  if (kind === "pdf" && preview) { show("ai"); return toast(`${TEMPLATES[preview]} is a Premium template. Upgrade to download it, or pick a free one.`); }
+  const b = $(kind === "pdf" ? "bPrint" : "bWord"), label = b.textContent;
+  b.disabled = true; b.textContent = "Preparing…";
+  const L = look();
+  try {
+    await downloadFile(`/resume/${kind}`, { template: st.template, accent: st.accent, title: L.title || "", showPhoto: !!st.showPhoto, hide: st.hide, density: st.density || "normal", ...(cur ? { versionId: cur.id } : {}) },
+      `${(profile.fullName || "My").replace(/[^A-Za-z0-9 ]/g, "").trim().replace(/\s+/g, "-")}-Resume.${kind}`);
+    toast(kind === "pdf" ? "PDF downloaded ✓" : "Word file downloaded ✓");
+    if (typeof gtag === "function") gtag("event", "resume_download", { format: kind, template: st.template, copy: !!cur });
+  } catch (e) {
+    if (kind === "pdf" && (e.status === 0 || e.status >= 500)) { toast("Couldn't make the PDF just now, opening your browser's print instead."); setTimeout(() => print(), 600); }
+    else toast(e.message);
+  } finally { b.disabled = false; b.textContent = label; }
 }
 
 // ---------- Actions ----------
@@ -289,6 +393,19 @@ function wire() {
   on("coverPdf", "onclick", coverPdf);
   // Design tab
   on("cTitle", "oninput", e => { st.title = e.target.value; changed(false); });
+  document.querySelectorAll("[data-d]").forEach(b => b.onclick = () => { st.density = b.dataset.d; changed(); });
+  document.querySelectorAll("[data-vopen]").forEach(b => b.onclick = () => openVersion(b.dataset.vopen));
+  document.querySelectorAll("[data-vren]").forEach(b => b.onclick = async () => {
+    const v = versions.find(x => String(x.id) === b.dataset.vren), name = v && prompt("Rename this copy", v.name);
+    if (!name || name === v.name) return;
+    try { const r = await api(`/resume/versions/${v.id}`, { method: "PATCH", auth: true, body: { name } }); Object.assign(v, r.version); if (cur?.id === v.id) cur = v; drawVer(); drawSide(); } catch (e) { toast(e.message); }
+  });
+  document.querySelectorAll("[data-vdel]").forEach(b => b.onclick = async () => {
+    const v = versions.find(x => String(x.id) === b.dataset.vdel);
+    if (!v || !confirm(`Delete the copy "${v.name}"? Your main resume isn't affected.`)) return;
+    try { await api(`/resume/versions/${v.id}`, { method: "DELETE", auth: true }); versions = versions.filter(x => x.id !== v.id); if (cur?.id === v.id) cur = null; drawVer(); drawPaper(); drawSide(); toast("Copy deleted"); } catch (e) { toast(e.message); }
+  });
+  on("saveCopy", "onclick", e => saveCopy(e.currentTarget));
   document.querySelectorAll("[data-a]").forEach(b => b.onclick = () => { st.accent = b.dataset.a; changed(); });
   document.querySelectorAll("[data-k]").forEach(c => c.onchange = () => {
     const k = c.dataset.k;
@@ -338,6 +455,18 @@ async function applyAi(kind, btn) {
     : kind === "bullets" ? { points: [{ index: ai.bullets.index, points: r.points.join("\n") }] }
     : { about: r.summary, points: r.jobs.map(j => ({ index: j.index, points: j.points.join("\n") })), addSkills: r.addSkills };
   btn.disabled = true; btn.textContent = "Saving…";
+  if (cur) {
+    // Working on a saved copy: change the copy, not the main resume
+    const pts = new Map((cur.data.points || []).map(x => [x.index, x.points]));
+    for (const x of body.points || []) pts.set(x.index, x.points);
+    const data = { ...(body.about ? { about: body.about } : {}), points: [...pts].map(([index, points]) => ({ index, points })),
+      ...(body.addSkills ? { skills: [...new Set([...(view().skills || []), ...body.addSkills])].slice(0, 15) } : {}) };
+    try {
+      const before = ats.score, r = await api(`/resume/versions/${cur.id}`, { method: "PATCH", auth: true, body: { data } });
+      Object.assign(cur, r.version); delete ai[kind]; drawPaper(); drawSide(); toast(`Saved to "${cur.name}" · ATS score ${before} → ${ats.score}`);
+    } catch (e) { btn.disabled = false; btn.textContent = "Try again"; toast(e.message); }
+    return;
+  }
   try {
     const res = await api("/talent/me/resume-content", { method: "PATCH", body, auth: true });
     const before = ats.score;
@@ -408,7 +537,7 @@ onUser(async u => {
     if (!TEMPLATES[st.template]) st.template = "modern";
     if (!canUse(st.template)) { preview = st.template; }
     document.title = `${profile.fullName} - Resume`;   // becomes the PDF file name
-    $("root").innerHTML = `<div class="layout"><div class="paper" id="paper"></div>
+    $("root").innerHTML = `<div class="layout"><div class="paperwrap"><div class="pages" id="pages"></div><div class="paper" id="paper"></div></div>
       <aside class="side"><div class="tabs" role="tablist">
         <button type="button" role="tab" data-tab="ats" aria-selected="true">ATS check</button>
         <button type="button" role="tab" data-tab="ai" aria-selected="false">✨ AI writer</button>
@@ -417,14 +546,14 @@ onUser(async u => {
     document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => show(b.dataset.tab));
     const jid = new URLSearchParams(location.search).get("job");
     drawTpl(); drawPaper(); show(new URLSearchParams(location.search).get("tab") === "ai" ? "ai" : "ats");
-    $("tpl").hidden = false; $("bPrint").hidden = false;
+    $("tpl").hidden = false; $("bPrint").hidden = false; $("bWord").hidden = false;
+    $("ver").onchange = e => openVersion(e.target.value);
+    loadVersions();
     if (jid) pickJob(jid);
     if (new URLSearchParams(location.search).has("new")) { toast("Your resume is ready ✓ Pick a template, then press Download PDF."); history.replaceState(null, "", "resume.html"); }
   } catch (e) { $("root").innerHTML = `<p class="msg">${esc(e.message)}</p>`; }
 });
-$("bPrint").onclick = () => {
-  if (preview) { show("ai"); return toast(`${TEMPLATES[preview]} is a Premium template. Upgrade to download it, or pick a free one.`); }
-  print();
-};
+$("bPrint").onclick = () => download("pdf");
+$("bWord").onclick = () => download("docx");
 </script>
 </body></html>

@@ -119,6 +119,19 @@ export function renderResume(p, template = "modern", opts = {}) {
   </article>`;
 }
 
+/**
+ * A saved copy of the resume (Resume Premium) keeps only what differs from the main one:
+ * { title, about, skills, points: [{ index, points }] }. This returns the profile with those applied.
+ */
+export function applyVersion(p, data) {
+  if (!data) return p;
+  const q = { ...p, experience: (p.experience || []).map(w => ({ ...w })) };
+  if (data.about) q.about = data.about;
+  if (data.skills && data.skills.length) q.skills = data.skills;
+  for (const x of data.points || []) if (q.experience[x.index]) q.experience[x.index].points = x.points || null;
+  return q;
+}
+
 /** Resume strength: what's missing that recruiters and ATS look for. */
 export function strength(p) {
   const work = p.experience || [];

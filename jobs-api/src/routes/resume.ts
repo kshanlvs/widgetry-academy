@@ -131,7 +131,7 @@ const lookBody = z.object({
   versionId: z.coerce.number().int().positive().optional(),
   // Unsaved changes from the preview; anything left out comes from the saved settings
   template: z.string().refine(t => t in TEMPLATES, "Unknown template").optional(),
-  accent: z.enum(Object.keys(ACCENTS) as [string, ...string[]]).optional(),
+  accent: z.enum(ACCENTS).optional(),
   title: z.string().trim().max(140).optional(),
   showPhoto: z.boolean().optional(),
   hide: z.array(z.enum(HIDEABLE)).max(HIDEABLE.length).optional(),
@@ -248,7 +248,7 @@ const versionData = z.object({
   points: z.array(z.object({ index: z.number().int().min(0).max(9), points: z.string().trim().max(1500) })).max(10).optional(),
 });
 const versionSettings = z.object({
-  template: z.string().refine(t => t in TEMPLATES).optional(), accent: z.enum(Object.keys(ACCENTS) as [string, ...string[]]).optional(),
+  template: z.string().refine(t => t in TEMPLATES).optional(), accent: z.enum(ACCENTS).optional(),
   density: z.enum(DENSITIES).optional(), hide: z.array(z.enum(HIDEABLE)).max(HIDEABLE.length).optional(), showPhoto: z.boolean().optional(),
 }).nullable().optional();
 const versionBody = z.object({

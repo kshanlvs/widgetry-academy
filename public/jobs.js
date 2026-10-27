@@ -68,6 +68,22 @@ export async function api(path, { method = "GET", body, auth: needAuth = false }
   return data;
 }
 
+/** POST to the API and save the file it sends back (resume PDF / Word). Returns the response headers. */
+export async function downloadFile(path, body, fallbackName) {
+  const u = auth.currentUser;
+  if (!u) throw Object.assign(new Error("Please sign in first."), { status: 401 });
+  let r;
+  try { r = await fetch(JOBS_API + path, { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer " + (await u.getIdToken()) }, body: JSON.stringify(body || {}) }); }
+  catch { throw Object.assign(new Error("Network problem. Check your connection and try again."), { status: 0 }); }
+  if (!r.ok) { const d = await r.json().catch(() => ({})); throw Object.assign(new Error(d.error || "Something went wrong. Please try again."), { status: r.status }); }
+  const name = /filename="([^"]+)"/.exec(r.headers.get("content-disposition") || "")?.[1] || fallbackName;
+  const url = URL.createObjectURL(await r.blob());
+  const a = Object.assign(document.createElement("a"), { href: url, download: name });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  return r.headers;
+}
+
 /** Resolves once Firebase knows whether someone is signed in; calls cb on every change. */
 export function onUser(cb) { onAuthStateChanged(auth, u => cb(u)); }
 
