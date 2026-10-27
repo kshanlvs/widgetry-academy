@@ -1,13 +1,14 @@
 // The resume flow people will use most at launch: ATS check, build without an account, sign in to save,
 // then preview, download PDF and Word, and change the design.
 import fs from "node:fs";
-import { test, expect, api, signIn, USERS } from "../helpers";
+import { test, expect, api, signIn, USERS, sql, givePremium } from "../helpers";
 
 const PDF = new URL("../fixtures/two-column-resume.pdf", import.meta.url).pathname;
 const DOCX = new URL("../fixtures/fresher-resume.docx", import.meta.url).pathname;
 
 test.beforeEach(async () => {
   await api("DELETE", "/talent/me", undefined, USERS.seeker);
+  await sql("DELETE FROM resume_premium WHERE uid = ?", [USERS.seeker.uid]);
 });
 
 test("ATS checker scores an uploaded resume without signing in", async ({ page, errors }) => {
@@ -48,7 +49,7 @@ test("build a resume signed out by importing a file, then sign in and it is save
   expect(errors).toEqual([]);
 });
 
-test("signed in: resume preview, PDF and Word downloads, fit to one page", async ({ page, errors }, info) => {
+test("signed in: free resume (PDF), then Premium: Word, Key highlights, fit to one page, Pro templates", async ({ page, errors }, info) => {
   const put = await api("PUT", "/talent/me", {
     fullName: "Priya Sharma", headline: "Flutter Developer · 2 years", experienceYears: 2, city: "Kolkata", categories: ["flutter"],
     skills: ["Flutter", "Dart", "Bloc", "Firebase", "REST APIs"], about: "Flutter developer who ships production apps with Bloc and Firebase.",
@@ -71,14 +72,30 @@ test("signed in: resume preview, PDF and Word downloads, fit to one page", async
   expect(fs.readFileSync(pdfPath).subarray(0, 4).toString()).toBe("%PDF");
   expect(pdf.suggestedFilename()).toMatch(/Priya-Sharma.*\.pdf$/);
 
+  // Free: a small Widgetry line; Word, colours and "fit to one page" are Premium
+  await expect(page.locator("#paper .rs-brand")).toBeVisible();
+  await expect(page.locator("#bWord")).toContainText("🔒");
+  await page.click("#bWord");
+  await expect(page.locator("#toast")).toContainText("Premium");
+  await page.click('[data-tab="design"]');
+  await page.click('[data-d="tight"]');
+  await expect(page.locator("#paper .resume")).not.toHaveClass(/d-tight/);
+
+  // Premium: Word downloads, Pro features apply, the Widgetry line goes
+  await givePremium(USERS.seeker);
+  await page.reload();
+  await expect(page.locator("#paper .resume")).toBeVisible();
+  await expect(page.locator("#paper .rs-brand")).toHaveCount(0);
+  await expect(page.locator("#paper")).toContainText("Key Highlights");
   const [word] = await Promise.all([page.waitForEvent("download", { timeout: 30_000 }), page.click("#bWord")]);
   const wordPath = info.outputPath("resume.docx");
   await word.saveAs(wordPath);
   expect(fs.readFileSync(wordPath).subarray(0, 2).toString()).toBe("PK");
-
   await page.click('[data-tab="design"]');
   await page.click('[data-d="tight"]');
   await expect(page.locator("#paper .resume")).toHaveClass(/d-tight/);
+  await page.click("#tpl [data-t=impact]");
+  await expect(page.locator("#paper .resume")).toHaveClass(/t-impact/);
   expect(errors).toEqual([]);
 });
 

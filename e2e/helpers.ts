@@ -1,5 +1,16 @@
 // Shared test helpers: test users, a fake Firebase (the pages load it from Google's CDN) and API calls.
 import { test as base, expect, type Page, type BrowserContext } from "@playwright/test";
+import mysql from "mysql2/promise";
+import { DB } from "./playwright.config";
+
+/** Runs SQL on the test database (e.g. to give a test user Resume Premium). */
+export async function sql(q: string, params: unknown[] = []) {
+  const db = await mysql.createConnection(DB);
+  try { return (await db.query(q, params))[0]; } finally { await db.end(); }
+}
+export const givePremium = (u: User, days = 10) => sql(
+  "INSERT INTO resume_premium (uid, email, amount, days, status, order_id, paid_at, starts_at, expires_at) VALUES (?,?,29900,30,'paid',?,NOW(),NOW(),NOW() + INTERVAL ? DAY)",
+  [u.uid, u.email, `order_e2e_${u.uid}_${Date.now()}`, days]);
 
 export const USERS = {
   admin: { uid: "E4edbAvcdwTdkTdNwcdWneVWe572", email: "admin@widgetry.test", name: "Admin" },

@@ -158,7 +158,8 @@ class _DownloadBarState extends State<_DownloadBar> {
 
   Future<void> _download({required bool word}) async {
     final cubit = context.read<ResumeCubit>();
-    if (cubit.state.locked) return showUpsell(context);
+    // A Pro template without Premium, or Word (Premium only)
+    if (cubit.state.locked || (word && !cubit.state.premium.active)) return showUpsell(context);
     setState(() => word ? _word = true : _pdf = true);
     final f = await cubit.download(word: word);
     if (mounted) setState(() => word ? _word = false : _pdf = false);
@@ -173,8 +174,9 @@ class _DownloadBarState extends State<_DownloadBar> {
   @override
   Widget build(BuildContext context) {
     final locked = context.select<ResumeCubit, bool>((c) => c.state.locked);
+    final pro = context.select<ResumeCubit, bool>((c) => c.state.premium.active);
     return BottomActionBar(
-      leading: OutlinedButton(onPressed: _word ? null : () => _download(word: true), child: BusyLabel(busy: _word, label: 'Word')),
+      leading: OutlinedButton(onPressed: _word ? null : () => _download(word: true), child: BusyLabel(busy: _word, label: pro ? 'Word' : '🔒 Word')),
       child: FilledButton.icon(
         onPressed: _pdf ? null : () => _download(word: false),
         icon: Icon(locked ? Icons.lock_outline : Icons.download_rounded, size: 18),
@@ -244,8 +246,8 @@ class PreviewTab extends StatelessWidget {
           ),
           if (pdf != null && pdf.pages == 2 && s.look.density != 'tight')
             TextButton.icon(
-              onPressed: () => cubit.setLook(s.look.copyWith(density: s.look.density == 'compact' ? 'tight' : 'compact')),
-              icon: const Icon(Icons.compress, size: 18),
+              onPressed: () => s.fullLook ? cubit.setLook(s.look.copyWith(density: s.look.density == 'compact' ? 'tight' : 'compact')) : showUpsell(context),
+              icon: Icon(s.fullLook ? Icons.compress : Icons.lock_outline, size: 18),
               label: const Text('Fit to one page'),
             ),
         ]),
@@ -324,6 +326,7 @@ class _DesignTabState extends State<DesignTab> {
     final profile = context.select<ProfileCubit, Candidate?>((c) => c.state.profile);
     final t = Theme.of(context).textTheme;
     final look = s.look;
+    final pro = s.fullLook;
     final hasPhoto = profile?.photo != null;
     return ListView(padding: const EdgeInsets.fromLTRB(Space.lg, Space.lg, Space.lg, Space.xxxl), children: [
       SectionCard(
@@ -335,18 +338,21 @@ class _DesignTabState extends State<DesignTab> {
             decoration: InputDecoration(labelText: 'Target job title (under your name)', hintText: profile?.headline),
             onChanged: (v) => cubit.setLook(look.copyWith(title: v.trim())),
           ),
-          Text('Fit to one page', style: t.titleSmall),
+          _ProLabel(title: 'Fit to one page', locked: !pro),
           const SizedBox(height: 2),
           Text('The same resume, slightly smaller.', style: t.bodySmall),
           const SizedBox(height: Space.sm),
-          SegmentedButton<String>(
-            segments: [for (final e in resumeDensities.entries) ButtonSegment(value: e.key, label: Text(e.value))],
-            selected: {look.density},
-            showSelectedIcon: false,
-            onSelectionChanged: (v) => cubit.setLook(look.copyWith(density: v.first)),
+          Opacity(
+            opacity: pro ? 1 : 0.5,
+            child: SegmentedButton<String>(
+              segments: [for (final e in resumeDensities.entries) ButtonSegment(value: e.key, label: Text(e.value))],
+              selected: {pro ? look.density : 'normal'},
+              showSelectedIcon: false,
+              onSelectionChanged: (v) => pro ? cubit.setLook(look.copyWith(density: v.first)) : showUpsell(context),
+            ),
           ),
           const SizedBox(height: Space.lg),
-          Text(look.template == 'classic' ? 'Colour (Classic uses it for the header line)' : 'Colour', style: t.titleSmall),
+          _ProLabel(title: look.template == 'classic' ? 'Colour (Classic uses it for the header line)' : 'Colour', locked: !pro),
           const SizedBox(height: Space.sm),
           Wrap(spacing: 12, children: [
             for (final e in accents.entries)
@@ -355,11 +361,15 @@ class _DesignTabState extends State<DesignTab> {
                 selected: look.accent == e.key,
                 label: e.key,
                 child: GestureDetector(
-                  onTap: () => cubit.setLook(look.copyWith(accent: e.key)),
+                  onTap: () => pro ? cubit.setLook(look.copyWith(accent: e.key)) : showUpsell(context),
                   child: Container(
                     width: 34,
                     height: 34,
-                    decoration: BoxDecoration(color: e.value, shape: BoxShape.circle, border: Border.all(color: look.accent == e.key ? Theme.of(context).colorScheme.onSurface : Colors.transparent, width: 3)),
+                    decoration: BoxDecoration(
+                      color: pro ? e.value : e.value.withValues(alpha: 0.35),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: pro && look.accent == e.key ? Theme.of(context).colorScheme.onSurface : Colors.transparent, width: 3),
+                    ),
                   ),
                 ),
               ),
@@ -370,21 +380,54 @@ class _DesignTabState extends State<DesignTab> {
           Wrap(spacing: 8, runSpacing: 8, children: [
             for (final e in resumeParts.entries)
               FilterChip(
-                label: Text(e.value),
-                selected: e.key == 'photo' ? look.showPhoto && hasPhoto : look.shows(e.key),
+                label: Text(proParts.contains(e.key) && !pro ? '${e.value} 🔒' : e.value),
+                selected: proParts.contains(e.key) && !pro ? false : e.key == 'photo' ? look.showPhoto && hasPhoto : look.shows(e.key),
                 onSelected: e.key == 'photo' && !hasPhoto
                     ? null
-                    : (on) => cubit.setLook(e.key == 'photo'
-                        ? look.copyWith(showPhoto: on)
-                        : look.copyWith(hide: on ? look.hide.where((x) => x != e.key).toList() : [...look.hide, e.key])),
+                    : proParts.contains(e.key) && !pro
+                        ? (_) => showUpsell(context)
+                        : (on) => cubit.setLook(e.key == 'photo'
+                            ? look.copyWith(showPhoto: on)
+                            : look.copyWith(hide: on ? look.hide.where((x) => x != e.key).toList() : [...look.hide, e.key])),
               ),
           ]),
           const SizedBox(height: Space.sm),
           Text(hasPhoto ? "Most Indian IT companies and ATS don't need a photo. Leave it off unless asked." : 'Add a profile photo to use it on your resume.', style: t.bodySmall),
         ]),
       ),
+      if (!s.premium.active) ...[
+        const SizedBox(height: Space.lg),
+        SectionCard(
+          title: 'Classic and Modern are free',
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Clean and ATS-friendly, with a fixed colour and a small "Made with Widgetry" line at the bottom. Premium adds 6 more templates, Key highlights, colours, a photo, fit to one page and Word download.', style: t.bodySmall),
+            const SizedBox(height: Space.sm),
+            TextButton(onPressed: () => showUpsell(context), child: const Text('See Premium')),
+          ]),
+        ),
+      ],
       const SizedBox(height: Space.lg),
       const CopiesCard(),
     ]);
   }
+}
+
+/// A Design setting's title, with a PRO tag when it needs Premium.
+class _ProLabel extends StatelessWidget {
+  const _ProLabel({required this.title, required this.locked});
+  final String title;
+  final bool locked;
+
+  @override
+  Widget build(BuildContext context) => Row(children: [
+        Flexible(child: Text(title, style: Theme.of(context).textTheme.titleSmall)),
+        if (locked) ...[
+          const SizedBox(width: Space.sm),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(color: AppColors.gold, borderRadius: BorderRadius.circular(4)),
+            child: const Text('🔒 PRO', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.goldInk)),
+          ),
+        ],
+      ]);
 }

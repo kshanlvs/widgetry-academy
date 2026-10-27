@@ -1324,11 +1324,24 @@ test("Resume v2: achievements and languages, PDF and Word downloads, ATS for the
     assert.deepEqual(kept.body.profile.achievements, ["Winner, Smart India Hackathon 2023"], "older apps that don't send the new sections don't wipe them");
     assert.equal((await call("PUT", "/talent/me/resume-settings", { template: "modern", density: "tight", hide: ["languages"] }, ME)).status, 200);
 
-    // Word download (free)
-    const d = await bin("/resume/docx", {}, ME);
+    // Word download is Pro; PDF stays free
+    assert.equal((await bin("/resume/docx", {}, ME)).status, 402);
+    await pool.query("INSERT INTO resume_premium (uid, email, amount, days, status, order_id, paid_at, starts_at, expires_at) VALUES ('rv1','rv@test.dev',29900,30,'paid','order_word_test',NOW(),NOW(),NOW() + INTERVAL 5 DAY)");
+    const d = await bin("/resume/docx", { accent: "maroon" }, ME);
     assert.equal(d.status, 200);
     assert.equal(d.bytes.subarray(0, 2).toString(), "PK");
     assert.match(d.headers.get("content-disposition") || "", /Riya-Sen-Resume\.docx/);
+    await pool.query("DELETE FROM resume_premium WHERE order_id = 'order_word_test'");
+    // Free resumes: fixed colour, no photo, normal spacing, no Key highlights, a small Widgetry line. Pro: all of it.
+    const { resumeHtml } = await import("../src/resumeDoc.js");
+    const who = { fullName: "Riya Sen", headline: "Flutter Developer", skills: ["Flutter"], photo: "data:image/png;base64,AAAA",
+      experience: [{ company: "A", role: "Dev", start: "2023-01", points: "Grew daily users by 40% with a new onboarding\nCut app start time by 2x on low-end phones" }] };
+    const body = (h: string) => h.slice(h.indexOf("<body>"));
+    const free = body(resumeHtml(who, { template: "modern", accent: "maroon", density: "tight", showPhoto: true }, false, false));
+    assert.ok(free.includes("Made with Widgetry") && !free.includes("d-tight") && !free.includes("Key Highlights") && !free.includes('class="photo"') && !free.includes("--rs-accent:#7a1f2b"));
+    const paid = body(resumeHtml(who, { template: "modern", accent: "maroon", density: "tight", showPhoto: true }, false, true));
+    assert.ok(!paid.includes("Made with Widgetry") && paid.includes("d-tight") && paid.includes("Key Highlights") && paid.includes('class="photo"') && paid.includes("--rs-accent:#7a1f2b"));
+    assert.ok(resumeHtml(who, { template: "impact" }, true, false).includes("Key Highlights"), "a Pro template's preview shows what Pro gives");
     // PDF: made by Chromium; Premium templates come with the watermark
     if (hasChromium) {
       const pdf = await bin("/resume/pdf", {}, ME);

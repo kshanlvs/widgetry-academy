@@ -132,10 +132,10 @@ export type CandidateInput = z.infer<typeof candidateInput>;
 
 // Resume look, saved per seeker
 export const ACCENTS = ["green", "navy", "black", "maroon", "teal", "purple"] as const;
-export const HIDEABLE = ["photo", "phone", "email", "city", "summary", "projects", "achievements", "education", "certifications", "languages"] as const;
+export const HIDEABLE = ["photo", "phone", "email", "city", "summary", "highlights", "projects", "achievements", "education", "certifications", "languages"] as const;
 export const DENSITIES = ["normal", "compact", "tight"] as const;
 export const resumeSettingsInput = z.object({
-  template: z.enum(["classic", "modern", "compact", "executive", "minimal", "elegant"]).default("modern"),   // the last three are Resume Premium
+  template: z.enum(["classic", "modern", "impact", "timeline", "executive", "elegant", "minimal", "compact"]).default("modern"),   // all but Classic and Modern are Resume Premium
   accent: z.enum(ACCENTS).default("green"),
   title: optText(140),                                  // target role shown instead of the headline
   showPhoto: z.boolean().default(false),

@@ -7,6 +7,7 @@ import { gateway, paymentsEnabled } from "./payments.js";
 import { reportExternalResume } from "./play.js";
 import { notifyUser } from "./notify.js";
 import { askModel } from "./chat.js";
+import { PRO_TEMPLATES as SHARED_PRO_TEMPLATES } from "./shared/resume-render.js";
 import { applyVersion as sharedApplyVersion } from "./shared/resume-render.js";
 
 const env = process.env;
@@ -15,7 +16,8 @@ export const premiumPrice = () => Number(env.RESUME_PREMIUM_PRICE || 299);
 export const premiumDays = () => Number(env.RESUME_PREMIUM_DAYS || 30);
 /** AI requests per person per rolling 24 hours (RESUME_AI_DAILY). */
 export const aiDailyLimit = () => Number(env.RESUME_AI_DAILY || 30);
-export const PRO_TEMPLATES = ["executive", "minimal", "elegant"] as const;
+/** Templates that need Premium: the same list as the website (shared/resume-render.js). */
+export const PRO_TEMPLATES: readonly string[] = [...SHARED_PRO_TEMPLATES];
 
 const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000);
 

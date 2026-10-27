@@ -169,7 +169,7 @@ function render() {
       </section>
       <section class="pcard">
         <h2>Your resume<a href="resume.html">Customize</a></h2>
-        <div class="mini" aria-hidden="true"><div class="scale" id="miniScale">${renderResume(p, rs.template || "modern", { ...rs, watermark: PRO_TEMPLATES.has(rs.template) && !premiumOn })}</div></div>
+        <div class="mini" aria-hidden="true"><div class="scale" id="miniScale">${renderResume(p, rs.template || "modern", { ...rs, watermark: PRO_TEMPLATES.has(rs.template) && !premiumOn, pro: premiumOn })}</div></div>
         <a class="btn" href="resume.html" style="width:100%">Customize &amp; download PDF</a>
       </section>
       <section class="pcard" style="display:grid;gap:14px">
@@ -237,8 +237,8 @@ onUser(async u => {
     const r = await api("/talent/me", { auth: true });
     if (!r.profile) { $("root").innerHTML = `<div class="msg pcard" style="margin-top:-70px"><h2>Build your resume</h2><p class="muted" style="margin:0">Upload your old resume and we fill everything in, or start fresh. Takes about 2 minutes.</p><a class="btn gold" href="talent.html">Build my resume</a></div>`; return; }
     p = r.profile;
-    // Premium templates show a watermark once Premium has ended
-    if (PRO_TEMPLATES.has(p.resumeSettings?.template)) premiumOn = !!(await api("/resume/premium", { auth: true }).catch(() => ({}))).active;
+    // Premium: Pro templates download clean, and Pro features (colour, photo, highlights) show on every template
+    premiumOn = !!(await api("/resume/premium", { auth: true }).catch(() => ({}))).active;
     render();
     if (new URLSearchParams(location.search).get("saved")) { toast("Profile saved"); history.replaceState(null, "", "my-profile.html"); }
   } catch (x) { $("root").innerHTML = `<div class="msg"><p>${esc(x.message)}</p></div>`; }

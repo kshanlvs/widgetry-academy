@@ -6,7 +6,9 @@ import 'package:widgetry_academy/core/error/failures.dart';
 import 'package:widgetry_academy/core/result/result.dart';
 import 'package:widgetry_academy/features/payments/domain/payments.dart';
 import 'package:widgetry_academy/features/resume/data/resume_data.dart';
+import 'package:widgetry_academy/features/profile/domain/entities/candidate.dart';
 import 'package:widgetry_academy/features/resume/domain/resume.dart';
+import 'package:widgetry_academy/features/resume/presentation/resume_cubit.dart';
 
 class MockRepo extends Mock implements ResumeRepository {}
 
@@ -109,6 +111,18 @@ void main() {
       expect(t.jobs, {1: ['p1', 'p2']});
       expect(t.addSkills, ['Bloc']);
     });
+  });
+
+  test('free templates are Classic and Modern; Pro features need Premium or a Pro template', () {
+    expect(resumeTemplates.keys.where((t) => !proTemplates.contains(t)), ['classic', 'modern']);
+    const free = ResumeState(look: ResumeSettings(template: 'modern'));
+    expect(free.fullLook, isFalse);
+    expect(free.locked, isFalse);
+    const preview = ResumeState(look: ResumeSettings(template: 'impact'));
+    expect(preview.fullLook, isTrue, reason: 'a Pro template previews with everything Pro gives');
+    expect(preview.locked, isTrue, reason: 'but needs Premium to download');
+    const paid = ResumeState(premium: ResumePremium(active: true), look: ResumeSettings(template: 'classic'));
+    expect([paid.fullLook, paid.locked], [true, false]);
   });
 
   group('importing a resume file', () {

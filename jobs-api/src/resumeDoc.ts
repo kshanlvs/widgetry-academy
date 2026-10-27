@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import type { Browser } from "playwright-core";
 import { AlignmentType, BorderStyle, Document, ExternalHyperlink, LevelFormat, Packer, Paragraph, TabStopType, TextRun } from "docx";
-import { renderResume, RESUME_CSS, groupSkills, autoSummary, PRO_TEMPLATES } from "./shared/resume-render.js";
+import { renderResume, RESUME_CSS, groupSkills, autoSummary, keyHighlights, ACCENTS, PRO_TEMPLATES } from "./shared/resume-render.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const env = process.env;
@@ -34,8 +34,8 @@ function fonts(): string {
 
 export interface ResumeLook { template?: string; accent?: string; title?: string | null; showPhoto?: boolean; hide?: string[]; density?: string }
 
-/** The full HTML page that is printed to PDF (also used by tests). */
-export function resumeHtml(p: any, look: ResumeLook, watermark: boolean): string {
+/** The full HTML page that is printed to PDF (also used by tests). [pro]: the person has Resume Premium. */
+export function resumeHtml(p: any, look: ResumeLook, watermark: boolean, pro = false): string {
   const t = look.template || "modern";
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${String(p.fullName || "Resume").replace(/[<&]/g, "")} - Resume</title>
 <style>${fonts()}
@@ -43,7 +43,7 @@ export function resumeHtml(p: any, look: ResumeLook, watermark: boolean): string
 html,body{margin:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 ${RESUME_CSS}
 .resume .row{flex-direction:row!important}
-</style></head><body>${renderResume(p, t, { ...look, watermark })}</body></html>`;
+</style></head><body>${renderResume(p, t, { ...look, watermark, pro })}</body></html>`;
 }
 
 export const needsWatermark = (template: string | undefined, premium: boolean) => PRO_TEMPLATES.has(template || "") && !premium;
@@ -97,9 +97,10 @@ const short = (u: string) => u.replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$
 const isUrl = (u?: string | null) => /^https?:\/\//i.test(u || "");
 
 /** A plain, ATS-friendly Word file: one column, standard headings, real bullet lists. */
+/** Word file (Resume Premium): the chosen accent colour and Key highlights, like the Pro PDF. */
 export async function resumeDocx(p: any, look: ResumeLook): Promise<Buffer> {
   const hide = new Set(look.hide || []), show = (k: string) => !hide.has(k);
-  const ACCENT = "0F6B56", FONT = "Calibri";
+  const ACCENT = ((ACCENTS as Record<string, string>)[look.accent || ""] || "#0f6b56").slice(1).toUpperCase(), FONT = "Calibri";
   const kids: Paragraph[] = [];
   const heading = (text: string) => kids.push(new Paragraph({
     spacing: { before: 220, after: 80 }, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "B9D3C8", space: 2 } },
@@ -122,6 +123,8 @@ export async function resumeDocx(p: any, look: ResumeLook): Promise<Buffer> {
   kids.push(new Paragraph({ spacing: { after: 120 }, border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: ACCENT, space: 4 } }, children: contact }));
 
   if (show("summary")) { heading("Professional Summary"); kids.push(new Paragraph({ children: [new TextRun({ text: (p.about || "").trim() || autoSummary(p), size: 20, font: FONT })] })); }
+  const hl = show("highlights") ? keyHighlights(p) : [];
+  if (hl.length >= 2) { heading("Key Highlights"); hl.forEach(bullet); }
   const groups = groupSkills(p.skills || []);
   if (groups.length) {
     heading("Technical Skills");

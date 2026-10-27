@@ -23,7 +23,7 @@ Follow these rules and almost every ATS will read your resume correctly:
 - **A PDF made from text**, not a scan or a photo.
 - **One page** for freshers and up to about 4 years of experience. Two pages are fine for senior developers.
 
-Our [free resume builder](../resume-builder.html) follows all of these rules automatically, with three templates and a resume strength score.
+Our [free resume builder](../resume-builder.html) follows all of these rules automatically, with free templates, a free PDF download and an ATS score.
 
 ## The right section order
 
@@ -115,4 +115,4 @@ One page for freshers and developers with up to about four years of experience. 
 
 ### Is there a free ATS-friendly resume builder for Flutter developers?
 
-Yes. [Widgetry's resume builder](../resume-builder.html) is free with no watermark. It builds an ATS-friendly resume from your profile in three templates and scores your resume with tips to improve it.
+Yes. [Widgetry's resume builder](../resume-builder.html) is free: it builds an ATS-friendly resume in the Classic or Modern template, gives you a free PDF download and scores your resume with tips to improve it. Optional Premium adds more templates and AI writing help.

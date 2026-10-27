@@ -49,6 +49,8 @@ class ResumeState extends Equatable {
   ResumeVersion? get version => versions.where((v) => v.id == versionId).firstOrNull;
   /// A Premium template without Premium: watermarked preview, no download.
   bool get locked => !premium.canUse(look.template);
+  /// Pro features (colour, photo, fit to one page, Key highlights) apply: with Premium, or while previewing a Pro template.
+  bool get fullLook => premium.active || proTemplates.contains(look.template);
 
   ResumeState copyWith({
     ResumePremium? premium,

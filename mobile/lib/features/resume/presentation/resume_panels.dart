@@ -622,13 +622,13 @@ class UpsellCard extends StatelessWidget {
           Text('Your Premium ended on ${_date(pr.expiresAt!)}. Your resume is safe: free templates still download without a watermark.', style: const TextStyle(color: Color(0xFFFFD98A), fontWeight: FontWeight.w600)),
         ],
         const SizedBox(height: Space.md),
-        const Text('Get shortlisted faster with AI', style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800)),
+        const Text('A resume that stands out, written with AI', style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800)),
         const SizedBox(height: Space.md),
-        point('Tailor your resume to any job', ' in one tap: summary, points and missing keywords'),
-        point('Rewrite weak points', ' into results recruiters notice'),
-        point('AI cover letter', ' for each application'),
-        point('A saved copy for each job', ', your main resume stays as it is'),
-        point('3 pro templates', ': Executive, Minimal and Elegant, without the watermark'),
+        point('6 Pro templates', ' with Key highlights: your 3 strongest numbers at the top, where recruiters look first'),
+        point('Tailor your resume to any job', ' in one tap, and keep a copy for each job'),
+        point('AI rewrites weak points', ' and writes your summary and cover letters'),
+        const SizedBox(height: Space.sm),
+        const _Compare(),
         const SizedBox(height: Space.md),
         Row(children: [
           Text('₹${pr.price}', style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800)),
@@ -647,13 +647,49 @@ class UpsellCard extends StatelessWidget {
   }
 }
 
+/// Free and Premium side by side.
+class _Compare extends StatelessWidget {
+  const _Compare();
+  static const _rows = [
+    ('Templates', '2', '8'),
+    ('ATS check and PDF download', '✓', '✓'),
+    ('Key highlights', '–', '✓'),
+    ('Colours, photo, fit to one page', '–', '✓'),
+    ('Word download', '–', '✓'),
+    ('AI writer, cover letters, copies per job', '–', '✓'),
+    ('"Made with Widgetry" line', 'Yes', 'No'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    const head = TextStyle(color: AppColors.deepMuted, fontSize: 12, fontWeight: FontWeight.w700);
+    const cell = TextStyle(color: Colors.white, fontSize: 13, height: 1.3);
+    Widget c(String t, {TextStyle style = cell, TextAlign align = TextAlign.center}) =>
+        Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Text(t, style: style, textAlign: align));
+    return Table(
+      columnWidths: const {0: FlexColumnWidth(), 1: FixedColumnWidth(56), 2: FixedColumnWidth(72)},
+      border: const TableBorder(horizontalInside: BorderSide(color: Color(0x22FFFFFF))),
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: [
+        TableRow(children: [c('', style: head), c('Free', style: head), c('Premium', style: head)]),
+        for (final (label, free, pro) in _rows)
+          TableRow(children: [
+            c(label, align: TextAlign.left),
+            c(free, style: cell.copyWith(color: AppColors.deepMuted)),
+            c(pro, style: cell.copyWith(color: const Color(0xFFFFD98A), fontWeight: FontWeight.w800)),
+          ]),
+      ],
+    );
+  }
+}
+
 /// The Premium card in a sheet (from a locked template or download).
 Future<void> showUpsell(BuildContext context) => showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => BlocProvider.value(value: context.read<ResumeCubit>(), child: const Padding(padding: EdgeInsets.fromLTRB(Space.lg, 0, Space.lg, Space.xl), child: UpsellCard())),
+      builder: (_) => BlocProvider.value(value: context.read<ResumeCubit>(), child: const SingleChildScrollView(padding: EdgeInsets.fromLTRB(Space.lg, 0, Space.lg, Space.xl), child: UpsellCard())),
     );
 
 /// Buys Premium. With Google's choice screen, asks for the state first (Google needs it for tax).

@@ -1,18 +1,33 @@
 // GENERATED from public/resume-render.js by `npm run sync-shared`. Edit the website file, not this one.
-// Widgetry resume renderer: one ATS-friendly structure, three premium looks.
+// Widgetry resume renderer: one ATS-friendly structure, two free looks and six Pro ones.
 // ATS rules followed: single column, real text (no images/icons/tables), standard section names,
 // plain contact line, consistent "Mon YYYY – Mon YYYY" dates, bullet points as real lists.
 
 export const TEMPLATES = {
-  classic: "Classic",     // serif, centered, black: accepted everywhere (banks, MNCs, service companies)
-  modern: "Modern",       // clean sans with a green accent: product companies and startups
-  compact: "Compact",     // tighter spacing: fits 4+ years of experience on one page
-  executive: "Executive", // Premium: strong serif name, ruled sections, for senior and lead roles
-  minimal: "Minimal",     // Premium: airy, light rules, quiet accent: design-led startups
-  elegant: "Elegant",     // Premium: serif headings over a sans body, accent rule beside each heading
+  classic: "Classic",     // Free: serif, centered, black: accepted everywhere (banks, MNCs, service companies)
+  modern: "Modern",       // Free: clean sans with a green accent: product companies and startups
+  impact: "Impact",       // Pro: colour header band and a "Key highlights" strip of your best numbers
+  timeline: "Timeline",   // Pro: experience on an accent timeline, dates up front: shows a career path at a glance
+  executive: "Executive", // Pro: strong serif name, ruled sections, for senior and lead roles
+  elegant: "Elegant",     // Pro: serif headings over a sans body, accent rule beside each heading
+  minimal: "Minimal",     // Pro: airy, light rules, quiet accent: design-led startups
+  compact: "Compact",     // Pro: tighter spacing: fits 4+ years of experience on one page
 };
-/** Templates that need Resume Premium. Same ATS-safe structure as the free ones: only the styling differs. */
-export const PRO_TEMPLATES = new Set(["executive", "minimal", "elegant"]);
+/** Templates that need Resume Premium. Same ATS-safe structure as the free ones (one column, real text, standard headings). */
+export const PRO_TEMPLATES = new Set(["impact", "timeline", "executive", "elegant", "minimal", "compact"]);
+/**
+ * What Pro adds on every template. Free resumes (Classic, Modern) keep a fixed colour, no photo,
+ * normal spacing, no Key highlights, PDF only, and a small "Made with Widgetry" line at the bottom.
+ */
+export const PRO_FEATURES = [
+  ["templates", "6 Pro templates", "Impact, Timeline, Executive, Elegant, Minimal and Compact"],
+  ["highlights", "Key highlights", "your 3 strongest numbers pulled to the top, where recruiters look first"],
+  ["colours", "6 accent colours", "match the company's style or your own"],
+  ["fit", "Fit to one page", "the same resume, tightened to one or two pages"],
+  ["photo", "Photo", "for roles and countries that expect one"],
+  ["word", "Word download", "a .docx for recruiters and job portals that ask for it"],
+  ["brand", "No Widgetry branding", "free resumes carry a small \"Made with Widgetry\" line"],
+];
 
 const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -58,6 +73,24 @@ export function autoSummary(p) {
   return `${who}${builds}.${stack} Focused on clean, maintainable code and smooth user experiences.`;
 }
 
+/**
+ * Key highlights (Pro): the strongest achievements with numbers, from jobs, projects and achievements.
+ * Picked, not written: the text is the person's own, so nothing is invented. The number is wrapped in <b>.
+ */
+const NUM = /(\d[\d,.]*\s?(?:%|\+|k\+?|K\+?|x|X|L\+?|lakh|crore|million|M\+?)?)/;
+export function keyHighlights(p, n = 3) {
+  const all = [
+    ...(p.experience || []).flatMap(w => lines(w.points)),
+    ...(p.apps || []).map(a => (a.about || "").split("·")[0].trim()),
+    ...(p.achievements || []).map(a => String(a || "").trim()),
+  ].filter(l => l.length >= 18 && l.length <= 170 && /\d/.test(l) && !/^\d{4}\s*[-–]/.test(l));
+  const score = l => (/\d\s?%/.test(l) ? 4 : 0) + (/\d\s?(k|K|L|lakh|crore|million|M)\b|\d\+/.test(l) ? 4 : 0) + (/\b(users|downloads|customers|installs|rating|revenue|faster|reduced|cut|increased|grew|improved|saved)\b/i.test(l) ? 2 : 0) + (/^(winner|won|rank|top|first)\b/i.test(l) ? 2 : 0);
+  const seen = new Set();
+  return all.map((l, i) => ({ l, s: score(l), i })).filter(x => x.s > 0).sort((a, b) => b.s - a.s || a.i - b.i)
+    .filter(x => { const k = x.l.toLowerCase().slice(0, 40); if (seen.has(k)) return false; seen.add(k); return true; })
+    .slice(0, n).map(x => x.l);
+}
+
 /** "Fit to one page": the same resume, slightly smaller. Still real text, so ATS read it the same way. */
 export const DENSITY = { compact: "d-compact", tight: "d-tight" };
 export const DENSITY_LABELS = { normal: "Normal", compact: "Snug", tight: "Fit more" };
@@ -71,15 +104,17 @@ const WM_URL = "data:image/svg+xml," + encodeURIComponent(WM_SVG);
 
 /**
  * opts (all optional, saved per seeker): { accent, title, showPhoto, density: "normal"|"compact"|"tight",
- *   hide: ["photo","phone","email","city","summary","projects","achievements","education","certifications","languages"] }
- * Not saved: watermark (true for a Premium template viewed without Premium).
+ *   hide: ["photo","phone","email","city","summary","highlights","projects","achievements","education","certifications","languages"] }
+ * Not saved: watermark (true for a Pro template viewed without Premium); pro (the person has Resume Premium).
+ * Pro features (colour, photo, density, Key highlights, no branding) apply with Premium, or on a Pro template's preview.
  */
 export function renderResume(p, template = "modern", opts = {}) {
   const t = TEMPLATES[template] ? template : "modern";
+  const full = !!opts.pro || PRO_TEMPLATES.has(t);
   const hide = new Set(opts.hide || []), show = k => !hide.has(k);
-  const accent = ACCENTS[opts.accent] || null;
+  const accent = full ? ACCENTS[opts.accent] || null : null;
   const style = accent && t !== "classic" ? ` style="--rs-accent:${accent};--rs-rule:${accent}40"` : accent && t === "classic" ? ` style="--rs-head-rule:${accent}"` : "";
-  const photo = opts.showPhoto && show("photo") && /^data:image\/(jpeg|png|webp);base64,/.test(p.photo || "") ? `<img class="photo" src="${p.photo}" alt="">` : "";
+  const photo = full && opts.showPhoto && show("photo") && /^data:image\/(jpeg|png|webp);base64,/.test(p.photo || "") ? `<img class="photo" src="${p.photo}" alt="">` : "";
   const contact = [
     show("city") && p.city && `${esc(p.city)}, India`, show("phone") && p.phone && esc(phone(p.phone)), show("email") && p.email && esc(p.email),
     ...[p.linkedinUrl, p.githubUrl, p.portfolioUrl].filter(safe).map(u => `<a href="${esc(u)}">${esc(short(u))}</a>`),
@@ -101,20 +136,24 @@ export function renderResume(p, template = "modern", opts = {}) {
   if (p.verification === "verified") certList.unshift({ name: "Widgetry Verified Flutter Developer (technical interview)", issuer: "Widgetry Academy" });
   const certs = certList.map(c => `<li><b>${esc(c.name)}</b>${c.issuer ? ` – ${esc(c.issuer)}` : ""}${c.year ? ` (${esc(c.year)})` : ""}</li>`).join("");
 
-  const sec = (title, body) => (body ? `<section><h2>${title}</h2>${body}</section>` : "");
+  const sec = (title, body, cls = "") => (body ? `<section${cls ? ` class="${cls}"` : ""}><h2>${title}</h2>${body}</section>` : "");
+  const hl = full && show("highlights") ? keyHighlights(p) : [];
+  const highlights = hl.length >= 2 ? `<ul class="hl">${hl.map(l => `<li data-n="${esc((NUM.exec(l) || [""])[0].trim())}">${esc(l).replace(NUM, "<b>$1</b>")}</li>`).join("")}</ul>` : "";
   const achievements = (p.achievements || []).map(a => String(a || "").trim()).filter(Boolean).map(a => `<li>${esc(a)}</li>`).join("");
   const langs = (p.languages || []).map(l => String(l || "").trim()).filter(Boolean).map(esc).join(", ");
-  const density = DENSITY[opts.density] ? ` ${DENSITY[opts.density]}` : "";
+  const density = full && DENSITY[opts.density] ? ` ${DENSITY[opts.density]}` : "";
   return `<article class="resume t-${t}${photo ? " has-photo" : ""}${opts.watermark ? " wm" : ""}${density}"${style}>
     <header>${photo}<div class="hd"><h1>${esc(p.fullName)}</h1><p class="title">${esc((opts.title || "").trim() || p.headline)}</p><p class="contact">${contact}</p></div></header>
     ${show("summary") ? sec("Professional Summary", `<p>${esc(summary)}</p>`) : ""}
+    ${sec("Key Highlights", highlights, "s-hl")}
     ${sec("Technical Skills", skills && `<ul class="skills">${skills}</ul>`)}
-    ${sec("Professional Experience", work)}
+    ${sec("Professional Experience", work, "s-exp")}
     ${show("projects") ? sec("Projects", projects) : ""}
     ${show("achievements") ? sec("Achievements", achievements && `<ul>${achievements}</ul>`) : ""}
     ${show("education") ? sec("Education", edu) : ""}
     ${show("certifications") ? sec("Certifications", certs && `<ul>${certs}</ul>`) : ""}
     ${show("languages") ? sec("Languages", langs && `<p>${langs}</p>`) : ""}
+    ${full ? "" : '<p class="rs-brand">Made with Widgetry · widgetryacademy.in</p>'}
     ${opts.watermark ? '<div class="rs-wm" aria-hidden="true"></div>' : ""}
   </article>`;
 }
@@ -219,12 +258,42 @@ export const RESUME_CSS = `
 .resume.t-elegant h1{font-family:"Source Serif 4",Georgia,serif;font-size:25pt;font-weight:600;font-style:italic;letter-spacing:0}
 .resume.t-elegant header .title{color:var(--rs-accent);font-weight:600}
 .resume.t-elegant h2{font-family:"Source Serif 4",Georgia,serif;text-transform:none;letter-spacing:0;font-size:12pt;color:var(--rs-ink);border:none;border-left:3px solid var(--rs-accent);padding:0 0 0 7pt;margin-bottom:6pt}
+/* Key highlights (Pro): the default look, every Pro template */
+.resume ul.hl{list-style:none;padding:0;margin:0}
+.resume ul.hl li{position:relative;padding-left:12pt;margin:2pt 0}
+.resume ul.hl li::before{content:"";position:absolute;left:0;top:.5em;width:5pt;height:5pt;border-radius:1pt;background:var(--rs-accent)}
+.resume ul.hl b{color:var(--rs-accent)}
+/* Free resumes: a small line at the bottom */
+.resume .rs-brand{margin-top:14pt;text-align:center;font-size:7.5pt;color:#9aa5a0;letter-spacing:.02em}
+/* Impact (Pro): colour header band, highlights as three cards */
+.resume.t-impact{font-family:"DM Sans",Arial,Helvetica,sans-serif;font-size:10.3pt;--rs-accent:#0f6b56;--rs-rule:#0f6b5640}
+.resume.t-impact header{background:var(--rs-accent);border-radius:6pt;padding:13pt 15pt;margin-bottom:9pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.resume.t-impact header h1{color:#fff;font-size:25pt;letter-spacing:-.01em}
+.resume.t-impact header .title{color:#fff;opacity:.92;font-weight:600}
+.resume.t-impact header .contact,.resume.t-impact header .contact .sep{color:#fff;opacity:.85}
+.resume.t-impact .photo{border:2pt solid #fff}
+.resume.t-impact h2{border-bottom:1.5px solid var(--rs-rule);font-size:10pt;letter-spacing:.05em}
+.resume.t-impact .s-hl h2{display:none}
+.resume.t-impact ul.hl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6pt}
+.resume.t-impact ul.hl li{margin:0;padding:7pt 8pt;border-radius:5pt;background:#f4f7f6;border-top:2.5pt solid var(--rs-accent);font-size:9.4pt;line-height:1.35;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.resume.t-impact ul.hl li::before{content:attr(data-n);position:static;display:block;width:auto;height:auto;background:none;color:var(--rs-accent);font-size:16pt;font-weight:800;line-height:1.1;margin-bottom:3pt}
+.resume.t-impact .what b{color:var(--rs-ink)}
+/* Timeline (Pro): experience on an accent line, dates first */
+.resume.t-timeline{font-family:"DM Sans",Arial,Helvetica,sans-serif;font-size:10.3pt;--rs-accent:#1d3557;--rs-rule:#1d355733}
+.resume.t-timeline header{border-left:5pt solid var(--rs-accent);padding:2pt 0 4pt 11pt}
+.resume.t-timeline h1{font-size:25pt;letter-spacing:-.01em}
+.resume.t-timeline header .title{color:var(--rs-accent);font-weight:700}
+.resume.t-timeline h2{text-transform:none;letter-spacing:0;font-size:12pt;border-bottom:1px solid var(--rs-rule);color:var(--rs-accent)}
+.resume.t-timeline .s-exp .item{position:relative;margin-left:4pt;padding:0 0 2pt 13pt;border-left:1.5pt solid var(--rs-rule)}
+.resume.t-timeline .s-exp .item::before{content:"";position:absolute;left:-4.6pt;top:3.5pt;width:7.5pt;height:7.5pt;border-radius:50%;background:var(--rs-accent);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.resume.t-timeline .s-exp .row{flex-direction:row-reverse;justify-content:flex-end}
+.resume.t-timeline .s-exp .when{color:var(--rs-accent);font-weight:700;min-width:84pt}
 /* Fit to one page */
 .resume.d-compact{zoom:.94}
 .resume.d-tight{zoom:.88}
 .resume.d-tight section{margin-top:7pt}
 .resume.d-tight .item{margin-bottom:5pt}
-@media (max-width:600px){.resume .row{flex-direction:column;gap:0}.resume .when{white-space:normal}}
+@media (max-width:600px){.resume .row,.resume.t-timeline .s-exp .row{flex-direction:column;gap:0}.resume .when{white-space:normal}.resume.t-impact ul.hl{grid-template-columns:1fr}}
 `;
 
 /** Fonts used by the templates (loaded once by the page). */

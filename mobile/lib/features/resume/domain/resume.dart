@@ -11,12 +11,17 @@ import 'package:widgetry_academy/features/profile/domain/entities/candidate.dart
 // The resume is made by the same engine as the website (on the server): 6 templates, the ATS check,
 // resume import, AI writing help and saved copies per job. The app shows and controls it.
 
-/// Templates, in the order shown. The last three need Resume Premium (a watermarked preview otherwise).
-const resumeTemplates = {'modern': 'Modern', 'classic': 'Classic', 'compact': 'Compact', 'executive': 'Executive', 'minimal': 'Minimal', 'elegant': 'Elegant'};
-const proTemplates = {'executive', 'minimal', 'elegant'};
+/// Templates, in the order shown. Classic and Modern are free; the rest need Resume Premium (a watermarked preview otherwise).
+const resumeTemplates = {
+  'classic': 'Classic', 'modern': 'Modern', 'impact': 'Impact', 'timeline': 'Timeline',
+  'executive': 'Executive', 'elegant': 'Elegant', 'minimal': 'Minimal', 'compact': 'Compact',
+};
+const proTemplates = {'impact', 'timeline', 'executive', 'elegant', 'minimal', 'compact'};
+/// Shown with Premium (or while previewing a Pro template): colour, photo, density and Key highlights.
+const proParts = {'photo', 'highlights'};
 const resumeDensities = {'normal': 'Normal', 'compact': 'Snug', 'tight': 'Fit more'};
 const resumeParts = {
-  'photo': 'Photo', 'phone': 'Phone', 'email': 'Email', 'city': 'City', 'summary': 'Summary', 'projects': 'Projects',
+  'highlights': 'Key highlights', 'photo': 'Photo', 'phone': 'Phone', 'email': 'Email', 'city': 'City', 'summary': 'Summary', 'projects': 'Projects',
   'achievements': 'Achievements', 'education': 'Education', 'certifications': 'Certifications', 'languages': 'Languages',
 };
 

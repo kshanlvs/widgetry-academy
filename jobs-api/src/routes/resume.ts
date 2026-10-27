@@ -166,7 +166,7 @@ resumeRouter.post("/resume/pdf", requireAuth, fileLimit, wrap(async (req, res) =
   const premium = (await premiumFor(uid)).active;
   const watermark = needsWatermark(look.template, premium);
   let out;
-  try { out = await htmlToPdf(resumeHtml(p, look, watermark)); }
+  try { out = await htmlToPdf(resumeHtml(p, look, watermark, premium)); }
   catch (e: any) { console.error(`[resume] pdf failed: ${e?.message}`); throw new HttpError(503, "We couldn't make the PDF right now. Please try again in a minute."); }
   res.set({ "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="${fileBase(p.fullName)}.pdf"`,
     "X-Resume-Pages": String(out.pages), "X-Resume-Watermark": watermark ? "1" : "0", "Access-Control-Expose-Headers": "X-Resume-Pages, X-Resume-Watermark, Content-Disposition" });
@@ -174,6 +174,7 @@ resumeRouter.post("/resume/pdf", requireAuth, fileLimit, wrap(async (req, res) =
 }));
 
 resumeRouter.post("/resume/docx", requireAuth, fileLimit, wrap(async (req, res) => {
+  if (!(await premiumFor(req.user!.uid)).active) throw new HttpError(402, "The Word download is part of Resume Premium. The PDF download is free.");
   const { p, look } = await resumeFor(req.user!.uid, req.body);
   const buf = await resumeDocx(p, look);
   res.set({ "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
