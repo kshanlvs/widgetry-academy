@@ -146,7 +146,7 @@ class EnrolInWorkshop {
         final v = await _repo.verifyStorePurchase(productId: productId, token: token);
         // Refused by the server (no seat to match, someone else's purchase): say why.
         if (v case Err(failure: ServerFailure(statusCode: final int code)) when code >= 400 && code < 500) return Err(v.failureOrNull!);
-        return Success(v case Success(value: 'confirmed') ? EnrolOutcome.enrolled : EnrolOutcome.pending);
+        return Success(v.valueOrNull == 'confirmed' ? EnrolOutcome.enrolled : EnrolOutcome.pending);
     }
   }
 
@@ -167,7 +167,7 @@ class EnrolInWorkshop {
             return Err(ServerFailure(message));
           case GatewaySuccess(:final paymentId, :final orderId, :final signature):
             final v = await _repo.verify(orderId: orderId.isEmpty ? o.orderId : orderId, paymentId: paymentId, signature: signature);
-            return Success(v case Success(value: 'confirmed') ? EnrolOutcome.enrolled : EnrolOutcome.pending);
+            return Success(v.valueOrNull == 'confirmed' ? EnrolOutcome.enrolled : EnrolOutcome.pending);
         }
     }
   }

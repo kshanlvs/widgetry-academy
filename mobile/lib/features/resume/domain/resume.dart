@@ -380,7 +380,7 @@ class BuyResumePremium implements UseCase<BuyOutcome, BuyPremiumRequest> {
       case StorePurchased(:final productId, :final token):
         final v = await _repo.verifyStorePurchase(productId: productId, token: token);
         if (v case Err(failure: ServerFailure(statusCode: final int code)) when code >= 400 && code < 500) return Err(v.failureOrNull!);
-        return Success(v case Success(value: 'paid') ? BuyOutcome.active : BuyOutcome.pending);
+        return Success(v.valueOrNull == 'paid' ? BuyOutcome.active : BuyOutcome.pending);
     }
   }
 
@@ -400,7 +400,7 @@ class BuyResumePremium implements UseCase<BuyOutcome, BuyPremiumRequest> {
             return Err(ServerFailure(message));
           case GatewaySuccess(:final paymentId, :final orderId, :final signature):
             final v = await _repo.verify(orderId: orderId.isEmpty ? o.orderId : orderId, paymentId: paymentId, signature: signature);
-            return Success(v case Success(value: ResumePremium(active: true)) ? BuyOutcome.active : BuyOutcome.pending);
+            return Success(v.valueOrNull?.active == true ? BuyOutcome.active : BuyOutcome.pending);
         }
     }
   }
