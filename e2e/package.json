@@ -1,0 +1,15 @@
+{
+  "name": "widgetry-e2e",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end tests of the website against a local API and database",
+  "scripts": {
+    "test": "playwright test",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "^22.20.5",
+    "mysql2": "^3.24.6"
+  }
+}

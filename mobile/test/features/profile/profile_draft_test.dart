@@ -7,6 +7,7 @@ import 'package:widgetry_academy/features/profile/domain/entities/candidate.dart
 import 'package:widgetry_academy/features/profile/domain/repositories/profile_repository.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   const draft = ProfileDraft(
     Candidate(
       fullName: 'Asha Rao',

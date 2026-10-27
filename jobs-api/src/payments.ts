@@ -6,7 +6,7 @@
 // and updates the student's registration in Firestore exactly like Admin → Registrations does.
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { adminApp } from "./firebase.js";
+import { adminApp, canSendPush } from "./firebase.js";
 import { query, exec } from "./db.js";
 import { HttpError } from "./errors.js";
 import { notifyUser, SITE } from "./notify.js";
@@ -116,6 +116,7 @@ const firestoreStore: RegistrationStore = {
   },
   async earlyBirdOpen() {
     if (env.EARLY_BIRD === "off") return false;
+    if (!canSendPush()) return true; // no Firebase service account (tests, local dev): nothing to ask
     try {
       const d = await getFirestore(adminApp()).collection("settings").doc("batch").get();
       const seats = d.data()?.seatsLeft;

@@ -1,0 +1,161 @@
+# Tests on every push and pull request. Pushes to main deploy the website only after the tests pass.
+name: CI
+
+on:
+  push:
+    branches: [main, mobile-app, widgetry-jobs]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API (typecheck + tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: widgetry_jobs
+          MYSQL_USER: jobs
+          MYSQL_PASSWORD: devpass
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    defaults:
+      run:
+        working-directory: jobs-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: jobs-api/package-lock.json
+      - run: npm ci
+      - name: Chromium for PDF tests
+        run: |
+          npx playwright-core install --with-deps chromium
+          echo "CHROMIUM_PATH=$(node -e "import('playwright-core').then(m => console.log(m.chromium.executablePath()))")" >> "$GITHUB_ENV"
+      - run: npm run typecheck
+      - name: Tests
+        run: npm test
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: jobs
+          DB_PASSWORD: devpass
+          DB_NAME: widgetry_jobs
+          ALLOW_DEV_AUTH: "1"
+
+  e2e:
+    name: Website end-to-end
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: widgetry_e2e
+          MYSQL_USER: jobs
+          MYSQL_PASSWORD: devpass
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    env:
+      CI: "1"
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: jobs
+      DB_PASSWORD: devpass
+      E2E_DB_NAME: widgetry_e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            jobs-api/package-lock.json
+            e2e/package-lock.json
+      - run: npm ci
+        working-directory: jobs-api
+      - run: npm ci
+        working-directory: e2e
+      - name: Chromium
+        working-directory: e2e
+        run: |
+          npx playwright install --with-deps chromium
+          echo "CHROMIUM_PATH=$(node -e "import('@playwright/test').then(m => console.log(m.chromium.executablePath()))")" >> "$GITHUB_ENV"
+      - run: npx playwright test
+        working-directory: e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7
+
+  blog:
+    name: Blog is built
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install markdown
+      - name: Generated blog files match the Markdown
+        run: |
+          python3 blog-src/build.py
+          git diff --exit-code -- public/blog public/sitemap.xml || (echo "::error::Run python3 blog-src/build.py and commit the result" && exit 1)
+
+  app:
+    name: Flutter app (analyze + tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter --version
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - name: Analyze (errors fail the build)
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test
+
+  deploy:
+    name: Deploy website
+    needs: [api, e2e, blog]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install -g firebase-tools
+      - name: Firebase credentials
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/firebase-key.json"
+      - name: Deploy to Firebase Hosting
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-key.json
+        run: firebase deploy --project flutter-in-10-days --only hosting
