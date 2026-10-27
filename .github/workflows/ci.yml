@@ -46,7 +46,13 @@ jobs:
           echo "CHROMIUM_PATH=$(node -e "import('playwright-core').then(m => console.log(m.chromium.executablePath()))")" >> "$GITHUB_ENV"
       - run: npm run typecheck
       - name: Tests
-        run: npm test
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee "$RUNNER_TEMP/api-test.log" || {
+            # Failing tests and their assertions on the run's summary page
+            grep -E "^not ok|^\s+(error|expected|actual|location):" "$RUNNER_TEMP/api-test.log" | grep -v "not ok 1 - test/" | head -30 | while read -r l; do echo "::error::$l"; done
+            exit 1
+          }
         env:
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
