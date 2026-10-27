@@ -12,6 +12,11 @@ void main() {
 
   test('verification opens the profile', () => expect(PushService.targetFor({'type': 'profile'}).route, '/profile'));
 
+  test('a Resume Premium reminder opens the resume', () {
+    expect(PushService.targetFor({'type': 'resume'}).route, '/profile/resume');
+    expect(PushService.targetFor({'type': 'announcement', 'link': 'https://widgetryacademy.in/resume.html'}).route, '/profile/resume');
+  });
+
   test('payment confirmation opens receipts', () => expect(PushService.targetFor({'type': 'payment', 'link': 'https://widgetryacademy.in/#fees'}).route, '/payments'));
 
   test('mock interview messages open the booking or the interviewer dashboard', () {

@@ -47,20 +47,28 @@ class CertItem extends Equatable {
 }
 
 class ResumeSettings extends Equatable {
-  const ResumeSettings({this.template = 'modern', this.accent = 'green', this.title, this.showPhoto = false, this.hide = const []});
+  const ResumeSettings({this.template = 'modern', this.accent = 'green', this.title, this.showPhoto = false, this.hide = const [], this.density = 'normal'});
   final String template;
   final String accent;
   final String? title;
   final bool showPhoto;
   final List<String> hide;
+  /// "Fit to one page": normal, compact or tight (the same resume, slightly smaller).
+  final String density;
 
   bool shows(String part) => !hide.contains(part);
 
-  ResumeSettings copyWith({String? template, String? accent, String? title, bool? showPhoto, List<String>? hide}) =>
-      ResumeSettings(template: template ?? this.template, accent: accent ?? this.accent, title: title ?? this.title, showPhoto: showPhoto ?? this.showPhoto, hide: hide ?? this.hide);
+  ResumeSettings copyWith({String? template, String? accent, String? title, bool? showPhoto, List<String>? hide, String? density}) => ResumeSettings(
+        template: template ?? this.template,
+        accent: accent ?? this.accent,
+        title: title ?? this.title,
+        showPhoto: showPhoto ?? this.showPhoto,
+        hide: hide ?? this.hide,
+        density: density ?? this.density,
+      );
 
   @override
-  List<Object?> get props => [template, accent, title, showPhoto, hide];
+  List<Object?> get props => [template, accent, title, showPhoto, hide, density];
 }
 
 /// A job seeker's Talent Network profile. Also the source of their resume.
@@ -94,6 +102,9 @@ class Candidate extends Equatable {
     this.photo,
     this.resumeSettings = const ResumeSettings(),
     this.mockInterview,
+    this.achievements = const [],
+    this.languages = const [],
+    this.talentNetwork = false,
   });
 
   final String id;
@@ -127,21 +138,27 @@ class Candidate extends Equatable {
   final ResumeSettings resumeSettings;
   /// A mock interview score the candidate chose to show, or null.
   final MockBadge? mockInterview;
+  /// One line each: awards, hackathons, positions of responsibility.
+  final List<String> achievements;
+  final List<String> languages;
+  /// Joined the Talent Network (employers can be introduced, with approval). Building a resume doesn't need it.
+  final bool talentNetwork;
 
-  Candidate copyWith({bool? openToWork, String? photo, bool clearPhoto = false, ResumeSettings? resumeSettings}) => Candidate(
+  Candidate copyWith({bool? openToWork, String? photo, bool clearPhoto = false, ResumeSettings? resumeSettings, bool? talentNetwork}) => Candidate(
         id: id, fullName: fullName, email: email, phone: phone, headline: headline, currentCompany: currentCompany,
         experienceYears: experienceYears, city: city, categories: categories, workModes: workModes, jobTypes: jobTypes,
         noticePeriod: noticePeriod, expectedSalaryLpa: expectedSalaryLpa, githubUrl: githubUrl, linkedinUrl: linkedinUrl,
         portfolioUrl: portfolioUrl, apps: apps, experience: experience, education: education, certifications: certifications,
         about: about, skills: skills, openToWork: openToWork ?? this.openToWork, hiddenCompanies: hiddenCompanies,
         verification: verification, photo: clearPhoto ? null : (photo ?? this.photo), resumeSettings: resumeSettings ?? this.resumeSettings, mockInterview: mockInterview,
+        achievements: achievements, languages: languages, talentNetwork: talentNetwork ?? this.talentNetwork,
       );
 
   @override
   List<Object?> get props => [
         id, fullName, email, phone, headline, currentCompany, experienceYears, city, categories, workModes, jobTypes, noticePeriod,
         expectedSalaryLpa, githubUrl, linkedinUrl, portfolioUrl, apps, experience, education, certifications, about, skills,
-        openToWork, hiddenCompanies, verification, photo, resumeSettings, mockInterview,
+        openToWork, hiddenCompanies, verification, photo, resumeSettings, mockInterview, achievements, languages, talentNetwork,
       ];
 }
 

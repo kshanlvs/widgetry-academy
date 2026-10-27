@@ -26,7 +26,9 @@ resumeRouter.get("/resume/premium", wrap(async (req, res) => {
   await reconcileResume(req.user.uid);
   const [p, used] = await Promise.all([premiumFor(req.user.uid), aiUsedToday(req.user.uid)]);
   res.set("Cache-Control", "private, no-store");
-  res.json({ ...base, ...p, aiLeftToday: Math.max(0, aiDailyLimit() - used) });
+  res.json({ ...base, ...p, aiLeftToday: Math.max(0, aiDailyLimit() - used),
+    // The Android app: Google's choice screen needs these (same as short courses)
+    android: { billing: playConfig().androidBilling, accountId: playAccountId(req.user.uid), states: INDIA_STATES } });
 }));
 
 const orderLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: "draft-7", legacyHeaders: false,

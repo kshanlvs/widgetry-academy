@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +17,7 @@ import 'package:widgetry_academy/features/jobs/domain/usecases/jobs_usecases.dar
 import 'package:widgetry_academy/features/profile/domain/entities/candidate.dart';
 import 'package:widgetry_academy/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:widgetry_academy/features/profile/presentation/widgets/photo_picker.dart';
+import 'package:widgetry_academy/features/resume/domain/resume.dart';
 
 /// Create or edit the Talent Network profile (the resume is built from it).
 class ProfileEditPage extends StatefulWidget {
@@ -51,6 +53,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   final _salary = TextEditingController();
   final _hidden = TextEditingController();
   final _skillInput = TextEditingController();
+  final _achievements = TextEditingController();
+  final _languages = TextEditingController();
 
   final List<_Row> _work = [];
   final List<_Row> _edu = [];
@@ -63,8 +67,15 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   List<String> _modes = [];
   String? _notice;
   bool _openToWork = true;
-  bool _consent = false;
+  /// Opted in to the Talent Network (recruiters can find the profile). Off: the profile only builds the resume.
+  bool _network = false;
   bool _existing = false;
+  bool _importing = false;
+  /// What the last import filled in, shown on the import card.
+  List<String>? _found;
+  bool _foundByAi = false;
+  /// The last file imported, kept so "Let AI read it" can send it again.
+  PlatformFile? _lastFile;
   /// After the first Save, fields re-check as you type, so fixed errors disappear straight away.
   bool _submitted = false;
   /// Photo chosen before the profile exists; uploaded right after it's created.
@@ -78,37 +89,14 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     final user = context.read<AuthCubit>().state.user;
     if (p != null) {
       _existing = true;
-      _consent = true;
-      _name.text = p.fullName;
-      _phone.text = p.phone ?? '';
-      _headline.text = p.headline;
-      _years.text = p.experienceYears == p.experienceYears.roundToDouble() ? p.experienceYears.toInt().toString() : p.experienceYears.toString();
-      _company.text = p.currentCompany ?? '';
-      _city.text = p.city ?? '';
-      _about.text = p.about ?? '';
-      _github.text = p.githubUrl ?? '';
-      _linkedin.text = p.linkedinUrl ?? '';
-      _portfolio.text = p.portfolioUrl ?? '';
-      _salary.text = p.expectedSalaryLpa?.toString() ?? '';
+      _network = p.talentNetwork;
+      _fill(p);
       _hidden.text = p.hiddenCompanies ?? '';
-      _cats = [...p.categories];
-      _skills = [...p.skills];
+      _salary.text = p.expectedSalaryLpa?.toString() ?? '';
       _jobTypes = [...p.jobTypes];
       _modes = [...p.workModes];
       _notice = p.noticePeriod;
       _openToWork = p.openToWork;
-      for (final w in p.experience) {
-        _work.add(_Row([w.company, w.role, w.start, w.end ?? '', w.points ?? ''])..current = w.end == null);
-      }
-      for (final e in p.education) {
-        _edu.add(_Row([e.degree, e.institute, e.year?.toString() ?? '', e.score ?? '']));
-      }
-      for (final a in p.apps) {
-        _apps.add(_Row([a.name, a.url ?? '', a.role ?? '', a.about ?? '']));
-      }
-      for (final c in p.certifications) {
-        _certs.add(_Row([c.name, c.issuer ?? '', c.year?.toString() ?? '']));
-      }
     } else {
       _name.text = user?.displayName ?? '';
       _edu.add(_Row(['', '', '', '']));
@@ -119,9 +107,91 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     });
   }
 
+  /// Puts a profile into the form. With [onlyFound], blank values in [p] keep what's typed.
+  void _fill(Candidate p, {bool onlyFound = false}) {
+    void text(TextEditingController c, String? v) {
+      if (!onlyFound || (v ?? '').trim().isNotEmpty) c.text = v ?? '';
+    }
+
+    void rows(List<_Row> list, List<_Row> next) {
+      if (onlyFound && next.isEmpty) return;
+      for (final r in list) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => r.dispose());
+      }
+      list
+        ..clear()
+        ..addAll(next);
+    }
+
+    text(_name, p.fullName);
+    text(_phone, p.phone);
+    text(_headline, p.headline);
+    if (!onlyFound || p.experienceYears > 0) _years.text = p.experienceYears == p.experienceYears.roundToDouble() ? p.experienceYears.toInt().toString() : p.experienceYears.toString();
+    text(_company, p.currentCompany);
+    text(_city, p.city);
+    text(_about, p.about);
+    text(_github, p.githubUrl);
+    text(_linkedin, p.linkedinUrl);
+    text(_portfolio, p.portfolioUrl);
+    text(_achievements, p.achievements.join('\n'));
+    text(_languages, p.languages.join(', '));
+    if (p.categories.isNotEmpty) _cats = [...p.categories];
+    if (!onlyFound || p.skills.isNotEmpty) _skills = [...p.skills.take(15)];
+    rows(_work, [for (final w in p.experience) _Row([w.company, w.role, w.start, w.end ?? '', w.points ?? ''])..current = w.end == null]);
+    rows(_edu, [for (final e in p.education) _Row([e.degree, e.institute, e.year?.toString() ?? '', e.score ?? ''])]);
+    rows(_apps, [for (final a in p.apps) _Row([a.name, a.url ?? '', a.role ?? '', a.about ?? ''])]);
+    rows(_certs, [for (final c in p.certifications) _Row([c.name, c.issuer ?? '', c.year?.toString() ?? ''])]);
+  }
+
+  /// Fills the form from an existing resume (PDF or Word). [ai]: let AI read the same file again.
+  Future<void> _import({bool ai = false}) async {
+    var file = ai ? _lastFile : null;
+    if (file == null) {
+      final picked = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: const ['pdf', 'docx'], withData: true);
+      file = picked?.files.firstOrNull;
+    }
+    if (file == null || !mounted) return;
+    final bytes = file.bytes;
+    if (bytes == null) {
+      showMessage(context, 'Couldn\'t open that file. Try another one.');
+      return;
+    }
+    if (_existing && !ai && !await _confirmReplace()) return;
+    setState(() => _importing = true);
+    final r = await getIt<ImportResume>()(ImportParams(bytes, fileName: file.name, ai: ai));
+    if (!mounted) return;
+    setState(() => _importing = false);
+    r.fold((f) => showMessage(context, f.message), (res) {
+      final p = res.profile;
+      if (p == null) {
+        showMessage(context, res.message ?? 'We couldn\'t read any text in that file. If it\'s a scanned image, fill the form instead.');
+        return;
+      }
+      _lastFile = file;
+      setState(() {
+        _fill(p, onlyFound: true);
+        _found = res.found;
+        _foundByAi = res.ai;
+        if (_edu.isEmpty) _edu.add(_Row(['', '', '', '']));
+      });
+      tick();
+    });
+  }
+
+  Future<bool> _confirmReplace() async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Fill from your resume?'),
+          content: const Text('What we find in the file replaces those parts of your profile. Nothing is saved until you tap Save.'),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Fill it in'))],
+        ),
+      ) ==
+      true;
+
   @override
   void dispose() {
-    for (final c in [_name, _phone, _headline, _years, _company, _city, _about, _github, _linkedin, _portfolio, _salary, _hidden, _skillInput]) {
+    for (final c in [_achievements, _languages, _name, _phone, _headline, _years, _company, _city, _about, _github, _linkedin, _portfolio, _salary, _hidden, _skillInput]) {
       c.dispose();
     }
     for (final r in [..._work, ..._edu, ..._apps, ..._certs]) {
@@ -230,6 +300,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         for (final r in _certs)
           if (r.v(0).isNotEmpty) CertItem(name: r.v(0), issuer: r.v(1).isEmpty ? null : r.v(1), year: int.tryParse(r.v(2))),
       ],
+      achievements: [for (final l in _achievements.text.split('\n')) if (l.replaceFirst(RegExp(r'^\s*[-•*·]\s*'), '').trim().isNotEmpty) l.replaceFirst(RegExp(r'^\s*[-•*·]\s*'), '').trim()].take(10).toList(),
+      languages: {for (final l in _languages.text.split(RegExp(r'[,\n]'))) if (l.trim().isNotEmpty) l.trim()}.take(10).toList(),
+      talentNetwork: _network,
       photo: p?.photo,
       resumeSettings: p?.resumeSettings ?? const ResumeSettings(),
     );
@@ -247,16 +320,18 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       showMessage(context, 'Add at least one skill.');
       return;
     }
-    if (!_consent) {
-      showMessage(context, 'Please tick the consent box at the bottom.');
-      return;
-    }
     final cubit = context.read<ProfileCubit>();
     final ok = await cubit.save(_build());
     if (!ok) return;
     final photo = _pendingPhoto;
     if (photo != null) await cubit.uploadPhoto(photo);
-    if (mounted) context.pop();
+    if (!mounted) return;
+    // A new profile goes straight to the resume it just made
+    if (_existing) {
+      context.pop();
+    } else {
+      context.pushReplacement('/profile/resume');
+    }
   }
 
   Future<void> _delete() async {
@@ -326,6 +401,14 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(Space.lg, Space.sm, Space.lg, Space.xxxl),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            _ImportCard(
+              busy: _importing,
+              existing: _existing,
+              found: _found,
+              byAi: _foundByAi,
+              onImport: () => _import(),
+              onAi: _lastFile == null || _foundByAi ? null : () => _import(ai: true),
+            ),
             _PhotoSection(
               name: _name.text,
               photo: _pendingPhoto != null ? 'data:image/jpeg;base64,${base64Encode(_pendingPhoto!)}' : context.select<ProfileCubit, String?>((c) => c.state.profile?.photo),
@@ -410,48 +493,55 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 ], () => _removeRow(_certs, r)),
               OutlinedButton.icon(onPressed: () => setState(() => _certs.add(_Row(['', '', '']))), icon: const Icon(Icons.add), label: const Text('Add a certificate')),
             ]),
+            _section('Achievements (optional)', [
+              _field(_achievements, 'One per line', hint: 'Winner, Smart India Hackathon 2024\n1,000+ downloads on my first app', maxLines: 5, maxLength: 1500),
+            ], hint: 'Awards, hackathons, ranks, open-source work.'),
+            _section('Languages (optional)', [
+              _field(_languages, 'Languages you speak', hint: 'English, Hindi, Telugu'),
+            ]),
             _section('Links', [
               _field(_github, 'GitHub', hint: 'github.com/you', keyboard: TextInputType.url, validator: Validators.optionalHttpsUrl),
               _field(_linkedin, 'LinkedIn', hint: 'linkedin.com/in/you', keyboard: TextInputType.url, validator: Validators.optionalHttpsUrl),
               _field(_portfolio, 'Portfolio', hint: 'yoursite.com', keyboard: TextInputType.url, validator: Validators.optionalHttpsUrl),
             ]),
-            _section('What you\'re looking for', [
-              const Text('Job type'),
-              const SizedBox(height: 6),
-              _chips(Labels.jobType, _jobTypes, (v) => _jobTypes = v),
-              const SizedBox(height: 14),
-              const Text('Work mode'),
-              const SizedBox(height: 6),
-              _chips(Labels.workMode, _modes, (v) => _modes = v),
-              const SizedBox(height: 14),
-              DropdownButtonFormField<String>(
-                initialValue: _notice,
-                decoration: const InputDecoration(labelText: 'Notice period'),
-                items: [for (final e in Labels.notice.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
-                onChanged: (v) => setState(() => _notice = v),
-              ),
-              const SizedBox(height: 12),
-              _field(_salary, 'Expected salary in LPA (private)', keyboard: const TextInputType.numberWithOptions(decimal: true)),
-            ]),
-            _section('Privacy', [
-              SwitchListTile(value: _openToWork, onChanged: (v) => setState(() => _openToWork = v), title: const Text("I'm open to work"), contentPadding: EdgeInsets.zero),
-              _field(_hidden, 'Never show my profile to (comma separated)', hint: 'e.g. your current employer'),
-              CheckboxListTile(
-                value: _consent,
-                onChanged: (v) => setState(() => _consent = v ?? false),
+            _section('Widgetry Talent Network', [
+              SwitchListTile(
+                value: _network,
+                onChanged: (v) => setState(() => _network = v),
                 contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                title: const Text('I agree that Widgetry may review my profile and share it with mobile employers only with my approval. I can delete it any time.'),
+                title: const Text('Let mobile employers find me'),
+                subtitle: const Text('Free. We review your profile and share it with employers only with your approval. Turn it off any time.'),
               ),
+              if (_network) ...[
+                const SizedBox(height: Space.sm),
+                const Text('Job type'),
+                const SizedBox(height: 6),
+                _chips(Labels.jobType, _jobTypes, (v) => _jobTypes = v),
+                const SizedBox(height: 14),
+                const Text('Work mode'),
+                const SizedBox(height: 6),
+                _chips(Labels.workMode, _modes, (v) => _modes = v),
+                const SizedBox(height: 14),
+                DropdownButtonFormField<String>(
+                  initialValue: _notice,
+                  decoration: const InputDecoration(labelText: 'Notice period'),
+                  items: [for (final e in Labels.notice.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+                  onChanged: (v) => setState(() => _notice = v),
+                ),
+                const SizedBox(height: 12),
+                _field(_salary, 'Expected salary in LPA (private)', keyboard: const TextInputType.numberWithOptions(decimal: true)),
+                SwitchListTile(value: _openToWork, onChanged: (v) => setState(() => _openToWork = v), title: const Text("I'm open to work"), contentPadding: EdgeInsets.zero),
+                _field(_hidden, 'Never show my profile to (comma separated)', hint: 'e.g. your current employer'),
+              ],
               if (_existing) TextButton.icon(onPressed: _delete, icon: const Icon(Icons.delete_forever_outlined), label: const Text('Delete my profile')),
-            ]),
+            ], hint: 'Optional. Your resume works either way.'),
           ]),
           ),
         ),
         bottomNavigationBar: BottomActionBar(
           child: FilledButton(
             onPressed: saving ? null : _save,
-            child: BusyLabel(busy: saving, label: _existing ? 'Save changes' : 'Create my profile'),
+            child: BusyLabel(busy: saving, label: _existing ? 'Save changes' : 'Save and see my resume'),
           ),
         ),
       ),
@@ -515,6 +605,66 @@ class _PhotoSection extends StatelessWidget {
             ]),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "Import your resume" at the top: fills the form from a PDF or Word file.
+class _ImportCard extends StatelessWidget {
+  const _ImportCard({required this.busy, required this.existing, required this.found, required this.byAi, required this.onImport, this.onAi});
+  final bool busy;
+  final bool existing;
+  final List<String>? found;
+  final bool byAi;
+  final VoidCallback onImport;
+  final VoidCallback? onAi;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final p = Palette.of(context);
+    final done = found != null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Space.xl),
+      child: Container(
+        padding: const EdgeInsets.all(Space.lg),
+        decoration: BoxDecoration(
+          color: p.accent.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(Radii.lg),
+          border: Border.all(color: p.accent.withValues(alpha: 0.35)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Icon(done ? Icons.check_circle : Icons.upload_file, color: done ? AppColors.ok : p.accent),
+            const SizedBox(width: Space.md),
+            Expanded(
+              child: Text(
+                done ? (byAi ? 'AI filled in your details' : 'We filled in your details') : (existing ? 'Update from your resume' : 'Have a resume already? Skip the typing'),
+                style: t.titleSmall,
+              ),
+            ),
+          ]),
+          const SizedBox(height: 6),
+          Text(
+            done
+                ? (found!.isEmpty ? 'Check each section below and fill any gaps.' : 'Found ${found!.join(', ')}. Check each section below before saving.')
+                : 'Upload a PDF or Word file and we fill the form for you. You can edit everything after.',
+            style: t.bodySmall,
+          ),
+          const SizedBox(height: Space.md),
+          Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+            if (busy)
+              const Row(mainAxisSize: MainAxisSize.min, children: [SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)), SizedBox(width: Space.md), Text('Reading your resume…')])
+            else ...[
+              if (done)
+                OutlinedButton.icon(onPressed: onImport, icon: const Icon(Icons.description_outlined, size: 18), label: const Text('Use another file'))
+              else
+                FilledButton.icon(onPressed: onImport, icon: const Icon(Icons.description_outlined, size: 18), label: const Text('Import PDF or Word')),
+              if (done && onAi != null) FilledButton.tonal(onPressed: onAi, child: const Text('✨ Not right? Let AI read it')),
+            ],
+          ]),
+        ]),
       ),
     );
   }

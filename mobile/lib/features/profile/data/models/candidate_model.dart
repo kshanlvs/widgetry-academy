@@ -35,6 +35,9 @@ class CandidateModel {
     this.photo,
     this.resumeSettings,
     this.mockInterview,
+    this.achievements = const [],
+    this.languages = const [],
+    this.talentNetwork = false,
   });
 
   factory CandidateModel.fromJson(Map<String, dynamic> json) => _$CandidateModelFromJson(json);
@@ -68,6 +71,9 @@ class CandidateModel {
   final ResumeSettingsModel? resumeSettings;
   /// {overall, track, level, date} when the candidate shows a mock interview score.
   final Map<String, dynamic>? mockInterview;
+  final List<String> achievements;
+  final List<String> languages;
+  final bool talentNetwork;
 
   Candidate toEntity() => Candidate(
         id: id,
@@ -100,6 +106,9 @@ class CandidateModel {
         mockInterview: mockInterview == null || mockInterview!['overall'] is! num
             ? null
             : MockBadge(overall: (mockInterview!['overall'] as num).toDouble(), track: '${mockInterview!['track'] ?? 'flutter'}'),
+        achievements: achievements,
+        languages: languages,
+        talentNetwork: talentNetwork,
       );
 
   /// Body for PUT /talent/me. Empty strings mean "not set" on the server.
@@ -126,7 +135,10 @@ class CandidateModel {
         'skills': p.skills,
         'openToWork': p.openToWork,
         'hiddenCompanies': p.hiddenCompanies ?? '',
-        'consent': true,
+        'achievements': p.achievements,
+        'languages': p.languages,
+        // Joining the Talent Network is a separate choice from building a resume
+        'talentNetwork': p.talentNetwork,
       };
 }
 
@@ -172,17 +184,18 @@ class CertItemModel {
 
 @JsonSerializable()
 class ResumeSettingsModel {
-  const ResumeSettingsModel({this.template = 'modern', this.accent = 'green', this.title, this.showPhoto = false, this.hide = const []});
+  const ResumeSettingsModel({this.template = 'modern', this.accent = 'green', this.title, this.showPhoto = false, this.hide = const [], this.density = 'normal'});
   factory ResumeSettingsModel.fromJson(Map<String, dynamic> json) => _$ResumeSettingsModelFromJson(json);
   factory ResumeSettingsModel.fromEntity(ResumeSettings s) =>
-      ResumeSettingsModel(template: s.template, accent: s.accent, title: s.title ?? '', showPhoto: s.showPhoto, hide: s.hide);
+      ResumeSettingsModel(template: s.template, accent: s.accent, title: s.title ?? '', showPhoto: s.showPhoto, hide: s.hide, density: s.density);
 
   final String template;
   final String accent;
   final String? title;
   final bool showPhoto;
   final List<String> hide;
+  final String density;
 
   Map<String, dynamic> toJson() => _$ResumeSettingsModelToJson(this);
-  ResumeSettings toEntity() => ResumeSettings(template: template, accent: accent, title: (title ?? '').isEmpty ? null : title, showPhoto: showPhoto, hide: hide);
+  ResumeSettings toEntity() => ResumeSettings(template: template, accent: accent, title: (title ?? '').isEmpty ? null : title, showPhoto: showPhoto, hide: hide, density: density);
 }

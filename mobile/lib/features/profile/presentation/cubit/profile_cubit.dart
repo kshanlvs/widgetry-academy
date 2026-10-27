@@ -116,6 +116,9 @@ class ProfileCubit extends Cubit<ProfileState> {
     r.fold((f) => emit(state.copyWith(profile: p, error: f.message)), (_) => emit(state.copyWith(message: open ? "You're open to work" : 'Your profile is paused')));
   }
 
+  /// The server changed the profile (e.g. AI suggestions applied on the resume screen).
+  void replaceProfile(Candidate p) => emit(state.copyWith(status: ProfileStatus.ready, profile: p));
+
   Future<void> saveResumeSettings(ResumeSettings s) async {
     final p = state.profile;
     if (p == null) return;

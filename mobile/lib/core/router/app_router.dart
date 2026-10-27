@@ -24,7 +24,7 @@ import 'package:widgetry_academy/features/payments/presentation/checkout_page.da
 import 'package:widgetry_academy/features/payments/presentation/payments_page.dart';
 import 'package:widgetry_academy/features/profile/presentation/pages/profile_edit_page.dart';
 import 'package:widgetry_academy/features/profile/presentation/pages/profile_page.dart';
-import 'package:widgetry_academy/features/profile/presentation/pages/resume_page.dart';
+import 'package:widgetry_academy/features/resume/presentation/resume_page.dart';
 import 'package:widgetry_academy/features/settings/settings_page.dart';
 import 'package:widgetry_academy/features/tutor/presentation/tutor_page.dart';
 import 'package:widgetry_academy/features/workshops/presentation/workshop_page.dart';

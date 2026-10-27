@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
@@ -24,6 +26,23 @@ class ApiClient {
   Future<Map<String, dynamic>> patch(String path, {Object? body}) => _send(() => _dio.patch<Object?>(path, data: body));
 
   Future<Map<String, dynamic>> delete(String path, {Object? body}) => _send(() => _dio.delete<Object?>(path, data: body));
+
+  /// POSTs JSON and returns the file the server sends back (resume PDF / Word) with its headers.
+  Future<ApiFile> postForFile(String path, {Object? body, Duration timeout = const Duration(seconds: 60)}) async {
+    try {
+      final res = await _dio.post<List<int>>(path, data: body, options: Options(responseType: ResponseType.bytes, receiveTimeout: timeout));
+      return ApiFile(Uint8List.fromList(res.data ?? const []), {for (final e in res.headers.map.entries) e.key.toLowerCase(): e.value.join(',')});
+    } on DioException catch (e) {
+      throw _map(e);
+    }
+  }
+
+  /// Uploads a file as the request body (resume import). [query] adds e.g. {'ai': '1'}.
+  Future<Map<String, dynamic>> postFile(String path, Uint8List bytes, {required String contentType, Map<String, dynamic>? query, Duration timeout = const Duration(seconds: 90)}) =>
+      _send(() => _dio.post<Object?>(path,
+          data: Stream.fromIterable([bytes]),
+          queryParameters: _clean(query),
+          options: Options(contentType: contentType, headers: {Headers.contentLengthHeader: bytes.length}, receiveTimeout: timeout, sendTimeout: timeout)));
 
   /// Fetches any JSON URL (used for the blog feed on the website).
   Future<Map<String, dynamic>> getUrl(String url) => _send(() => _dio.getUri<Object?>(Uri.parse(url)));
@@ -60,7 +79,13 @@ class ApiClient {
         return const NetworkException();
       case DioExceptionType.badResponse:
         final code = e.response?.statusCode;
-        final data = e.response?.data;
+        var data = e.response?.data;
+        // File downloads get the error as bytes: read the JSON message out of them
+        if (data is List<int>) {
+          try {
+            data = jsonDecode(utf8.decode(data));
+          } catch (_) {}
+        }
         final msg = data is Map && data['error'] is String ? data['error'] as String : _fallback(code);
         return ServerException(msg, statusCode: code);
       case DioExceptionType.cancel:
@@ -79,4 +104,14 @@ class ApiClient {
         429 => 'Too many requests. Please wait a moment and try again.',
         _ => 'Something went wrong. Please try again.',
       };
+}
+
+/// A file from the API: its bytes and the response headers (lower-case names).
+class ApiFile {
+  const ApiFile(this.bytes, this.headers);
+  final Uint8List bytes;
+  final Map<String, String> headers;
+
+  /// File name from Content-Disposition, if the server sent one.
+  String? get fileName => RegExp(r'filename="([^"]+)"').firstMatch(headers['content-disposition'] ?? '')?.group(1);
 }

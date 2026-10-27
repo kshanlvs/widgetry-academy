@@ -155,6 +155,8 @@ class PushService {
         return PushTarget(route: cat.isEmpty ? '/jobs' : '/jobs?cat=$cat');
       case 'profile':
         return const PushTarget(route: '/profile');
+      case 'resume':
+        return const PushTarget(route: '/profile/resume');
       case 'payment':
         return const PushTarget(route: '/payments');
       case 'mock':
@@ -172,7 +174,8 @@ class PushService {
       if (path.contains('#courses') || path.contains('#fees') || path == '/' || path.isEmpty) return const PushTarget(route: '/courses');
       if (path.startsWith('/blog')) return const PushTarget(route: '/blog');
       if (path.startsWith('/jobs')) return const PushTarget(route: '/jobs');
-      if (path.startsWith('/my-profile') || path.startsWith('/resume')) return const PushTarget(route: '/profile');
+      if (path.startsWith('/resume')) return const PushTarget(route: '/profile/resume');
+      if (path.startsWith('/my-profile')) return const PushTarget(route: '/profile');
     }
     return link.startsWith('https://') ? PushTarget(url: link) : const PushTarget(route: '/jobs');
   }

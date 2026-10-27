@@ -13,8 +13,3 @@ abstract interface class ProfileRepository {
   Future<Result<Unit>> saveResumeSettings(ResumeSettings settings);
   Future<Result<Unit>> deleteProfile();
 }
-
-/// Builds the resume PDF. Lives behind an interface so the PDF library can be swapped.
-abstract interface class ResumeBuilder {
-  Future<Uint8List> build(Candidate profile, ResumeSettings settings);
-}

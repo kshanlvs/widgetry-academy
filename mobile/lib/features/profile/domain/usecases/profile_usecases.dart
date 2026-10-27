@@ -61,10 +61,3 @@ class DeleteProfile implements UseCase<Unit, NoParams> {
   @override
   Future<Result<Unit>> call(NoParams p) => _repo.deleteProfile();
 }
-
-@injectable
-class BuildResumePdf {
-  const BuildResumePdf(this._builder);
-  final ResumeBuilder _builder;
-  Future<Uint8List> call(Candidate profile, ResumeSettings settings) => _builder.build(profile, settings);
-}

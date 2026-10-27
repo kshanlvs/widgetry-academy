@@ -56,10 +56,26 @@ void main() {
     expect(c.resumeSettings.template, 'modern');
   });
 
-  test('toRequest sends empty strings for unset fields and gives consent', () {
+  test('reads achievements, languages, Talent Network and "fit to one page"', () {
+    final c = CandidateModel.fromJson({
+      ...json,
+      'achievements': ['Winner, Smart India Hackathon 2024'],
+      'languages': ['English', 'Hindi'],
+      'talentNetwork': true,
+      'resumeSettings': {'template': 'modern', 'density': 'tight'},
+    }).toEntity();
+    expect(c.achievements, ['Winner, Smart India Hackathon 2024']);
+    expect(c.languages, ['English', 'Hindi']);
+    expect(c.talentNetwork, isTrue);
+    expect(c.resumeSettings.density, 'tight');
+  });
+
+  test('toRequest sends empty strings for unset fields and the Talent Network choice', () {
     final body = CandidateModel.toRequest(CandidateModel.fromJson(json).toEntity());
     expect(body['currentCompany'], '');
-    expect(body['consent'], isTrue);
+    expect(body['talentNetwork'], isFalse, reason: 'building a resume does not join the network');
+    expect(body.containsKey('consent'), isFalse);
+    expect(body['achievements'], isEmpty);
     expect((body['experience'] as List).single['end'], '');
     expect(body.containsKey('photo'), isFalse, reason: 'photos upload separately');
   });
