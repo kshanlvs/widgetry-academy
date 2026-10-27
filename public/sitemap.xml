@@ -17,19 +17,6 @@
   <url><loc>https://widgetryacademy.in/jobs-terms.html</loc><lastmod>2026-10-15</lastmod><changefreq>yearly</changefreq><priority>0.2</priority></url>
   <url><loc>https://widgetryacademy.in/resume-builder.html</loc><lastmod>2026-10-15</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://widgetryacademy.in/ats-checker.html</loc><lastmod>2026-10-27</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <!-- blog:start -->
-  <url><loc>https://widgetryacademy.in/blog/</loc><lastmod>2026-10-20</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://widgetryacademy.in/blog/flutter-clean-architecture.html</loc><lastmod>2026-10-20</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://widgetryacademy.in/blog/flutter-bloc-tutorial.html</loc><lastmod>2026-10-20</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://widgetryacademy.in/blog/flutter-internship-fresher-jobs.html</loc><lastmod>2026-10-18</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://widgetryacademy.in/blog/famous-apps-built-with-flutter.html</loc><lastmod>2026-10-18</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://widgetryacademy.in/blog/flutter-vs-react-native-jobs.html</loc><lastmod>2026-10-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://widgetryacademy.in/blog/flutter-developer-salary-india.html</loc><lastmod>2026-10-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://widgetryacademy.in/blog/flutter-developer-jobs-india.html</loc><lastmod>2026-10-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://widgetryacademy.in/blog/how-to-become-flutter-developer.html</loc><lastmod>2026-10-15</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://widgetryacademy.in/blog/flutter-developer-resume.html</loc><lastmod>2026-10-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://widgetryacademy.in/blog/flutter-interview-questions.html</loc><lastmod>2026-10-13</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <!-- blog:end -->
   <!-- job pages:start -->
   <url><loc>https://widgetryacademy.in/flutter-jobs.html</loc><lastmod>2026-10-20</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://widgetryacademy.in/remote-flutter-jobs.html</loc><lastmod>2026-10-20</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
@@ -46,4 +33,18 @@
   <url><loc>https://widgetryacademy.in/mobile-developer-jobs-chennai.html</loc><lastmod>2026-10-20</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://widgetryacademy.in/mobile-developer-jobs-kolkata.html</loc><lastmod>2026-10-20</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
   <!-- job pages:end -->
+  <!-- blog:start -->
+  <url><loc>https://widgetryacademy.in/blog/</loc><lastmod>2026-10-27</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://widgetryacademy.in/blog/why-learn-flutter-2026.html</loc><lastmod>2026-10-27</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://widgetryacademy.in/blog/flutter-clean-architecture.html</loc><lastmod>2026-10-20</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://widgetryacademy.in/blog/flutter-bloc-tutorial.html</loc><lastmod>2026-10-20</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://widgetryacademy.in/blog/flutter-internship-fresher-jobs.html</loc><lastmod>2026-10-18</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://widgetryacademy.in/blog/famous-apps-built-with-flutter.html</loc><lastmod>2026-10-18</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://widgetryacademy.in/blog/flutter-vs-react-native-jobs.html</loc><lastmod>2026-10-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://widgetryacademy.in/blog/flutter-developer-salary-india.html</loc><lastmod>2026-10-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://widgetryacademy.in/blog/flutter-developer-jobs-india.html</loc><lastmod>2026-10-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://widgetryacademy.in/blog/how-to-become-flutter-developer.html</loc><lastmod>2026-10-15</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://widgetryacademy.in/blog/flutter-developer-resume.html</loc><lastmod>2026-10-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://widgetryacademy.in/blog/flutter-interview-questions.html</loc><lastmod>2026-10-13</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <!-- blog:end -->
 </urlset>

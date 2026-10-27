@@ -35,7 +35,7 @@ FONTS = "https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=
 
 CTAS = {
     "jobs": ("Looking for your next mobile developer role?", "Browse Flutter, Android and iOS jobs reviewed by working engineers. Free for job seekers.", "../jobs.html", "Browse jobs"),
-    "resume": ("Build your ATS-friendly resume in 5 minutes", "Free, no watermark, three professional templates and a resume strength score.", "../resume-builder.html", "Create my resume free"),
+    "resume": ("Build your ATS-friendly resume in 5 minutes", "Free, no sign-up to start: import your old resume, pick an ATS-friendly template and see your ATS score.", "../resume-builder.html", "Create my resume free"),
     "course": ("Learn Flutter by building a real app", "Flutter in 10 Days: live weekend classes, a real app in your portfolio, and mentor support.", "../#courses", "See the course"),
     "bloc": ("Learn Bloc live in one weekend", "Bloc crash course: Cubit, Bloc, repositories and bloc_test, building a real shopping cart. Two live sessions.", "../bloc-crash-course.html", "See the Bloc course"),
     "cleanarch": ("Build a real app with clean architecture", "Flutter, Bloc & Clean Architecture: Dart OOP, SOLID, Bloc, dependency injection and tests, by building a cricket scorer app.", "../flutter-clean-architecture-course.html", "See the course"),
