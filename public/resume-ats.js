@@ -106,6 +106,7 @@ export function resumeText(p, opts = {}) {
   for (const a of p.apps || []) parts.push(`${a.name} ${a.role || ""}`, a.about || "");
   for (const e of p.education || []) parts.push(`${e.degree} ${e.institute}`);
   for (const c of p.certifications || []) parts.push(c.name);
+  for (const a of p.achievements || []) parts.push(a);
   return parts.filter(Boolean).join("\n");
 }
 
@@ -247,7 +248,9 @@ const SECTION_NAMES = {
   education: /^(education|academic background|academics|academic details|qualifications?|educational qualifications?|education\s*(&|and)\s*training)$/i,
   certifications: /^(certifications?|certificates|courses|training|licenses|licenses\s*(&|and)\s*certifications|certifications?\s*(&|and)\s*(courses|training))$/i,
   // Headings that end a section but aren't scored
-  other: /^(achievements?|awards?|honou?rs|awards\s*(&|and)\s*achievements|languages( known)?|hobbies|interests|hobbies\s*(&|and)\s*interests|personal details|personal information|personal profile|declaration|references|strengths|extra[- ]curricular( activities)?|activities|volunteering|publications|contact|contact details)$/i,
+  achievements: /^(key\s+)?(achievements?|accomplishments|awards?|honou?rs|awards\s*(&|and)\s*(achievements|honou?rs)|achievements\s*(&|and)\s*awards|hackathons?|positions? of responsibility|extra[- ]curricular( activities)?|leadership)$/i,
+  languages: /^languages( known| spoken)?$/i,
+  other: /^(hobbies|interests|hobbies\s*(&|and)\s*interests|personal details|personal information|personal profile|declaration|references|strengths|activities|volunteering|publications|contact|contact details|top skills)$/i,
 };
 const CITY = /\b(bengaluru|bangalore|mumbai|pune|hyderabad|chennai|kolkata|delhi|new delhi|noida|gurugram|gurgaon|ahmedabad|jaipur|indore|kochi|coimbatore|chandigarh|lucknow|bhubaneswar|nagpur|surat|vadodara|india)\b/i;
 

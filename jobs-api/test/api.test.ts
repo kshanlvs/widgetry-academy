@@ -49,7 +49,7 @@ before(async () => {
   await new Promise(r => server.once("listening", r));
   base = `http://127.0.0.1:${(server.address() as any).port}/api`;
 });
-after(async () => { server.close(); await pool.end(); });
+after(async () => { server.close(); await pool.end(); await (await import("../src/resumeDoc.js")).closePdfBrowser(); });
 
 test("health check reaches the database", async () => {
   const r = await call("GET", "/health");
@@ -1299,4 +1299,137 @@ test("Resume Premium: ₹299 for 30 days via Razorpay, AI help only with Premium
     assert.match(rp[0].item, /^30 days · until /);
     assert.equal(rp[0].amount, 299);
   } finally { setChatModel(null); delete process.env.RESUME_AI_DAILY; await pool.query("DELETE FROM candidates WHERE uid = 'rp1'"); }
+});
+
+test("Resume v2: achievements and languages, PDF and Word downloads, ATS for the app, import, saved copies, Play purchase, reminder", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { setChatModel } = await import("../src/chat.js");
+  const ME = "dev:rv1:rv@test.dev:Rohan", OTHER = "dev:rv2:rv2@test.dev:Other";
+  const hasChromium = (() => { try { readFileSync(process.env.CHROMIUM_PATH || "/usr/bin/chromium"); return true; } catch { return false; } })();
+  const raw = async (path: string, bytes: Buffer, type: string, token?: string) => {
+    const r = await fetch(base + path, { method: "POST", headers: { "content-type": type, "x-forwarded-for": "10.9.9.9", ...(token ? { authorization: "Bearer " + token } : {}) }, body: bytes });
+    return { status: r.status, body: await r.json() };
+  };
+  const bin = async (path: string, body: unknown, token: string) => {
+    const r = await fetch(base + path, { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer " + token }, body: JSON.stringify(body) });
+    return { status: r.status, bytes: Buffer.from(await r.arrayBuffer()), headers: r.headers };
+  };
+  try {
+    // New sections are saved and come back
+    const put = await call("PUT", "/talent/me", profile({ achievements: ["Winner, Smart India Hackathon 2023", ""], languages: ["English", "Hindi", "English"],
+      experience: [{ company: "PayNow", role: "Android Developer", start: "2022-03", end: "", points: "Led migration to Compose\nAdded Hilt" }] }), ME);
+    assert.equal(put.status, 200, JSON.stringify(put.body));
+    assert.deepEqual([put.body.profile.achievements, put.body.profile.languages], [["Winner, Smart India Hackathon 2023"], ["English", "Hindi"]]);
+    const kept = await call("PUT", "/talent/me", profile({ headline: "Android Developer" }), ME);
+    assert.deepEqual(kept.body.profile.achievements, ["Winner, Smart India Hackathon 2023"], "older apps that don't send the new sections don't wipe them");
+    assert.equal((await call("PUT", "/talent/me/resume-settings", { template: "modern", density: "tight", hide: ["languages"] }, ME)).status, 200);
+
+    // Word download (free)
+    const d = await bin("/resume/docx", {}, ME);
+    assert.equal(d.status, 200);
+    assert.equal(d.bytes.subarray(0, 2).toString(), "PK");
+    assert.match(d.headers.get("content-disposition") || "", /Riya-Sen-Resume\.docx/);
+    // PDF: made by Chromium; Premium templates come with the watermark
+    if (hasChromium) {
+      const pdf = await bin("/resume/pdf", {}, ME);
+      assert.equal(pdf.status, 200);
+      assert.equal(pdf.bytes.subarray(0, 5).toString(), "%PDF-");
+      assert.deepEqual([pdf.headers.get("x-resume-pages"), pdf.headers.get("x-resume-watermark")], ["1", "0"]);
+      const pro = await bin("/resume/pdf", { template: "elegant" }, ME);
+      assert.equal(pro.headers.get("x-resume-watermark"), "1", "Premium template without Premium");
+    }
+    assert.equal((await bin("/resume/pdf", { template: "nope" }, ME)).status, 400);
+    assert.equal((await bin("/resume/pdf", {}, OTHER)).status, 404, "no resume yet");
+
+    // ATS check for the app: the role's keywords, or a pasted job
+    let a = await call("POST", "/resume/ats", {}, ME);
+    assert.equal(a.status, 200);
+    assert.ok(a.body.result.score > 0 && a.body.result.categories.length >= 6);
+    assert.equal((await call("POST", "/resume/ats", { jobText: "too short" }, ME)).status, 400);
+    a = await call("POST", "/resume/ats", { jobText: "Android developer with Kotlin, Jetpack Compose, Hilt, Room and Coroutines for our payments app. 3+ years. GraphQL is a plus." }, ME);
+    assert.equal(a.body.result.mode, "job");
+    assert.ok(a.body.result.keywords.missing.includes("GraphQL"));
+
+    // Import: a two-column PDF and a Word file, read on the server (for the app)
+    let im = await raw("/resume/import", readFileSync(new URL("./fixtures/two-column-resume.pdf", import.meta.url)), "application/pdf");
+    assert.equal(im.status, 200, JSON.stringify(im.body));
+    assert.equal(im.body.profile.fullName, "Rohan Mehta");
+    assert.deepEqual(im.body.profile.languages, ["English", "Hindi", "Marathi"], "sidebar read on its own");
+    assert.deepEqual(im.body.profile.experience.map((j: any) => j.company), ["PayNow", "ShopKart"]);
+    assert.equal(im.body.profile.achievements.length, 2);
+    im = await raw("/resume/import", readFileSync(new URL("./fixtures/fresher-resume.docx", import.meta.url)), "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    assert.equal(im.body.profile.fullName, "Rahul Verma");
+    assert.equal((await raw("/resume/import", Buffer.from("hello, not a resume"), "application/octet-stream")).status, 400);
+    // With AI: the model's reading wins, made-up shapes are cleaned, the parser fills gaps
+    setChatModel(async () => ({ text: JSON.stringify({ fullName: "Rohan Mehta", headline: "Senior Android Developer", experienceYears: 6, skills: ["Kotlin", "Compose"],
+      experience: [{ company: "PayNow", role: "Senior Android Developer", start: "2022-03", end: "present?", points: ["Led migration", ""] }], apps: [{ name: "", url: "x" }], languages: [] }),
+      stopReason: "end_turn", inputTokens: 1200, outputTokens: 400 }));
+    im = await call("POST", "/resume/import", { text: "ROHAN MEHTA\nSenior Android Developer\nrohan@x.dev\nLANGUAGES\nEnglish, Hindi\nEXPERIENCE\nSenior Android Developer | PayNow | Mar 2022 - Present\n• Led migration", ai: true });
+    assert.equal(im.status, 200, JSON.stringify(im.body));
+    assert.equal(im.body.ai, true);
+    assert.deepEqual([im.body.profile.experience[0].end, im.body.profile.experience[0].points], ["", "Led migration"]);
+    assert.deepEqual(im.body.profile.apps, []);
+    assert.deepEqual(im.body.profile.languages, ["English", "Hindi"], "parser fills what the AI left empty");
+    for (let i = 0; i < 2; i++) await call("POST", "/resume/import", { text: "ROHAN MEHTA\nSenior Android Developer\nrohan@x.dev\nEXPERIENCE\nAndroid | X | 2020 - 2021", ai: true });
+    assert.equal((await call("POST", "/resume/import", { text: "ROHAN MEHTA\nSenior Android Developer\nrohan@x.dev\nmore text here to read", ai: true })).status, 429, "3 AI imports a day");
+
+    // Saved copies need Premium
+    assert.equal((await call("POST", "/resume/versions", { name: "For PayCo", data: { about: "Aimed at PayCo." } }, ME)).status, 402);
+
+    // Premium bought in the app with Google Play
+    process.env.ANDROID_BILLING = "user_choice";
+    const g = await call("GET", "/resume/premium");
+    assert.equal(g.body.playProductId, "resume_premium_299");
+    const o = await call("POST", "/resume/premium/order", { mode: "play" }, ME);
+    assert.deepEqual([o.status, o.body.productId], [201, "resume_premium_299"]);
+    let consumed = 0;
+    setPlayApi({
+      async getPurchase(_p, token) { return token === "tok_other_acct_123" ? { purchaseState: 0, orderId: "GPA.9", obfuscatedExternalAccountId: playAccountId("someone") } : { purchaseState: 0, consumptionState: 0, orderId: "GPA.3333-1", obfuscatedExternalAccountId: playAccountId("rv1") }; },
+      async consume() { consumed++; }, async reportExternal() { return true; },
+    });
+    assert.equal((await call("POST", "/resume/premium/play/verify", { productId: "resume_premium_299", purchaseToken: "tok_other_acct_123" }, ME)).status, 403);
+    let v = await call("POST", "/resume/premium/play/verify", { productId: "resume_premium_299", purchaseToken: "tok_good_purchase_1" }, ME);
+    assert.deepEqual([v.status, v.body.active, consumed], [200, true, 1]);
+    v = await call("POST", "/resume/premium/play/verify", { productId: "resume_premium_299", purchaseToken: "tok_good_purchase_1" }, ME);
+    assert.deepEqual([v.status, v.body.status], [200, "paid"], "verifying twice is fine");
+
+    // Saved copies: create, use for PDF/ATS, edit, limit, delete
+    const c = await call("POST", "/resume/versions", { name: "For PayCo", jobTitle: "Senior Android Developer", company: "PayCo",
+      data: { title: "Senior Android Engineer", about: "Android engineer aimed at payments.", skills: ["Kotlin", "GraphQL"], points: [{ index: 0, points: "Built UPI payments" }] }, settings: { template: "classic" } }, ME);
+    assert.equal(c.status, 201, JSON.stringify(c.body));
+    const vid = c.body.version.id;
+    a = await call("POST", "/resume/ats", { versionId: vid, jobText: "Android developer with Kotlin, Jetpack Compose, Hilt, Room and Coroutines for our payments app. 3+ years. GraphQL is a plus." }, ME);
+    assert.ok(!a.body.result.keywords.missing.includes("GraphQL"), "the copy's skills are used");
+    if (hasChromium) assert.equal((await bin("/resume/pdf", { versionId: vid }, ME)).status, 200);
+    assert.equal((await call("POST", "/resume/ats", { versionId: vid }, OTHER)).status, 404, "not someone else's copy");
+    const p2 = await call("PATCH", `/resume/versions/${vid}`, { name: "PayCo (final)", data: { about: "Updated." } }, ME);
+    assert.deepEqual([p2.body.version.name, p2.body.version.data.about, p2.body.version.data.skills], ["PayCo (final)", "Updated.", ["Kotlin", "GraphQL"]]);
+    process.env.RESUME_MAX_VERSIONS = "1";
+    assert.equal((await call("POST", "/resume/versions", { name: "Second" }, ME)).status, 409);
+    delete process.env.RESUME_MAX_VERSIONS;
+    assert.equal((await call("GET", "/resume/versions", undefined, ME)).body.items.length, 1);
+    assert.equal((await call("DELETE", `/resume/versions/${vid}`, undefined, ME)).status, 200);
+    assert.equal((await call("GET", "/resume/versions", undefined, ME)).body.items.length, 0);
+
+    // Reminder 3 days before it ends, once
+    const pushes: string[] = [];
+    setSender({ async topic() {}, async tokens(_t, p) { pushes.push(p.title); return []; } });
+    await pool.query("INSERT INTO device_tokens (uid, token, platform) VALUES ('rv1', 'devtok-rv1', 'android') ON DUPLICATE KEY UPDATE uid = uid");
+    await pool.query("UPDATE resume_premium SET expires_at = UTC_TIMESTAMP() + INTERVAL 2 DAY WHERE uid = 'rv1' AND status = 'paid'");
+    const { remindPremiumEnding } = await import("../src/resume.js");
+    assert.equal(await remindPremiumEnding(), 1);
+    assert.equal(await remindPremiumEnding(), 0, "only once");
+    await new Promise(r => setTimeout(r, 50));
+    assert.match(pushes.join("|"), /Resume Premium ends in 2 days/);
+  } finally {
+    setChatModel(null); setPlayApi(null); setSender(null); delete process.env.ANDROID_BILLING;
+    await pool.query("DELETE FROM candidates WHERE uid IN ('rv1','rv2')"); await pool.query("DELETE FROM resume_premium WHERE uid = 'rv1'");
+    await pool.query("DELETE FROM resume_ai_usage WHERE action = 'import'");
+  }
+});
+
+test("the API's copy of the resume engine matches the website's", async () => {
+  const { SHARED, copyOf } = await import("../scripts/sync-shared.mjs");
+  const { readFileSync } = await import("node:fs");
+  for (const f of SHARED) assert.equal(readFileSync(new URL(`../src/shared/${f}`, import.meta.url), "utf8"), copyOf(f), `src/shared/${f} is out of date: run npm run sync-shared`);
 });

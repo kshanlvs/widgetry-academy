@@ -196,6 +196,69 @@ function yearsOf(text, jobs) {
   return Math.min(40, Math.round((months / 12) * 2) / 2);
 }
 
+// ---------- PDF text with layout (two-column resumes) ----------
+// PDF text comes as positioned pieces. Rebuilding lines purely top-to-bottom mixes a sidebar into the main
+// column ("SKILLS Built the payments flow…"), so we look for a clear vertical gap that splits the page into
+// two columns, keep any full-width header (name, contact line) on top, then read each column in turn.
+
+/** pages: [{ width, items: [{ str, x, y, w }] }] with y measured from the bottom (as pdf.js gives it). */
+export function pdfItemsToText(pages) {
+  const out = [];
+  for (const pg of pages) {
+    const items = (pg.items || []).filter(i => i.str && i.str.trim());
+    if (!items.length) { out.push(""); continue; }
+    const cols = splitColumns(items, pg.width || Math.max(...items.map(i => i.x + i.w)));
+    for (const group of cols) out.push(...toLines(group), "");
+  }
+  return out.join("\n").replace(/\n{3,}/g, "\n\n");
+}
+function toLines(items) {
+  const sorted = [...items].sort((a, b) => b.y - a.y || a.x - b.x);
+  const lines = [];
+  for (const it of sorted) {
+    const l = lines.find(l => Math.abs(l.y - it.y) <= 2.5);
+    if (l) l.items.push(it); else lines.push({ y: it.y, items: [it] });
+  }
+  return lines.sort((a, b) => b.y - a.y).map(l => {
+    let s = "", end = null;
+    for (const it of l.items.sort((a, b) => a.x - b.x)) {
+      if (s && end !== null && it.x - end > 1.5 && !/\s$/.test(s) && !/^\s/.test(it.str)) s += " ";
+      s += it.str; end = it.x + it.w;
+    }
+    return s.trimEnd();
+  });
+}
+function bestSplit(items, W) {
+  let best = null;
+  for (let s = W * 0.22; s <= W * 0.78; s += 3) {
+    let cross = 0, left = 0, right = 0;
+    for (const i of items) { if (i.x + i.w <= s) left++; else if (i.x >= s) right++; else cross++; }
+    const ok = cross <= Math.max(1, items.length * 0.02) && Math.min(left, right) >= items.length * 0.15;
+    if (ok && (!best || Math.min(left, right) - cross * 5 > best.score)) best = { s, score: Math.min(left, right) - cross * 5 };
+  }
+  if (!best) return null;
+  // Both columns must run side by side for a good part of the page, not just sit one above the other
+  const L = items.filter(i => i.x + i.w <= best.s), R = items.filter(i => i.x >= best.s);
+  const span = a => [Math.min(...a.map(i => i.y)), Math.max(...a.map(i => i.y))];
+  const [l0, l1] = span(L), [r0, r1] = span(R), overlap = Math.min(l1, r1) - Math.max(l0, r0);
+  return overlap > 0.35 * Math.min(l1 - l0, r1 - r0) ? { s: best.s, L, R } : null;
+}
+function splitColumns(items, W) {
+  if (items.length < 25) return [items];
+  let sp = bestSplit(items, W);
+  if (sp) return [sp.L, sp.R];
+  // A full-width header on top (name, contact line) crosses the gap: take it off and try the rest
+  const ys = items.map(i => i.y), top = Math.max(...ys), bottom = Math.min(...ys);
+  for (const cut of [0.12, 0.2, 0.3]) {
+    const yCut = top - (top - bottom) * cut;
+    const head = items.filter(i => i.y >= yCut), body = items.filter(i => i.y < yCut);
+    if (body.length < 25) break;
+    sp = bestSplit(body, W);
+    if (sp) return [head, sp.L, sp.R];
+  }
+  return [items];
+}
+
 /**
  * Reads resume text into profile fields: { fullName, email, phone, city, headline, experienceYears, currentCompany, about,
  * skills, experience, apps, education, certifications, githubUrl, linkedinUrl, portfolioUrl, categories } plus
@@ -244,6 +307,10 @@ export function parseResume(rawText) {
   p.apps = entries(sections.projects || [], true).map(parseProject).filter(a => a.name).slice(0, 8);
   p.education = parseEducation(sections.education || []);
   p.certifications = parseCerts(sections.certifications || []);
+  // Achievements, awards, hackathons: one line each (wrapped lines joined)
+  p.achievements = entries(sections.achievements || []).flatMap(e => [...e.head, ...e.points]).map(a => clip(a.replace(BUL, ""), 200)).filter(a => wc(a) >= 2).slice(0, 10);
+  p.languages = [...new Set((sections.languages || []).join(", ").split(/\s*[,|•·;\/]\s*|\s{2,}/).map(l => l.replace(/\(.*?\)/g, "").replace(/[-–:].*$/, "").trim())
+    .filter(l => /^[A-Za-z][A-Za-z ]{1,24}$/.test(l) && wc(l) <= 2).map(l => l[0].toUpperCase() + l.slice(1).toLowerCase()))].slice(0, 8);
   p.skills = parseSkills([...(sections.skills || []), ...inlineSkills], text);
 
   p.currentCompany = (p.experience.find(j => j.company && !j.end) || {}).company || "";
@@ -257,6 +324,7 @@ export function parseResume(rawText) {
     p.skills.length && `${p.skills.length} skills`, p.experience.length && `${p.experience.length} job${p.experience.length > 1 ? "s" : ""}`,
     p.apps.length && `${p.apps.length} project${p.apps.length > 1 ? "s" : ""}`, p.education.length && "education",
     p.certifications.length && `${p.certifications.length} certificate${p.certifications.length > 1 ? "s" : ""}`,
+    p.achievements.length && `${p.achievements.length} achievement${p.achievements.length > 1 ? "s" : ""}`, p.languages.length && "languages",
   ].filter(Boolean);
   return p;
 }

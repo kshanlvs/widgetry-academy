@@ -45,8 +45,11 @@ export function createApp() {
   const smallJson = express.json({ limit: "64kb" }), photoJson = express.json({ limit: "400kb" });
   // The Razorpay webhook keeps its raw body: its signature is computed over the exact bytes
   const webhookRaw = express.raw({ type: "*/*", limit: "256kb" });
+  const resumeRaw = express.raw({ type: () => true, limit: "5200kb" });
   api.use((req, res, next) => {
     if (req.path === "/payments/webhook") return webhookRaw(req, res, err => { (req as any).rawBody = req.body; next(err); });
+    // Resume import: the file itself (PDF or Word), up to 5 MB
+    if (req.path === "/resume/import" && !/json/i.test(req.headers["content-type"] || "")) return resumeRaw(req, res, next);
     return (req.path === "/talent/me/photo" || req.path === "/admin/jobs/import" ? photoJson : smallJson)(req, res, next);
   });
   api.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 600, standardHeaders: "draft-7", legacyHeaders: false,

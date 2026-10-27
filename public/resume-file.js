@@ -1,6 +1,8 @@
 // Reads a resume file (PDF or Word .docx) into plain text, in the browser. Nothing is uploaded.
 // The readers (pdf.js and mammoth) are self-hosted in vendor/ and load only when someone picks a file.
 
+import { pdfItemsToText } from "./resume-parse.js";
+
 const MAX = 5 * 1024 * 1024;
 const loaded = {};
 function script(src) {
@@ -16,23 +18,14 @@ async function readPdf(buf) {
   const lib = window.pdfjsLib;
   lib.GlobalWorkerOptions.workerSrc = "vendor/pdf-3.11.174.worker.min.js";
   const pdf = await lib.getDocument({ data: buf }).promise;
-  const out = [];
+  const pages = [];
   for (let i = 1; i <= Math.min(pdf.numPages, 8); i++) {
     const page = await pdf.getPage(i);
     const { items } = await page.getTextContent();
-    // Rebuild lines: pieces on the same baseline join (with a space when there's a gap), a new baseline starts a new line
-    let line = "", y = null, lastEnd = null;
-    for (const it of items) {
-      const iy = Math.round(it.transform[5]), x = it.transform[4];
-      if (y !== null && Math.abs(iy - y) > 2) { out.push(line); line = ""; lastEnd = null; }
-      if (line && lastEnd !== null && x - lastEnd > 1.5 && !/\s$/.test(line) && !/^\s/.test(it.str)) line += " ";
-      line += it.str; y = iy; lastEnd = x + (it.width || 0);
-      if (it.hasEOL) { out.push(line); line = ""; y = null; lastEnd = null; }
-    }
-    if (line) out.push(line);
-    out.push("");
+    pages.push({ width: page.view[2], items: items.map(it => ({ str: it.str, x: it.transform[4], y: it.transform[5], w: it.width || 0 })) });
   }
-  return { text: out.join("\n"), pages: pdf.numPages };
+  // Layout-aware: two-column resumes are read one column at a time
+  return { text: pdfItemsToText(pages), pages: pdf.numPages };
 }
 
 async function readDocx(buf) {

@@ -4,6 +4,7 @@
 import { exec, query } from "./db.js";
 import { HttpError } from "./errors.js";
 import { gateway, paymentsEnabled } from "./payments.js";
+import { reportExternalResume } from "./play.js";
 import { notifyUser } from "./notify.js";
 import { askModel } from "./chat.js";
 
@@ -24,7 +25,7 @@ export async function premiumFor(uid: string): Promise<{ active: boolean; expire
 }
 
 export async function aiUsedToday(uid: string): Promise<number> {
-  const [r] = await query<{ n: number }>("SELECT COUNT(*) AS n FROM resume_ai_usage WHERE uid = ? AND created_at > ?", [uid, minutesAgo(24 * 60)]);
+  const [r] = await query<{ n: number }>("SELECT COUNT(*) AS n FROM resume_ai_usage WHERE uid = ? AND action <> 'import' AND created_at > ?", [uid, minutesAgo(24 * 60)]);
   return Number(r?.n ?? 0);
 }
 
@@ -39,6 +40,7 @@ export async function fulfilResumePremium(orderId: string, paymentId: string, me
   const r = await exec("UPDATE resume_premium SET status = 'paid', payment_id = ?, method = ?, paid_at = CURRENT_TIMESTAMP, starts_at = ?, expires_at = ? WHERE id = ? AND status IN ('created','failed')",
     [paymentId, method ?? null, start, end, row.id]);
   if (r.affectedRows === 0) return { status: "paid", first: false };
+  if (row.ext_token) void reportExternalResume(orderId).catch(e => console.warn(`[play] report ${orderId} failed: ${e?.message}`));
   void notifyUser(row.uid, { title: "Resume Premium is on ✨", body: `AI writing help and pro templates until ${end.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}.`, data: { type: "resume" } });
   return { status: "paid", first: true };
 }
@@ -81,6 +83,7 @@ export function resumeForAi(p: any): string {
   });
   for (const a of p.apps || []) out.push(`Project: ${a.name}${a.role ? ` (${a.role})` : ""}${a.about ? `: ${a.about}` : ""}`);
   for (const e of p.education || []) out.push(`Education: ${e.degree}, ${e.institute}${e.year ? ` (${e.year})` : ""}`);
+  for (const a of p.achievements || []) out.push(`Achievement: ${a}`);
   return out.join("\n").slice(0, 9000);
 }
 
@@ -146,3 +149,49 @@ Shape: {"letter": "..."} with paragraphs separated by \\n\\n.`;
   if (Object.values(result).every(v => !v || (Array.isArray(v) && !v.length))) throw new HttpError(502, "The AI couldn't write that. Please try again.");
   return { result, inputTokens: reply.inputTokens, outputTokens: reply.outputTokens, truncated: reply.stopReason === "max_tokens" };
 }
+
+// ---------- Saved copies (versions) ----------
+// A version keeps only what differs from the main resume: a target title, summary, skills and job points.
+export interface VersionData { title?: string | null; about?: string | null; skills?: string[] | null; points?: { index: number; points: string }[] }
+export const MAX_VERSIONS = () => Number(env.RESUME_MAX_VERSIONS || 5);
+
+export function applyVersion(p: any, data: VersionData | null | undefined) {
+  if (!data) return p;
+  const q = { ...p, experience: (p.experience || []).map((w: any) => ({ ...w })) };
+  if (data.about != null && data.about !== "") q.about = data.about;
+  if (data.skills?.length) q.skills = data.skills;
+  for (const x of data.points || []) if (q.experience[x.index]) q.experience[x.index].points = x.points || null;
+  return q;
+}
+const parse = (v: any) => (typeof v === "string" ? JSON.parse(v) : v);
+export const versionOut = (r: any) => ({
+  id: Number(r.id), name: r.name, jobId: r.job_id ?? null, jobTitle: r.job_title ?? null, company: r.company ?? null,
+  data: parse(r.data) ?? {}, settings: r.settings ? parse(r.settings) : null, createdAt: r.created_at, updatedAt: r.updated_at,
+});
+export async function versionFor(uid: string, id: number) {
+  const [r] = await query<any>("SELECT * FROM resume_versions WHERE id = ? AND uid = ?", [id, uid]);
+  if (!r) throw new HttpError(404, "That saved copy no longer exists.");
+  return versionOut(r);
+}
+
+// ---------- Reminder before Premium ends ----------
+/** Push a reminder 3 days before Premium ends (once per purchase, only for the purchase that ends last). */
+export async function remindPremiumEnding(): Promise<number> {
+  const rows = await query<{ id: number; uid: string; expires_at: Date }>(
+    `SELECT r.id, r.uid, r.expires_at FROM resume_premium r
+      WHERE r.status = 'paid' AND r.reminded_at IS NULL AND r.expires_at > UTC_TIMESTAMP() AND r.expires_at < UTC_TIMESTAMP() + INTERVAL 3 DAY
+        AND NOT EXISTS (SELECT 1 FROM resume_premium o WHERE o.uid = r.uid AND o.status = 'paid' AND o.expires_at > r.expires_at)
+      LIMIT 200`);
+  for (const r of rows) {
+    const days = Math.max(1, Math.ceil((new Date(r.expires_at).getTime() - Date.now()) / 86_400_000));
+    await exec("UPDATE resume_premium SET reminded_at = CURRENT_TIMESTAMP WHERE id = ?", [r.id]);
+    void notifyUser(r.uid, { title: `Resume Premium ends in ${days} day${days > 1 ? "s" : ""}`,
+      body: "Renew to keep the AI writer and Premium templates. Your resume stays yours either way.", data: { type: "resume" } });
+  }
+  return rows.length;
+}
+
+// ---------- Google Play (Android app) ----------
+/** One Play Console one-time product per price: resume_premium_<rupees>, e.g. resume_premium_299. */
+export const resumePlayProduct = () => `resume_premium_${premiumPrice()}`;
+export const isResumeProduct = (id: string) => /^resume_premium_\d+$/.test(id);

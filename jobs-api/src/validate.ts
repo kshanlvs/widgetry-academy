@@ -117,6 +117,10 @@ export const candidateInput = z.object({
   certifications: z.array(z.object({ name: trim(120).min(1, "Add the certificate name"), issuer: optText(120),
     year: z.coerce.number().int().min(1970).max(2040).optional().nullable() })).max(8).default([]),
   about: optText(2000),
+  // One line each: awards, hackathons, positions of responsibility. Blank lines are dropped.
+  // Left out (older app versions): kept as they are
+  achievements: z.array(z.string().trim().max(200, "Keep each achievement under 200 characters")).max(10).optional().transform(a => a?.filter(Boolean)),
+  languages: z.array(z.string().trim().max(40)).max(8).optional().transform(a => (a ? [...new Set(a.filter(Boolean))] : undefined)),
   skills: skillList.refine(s => s.length > 0, "Add at least one skill"),
   openToWork: z.boolean().default(true),
   hiddenCompanies: optText(400),
@@ -128,13 +132,15 @@ export type CandidateInput = z.infer<typeof candidateInput>;
 
 // Resume look, saved per seeker
 export const ACCENTS = ["green", "navy", "black", "maroon", "teal", "purple"] as const;
-export const HIDEABLE = ["photo", "phone", "email", "city", "summary", "projects", "education", "certifications"] as const;
+export const HIDEABLE = ["photo", "phone", "email", "city", "summary", "projects", "achievements", "education", "certifications", "languages"] as const;
+export const DENSITIES = ["normal", "compact", "tight"] as const;
 export const resumeSettingsInput = z.object({
   template: z.enum(["classic", "modern", "compact", "executive", "minimal", "elegant"]).default("modern"),   // the last three are Resume Premium
   accent: z.enum(ACCENTS).default("green"),
   title: optText(140),                                  // target role shown instead of the headline
   showPhoto: z.boolean().default(false),
   hide: z.array(z.enum(HIDEABLE)).max(HIDEABLE.length).default([]),
+  density: z.enum(DENSITIES).default("normal"),   // "Fit to one page"
 });
 
 // Profile photo: the browser resizes to a small JPEG/PNG/WebP first

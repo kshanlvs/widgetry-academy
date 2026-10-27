@@ -24,6 +24,7 @@ export function candidateOut(r: any, skills: string[], forAdmin = false, cats: s
     expectedSalaryLpa: r.expected_salary_lpa != null ? Number(r.expected_salary_lpa) : null,
     githubUrl: r.github_url ?? null, linkedinUrl: r.linkedin_url ?? null, portfolioUrl: r.portfolio_url ?? null,
     apps: json(r.apps), experience: json(r.experience), education: json(r.education), certifications: json(r.certifications),
+    achievements: json(r.achievements), languages: json(r.languages),
     about: r.about ?? null, skills, categories: cats,
     resumeSettings: r.resume_settings ? (typeof r.resume_settings === "string" ? JSON.parse(r.resume_settings) : r.resume_settings) : null,
     openToWork: !!r.open_to_work, hiddenCompanies: r.hidden_companies ?? null, talentNetwork: r.talent_network == null ? true : !!r.talent_network,
@@ -71,14 +72,16 @@ talentRouter.put("/talent/me", requireAuth, wrap(async (req, res) => {
       await c.query(`UPDATE candidates SET full_name=?, email=?, phone=?, headline=?, current_company=?, experience_years=?, city=?,
         work_modes=?, job_types=?, notice_period=?, expected_salary_lpa=?, github_url=?, linkedin_url=?, portfolio_url=?, apps=?, experience=?, education=?, certifications=?, about=?,
         open_to_work=?, hidden_companies=? WHERE id=?`, [...vals, id]);
+      if (p.achievements !== undefined) await c.query("UPDATE candidates SET achievements = ? WHERE id = ?", [JSON.stringify(p.achievements), id]);
+      if (p.languages !== undefined) await c.query("UPDATE candidates SET languages = ? WHERE id = ?", [JSON.stringify(p.languages), id]);
       // Not sent: keep what they chose before
       if (p.talentNetwork !== undefined) await c.query("UPDATE candidates SET talent_network = ? WHERE id = ?", [p.talentNetwork ? 1 : 0, id]);
       await c.query("DELETE FROM candidate_skills WHERE candidate_id = ?", [id]);
     } else {
       const [ins] = await c.query(`INSERT INTO candidates (public_id, uid, full_name, email, phone, headline, current_company, experience_years, city,
         work_modes, job_types, notice_period, expected_salary_lpa, github_url, linkedin_url, portfolio_url, apps, experience, education, certifications, about,
-        open_to_work, hidden_companies, talent_network, consent_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP())`,
-        [publicId(), u.uid, ...vals, p.talentNetwork ? 1 : 0]);
+        open_to_work, hidden_companies, achievements, languages, talent_network, consent_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP())`,
+        [publicId(), u.uid, ...vals, JSON.stringify(p.achievements ?? []), JSON.stringify(p.languages ?? []), p.talentNetwork ? 1 : 0]);
       id = (ins as mysql.ResultSetHeader).insertId;
     }
     await c.query("INSERT INTO candidate_skills (candidate_id, skill) VALUES ?", [p.skills.map(s => [id, s])]);

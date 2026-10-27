@@ -57,6 +57,10 @@ export function autoSummary(p) {
   return `${who}${builds}.${stack} Focused on clean, maintainable code and smooth user experiences.`;
 }
 
+/** "Fit to one page": the same resume, slightly smaller. Still real text, so ATS read it the same way. */
+export const DENSITY = { compact: "d-compact", tight: "d-tight" };
+export const DENSITY_LABELS = { normal: "Normal", compact: "Snug", tight: "Fit more" };
+
 export const ACCENTS = { green: "#0f6b56", navy: "#1d3557", black: "#111111", maroon: "#7a1f2b", teal: "#0e6d7a", purple: "#53389e" };
 
 // Premium templates seen without Premium carry a watermark, on screen and in print. It's a background image,
@@ -65,7 +69,8 @@ const WM_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="330" height="210"
 const WM_URL = "data:image/svg+xml," + encodeURIComponent(WM_SVG);
 
 /**
- * opts (all optional, saved per seeker): { accent, title, showPhoto, hide: ["photo","phone","email","city","summary","projects","education","certifications"] }
+ * opts (all optional, saved per seeker): { accent, title, showPhoto, density: "normal"|"compact"|"tight",
+ *   hide: ["photo","phone","email","city","summary","projects","achievements","education","certifications","languages"] }
  * Not saved: watermark (true for a Premium template viewed without Premium).
  */
 export function renderResume(p, template = "modern", opts = {}) {
@@ -96,14 +101,19 @@ export function renderResume(p, template = "modern", opts = {}) {
   const certs = certList.map(c => `<li><b>${esc(c.name)}</b>${c.issuer ? ` – ${esc(c.issuer)}` : ""}${c.year ? ` (${esc(c.year)})` : ""}</li>`).join("");
 
   const sec = (title, body) => (body ? `<section><h2>${title}</h2>${body}</section>` : "");
-  return `<article class="resume t-${t}${photo ? " has-photo" : ""}${opts.watermark ? " wm" : ""}"${style}>
+  const achievements = (p.achievements || []).map(a => String(a || "").trim()).filter(Boolean).map(a => `<li>${esc(a)}</li>`).join("");
+  const langs = (p.languages || []).map(l => String(l || "").trim()).filter(Boolean).map(esc).join(", ");
+  const density = DENSITY[opts.density] ? ` ${DENSITY[opts.density]}` : "";
+  return `<article class="resume t-${t}${photo ? " has-photo" : ""}${opts.watermark ? " wm" : ""}${density}"${style}>
     <header>${photo}<div class="hd"><h1>${esc(p.fullName)}</h1><p class="title">${esc((opts.title || "").trim() || p.headline)}</p><p class="contact">${contact}</p></div></header>
     ${show("summary") ? sec("Professional Summary", `<p>${esc(summary)}</p>`) : ""}
     ${sec("Technical Skills", skills && `<ul class="skills">${skills}</ul>`)}
     ${sec("Professional Experience", work)}
     ${show("projects") ? sec("Projects", projects) : ""}
+    ${show("achievements") ? sec("Achievements", achievements && `<ul>${achievements}</ul>`) : ""}
     ${show("education") ? sec("Education", edu) : ""}
     ${show("certifications") ? sec("Certifications", certs && `<ul>${certs}</ul>`) : ""}
+    ${show("languages") ? sec("Languages", langs && `<p>${langs}</p>`) : ""}
     ${opts.watermark ? '<div class="rs-wm" aria-hidden="true"></div>' : ""}
   </article>`;
 }
@@ -195,6 +205,11 @@ export const RESUME_CSS = `
 .resume.t-elegant h1{font-family:"Source Serif 4",Georgia,serif;font-size:25pt;font-weight:600;font-style:italic;letter-spacing:0}
 .resume.t-elegant header .title{color:var(--rs-accent);font-weight:600}
 .resume.t-elegant h2{font-family:"Source Serif 4",Georgia,serif;text-transform:none;letter-spacing:0;font-size:12pt;color:var(--rs-ink);border:none;border-left:3px solid var(--rs-accent);padding:0 0 0 7pt;margin-bottom:6pt}
+/* Fit to one page */
+.resume.d-compact{zoom:.94}
+.resume.d-tight{zoom:.88}
+.resume.d-tight section{margin-top:7pt}
+.resume.d-tight .item{margin-bottom:5pt}
 @media (max-width:600px){.resume .row{flex-direction:column;gap:0}.resume .when{white-space:normal}}
 `;
 
