@@ -92,7 +92,8 @@ class ApiClient {
         return const ServerException('Request cancelled.');
       case DioExceptionType.badCertificate:
         return const ServerException('Secure connection failed. Please try again later.');
-      case DioExceptionType.unknown:
+      // unknown, and any type newer dio versions add (5.11 added transformTimeout)
+      default:
         return e.error is SocketException ? const NetworkException() : ServerException(_fallback(null));
     }
   }
