@@ -20,6 +20,7 @@ class ResumePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = context.select<ProfileCubit, ProfileStatus>((c) => c.state.status);
+    final hasDraft = context.select<ProfileCubit, bool>((c) => c.state.draft != null && c.state.profile != null);
     if (status == ProfileStatus.loading) return Scaffold(appBar: AppBar(title: const Text('My resume')), body: const LoadingView(message: 'Loading your resume…'));
     if (context.read<ProfileCubit>().state.profile == null) {
       return Scaffold(
@@ -40,7 +41,44 @@ class ResumePage extends StatelessWidget {
         ),
       );
     }
+    if (hasDraft) return const _DraftChoice();
     return BlocProvider(create: (_) => getIt<ResumeCubit>()..start(), child: const _ResumeView());
+  }
+}
+
+/// Signed in to an account that already had a resume, with a new one made before signing in.
+class _DraftChoice extends StatelessWidget {
+  const _DraftChoice();
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<ProfileCubit>();
+    final s = context.watch<ProfileCubit>().state;
+    final t = Theme.of(context).textTheme;
+    final draft = s.draft!.profile;
+    final saved = s.profile!;
+    Widget option(String label, Candidate c) => Card(
+          child: ListTile(
+            title: Text(label, style: t.labelLarge),
+            subtitle: Text([c.fullName, c.headline, '${c.experience.length} job${c.experience.length == 1 ? '' : 's'} · ${c.skills.length} skills'].join('\n')),
+            isThreeLine: true,
+          ),
+        );
+    return Scaffold(
+      appBar: AppBar(title: const Text('My resume')),
+      body: ListView(padding: const EdgeInsets.all(Space.page), children: [
+        Text('You already have a resume', style: t.headlineSmall),
+        const SizedBox(height: Space.sm),
+        Text('Which one should your account keep? The other is deleted.', style: t.bodyMedium),
+        const SizedBox(height: Space.lg),
+        option('Just made on this phone', draft),
+        option('Saved in your account', saved),
+      ]),
+      bottomNavigationBar: BottomActionBar(
+        leading: OutlinedButton(onPressed: s.saving ? null : cubit.discardDraft, child: const Text('Keep saved')),
+        child: FilledButton(onPressed: s.saving ? null : cubit.useDraft, child: BusyLabel(busy: s.saving, label: 'Use the new one')),
+      ),
+    );
   }
 }
 

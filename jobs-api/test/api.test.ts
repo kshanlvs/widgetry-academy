@@ -1433,3 +1433,24 @@ test("the API's copy of the resume engine matches the website's", async () => {
   const { readFileSync } = await import("node:fs");
   for (const f of SHARED) assert.equal(readFileSync(new URL(`../src/shared/${f}`, import.meta.url), "utf8"), copyOf(f), `src/shared/${f} is out of date: run npm run sync-shared`);
 });
+
+test("Guests (the app before signing in) can preview a resume and see its ATS score; nothing is saved", async () => {
+  const { readFileSync } = await import("node:fs");
+  const hasChromium = (() => { try { readFileSync(process.env.CHROMIUM_PATH || "/usr/bin/chromium"); return true; } catch { return false; } })();
+  const draft = profile({ fullName: "Guest Person", headline: "Flutter Developer", skills: ["Flutter", "Dart", "Bloc"] });
+  const before = ((await pool.query("SELECT COUNT(*) AS n FROM candidates")) as any)[0][0].n;
+  const ats = await call("POST", "/resume/guest/ats", { profile: draft, jobText: "Flutter Developer\nWe need Flutter, Dart, Bloc, Firebase and CI/CD experience for our fintech app. ".repeat(2) }, undefined, "10.7.7.7");
+  assert.equal(ats.status, 200, JSON.stringify(ats.body));
+  assert.equal(ats.body.result.mode, "job");
+  assert.ok(ats.body.result.keywords.missing.includes("firebase") || ats.body.result.keywords.missing.some((k: string) => /firebase/i.test(k)));
+  const bad = await call("POST", "/resume/guest/ats", { profile: { ...draft, fullName: "" } }, undefined, "10.7.7.7");
+  assert.equal(bad.status, 400, "the same checks as saving a profile");
+  if (hasChromium) {
+    const r = await fetch(base + "/resume/guest/pdf", { method: "POST", headers: { "content-type": "application/json", "x-forwarded-for": "10.7.7.7" },
+      body: JSON.stringify({ profile: draft, look: { template: "elegant" } }) });
+    assert.equal(r.status, 200);
+    assert.equal(r.headers.get("x-resume-watermark"), "1", "Premium templates are watermarked for guests");
+    assert.equal(Buffer.from(await r.arrayBuffer()).subarray(0, 4).toString(), "%PDF");
+  }
+  assert.equal(((await pool.query("SELECT COUNT(*) AS n FROM candidates")) as any)[0][0].n, before);
+});

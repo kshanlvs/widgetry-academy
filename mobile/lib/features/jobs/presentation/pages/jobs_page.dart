@@ -107,6 +107,7 @@ class _JobsViewState extends State<_JobsView> {
                 ),
                 if (browsing) const SliverToBoxAdapter(child: CourseBanners()),
                 if (browsing) const SliverToBoxAdapter(child: ShortCourseTiles()),
+                if (browsing) const SliverToBoxAdapter(child: ResumeTile()),
                 if (browsing) const SliverToBoxAdapter(child: MockInterviewTile()),
                 SliverPersistentHeader(
                   pinned: true,

@@ -15,13 +15,16 @@ import 'package:widgetry_academy/features/auth/presentation/cubit/auth_cubit.dar
 import 'package:widgetry_academy/features/jobs/domain/entities/jobs_meta.dart';
 import 'package:widgetry_academy/features/jobs/domain/usecases/jobs_usecases.dart';
 import 'package:widgetry_academy/features/profile/domain/entities/candidate.dart';
+import 'package:widgetry_academy/features/profile/domain/repositories/profile_repository.dart';
 import 'package:widgetry_academy/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:widgetry_academy/features/profile/presentation/widgets/photo_picker.dart';
 import 'package:widgetry_academy/features/resume/domain/resume.dart';
 
-/// Create or edit the Talent Network profile (the resume is built from it).
+/// Create or edit the profile the resume is built from.
+/// [guest]: before signing in. The resume is kept on the phone and previewed; signing in saves it.
 class ProfileEditPage extends StatefulWidget {
-  const ProfileEditPage({super.key});
+  const ProfileEditPage({super.key, this.guest = false});
+  final bool guest;
   @override
   State<ProfileEditPage> createState() => _ProfileEditPageState();
 }
@@ -81,6 +84,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   /// Photo chosen before the profile exists; uploaded right after it's created.
   Uint8List? _pendingPhoto;
   JobsMeta _meta = JobsMeta.fallback;
+  /// How the resume looks (kept with a guest draft).
+  ResumeSettings _look = const ResumeSettings();
 
   @override
   void initState() {
@@ -97,6 +102,19 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       _modes = [...p.workModes];
       _notice = p.noticePeriod;
       _openToWork = p.openToWork;
+    } else if (context.read<ProfileCubit>().draft case final ProfileDraft d) {
+      // A resume started before (on this phone): carry on from it
+      final p = d.profile;
+      _look = d.look;
+      _network = p.talentNetwork;
+      _fill(p);
+      _hidden.text = p.hiddenCompanies ?? '';
+      _salary.text = p.expectedSalaryLpa?.toString() ?? '';
+      _jobTypes = [...p.jobTypes];
+      _modes = [...p.workModes];
+      _notice = p.noticePeriod;
+      _openToWork = p.openToWork;
+      if (_edu.isEmpty) _edu.add(_Row(['', '', '', '']));
     } else {
       _name.text = user?.displayName ?? '';
       _edu.add(_Row(['', '', '', '']));
@@ -321,6 +339,13 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       return;
     }
     final cubit = context.read<ProfileCubit>();
+    if (widget.guest) {
+      await cubit.keepDraft(ProfileDraft(_build(), look: _look));
+      if (!mounted) return;
+      final look = await context.push<ResumeSettings>('/resume/preview');
+      if (look != null) _look = look;
+      return;
+    }
     final ok = await cubit.save(_build());
     if (!ok) return;
     final photo = _pendingPhoto;
@@ -389,11 +414,12 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   @override
   Widget build(BuildContext context) {
     final saving = context.select<ProfileCubit, bool>((c) => c.state.saving);
+    final savedPhoto = context.select<ProfileCubit, String?>((c) => c.state.profile?.photo);
     return BlocListener<ProfileCubit, ProfileState>(
       listenWhen: (a, b) => b.error != null,
       listener: (context, s) => showMessage(context, s.error!),
       child: Scaffold(
-        appBar: AppBar(title: Text(_existing ? 'Edit profile' : 'Create profile'), titleSpacing: 0),
+        appBar: AppBar(title: Text(widget.guest ? 'Build your resume' : _existing ? 'Edit profile' : 'Create profile'), titleSpacing: 0),
         body: Form(
           key: _form,
           autovalidateMode: _submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
@@ -409,9 +435,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               onImport: () => _import(),
               onAi: _lastFile == null || _foundByAi ? null : () => _import(ai: true),
             ),
-            _PhotoSection(
+            if (!widget.guest) _PhotoSection(
               name: _name.text,
-              photo: _pendingPhoto != null ? 'data:image/jpeg;base64,${base64Encode(_pendingPhoto!)}' : context.select<ProfileCubit, String?>((c) => c.state.profile?.photo),
+              photo: _pendingPhoto != null ? 'data:image/jpeg;base64,${base64Encode(_pendingPhoto!)}' : savedPhoto,
               busy: saving,
               onTap: _pickPhoto,
             ),
@@ -541,7 +567,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         bottomNavigationBar: BottomActionBar(
           child: FilledButton(
             onPressed: saving ? null : _save,
-            child: BusyLabel(busy: saving, label: _existing ? 'Save changes' : 'Save and see my resume'),
+            child: BusyLabel(busy: saving, label: widget.guest ? 'Preview my resume' : _existing ? 'Save changes' : 'Save and see my resume'),
           ),
         ),
       ),

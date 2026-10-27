@@ -8,7 +8,7 @@ import { requireAuth } from "../auth.js";
 import { gateway, paymentsEnabled, razorpayConfig, validPaymentSignature } from "../payments.js";
 import { aiDailyLimit, aiUsedToday, applyVersion, fulfilResumePremium, isResumeProduct, MAX_VERSIONS, premiumDays, premiumFor, premiumPrice, reconcileResume, resumePlayProduct, runResumeAi, versionFor, versionOut } from "../resume.js";
 import { INDIA_STATES, playAccountId, playApi, playConfig } from "../play.js";
-import { DENSITIES, HIDEABLE, ACCENTS } from "../validate.js";
+import { DENSITIES, HIDEABLE, ACCENTS, candidateInput } from "../validate.js";
 import { fileBase, htmlToPdf, needsWatermark, resumeDocx, resumeHtml, type ResumeLook } from "../resumeDoc.js";
 import { atsCheck } from "../shared/resume-ats.js";
 import { TEMPLATES } from "../shared/resume-render.js";
@@ -191,6 +191,12 @@ const atsBody = z.object({
 resumeRouter.post("/resume/ats", requireAuth, wrap(async (req, res) => {
   const b = atsBody.parse(req.body ?? {});
   const { p, look } = await resumeFor(req.user!.uid, b.versionId ? { versionId: b.versionId } : {});
+  const job = await atsJob(b);
+  res.json({ job: job && { id: job.id ?? null, title: job.title, company: job.company ?? null }, result: (atsCheck as any)(p, job, look) });
+}));
+
+/** The job to check against: a Widgetry job by id, or a pasted description. */
+async function atsJob(b: { jobId?: string; jobText?: string; jobTitle?: string }) {
   let job: { title: string; text: string; company?: string; id?: string } | null = null;
   if (b.jobId) {
     const [j] = await query<any>("SELECT j.public_id, j.title, j.description, c.name AS company FROM jobs j JOIN companies c ON c.id = j.company_id WHERE j.public_id = ?", [b.jobId]);
@@ -201,6 +207,39 @@ resumeRouter.post("/resume/ats", requireAuth, wrap(async (req, res) => {
     if (b.jobText.length < 80) throw new HttpError(400, "Paste the full job description (at least a few lines).");
     job = { title: b.jobTitle || b.jobText.split("\n")[0]!.slice(0, 90), text: b.jobText };
   }
+  return job;
+}
+
+// ---------- Guests (the app before signing in): preview and ATS score of a resume that isn't saved yet ----------
+// Nothing is stored. Premium templates are watermarked; downloading needs an account (as on the website).
+const guestBody = z.object({
+  profile: candidateInput,
+  look: lookBody.omit({ versionId: true }).optional(),
+}).merge(atsBody.omit({ versionId: true }));
+const guestLimit = rateLimit({ windowMs: 10 * 60 * 1000, limit: 30, standardHeaders: "draft-7", legacyHeaders: false,
+  keyGenerator: req => ipKeyGenerator(req.ip ?? "0.0.0.0"),
+  handler: (_req, res) => res.status(429).json({ error: "Too many previews. Please wait a few minutes." }) });
+const guestResume = (body: unknown) => {
+  const b = guestBody.parse(body ?? {});
+  const look: ResumeLook = { template: "modern", ...Object.fromEntries(Object.entries(b.look ?? {}).filter(([, x]) => x !== undefined)) } as ResumeLook;
+  return { b, p: { ...b.profile, email: null, photo: null }, look };
+};
+
+resumeRouter.post("/resume/guest/pdf", guestLimit, wrap(async (req, res) => {
+  const { p, look } = guestResume(req.body);
+  const watermark = needsWatermark(look.template, false);
+  let out;
+  try { out = await htmlToPdf(resumeHtml(p, look, watermark)); }
+  catch (e: any) { console.error(`[resume] guest pdf failed: ${e?.message}`); throw new HttpError(503, "We couldn't make the preview right now. Please try again in a minute."); }
+  res.set({ "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${fileBase(p.fullName)}.pdf"`, "Cache-Control": "no-store",
+    "X-Resume-Pages": String(out.pages), "X-Resume-Watermark": watermark ? "1" : "0", "Access-Control-Expose-Headers": "X-Resume-Pages, X-Resume-Watermark, Content-Disposition" });
+  res.send(out.pdf);
+}));
+
+resumeRouter.post("/resume/guest/ats", guestLimit, wrap(async (req, res) => {
+  const { b, p, look } = guestResume(req.body);
+  const job = await atsJob(b);
+  res.set("Cache-Control", "no-store");
   res.json({ job: job && { id: job.id ?? null, title: job.title, company: job.company ?? null }, result: (atsCheck as any)(p, job, look) });
 }));
 

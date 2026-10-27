@@ -10,6 +10,7 @@ import 'package:widgetry_academy/features/courses/presentation/cubit/courses_cub
 import 'package:widgetry_academy/features/courses/presentation/widgets/my_course.dart';
 import 'package:widgetry_academy/features/jobs/domain/entities/job.dart';
 import 'package:widgetry_academy/features/jobs/presentation/widgets/job_card.dart';
+import 'package:widgetry_academy/features/profile/presentation/cubit/profile_cubit.dart';
 
 /// Course banners on the home screen. A registered student sees their own course
 /// (what to do next); everyone else sees the open courses, swipeable.
@@ -277,6 +278,49 @@ class MockInterviewTile extends StatelessWidget {
   const MockInterviewTile({super.key});
 
   @override
+  Widget build(BuildContext context) => _HomeTile(
+        icon: Icons.record_voice_over_rounded,
+        tint: AppColors.gold,
+        iconColor: AppColors.warn,
+        title: 'Mock interview with a working engineer',
+        subtitle: 'One-to-one video call and a written scorecard',
+        onTap: () => context.push('/interviews'),
+      );
+}
+
+/// The free resume builder on the home screen. Works without an account, like the website.
+class ResumeTile extends StatelessWidget {
+  const ResumeTile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final status = context.select<ProfileCubit, ProfileStatus>((c) => c.state.status);
+    final has = status == ProfileStatus.ready;
+    return _HomeTile(
+      icon: Icons.description_rounded,
+      tint: AppColors.greenBright,
+      iconColor: AppColors.green,
+      title: has ? 'Your resume' : 'Free ATS resume builder',
+      subtitle: has ? 'Preview, ATS score and download' : 'Import your old resume or fill a short form',
+      onTap: () => context.push(switch (status) {
+        ProfileStatus.ready => '/profile/resume',
+        ProfileStatus.signedOut => '/resume/start',
+        _ => '/profile/edit',
+      }),
+    );
+  }
+}
+
+class _HomeTile extends StatelessWidget {
+  const _HomeTile({required this.icon, required this.tint, required this.iconColor, required this.title, required this.subtitle, required this.onTap});
+  final IconData icon;
+  final Color tint;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final p = Palette.of(context);
@@ -287,22 +331,22 @@ class MockInterviewTile extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.lg), side: BorderSide(color: p.line)),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => context.push('/interviews'),
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(Space.lg),
             child: Row(children: [
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(color: AppColors.gold.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(Radii.md)),
-                child: const Icon(Icons.record_voice_over_rounded, color: AppColors.warn, size: 22),
+                decoration: BoxDecoration(color: tint.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(Radii.md)),
+                child: Icon(icon, color: iconColor, size: 22),
               ),
               const SizedBox(width: Space.md),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Mock interview with a working engineer', style: t.titleSmall),
+                  Text(title, style: t.titleSmall),
                   const SizedBox(height: 2),
-                  Text('One-to-one video call and a written scorecard', style: t.bodySmall),
+                  Text(subtitle, style: t.bodySmall),
                 ]),
               ),
               Icon(Icons.chevron_right_rounded, color: p.faint),

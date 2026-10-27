@@ -34,6 +34,23 @@ class ResumeRepositoryImpl implements ResumeRepository {
       });
 
   @override
+  Future<Result<ResumeFile>> guestPdf(Candidate profile, ResumeSettings look) => guard(() async {
+        final body = _look(ResumeLook(look))..remove('showPhoto');
+        final f = await _api.postForFile('/resume/guest/pdf', body: {'profile': CandidateModel.toRequest(profile), 'look': body});
+        return ResumeFile(bytes: f.bytes, fileName: f.fileName ?? 'Resume.pdf', pages: int.tryParse(f.headers['x-resume-pages'] ?? '') ?? 1, watermark: f.headers['x-resume-watermark'] == '1');
+      });
+
+  @override
+  Future<Result<AtsResult>> guestAts(Candidate profile, {TargetJob? job}) => guard(() async {
+        final j = await _api.post('/resume/guest/ats', body: {
+          'profile': CandidateModel.toRequest(profile),
+          if (job?.id != null) 'jobId': job!.id,
+          if (job?.id == null && job?.text != null) ...{'jobText': job!.text, 'jobTitle': job.title},
+        });
+        return ResumeJson.ats(j, job);
+      });
+
+  @override
   Future<Result<ResumeFile>> docx(ResumeLook l) => guard(() async {
         final f = await _api.postForFile('/resume/docx', body: _look(l));
         return ResumeFile(bytes: f.bytes, fileName: f.fileName ?? 'Resume.docx');

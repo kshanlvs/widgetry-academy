@@ -13,3 +13,16 @@ abstract interface class ProfileRepository {
   Future<Result<Unit>> saveResumeSettings(ResumeSettings settings);
   Future<Result<Unit>> deleteProfile();
 }
+
+/// A resume built before signing in. Kept on the phone until it can be saved to the account.
+class ProfileDraft {
+  const ProfileDraft(this.profile, {this.look = const ResumeSettings()});
+  final Candidate profile;
+  final ResumeSettings look;
+}
+
+abstract interface class ProfileDraftStore {
+  ProfileDraft? read();
+  Future<void> write(ProfileDraft draft);
+  Future<void> clear();
+}

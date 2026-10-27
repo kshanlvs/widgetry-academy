@@ -24,6 +24,7 @@ import 'package:widgetry_academy/features/payments/presentation/checkout_page.da
 import 'package:widgetry_academy/features/payments/presentation/payments_page.dart';
 import 'package:widgetry_academy/features/profile/presentation/pages/profile_edit_page.dart';
 import 'package:widgetry_academy/features/profile/presentation/pages/profile_page.dart';
+import 'package:widgetry_academy/features/resume/presentation/guest_resume_page.dart';
 import 'package:widgetry_academy/features/resume/presentation/resume_page.dart';
 import 'package:widgetry_academy/features/settings/settings_page.dart';
 import 'package:widgetry_academy/features/tutor/presentation/tutor_page.dart';
@@ -46,7 +47,12 @@ class AppRouter {
     redirect: (context, state) {
       final path = state.uri.path;
       final needs = _needsAccount.contains(path) || RegExp(r'^/courses/[^/]+/(register|pay)$').hasMatch(path) || RegExp(r'^/(interviews/.+|interviewer(/.*)?)$').hasMatch(path);
-      if (needs && _auth.state.status == AuthStatus.signedOut) return '/sign-in?from=${Uri.encodeComponent(state.uri.toString())}';
+      final signedOut = _auth.state.status == AuthStatus.signedOut;
+      if (needs && signedOut) return '/sign-in?from=${Uri.encodeComponent(state.uri.toString())}';
+      // The resume builder without an account; once signed in, the real one
+      final signedIn = _auth.state.status == AuthStatus.signedIn;
+      if (signedIn && path == '/resume/start') return '/profile/edit';
+      if (signedIn && path == '/resume/preview') return '/profile/resume';
       return null;
     },
     routes: [
@@ -93,6 +99,8 @@ class AppRouter {
           ]),
         ],
       ),
+      GoRoute(path: '/resume/start', parentNavigatorKey: rootKey, builder: (_, __) => const ProfileEditPage(guest: true)),
+      GoRoute(path: '/resume/preview', parentNavigatorKey: rootKey, builder: (_, __) => const GuestResumePage()),
       GoRoute(path: '/sign-in', parentNavigatorKey: rootKey, builder: (_, s) => SignInPage(redirectTo: s.uri.queryParameters['from'])),
       GoRoute(path: '/settings', parentNavigatorKey: rootKey, builder: (_, __) => const SettingsPage()),
       GoRoute(path: '/assistant', parentNavigatorKey: rootKey, builder: (_, __) => const AssistantPage()),

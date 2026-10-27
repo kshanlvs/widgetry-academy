@@ -57,18 +57,23 @@ class _Intro extends StatelessWidget {
           ]),
         );
     return ListView(padding: const EdgeInsets.fromLTRB(Space.page, Space.sm, Space.page, Space.xxxl), children: [
-      Text(signedIn ? 'Create your profile' : 'Your profile and resume', style: t.headlineSmall),
+      Text(signedIn ? 'Build your resume' : 'Your resume, in minutes', style: t.headlineSmall),
       const SizedBox(height: 6),
-      Text('About 5 minutes. Private until you say yes.', style: t.bodyMedium?.copyWith(color: p.muted)),
+      Text(signedIn ? 'Import the one you have, or fill a short form.' : 'Free. No account needed to start.', style: t.bodyMedium?.copyWith(color: p.muted)),
       const SizedBox(height: Space.xxl),
-      point(Icons.description_outlined, 'ATS-friendly resume', 'A clean PDF in three styles, built from your profile. Share or print it any time.'),
-      point(Icons.insights_outlined, 'Profile score', 'See exactly what to add to stand out to recruiters.'),
-      point(Icons.groups_2_outlined, 'Talent Network', 'Mobile teams find you. We share your profile only with your approval.'),
+      point(Icons.upload_file_outlined, 'Import your old resume', 'PDF or Word: we fill everything in for you.'),
+      point(Icons.description_outlined, 'ATS-friendly templates', 'PDF and Word downloads that applicant tracking systems can read.'),
+      point(Icons.insights_outlined, 'ATS score', 'See what recruiters look for and what your resume is missing.'),
+      point(Icons.groups_2_outlined, 'Talent Network (optional)', 'Mobile teams find you. We share your profile only with your approval.'),
       const SizedBox(height: Space.md),
       FilledButton(
-        onPressed: () => signedIn ? context.push('/profile/edit') : context.push('/sign-in?from=/profile'),
-        child: Text(signedIn ? 'Create my profile' : 'Sign in to start'),
+        onPressed: () => context.push(signedIn ? '/profile/edit' : '/resume/start'),
+        child: const Text('Build my resume'),
       ),
+      if (!signedIn) ...[
+        const SizedBox(height: Space.sm),
+        TextButton(onPressed: () => context.push('/sign-in?from=/profile'), child: const Text('I have an account: sign in')),
+      ],
     ]);
   }
 }

@@ -226,6 +226,9 @@ class ResumeLook extends Equatable {
 
 abstract interface class ResumeRepository {
   Future<Result<ResumePremium>> premium();
+  /// Before signing in: a preview of a resume that isn't saved (nothing is stored on the server).
+  Future<Result<ResumeFile>> guestPdf(Candidate profile, ResumeSettings look);
+  Future<Result<AtsResult>> guestAts(Candidate profile, {TargetJob? job});
   Future<Result<ResumeFile>> pdf(ResumeLook look);
   Future<Result<ResumeFile>> docx(ResumeLook look);
   Future<Result<AtsResult>> ats({int? versionId, TargetJob? job});
