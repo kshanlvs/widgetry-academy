@@ -7,8 +7,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+# The same commit is pushed to several branches at once: keep only the newest run of it (main is pushed last, so it deploys)
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
@@ -158,4 +159,10 @@ jobs:
       - name: Deploy to Firebase Hosting
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-key.json
-        run: firebase deploy --project flutter-in-10-days --only hosting
+        run: |
+          set -o pipefail
+          firebase deploy --project flutter-in-10-days --only hosting --non-interactive 2>&1 | tee "$RUNNER_TEMP/deploy.log" || {
+            # Show Firebase's own error on the run's summary page
+            grep -iE "error|denied|permission|not found|invalid" "$RUNNER_TEMP/deploy.log" | tail -8 | while read -r l; do echo "::error::$l"; done
+            exit 1
+          }
