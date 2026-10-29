@@ -1641,22 +1641,82 @@ function render(){
   if (me.user) { const first = ((r && r.name) || me.user.displayName || "").split(" ")[0]; no.textContent = "Log out"; no.title = first ? "Signed in as " + first : ""; }
   $("regStart").hidden = !!r; $("pDone").hidden = !r;
   if (r) { $("doneName").textContent = r.name || ""; $("donePhone").textContent = r.phone || ""; $("doneCourse").textContent = r.batch || "Flutter in 10 Days"; }
-  // Fee payment buttons: only for registered students
-  const cfg = (window.WIDGETRY && window.WIDGETRY.razorpay) || {};
+  // Ask the server what this student can pay (once per signed-in, registered person)
+  const who = me.user && me.reg ? me.user.uid : "";
+  if (who !== feeFor) { feeFor = who; fee = null; if (who) loadFee(); }
+  drawPay();
+}
+
+// ----- Fee payment: an order made on our server, then Razorpay Checkout (UPI, cards, net banking) -----
+// The same flow as the app, short courses and Resume Premium. The server knows the fee, the plans and what's
+// already paid, confirms the payment with Razorpay, and marks the registration paid.
+let fee = null, paying = "", feeFor = "";   // fee: { enabled, status, amountPaid, plans } from the server, for the signed-in student
+const inr = n => "₹" + Number(n).toLocaleString("en-IN");
+async function feeApi(path, body) {
+  const token = await auth.currentUser.getIdToken();
+  const r = await fetch(JOBS_API + path, { method: body ? "POST" : "GET", headers: { authorization: "Bearer " + token, ...(body ? { "content-type": "application/json" } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(j.error || "Something went wrong. Please try again."), { status: r.status });
+  return j;
+}
+async function loadFee() {
+  if (!me.user || !me.reg) { fee = null; return drawPay(); }
+  try { fee = await feeApi("/payments/plans"); } catch (e) { fee = { error: e.message }; }
+  drawPay();
+}
+function drawPay() {
+  const r = me.reg;
   document.querySelectorAll(".paybox").forEach(box => {
-    const id = cfg[box.getAttribute("data-pay")];
-    box.innerHTML = "";
-    if (!id) { box.innerHTML = '<span class="paysoon">Online payment opening soon</span>'; return; }
+    const kind = box.getAttribute("data-pay");   // "regular" or "booking"
     if (!r) {
       box.innerHTML = '<div class="payreg"><button class="btn" type="button">Register to pay</button><p>Takes 30 seconds · free</p></div>';
       box.querySelector("button").onclick = () => openReg("Flutter in 10 Days", () => document.getElementById("fees").scrollIntoView({ behavior: "smooth", block: "start" }), "Register first, then you can pay for your seat.");
       return;
     }
-    box.addEventListener("pointerdown", () => { window.gtag && gtag("event", "begin_checkout", { course: "Flutter in 10 Days", plan: box.getAttribute("data-pay") }); }, { once: true });
-    const f = document.createElement("form"), sc = document.createElement("script");
-    sc.src = "https://checkout.razorpay.com/v1/payment-button.js"; sc.async = true; sc.setAttribute("data-payment_button_id", id);
-    f.appendChild(sc); box.appendChild(f);
+    if (!fee) { box.innerHTML = '<span class="paysoon">Loading…</span>'; return; }
+    if (fee.error) { box.innerHTML = '<span class="paysoon">' + esc(fee.error) + '</span>'; return; }
+    if (fee.status === "paid") { box.innerHTML = '<span class="paysoon">✓ Fee paid. See you in class!</span>'; return; }
+    if (!fee.enabled) { box.innerHTML = '<span class="paysoon">Online payment opening soon</span>'; return; }
+    // Paid the booking amount: the rest is one "balance" payment, on the "Pay in 2 parts" card
+    if (fee.status === "part-paid" && kind === "regular") { box.innerHTML = '<span class="paysoon">✓ Booking paid · ' + inr(fee.amountPaid) + '</span>'; return; }
+    const plan = fee.plans.find(p => p.id === (fee.status === "part-paid" ? "balance" : kind));
+    if (!plan) { box.innerHTML = fee.status === "part-paid" && kind === "regular" ? '<span class="paysoon">✓ Booking paid · ' + inr(fee.amountPaid) + '</span>' : '<span class="paysoon">Not available right now</span>'; return; }
+    const label = plan.id === "balance" ? "Pay the balance " + inr(plan.amount) : "Pay " + inr(plan.amount);
+    box.innerHTML = '<div class="payreg"><button class="btn" type="button"' + (paying ? " disabled" : "") + '>' + (paying === plan.id ? "Opening…" : label) + '</button><p>UPI, cards or net banking · secured by Razorpay</p></div>';
+    box.querySelector("button").onclick = () => payFee(plan);
   });
+}
+function loadCheckout() {
+  return window.Razorpay ? Promise.resolve() : new Promise((ok, fail) => {
+    const s = document.createElement("script"); s.src = "https://checkout.razorpay.com/v1/checkout.js"; s.onload = ok;
+    s.onerror = () => fail(new Error("Couldn't open the payment window. Check your connection and try again."));
+    document.head.appendChild(s);
+  });
+}
+async function payFee(plan) {
+  if (paying) return;
+  paying = plan.id; drawPay();
+  window.gtag && gtag("event", "begin_checkout", { course: "Flutter in 10 Days", plan: plan.id, value: plan.amount, currency: "INR" });
+  window.fbq && fbq("track", "InitiateCheckout", { currency: "INR", value: plan.amount });
+  try {
+    const o = await feeApi("/payments/order", { plan: plan.id });
+    await loadCheckout();
+    new window.Razorpay({
+      key: o.keyId, order_id: o.orderId, amount: o.amount, currency: o.currency, name: o.name, description: o.description,
+      prefill: { name: o.prefill?.name || "", email: o.prefill?.email || "", contact: o.prefill?.contact || "" },
+      theme: { color: "#0F6B56" },
+      handler: async resp => {
+        try {
+          await feeApi("/payments/verify", { orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature });
+          window.gtag && gtag("event", "purchase", { transaction_id: resp.razorpay_payment_id, value: plan.amount, currency: "INR" });
+          window.fbq && fbq("track", "Purchase", { currency: "INR", value: plan.amount });
+          toast(plan.id === "booking" ? "Seat booked ✓ Pay the rest before Weekend 2. Your receipt is in My courses." : "Payment received ✓ Your seat is confirmed. Your receipt is in My courses.");
+        } catch (e) { toast(e.message); }
+        paying = ""; loadFee();
+      },
+      modal: { ondismiss: () => { paying = ""; drawPay(); } },
+    }).open();
+  } catch (e) { paying = ""; drawPay(); toast(e.message); }
 }
 
 // Any course buy link (Razorpay page) or "Reserve seat" link needs registration first

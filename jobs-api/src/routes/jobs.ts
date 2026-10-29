@@ -150,8 +150,8 @@ jobsRouter.get("/jobs", wrap(async (req, res) => {
   if (f.q) {
     const ft = ftQuery(f.q), like = "%" + likeEsc(f.q) + "%";
     if (ft && await hasFulltext()) {
-      // The title LIKE keeps search working if the full-text index ever lags behind (e.g. after an unclean database restart)
-      where.push("(MATCH(j.title, j.description) AGAINST (? IN BOOLEAN MODE) OR j.title LIKE ? OR c.name LIKE ? OR EXISTS (SELECT 1 FROM job_skills s2 WHERE s2.job_id = j.id AND s2.skill LIKE ?))"); params.push(ft, like, like, like);
+      // The LIKEs keep search complete when the full-text index lags behind new rows (it can, briefly, and after an unclean restart)
+      where.push("(MATCH(j.title, j.description) AGAINST (? IN BOOLEAN MODE) OR j.title LIKE ? OR j.description LIKE ? OR c.name LIKE ? OR EXISTS (SELECT 1 FROM job_skills s2 WHERE s2.job_id = j.id AND s2.skill LIKE ?))"); params.push(ft, like, like, like, like);
     } else if (ft) {
       // No full-text index (e.g. TiDB): every word must appear in the title, description, company or skills
       for (const w of f.q.toLowerCase().split(/\s+/).filter(x => x.length >= 2).slice(0, 5)) {

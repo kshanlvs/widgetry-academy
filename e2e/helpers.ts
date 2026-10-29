@@ -59,9 +59,12 @@ const FIRESTORE = `
 const snap = { exists: () => false, data: () => undefined, id: "x" };
 const qs = { docs: [], empty: true, size: 0, forEach() {} };
 export const getFirestore = () => ({});
-export const collection = () => ({}); export const doc = () => ({ id: "x" }); export const query = () => ({});
+// Tests can put documents in localStorage "e2e_docs": { "registrations/<uid>": {...} }
+const docs = () => { try { return JSON.parse(localStorage.getItem("e2e_docs") || "{}"); } catch { return {}; } };
+export const collection = () => ({}); export const doc = (_db, ...path) => ({ id: path[path.length - 1] || "x", path: path.join("/") }); export const query = () => ({});
 export const where = () => ({}); export const orderBy = () => ({}); export const limit = () => ({});
-export const getDoc = async () => snap; export const getDocs = async () => qs;
+export const getDoc = async (ref) => { const d = ref && docs()[ref.path]; return d ? { exists: () => true, data: () => d, id: ref.id } : snap; };
+export const getDocs = async () => qs;
 export const setDoc = async () => {}; export const addDoc = async () => ({ id: "x" }); export const updateDoc = async () => {}; export const deleteDoc = async () => {};
 export const onSnapshot = (_r, cb) => { setTimeout(() => cb(qs), 0); return () => {}; };
 export const serverTimestamp = () => new Date(); export const deleteField = () => null; export const increment = (n) => n;

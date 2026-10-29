@@ -95,12 +95,17 @@ async function rzp(method: string, path: string, body?: unknown) {
   return json;
 }
 
+// Without a Firebase service account (tests, local dev) Firestore isn't asked at all: its client would fail
+// in the background, outside any request.
+const firestoreReady = () => { if (!canSendPush()) throw new Error("Firestore is not configured (FIREBASE_SERVICE_ACCOUNT)"); };
 const firestoreStore: RegistrationStore = {
   async get(uid) {
+    firestoreReady();
     const d = await getFirestore(adminApp()).collection("registrations").doc(uid).get();
     return d.exists ? (d.data() as Registration) : null;
   },
   async addPayment(uid, p) {
+    firestoreReady();
     const db = getFirestore(adminApp());
     const ref = db.collection("registrations").doc(uid);
     return db.runTransaction(async t => {

@@ -7,6 +7,10 @@ import { sendReminders } from "./mock.js";
 import { remindPremiumEnding } from "./resume.js";
 import { closePdfBrowser } from "./resumeDoc.js";
 
+// A background error (a library retrying in the background, a forgotten await) is logged, never a crash that
+// takes the whole API down for everyone.
+process.on("unhandledRejection", e => console.error("[jobs-api] unhandled rejection:", e instanceof Error ? e.stack || e.message : e));
+
 async function main() {
   if (process.env.MIGRATE_ON_START === "1") await migrate();
   const server = createApp().listen(config.port, () => console.log(`[jobs-api] listening on :${config.port}${config.allowDevAuth ? " (DEV AUTH ON)" : ""}`));

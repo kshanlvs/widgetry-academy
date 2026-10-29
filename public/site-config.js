@@ -2,12 +2,7 @@
 // Edit only the values in quotes, then redeploy (firebase deploy --only hosting).
 
 window.WIDGETRY = {
-  // Razorpay Payment Button IDs (start with "pl_"). Leave "" to show "Online payment opening soon".
-  // Use TEST IDs only on a preview channel; on the live site use LIVE IDs or leave empty.
-  razorpay: {
-    regular:   "pl_Tl4tO3qkfF95TV",   // ₹4,999
-    booking:   "pl_Tl4y52Nbm6N2QY"    // ₹2,500 – pay in 2 parts
-  },
+  // Course fee payments: made through our server (Razorpay keys are set on Railway). Nothing to set here.
 
   // ---- Next batch (shown in the hero, fees section and WhatsApp messages) ----
   batch: {
