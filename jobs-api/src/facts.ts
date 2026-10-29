@@ -45,7 +45,7 @@ export async function academyFacts(): Promise<string> {
     const b = batch as Record<string, string | number | null>;
     const parts = [b.name, b.startDate && `starts ${b.startDate}`, b.days, b.time, b.mode].filter(Boolean);
     if (parts.length) lines.push(`- Next batch: ${parts.join(", ")}`);
-    if (typeof b.seatsLeft === "number") lines.push(`- Early-bird seats left: ${b.seatsLeft}`);
+    if (typeof b.seatsLeft === "number") lines.push(`- Seats left in this batch: ${b.seatsLeft}`);
   } else lines.push(`- Next batch dates: shown at ${SITE}/#fees`);
 
   if (shorts.length) lines.push("Short courses:");

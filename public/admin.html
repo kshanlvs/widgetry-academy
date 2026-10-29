@@ -208,7 +208,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
       <thead><tr><th>Registered</th><th>Student</th><th>Class / course</th><th>Contact</th><th>Experience</th><th>Plan</th><th class="num">Paid</th><th class="num">Due</th><th>Status</th><th></th></tr></thead>
       <tbody id="rows"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody>
     </table></div>
-    <p class="small" style="margin-top:12px">Always confirm a payment in the Razorpay dashboard before marking it Paid. Fees: Early bird ₹3,499 · Regular ₹4,999 · Booking ₹2,500 (+ balance).</p>
+    <p class="small" style="margin-top:12px">Always confirm a payment in the Razorpay dashboard before marking it Paid. Fees: Full ₹4,999 · Booking ₹2,500 (+ balance). Early bird ₹3,499 only on older payments.</p>
   </section>
 
   <section id="mapp" hidden>
@@ -250,7 +250,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
         </div>
         <label><span>Mode <span class="opt">(optional)</span></span><input id="bMode" maxlength="60" placeholder="e.g. Live online (Google Meet)"></label>
         <label><span>Free demo <span class="opt">(optional)</span></span><input id="bDemo" maxlength="80" placeholder="e.g. Free demo: Sunday, 12 October, 11 AM"></label>
-        <label><span>Early-bird seats left <span class="opt">(optional · leave empty to hide)</span></span><input id="bSeats" type="number" min="0" max="10" inputmode="numeric" placeholder="e.g. 7"></label>
+        <label><span>Seats left <span class="opt">(optional · leave empty to hide)</span></span><input id="bSeats" type="number" min="0" max="10" inputmode="numeric" placeholder="e.g. 7"></label>
         <p class="err" id="bErr" hidden></p>
         <p class="okmsg" id="bOk" hidden></p>
         <div class="acts">
@@ -312,10 +312,10 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
 
         <fieldset><legend>Fee (optional)</legend>
           <div class="row2">
-            <label>Price (₹)<input id="cPrice" type="number" min="0" step="1" placeholder="3499"></label>
+            <label>Price (₹)<input id="cPrice" type="number" min="0" step="1" placeholder="4999"></label>
             <label>Crossed-out price (₹)<input id="cMrp" type="number" min="0" step="1" placeholder="4999"></label>
           </div>
-          <label>Note under the price<input id="cPriceNote" maxlength="90" placeholder="e.g. Early-bird fee · first 10 seats · pay in 2 parts"></label>
+          <label>Note under the price<input id="cPriceNote" maxlength="90" placeholder="e.g. Full fee · or pay in 2 parts"></label>
           <p class="small" id="cPriceWs" hidden style="margin:0"></p>
         </fieldset>
 
@@ -517,7 +517,7 @@ legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.0
   <h2 id="dName">Edit payment</h2>
   <p class="small" id="dSub"></p>
   <div class="row2">
-    <label>Plan<select id="ePlan"><option value="">Not chosen</option><option value="early-bird">Early bird ₹3,499</option><option value="regular">Regular ₹4,999</option><option value="booking">Booking ₹2,500 + balance</option></select></label>
+    <label>Plan<select id="ePlan"><option value="">Not chosen</option><option value="early-bird">Early bird ₹3,499 (old)</option><option value="regular">Regular ₹4,999</option><option value="booking">Booking ₹2,500 + balance</option></select></label>
     <label>Status<select id="eStatus"><option value="unpaid">Not paid</option><option value="part-paid">Part-paid</option><option value="paid">Paid</option><option value="refunded">Refunded</option><option value="cancelled">Cancelled</option></select></label>
   </div>
   <div class="row2">
@@ -709,7 +709,7 @@ const CST = { open: "Enrolling now", soon: "Coming soon", hidden: "Hidden" };
 const SEED = [
   { title: "Flutter in 10 Days", tagline: "Build your own mobile app for Android, from zero. No coding experience needed.", status: "open", flagship: true, order: 1,
     meta: "10 live online sessions · Saturdays & Sundays · 2 hrs each", tags: ["Flutter", "Dart", "Firebase", "APIs", "GitHub"], steps: [],
-    outcome: "your own installable Android app and a GitHub portfolio.", price: 3499, mrp: 4999, priceNote: "Early-bird fee · first 10 seats · pay in 2 parts", showBatch: true,
+    outcome: "your own installable Android app and a GitHub portfolio.", price: 4999, mrp: null, priceNote: "Full fee · or pay in 2 parts", showBatch: true,
     mentorName: "Kishan Kumar Sharma", mentorLine: "5+ years · Senior Software Engineer, Relevance Lab", mentorPhoto: "shots/mentor-square.jpg",
     cta: "Reserve my seat", ctaLink: "#register", cta2: "See syllabus", cta2Link: "#schedule", brochure: "Widgetry-Academy-Flutter-Brochure.pdf" },
   { title: "Full-Stack Web Development", tagline: "Build a complete website with your own backend, and put it live on the internet.", status: "soon", flagship: false, order: 2,

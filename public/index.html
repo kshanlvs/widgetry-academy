@@ -64,7 +64,7 @@
         "courseMode": "Online",
         "courseWorkload": "PT20H"
       },
-      "offers": { "@type": "Offer", "category": "Paid", "price": 3499, "priceCurrency": "INR", "availability": "https://schema.org/InStock", "url": "https://widgetryacademy.in/#fees" }
+      "offers": { "@type": "Offer", "category": "Paid", "price": 4999, "priceCurrency": "INR", "availability": "https://schema.org/InStock", "url": "https://widgetryacademy.in/#fees" }
     }
   ]
 }
@@ -283,7 +283,7 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px
 .nextstep p:not(.eyebrow){color:var(--muted);font-size:15px;max-width:70ch}
 .ns-tag{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:var(--accent-2);color:#1d1400}
 /* fees */
-.fees{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch}
+.fees{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:stretch;max-width:760px;margin-inline:auto}
 .fee{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:30px 26px;display:flex;flex-direction:column;gap:6px}
 .fee.hot{background:linear-gradient(160deg,#f2a900,#ffbe2e);border-color:#f2a900;color:#1d1400}
 .fee .flag{position:absolute;top:-14px;left:22px;background:var(--deep);color:#f2a900;border:2px solid #f2a900;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:20px}
@@ -943,7 +943,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
         <p class="crs-sub">Build your own mobile app for Android, from zero. No coding experience needed.</p>
         <div class="crs-tags"><span>Flutter</span><span>Dart</span><span>Firebase</span><span>APIs</span><span>GitHub</span></div>
         <p class="crs-out"><b>You finish with:</b> your own installable Android app and a GitHub portfolio.</p>
-        <div class="crs-price"><b>₹3,499</b><s>₹4,999</s><span>Early-bird fee · first 10 seats · pay in 2 parts</span></div>
+        <div class="crs-price"><b>₹4,999</b><span>Full fee · or pay in 2 parts</span></div>
         <div class="crs-mentor"><img src="shots/mentor-square.jpg" alt="" loading="lazy"><div><b>Kishan Kumar Sharma</b><span>5+ years · Senior Software Engineer, Relevance Lab</span></div></div>
         <div class="mx-links"><a class="btn" href="#register">Reserve my seat</a><a class="btn ghost" href="#schedule">See syllabus</a></div>
       </article>
@@ -1150,14 +1150,8 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
     <div class="nextbatch" id="nextBatch" hidden></div>
     <div class="fees">
       <div class="fee hot">
-        <span class="flag" id="ebFlag">First 10 seats</span>
-        <p class="fn">Early bird</p>
-        <p class="fp">₹3,499</p>
-        <p class="fs"><s>₹4,999</s> · Save ₹1,500</p>
-        <div class="paybox" data-pay="earlyBird"></div>
-      </div>
-      <div class="fee">
-        <p class="fn">Regular</p>
+        <span class="flag" id="ebFlag">One payment</span>
+        <p class="fn">Pay in full</p>
         <p class="fp">₹4,999</p>
         <p class="fs">Full program, all inclusive</p>
         <div class="paybox" data-pay="regular"></div>
@@ -1313,7 +1307,7 @@ const MENTOR = { mentorName: "Kishan Kumar Sharma", mentorLine: "5+ years · Sen
 const FLUTTER = { title: "Flutter in 10 Days", status: "open", flagship: true, order: 1, badge: "★ Flagship course", showBatch: true,
   meta: "10 live online sessions · Saturdays & Sundays · 2 hrs each", tagline: "Build your own mobile app for Android, from zero. No coding experience needed.",
   tags: ["Flutter", "Dart", "Firebase", "APIs", "GitHub"], outcome: "your own installable Android app and a GitHub portfolio.",
-  price: 3499, mrp: 4999, priceNote: "Early-bird fee · first 10 seats · pay in 2 parts", ...MENTOR, cta: "Reserve my seat", ctaLink: "#register", cta2: "See syllabus", cta2Link: "#schedule" };
+  price: 4999, mrp: null, priceNote: "Full fee · or pay in 2 parts", ...MENTOR, cta: "Reserve my seat", ctaLink: "#register", cta2: "See syllabus", cta2Link: "#schedule" };
 const DEFAULT_COURSES = [FLUTTER,
   { title: "Bloc Crash Course", status: "open", order: 2, badge: "★ New · Crash course", meta: "2 live sessions · one weekend · 5 hours",
     tagline: "Learn Bloc state management the way companies use it, in one weekend.", tags: ["Bloc", "Cubit", "bloc_test", "Clean architecture"], outcome: "a working shopping cart feature built with Bloc, with tests, on your GitHub.", price: 799, mrp: 999, priceNote: "Early-bird fee · first 15 seats", ...MENTOR, ctaLink: "bloc-crash-course.html" },
@@ -1469,7 +1463,7 @@ try {
       '<ul>'+(B.days?'<li>🗓 '+esc(B.days)+'</li>':'')+(B.time?'<li>⏰ '+esc(B.time)+'</li>':'')+(B.mode?'<li>📍 '+esc(B.mode)+'</li>':'')+(B.demo?'<li>🎓 '+esc(B.demo)+'</li>':'<li>🎓 Free demo class available</li>')+'</ul>'+
       '<a class="btn" href="'+demoUrl+'"'+(demoUrl.charAt(0)==='#'?'':' target="_blank" rel="noopener"')+'>Book free demo</a>';nb.hidden=false;}
   var cb=document.getElementById('crsBatch'); if(cb){cb.textContent=B.startDate?('🗓 Next batch starts '+B.startDate):'🗓 Next batch dates announced soon';cb.hidden=false;}
-  var fl=document.getElementById('ebFlag'); if(fl){if(fl.dataset.def==null)fl.dataset.def=fl.textContent; fl.textContent=(B.seatsLeft!=null&&B.seatsLeft!=='')?(B.seatsLeft>0?(B.seatsLeft+' of 10 seats left'):'Early bird full'):fl.dataset.def;}
+  var fl=document.getElementById('ebFlag'); if(fl){if(fl.dataset.def==null)fl.dataset.def=fl.textContent; fl.textContent=(B.seatsLeft!=null&&B.seatsLeft!=='')?(B.seatsLeft>0?('Only '+B.seatsLeft+' seat'+(B.seatsLeft==1?'':'s')+' left'):'Batch full'):fl.dataset.def;}
   };
   renderBatch(B);
   var wu=waLink('Hi! I would like to book the free demo class for the Widgetry Academy Flutter workshop.');
@@ -1479,7 +1473,7 @@ try {
   if(/^\d+$/.test(C.metaPixelId||'')){
     !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
     fbq('init',C.metaPixelId); fbq('track','PageView');
-    document.querySelectorAll('.paybox').forEach(function(b){b.addEventListener('pointerdown',function(){fbq('track','InitiateCheckout',{currency:'INR',value:{earlyBird:3499,regular:4999,booking:2500}[b.getAttribute('data-pay')]||0});},{once:true});});
+    document.querySelectorAll('.paybox').forEach(function(b){b.addEventListener('pointerdown',function(){fbq('track','InitiateCheckout',{currency:'INR',value:{regular:4999,booking:2500}[b.getAttribute('data-pay')]||0});},{once:true});});
   }
 })();
 </script>

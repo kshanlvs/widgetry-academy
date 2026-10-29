@@ -109,7 +109,7 @@ class CourseDetailPage extends StatelessWidget {
                         Fact(icon: Icons.event_rounded, label: s.batch.name ?? 'Next batch', value: s.batch.startDate == null ? 'Dates announced soon' : 'Starts ${s.batch.startDate}'),
                         if (when.isNotEmpty) ...[const SizedBox(height: Space.md), Fact(icon: Icons.schedule_rounded, label: 'Schedule', value: when)],
                         if (s.batch.demo != null) ...[const SizedBox(height: Space.md), Fact(icon: Icons.play_circle_outline_rounded, label: 'Free demo', value: s.batch.demo!)],
-                        if (s.batch.seatsLeft != null) ...[const SizedBox(height: Space.md), Fact(icon: Icons.event_seat_outlined, label: 'Early-bird seats', value: '${s.batch.seatsLeft} left')],
+                        if (s.batch.seatsLeft != null) ...[const SizedBox(height: Space.md), Fact(icon: Icons.event_seat_outlined, label: 'Seats left', value: '${s.batch.seatsLeft} left')],
                       ]),
                     ),
                     const SizedBox(height: Space.xxl),

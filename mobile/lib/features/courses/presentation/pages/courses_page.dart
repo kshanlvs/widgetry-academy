@@ -152,7 +152,7 @@ class _FeaturedCourse extends StatelessWidget {
                   ),
                 ]),
               ),
-              if (batch.seatsLeft != null) Padding(padding: const EdgeInsets.only(top: Space.sm), child: Text('${batch.seatsLeft} early-bird seats left', style: t.bodySmall?.copyWith(color: AppColors.gold, fontWeight: FontWeight.w700))),
+              if (batch.seatsLeft != null) Padding(padding: const EdgeInsets.only(top: Space.sm), child: Text('${batch.seatsLeft} seats left in this batch', style: t.bodySmall?.copyWith(color: AppColors.gold, fontWeight: FontWeight.w700))),
             ],
             const SizedBox(height: Space.lg),
             Row(crossAxisAlignment: CrossAxisAlignment.center, children: [

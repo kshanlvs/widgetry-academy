@@ -5,7 +5,6 @@ window.WIDGETRY = {
   // Razorpay Payment Button IDs (start with "pl_"). Leave "" to show "Online payment opening soon".
   // Use TEST IDs only on a preview channel; on the live site use LIVE IDs or leave empty.
   razorpay: {
-    earlyBird: "pl_Tl4maYsbl2Eaxn",   // ₹3,499 – first 10 seats
     regular:   "pl_Tl4tO3qkfF95TV",   // ₹4,999
     booking:   "pl_Tl4y52Nbm6N2QY"    // ₹2,500 – pay in 2 parts
   },
@@ -18,7 +17,7 @@ window.WIDGETRY = {
     time:      "11:00 AM – 2:00 PM IST", // e.g. "10:00 AM – 12:00 PM IST"
     mode:      "Live online",            // e.g. "Live online (Google Meet)"
     demo:      "",                       // e.g. "Free demo: Sunday, 26 October, 11 AM"
-    seatsLeft: null                      // early-bird seats left, e.g. 7 (null = hide). Keep it honest.
+    seatsLeft: null                      // seats left in the batch, e.g. 7 (null = hide). Keep it honest.
   },
 
   // ---- Contact (Contact page, policy pages, WhatsApp button) ----

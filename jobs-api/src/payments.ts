@@ -115,7 +115,8 @@ const firestoreStore: RegistrationStore = {
     });
   },
   async earlyBirdOpen() {
-    if (env.EARLY_BIRD === "off") return false;
+    // Early bird is off unless EARLY_BIRD=on (Flutter in 10 Days: full fee or 2 parts)
+    if (env.EARLY_BIRD !== "on") return false;
     if (!canSendPush()) return true; // no Firebase service account (tests, local dev): nothing to ask
     try {
       const d = await getFirestore(adminApp()).collection("settings").doc("batch").get();
