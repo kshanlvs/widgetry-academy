@@ -42,7 +42,7 @@ export const config = {
     apiKey: env.ANTHROPIC_API_KEY || "",
     model: env.CHAT_MODEL || "claude-haiku-5-5",
     maxTokens: Number(env.CHAT_MAX_TOKENS || 800),        // hard cap on each reply's length
-    historyLimit: Number(env.CHAT_HISTORY_LIMIT || 20),   // past messages resent to Claude each call
+    historyLimit: Number(env.CHAT_HISTORY_LIMIT || 10),   // past messages resent to Claude each call (more = more cost)
     dailyLimit: Number(env.CHAT_DAILY_LIMIT || 30),       // messages per user per day
   },
 };

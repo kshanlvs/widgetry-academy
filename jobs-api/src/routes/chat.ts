@@ -3,6 +3,7 @@
 // RAG: before asking Claude, we search Widgetry's own material for the question and add the best passages
 // (plus live fees and dates) to the system prompt, so answers match what we teach and never use old prices.
 import { Router } from "express";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { z } from "zod";
 import { query, tx } from "../db.js";
 import { wrap, HttpError } from "../errors.js";
@@ -27,7 +28,12 @@ async function ownConversation(id: number, uid: string) {
   return conv;
 }
 
-chatRouter.post("/chat", requireAuth, wrap(async (req, res) => {
+// Per device as well as per account: new accounts are free to make, a network's address isn't
+const chatIpLimit = rateLimit({ windowMs: 60 * 60 * 1000, limit: Number(process.env.CHAT_IP_HOURLY || 60), standardHeaders: "draft-7", legacyHeaders: false,
+  keyGenerator: req => ipKeyGenerator(req.ip ?? "0.0.0.0"),
+  handler: (_req, res) => res.status(429).json({ error: "Lots of questions from your network right now. Please try again in a while." }) });
+
+chatRouter.post("/chat", requireAuth, chatIpLimit, wrap(async (req, res) => {
   const uid = req.user!.uid;
   const { conversationId, message } = sendBody.parse(req.body);
 

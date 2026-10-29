@@ -1,6 +1,7 @@
 // Admin → Overview: everything new in one place (registrations, payments, mock interviews,
 // mentors, jobs, profiles, app installs), with the previous period for comparison and a to-do list.
 import { Router } from "express";
+import { aiUsage, aiDailyBudget, aiPrices } from "../chat.js";
 import { z } from "zod";
 import { getFirestore } from "firebase-admin/firestore";
 import { adminApp } from "../firebase.js";
@@ -37,6 +38,14 @@ export const istDay = (d: Date) => new Date(d.getTime() + IST).toISOString().sli
 const PAID = new Set(["paid", "full", "completed", "part-paid"]);
 
 export const overviewRouter = Router();
+
+/** AI spend: the last 24 hours against the daily budget, and the last 30 days. Estimated from logged tokens. */
+overviewRouter.get("/ai-usage", wrap(async (_req, res) => {
+  const [day, month] = await Promise.all([aiUsage(new Date(Date.now() - 86_400_000)), aiUsage(new Date(Date.now() - 30 * 86_400_000))]);
+  const r = (x: { input: number; output: number; calls: number; usd: number }) => ({ ...x, usd: Math.round(x.usd * 10000) / 10000 });
+  res.set("Cache-Control", "private, no-store");
+  res.json({ last24h: r(day), last30d: r(month), dailyBudgetUsd: aiDailyBudget(), prices: aiPrices() });
+}));
 
 overviewRouter.get("/overview", wrap(async (req, res) => {
   const days = z.coerce.number().int().refine(v => [7, 30, 90].includes(v)).default(30).parse(req.query.days ?? 30);

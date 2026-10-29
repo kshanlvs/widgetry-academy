@@ -2,6 +2,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { config } from "./config.js";
 import { HttpError } from "./errors.js";
+import { query } from "./db.js";
 
 export type ChatRole = "user" | "assistant";
 export interface ChatTurn { role: ChatRole; content: string }
@@ -61,6 +62,41 @@ const claude: ChatModel = async (system, messages, opts) => {
   }
 };
 
-export function askModel(system: string, messages: ChatTurn[], opts?: { maxTokens?: number }): Promise<ChatReply> {
-  return (override ?? claude)(system, messages, opts);
+// ---------- Cost cap ----------
+// Every AI call (tutor, resume writer, AI import) goes through askModel. Before each call we check what all of
+// them cost in the last 24 hours; over the budget, AI pauses until usage drops, instead of the bill growing.
+// Prices default to Claude Haiku 5.5 (USD per million tokens); set them if CHAT_MODEL changes.
+const env = process.env;
+export const aiPrices = () => ({ input: Number(env.AI_PRICE_INPUT_PER_MTOK || 0.10), output: Number(env.AI_PRICE_OUTPUT_PER_MTOK || 0.50) });
+export const aiDailyBudget = () => Number(env.AI_DAILY_BUDGET_USD || 2);
+export const aiCost = (input: number, output: number) => (input * aiPrices().input + output * aiPrices().output) / 1e6;
+
+/** Tokens used in a window, from the tables that log every AI call. */
+export async function aiUsage(since: Date) {
+  const [[chat], [resume]] = await Promise.all([
+    query<{ i: number; o: number; n: number }>("SELECT COALESCE(SUM(input_tokens),0) AS i, COALESCE(SUM(output_tokens),0) AS o, COUNT(*) AS n FROM chat_messages WHERE role = 'assistant' AND created_at > ?", [since]),
+    query<{ i: number; o: number; n: number }>("SELECT COALESCE(SUM(input_tokens),0) AS i, COALESCE(SUM(output_tokens),0) AS o, COUNT(*) AS n FROM resume_ai_usage WHERE created_at > ?", [since]),
+  ]);
+  const input = Number(chat!.i) + Number(resume!.i), output = Number(chat!.o) + Number(resume!.o);
+  return { input, output, calls: Number(chat!.n) + Number(resume!.n), usd: aiCost(input, output) };
+}
+
+// Re-read from the database once a minute; calls in between are added as they happen
+let spent = { at: 0, usd: 0 }, warned = 0;
+async function spentToday() {
+  if (Date.now() - spent.at > 60_000) spent = { at: Date.now(), usd: (await aiUsage(new Date(Date.now() - 86_400_000))).usd };
+  return spent.usd;
+}
+/** Tests reset the cached total. */
+export function resetAiSpend() { spent = { at: 0, usd: 0 }; }
+
+export async function askModel(system: string, messages: ChatTurn[], opts?: { maxTokens?: number }): Promise<ChatReply> {
+  const budget = aiDailyBudget();
+  if (budget > 0 && (await spentToday()) >= budget) {
+    if (Date.now() - warned > 3_600_000) { warned = Date.now(); console.warn(`[ai] daily budget of $${budget} reached: AI paused until usage drops`); }
+    throw new HttpError(503, "The AI assistant is resting for a few hours. Please try again later.");
+  }
+  const reply = await (override ?? claude)(system, messages, opts);
+  spent.usd += aiCost(reply.inputTokens || 0, reply.outputTokens || 0);
+  return reply;
 }

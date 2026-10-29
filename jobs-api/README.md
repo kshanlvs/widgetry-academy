@@ -50,6 +50,9 @@ Students ask Flutter questions and Claude answers (`src/chat.ts`, `src/routes/ch
 - Signed-in users only; each user sees only their own chats.
 - The server owns the history: the app sends only the new message, the API resends the latest `CHAT_HISTORY_LIMIT` (20) messages to Claude.
 - Limits: `CHAT_DAILY_LIMIT` (30) questions per user per 24 hours, `CHAT_MAX_TOKENS` (800) per reply. Model: `CHAT_MODEL` (default `claude-haiku-5-5`).
+- **Cost cap (all AI features):** `AI_DAILY_BUDGET_USD` (default 2). When the AI calls of the last 24 hours (tutor, resume writer, AI import) reach it, AI pauses with a friendly message until usage drops. `0` turns the cap off. Costs are estimated from logged tokens at `AI_PRICE_INPUT_PER_MTOK` (0.10) and `AI_PRICE_OUTPUT_PER_MTOK` (0.50), Claude Haiku 5.5 prices in USD: update them if you change `CHAT_MODEL`. Admin → Overview shows the spend; `GET /api/admin/ai-usage` returns it.
+- Tutor per network: `CHAT_IP_HOURLY` (60) questions per hour from one IP address, on top of the per-account limit. `CHAT_HISTORY_LIMIT` (10) earlier messages are resent with each question.
+- Also set a **monthly spend limit in the Claude Console** (Organization settings → Billing → Spend limits): it's the final hard stop if anything here is misconfigured.
 - Token counts are saved on each reply, so cost per user can be checked in `chat_messages`.
 
 ## Run locally

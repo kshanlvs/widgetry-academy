@@ -1467,3 +1467,25 @@ test("Guests (the app before signing in) can preview a resume and see its ATS sc
   }
   assert.equal(((await pool.query("SELECT COUNT(*) AS n FROM candidates")) as any)[0][0].n, before);
 });
+
+test("AI cost cap: over the daily budget every AI feature pauses; admins can see the spend", async () => {
+  const { setChatModel, resetAiSpend } = await import("../src/chat.js");
+  setChatModel(async () => ({ text: "ok", stopReason: "end_turn", inputTokens: 1000, outputTokens: 200 }));
+  const me = "dev:cap1:cap@test.dev:Cap";
+  try {
+    process.env.AI_DAILY_BUDGET_USD = "0.5"; resetAiSpend();
+    assert.equal((await call("POST", "/chat", { message: "What is Bloc?" }, me, "10.8.8.1")).status, 200, "under budget");
+    // Someone used a lot of AI today: $1 at Haiku prices
+    await pool.query("INSERT INTO resume_ai_usage (uid, action, input_tokens, output_tokens) VALUES ('cap-x', 'tailor', 5000000, 1000000)");
+    resetAiSpend();
+    const r = await call("POST", "/chat", { message: "And Riverpod?" }, me, "10.8.8.1");
+    assert.equal(r.status, 503); assert.match(r.body.error, /resting/);
+    const u = await call("GET", "/admin/ai-usage", undefined, ADMIN);
+    assert.equal(u.status, 200);
+    assert.ok(u.body.last24h.usd >= 1 && u.body.dailyBudgetUsd === 0.5 && u.body.last30d.calls >= u.body.last24h.calls);
+    assert.equal((await call("GET", "/admin/ai-usage", undefined, me)).status, 403);
+  } finally {
+    delete process.env.AI_DAILY_BUDGET_USD; setChatModel(null); resetAiSpend();
+    await pool.query("DELETE FROM resume_ai_usage WHERE uid = 'cap-x'");
+  }
+});

@@ -1182,6 +1182,13 @@ async function loadOverview() {
       ["New app installs", k.appDevices, false, "phones that turned on notifications"],
     ];
     $("ovTiles").innerHTML = tiles.map(([label, x, money, note]) => `<div class="tile"><div class="l">${label}</div><div class="v">${money ? rs(x.value) : nfmt(x.value)}</div><div class="d">${deltaText(x.value, x.prev, money)}</div>${note ? `<div class="d">${esc(note)}</div>` : ""}</div>`).join("");
+    // AI spend (Claude API), estimated from logged tokens; AI pauses when the last 24 hours reach the daily budget
+    japi("/admin/ai-usage").then(u => {
+      const pct = u.dailyBudgetUsd > 0 ? Math.round((u.last24h.usd / u.dailyBudgetUsd) * 100) : 0;
+      $("ovTiles").insertAdjacentHTML("beforeend", `<div class="tile"><div class="l">AI spend, last 24 hours</div><div class="v">$${u.last24h.usd.toFixed(2)}</div>
+        <div class="d" style="color:${pct >= 80 ? "#c23b3b" : "inherit"}">${pct}% of the $${u.dailyBudgetUsd} daily cap · ${nfmt(u.last24h.calls)} AI calls</div>
+        <div class="d">$${u.last30d.usd.toFixed(2)} in the last 30 days</div></div>`);
+    }).catch(() => {});
     const t = o.todo;
     const todo = [
       ["Jobs to review", t.jobsInReview, "japp"], ["Reported jobs", t.reportedJobs, "japp"], ["Refunds due", t.refundsDue, "iapp"],
