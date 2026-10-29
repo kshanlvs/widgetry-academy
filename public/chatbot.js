@@ -146,7 +146,7 @@
       act: [], rel: ["courses", "career"] },
     { id: "mock", q: "Do you offer mock interviews?",
       k: ["mock interview", "mock interviews", "mock", "interview practice", "practice interview", "interview preparation", "interview prep", "interview questions"],
-      a: "Yes. Book a one-to-one mock interview with a working engineer in the Widgetry app: Settings, then Mock interviews. You pick your track and level, get a scorecard afterwards, and can show the result on your Widgetry profile. Our free interview questions guide helps you prepare.",
+      a: "Yes, for Flutter. Book a one-to-one mock interview with a working engineer at widgetryacademy.in/mock-interview.html, or in the Widgetry app under Settings, then Mock interviews. You pick your level and a time, get a scorecard afterwards, and can show the result on your Widgetry profile. Our free interview questions guide helps you prepare.",
       act: [["Interview questions guide", "link", "blog/flutter-interview-questions.html"]], rel: ["jobs", "career"] },
     { id: "jobs", q: "Where can I find Flutter jobs?",
       k: ["widgetry jobs", "job board", "find jobs", "find a job", "job openings", "openings", "vacancy", "vacancies", "flutter jobs", "android jobs", "ios jobs", "resume builder", "free resume", "post a job"],

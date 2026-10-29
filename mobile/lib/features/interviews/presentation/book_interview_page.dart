@@ -129,12 +129,15 @@ class _Choose extends StatelessWidget {
     final o = s.options!;
     final cubit = context.read<BookInterviewCubit>();
     return ListView(padding: const EdgeInsets.fromLTRB(Space.page, Space.sm, Space.page, Space.xxl), children: [
-      Text('Track', style: t.titleSmall),
-      const SizedBox(height: Space.sm),
-      Wrap(spacing: 8, runSpacing: 8, children: [
-        for (final tr in o.tracks) ChoiceChip(label: Text(tr.name), selected: s.track == tr.id, onSelected: (_) => cubit.setTrack(tr.id)),
-      ]),
-      const SizedBox(height: Space.xl),
+      // One track (Flutter for now): nothing to choose
+      if (o.tracks.length > 1) ...[
+        Text('Track', style: t.titleSmall),
+        const SizedBox(height: Space.sm),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          for (final tr in o.tracks) ChoiceChip(label: Text(tr.name), selected: s.track == tr.id, onSelected: (_) => cubit.setTrack(tr.id)),
+        ]),
+        const SizedBox(height: Space.xl),
+      ],
       Text('Your level', style: t.titleSmall),
       const SizedBox(height: Space.sm),
       for (final l in o.levels) _OptionCard(title: l.name, note: l.note, trailing: Fmt.rupees(l.price ?? 0), selected: s.level == l.id, onTap: () => cubit.setLevel(l.id)),

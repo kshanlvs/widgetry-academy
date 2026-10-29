@@ -13,12 +13,20 @@ import { gateway, paymentsEnabled } from "./payments.js";
 
 const env = process.env;
 
+/** Every track an interviewer can take (their profiles keep these). */
 export const TRACKS = [
   { id: "flutter", name: "Flutter" },
   { id: "android", name: "Android" },
   { id: "ios", name: "iOS" },
 ] as const;
 export type TrackId = (typeof TRACKS)[number]["id"];
+const TRACK_NAMES: Record<string, string> = Object.fromEntries(TRACKS.map(t => [t.id, t.name]));
+/** Tracks people can book: MOCK_TRACKS (comma separated), Flutter only by default. */
+export const bookableTracks = () => {
+  const want = (env.MOCK_TRACKS || "flutter").split(",").map(s => s.trim()).filter(Boolean);
+  const list = TRACKS.filter(t => want.includes(t.id));
+  return list.length ? list : TRACKS.filter(t => t.id === "flutter");
+};
 
 const rupees = (name: string, fallback: number) => Number(env[name] || fallback);
 export const LEVELS = () => [
@@ -48,7 +56,7 @@ export const MIN_NOTICE_HOURS = 2;
 export const CANCEL_HOURS = 24;
 
 export const levelPrice = (level: string) => LEVELS().find(l => l.id === level)?.price ?? 0;
-export const trackName = (t: string) => TRACKS.find(x => x.id === t)?.name ?? t;
+export const trackName = (t: string) => TRACK_NAMES[t] ?? t;
 export const levelName = (l: string) => LEVELS().find(x => x.id === l)?.name ?? l;
 export const formatName = (f: string) => FORMATS.find(x => x.id === f)?.name ?? f;
 export const mockTitle = (b: { track: string; level: string; format?: string }) => `Mock interview · ${trackName(b.track)} · ${levelName(b.level)}`;

@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flutter Mock Interview with a Working Engineer | Widgetry</title>
+<meta name="description" content="Book a one-to-one Flutter mock interview with a working engineer. Live video call, real interview questions and a written scorecard with what to improve. From ₹499.">
+<link rel="canonical" href="https://widgetryacademy.in/mock-interview.html">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Widgetry Academy">
+<meta property="og:title" content="Flutter mock interview with a working engineer | Widgetry">
+<meta property="og:description" content="One-to-one video call, real Flutter interview questions and a written scorecard. Book a slot that suits you.">
+<meta property="og:url" content="https://widgetryacademy.in/mock-interview.html"><meta property="og:image" content="https://widgetryacademy.in/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@500&display=swap">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Service","name":"Flutter mock interview","serviceType":"Mock technical interview","url":"https://widgetryacademy.in/mock-interview.html",
+ "description":"A one-to-one Flutter mock interview over video with a working engineer, with a written scorecard: platform knowledge, problem solving, architecture and state, debugging and testing, and communication.",
+ "provider":{"@type":"EducationalOrganization","@id":"https://widgetryacademy.in/#org","name":"Widgetry Academy","url":"https://widgetryacademy.in/"},
+ "areaServed":"IN","offers":{"@type":"Offer","price":499,"priceCurrency":"INR","url":"https://widgetryacademy.in/mock-interview.html"}}
+</script>
+<style>
+:root{
+  --bg:#f3f6f4; --surface:#fff; --ink:#0e1f1a; --muted:#4f6359; --line:#d8e2dc;
+  --accent:#0f6b56; --gold:#f2a900; --deep:#0c2a23; --deep-line:#245446; --deep-fg:#eaf3ee; --deep-muted:#b3cbbf; --soft:#e3efe9;
+  --bad:#c23b3b; --ok:#1f8a4c; --warn:#a35f00;
+  --display:"Unbounded","Segoe UI",system-ui,sans-serif; --body:"DM Sans","Segoe UI",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6}
+a{color:var(--accent)}
+.w{max-width:1100px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.02em;line-height:1.15}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;padding:14px 24px;border-radius:12px;text-decoration:none;border:0;font:inherit;font-weight:700;cursor:pointer;min-height:48px}
+.btn:hover{filter:brightness(1.08)}
+.btn.gold{background:var(--gold);color:var(--deep)}
+.btn.ghost{background:transparent;color:var(--accent);border:2px solid var(--line)}
+.btn.small{padding:8px 14px;min-height:38px;font-size:15px}
+.btn[disabled]{opacity:.6;cursor:wait}
+
+.top{background:var(--deep);color:var(--deep-fg)}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 0;flex-wrap:wrap}
+.brand{color:#fff;text-decoration:none;font-family:var(--display);font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px}
+.mark{display:grid;grid-template-columns:1fr 1fr;gap:3px;width:26px;height:26px}
+.mark i{border-radius:3px;background:#3fc79f}.mark i:nth-child(2),.mark i:nth-child(3){background:var(--gold)}
+.nav a.l{color:var(--deep-fg);text-decoration:none;font-weight:500;margin-left:18px}
+
+.hero{padding:40px 0 64px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:start}
+.kicker{display:inline-block;background:var(--gold);color:var(--deep);font-weight:700;font-size:14px;letter-spacing:.08em;padding:6px 12px;border-radius:8px;transform:rotate(-1.5deg)}
+.hero h1{color:#fff;font-size:clamp(32px,5vw,54px);font-weight:800;margin:18px 0 16px}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p.lede{color:var(--deep-muted);font-size:19px;margin:0 0 22px;max-width:540px}
+.facts{display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0;list-style:none}
+.facts li{border:1px solid var(--deep-line);border-radius:999px;padding:7px 14px;font-size:15px;color:var(--deep-fg)}
+
+.book{background:var(--surface);color:var(--ink);border-radius:20px;padding:24px;box-shadow:0 18px 40px rgba(0,0,0,.25);display:grid;gap:16px;scroll-margin-top:20px}
+.book h2{font-size:20px;margin:0}
+.step{font-weight:700;font-size:15px;margin:0 0 8px;display:flex;gap:8px;align-items:center}
+.step i{font-style:normal;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px}
+.levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.opt{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;cursor:pointer;text-align:left;font:inherit;display:grid;gap:2px}
+.opt b{font-size:15px}.opt span{font-size:13px;color:var(--muted)}.opt .p{font-weight:700;color:var(--ink);font-size:15px}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:#f1faf6;box-shadow:inset 0 0 0 1px var(--accent)}
+.formats{display:grid;gap:8px}
+.slots{display:grid;gap:12px;max-height:330px;overflow:auto;padding-right:4px}
+.day b{display:block;font-size:14px;color:var(--muted);margin-bottom:6px}
+.times{display:flex;flex-wrap:wrap;gap:8px}
+.times button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font:inherit;font-weight:600;font-size:15px;cursor:pointer}
+.times button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:#fff}
+.who{background:var(--soft);border-radius:12px;padding:10px 12px;font-size:15px}
+textarea{font:inherit;width:100%;min-height:72px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;resize:vertical}
+label.chk{display:flex;gap:8px;align-items:flex-start;font-size:15px}
+label.chk input{margin-top:5px}
+.sum{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:12px}
+.sum b{font-family:var(--display);font-size:30px}
+.muted{color:var(--muted)}.small{font-size:14.5px}
+.err{color:var(--bad);font-weight:600;margin:0}
+.okbox{background:#e8f7ef;border:1px solid #b9e5cc;border-radius:12px;padding:14px;display:grid;gap:8px}
+.skel{height:180px;border-radius:12px;background:linear-gradient(90deg,#eef2f0,#f7f9f8,#eef2f0);background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+
+section.band{padding:56px 0}
+.band h2{font-size:clamp(24px,3.2vw,34px);margin:0 0 10px}
+.band .sub{color:var(--muted);margin:0 0 26px;max-width:700px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px}
+.card h3{font-size:17px;margin:0 0 8px}
+.card p{margin:0;color:var(--muted)}
+.n{font-family:var(--mono);font-size:13px;color:var(--accent)}
+.areas{display:flex;flex-wrap:wrap;gap:10px;padding:0;margin:0;list-style:none}
+.areas li{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:600}
+
+.mine{display:grid;gap:14px}
+.bk{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:grid;gap:8px}
+.bk .row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.bk h3{margin:0;font-size:17px}
+.st{font-size:13px;font-weight:700;border-radius:999px;padding:3px 10px;background:var(--soft);color:var(--accent)}
+.st.warn{background:#fff4d6;color:var(--warn)}.st.off{background:#eef0ef;color:var(--muted)}
+.score{display:grid;gap:6px;background:#f7faf8;border-radius:12px;padding:12px 14px}
+.score .big{font-family:var(--display);font-size:26px;color:var(--accent)}
+.bars{display:grid;gap:4px;font-size:14px}
+.bars div{display:grid;grid-template-columns:170px 1fr 28px;gap:8px;align-items:center}
+.bars i{display:block;height:7px;border-radius:9px;background:var(--soft);overflow:hidden}
+.bars i span{display:block;height:100%;background:var(--accent)}
+
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:10px}
+summary{font-weight:700;cursor:pointer}
+details p{margin:10px 0 0;color:var(--muted)}
+footer{background:var(--deep);color:var(--deep-muted);padding:26px 0;font-size:14.5px}
+footer .w{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer a{color:var(--deep-fg)}
+
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr;padding-top:20px}
+  .grid3{grid-template-columns:1fr}
+  .nav a.l.hide-m{display:none}
+}
+@media (max-width:520px){
+  .book{padding:18px}
+  .levels{grid-template-columns:1fr}
+  .bars div{grid-template-columns:120px 1fr 24px}
+}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="w">
+    <nav class="nav" aria-label="Main">
+      <a class="brand" href="./"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Widgetry Academy</a>
+      <div><a class="l hide-m" href="./#courses">Courses</a><a class="l hide-m" href="jobs.html">Jobs</a><a class="l hide-m" href="resume-builder.html">Resume</a><a class="l" href="#book">Book</a></div>
+    </nav>
+
+    <div class="hero">
+      <div>
+        <span class="kicker">ONE-TO-ONE · LIVE VIDEO CALL</span>
+        <h1>A <em>Flutter</em> mock interview with a working engineer.</h1>
+        <p class="lede">Practise the real thing before the real thing. Real Flutter interview questions, your own projects, a short coding task, then a written scorecard that shows exactly what to fix.</p>
+        <ul class="facts">
+          <li>🎥 Live video call</li><li>⏱ About 45–60 minutes</li><li>📝 Written scorecard</li><li>💸 From ₹499</li>
+        </ul>
+      </div>
+      <div class="book" id="book" aria-live="polite">
+        <div id="bLoading"><h2>Book your mock interview</h2><div class="skel" style="margin-top:14px"></div></div>
+        <div id="bBody" hidden></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="band" id="mineBand" hidden aria-labelledby="hMine">
+  <div class="w">
+    <h2 id="hMine">My mock interviews</h2>
+    <p class="sub">Joining links, scorecards and cancellations. You'll also get reminders on WhatsApp or in the app.</p>
+    <div class="mine" id="mine"></div>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="hHow">
+  <div class="w">
+    <h2 id="hHow">How it works</h2>
+    <p class="sub">Three steps, and you can book a time that suits you.</p>
+    <div class="grid3">
+      <div class="card"><span class="n">01</span><h3>Pick your level and a time</h3><p>Fresher, mid level or senior. Choose a technical, coding or app design round and add anything you want to focus on.</p></div>
+      <div class="card"><span class="n">02</span><h3>Join the call</h3><p>The joining link appears here once you've paid. The interviewer runs it like a real interview, then gives you feedback on the call.</p></div>
+      <div class="card"><span class="n">03</span><h3>Get your scorecard</h3><p>Scores out of 5 in each area, your strengths, what to improve and an honest hiring recommendation. You can show it on your Widgetry profile.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0" aria-labelledby="hAreas">
+  <div class="w">
+    <h2 id="hAreas">What you're scored on</h2>
+    <p class="sub">The same things Flutter interviewers look for at product companies and startups.</p>
+    <ul class="areas" id="areas"><li>Platform knowledge</li><li>Problem solving &amp; code</li><li>Architecture &amp; state</li><li>Debugging &amp; testing</li><li>Communication</li></ul>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0" aria-labelledby="hFaq">
+  <div class="w" style="max-width:820px">
+    <h2 id="hFaq" style="margin-bottom:20px">Questions</h2>
+    <details><summary>Who takes the interview?</summary><p>A working Flutter engineer who interviews developers. You see their name, role and experience before you book.</p></details>
+    <details><summary>Which level should I pick?</summary><p>Fresher if you have up to a year of experience (or none), mid level for 2–4 years, senior for 5 or more. The questions and the bar follow the level.</p></details>
+    <details><summary>What should I prepare?</summary><p>Have Flutter and your editor ready, and be able to talk through one app you built. The coding task is short and uses plain Dart and Flutter.</p></details>
+    <details><summary>Can I cancel?</summary><p>Yes. Cancel here up to 24 hours before for a full refund. Closer than that, message us on WhatsApp and we'll help. See the <a href="refund.html">refund policy</a>.</p></details>
+    <details><summary>Do you do Android or iOS interviews?</summary><p>Not right now: mock interviews are for Flutter only.</p></details>
+    <details><summary>I have another question</summary><p>Message us on <a id="waLink" href="contact.html" target="_blank" rel="noopener">WhatsApp</a> or use the <a href="contact.html">contact page</a>.</p></details>
+  </div>
+</section>
+
+<footer>
+  <div class="w">
+    <span>© 2026 Widgetry Academy · Kolkata, India</span>
+    <span><a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="refund.html">Refunds</a> · <a href="contact.html">Contact</a></span>
+  </div>
+</footer>
+
+<script src="site-config.js"></script>
+<script type="module">
+import { watchAuthState, getCurrentUser } from './js/auth.js';
+import { JOBS_API } from './jobs-api-url.js';
+
+const TRACK = "flutter";
+const $ = id => document.getElementById(id);
+const esc = t => { const d = document.createElement("div"); d.textContent = t ?? ""; return d.innerHTML; };
+const inr = n => "₹" + Number(n || 0).toLocaleString("en-IN");
+const wa = (window.WIDGETRY || {}).whatsapp || "";
+const waHref = text => wa ? `https://wa.me/${wa}?text=${encodeURIComponent(text)}` : "contact.html";
+if (wa) $("waLink").href = waHref("Hi! I have a question about the Flutter mock interview.");
+const IST = { timeZone: "Asia/Kolkata" };
+const dayOf = iso => new Date(iso).toLocaleDateString("en-IN", { ...IST, weekday: "long", day: "numeric", month: "short" });
+const timeOf = iso => new Date(iso).toLocaleTimeString("en-IN", { ...IST, hour: "numeric", minute: "2-digit" });
+const when = iso => `${dayOf(iso)}, ${timeOf(iso)} IST`;
+
+let user = null, opts = null, slots = [], mine = [], loadErr = "";
+let pick = { level: "", format: "technical", slotId: null, focus: "", share: true }, busy = false;
+// Choices made before signing in come back after it
+try { Object.assign(pick, JSON.parse(sessionStorage.getItem("wa_mock_pick") || "{}")); } catch {}
+const remember = () => { try { sessionStorage.setItem("wa_mock_pick", JSON.stringify(pick)); } catch {} };
+
+async function api(path, { method = "GET", body } = {}) {
+  const headers = { "content-type": "application/json" };
+  const u = getCurrentUser();
+  if (u) headers.authorization = "Bearer " + await u.getIdToken();
+  let r;
+  try { r = await fetch(JOBS_API + path, { method, headers, body: body ? JSON.stringify(body) : undefined }); }
+  catch { throw new Error("Network problem. Check your connection and try again."); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "Something went wrong. Please try again.");
+  return d;
+}
+
+async function load() {
+  try {
+    [opts, { slots }] = await Promise.all([opts ? Promise.resolve(opts) : api("/mock/options"), api("/mock/slots?track=" + TRACK)]);
+    loadErr = "";
+    if (!pick.level || !opts.levels.some(l => l.id === pick.level)) pick.level = opts.levels[0]?.id || "fresher";
+    if (pick.slotId && !slots.some(s => s.id === pick.slotId)) pick.slotId = null;
+  } catch (e) { loadErr = e.message; }
+  if (user) { try { mine = (await api("/mock/mine")).bookings || []; } catch { mine = []; } } else mine = [];
+  render(); renderMine();
+}
+
+function show(html) { $("bLoading").hidden = true; const b = $("bBody"); b.hidden = false; b.innerHTML = html; b.style.display = "grid"; b.style.gap = "16px"; }
+
+function render() {
+  if (loadErr) return show(`<h2>Book your mock interview</h2><p class="err">${esc(loadErr)}</p><a class="btn gold" href="${waHref("Hi! I'd like to book a Flutter mock interview.")}" target="_blank" rel="noopener">Book on WhatsApp</a>`);
+  if (!opts.enabled) return show(`<h2>Book your mock interview</h2><p class="muted" style="margin:0">Online booking opens soon. Message us and we'll fix a time with you.</p><a class="btn gold" href="${waHref("Hi! I'd like to book a Flutter mock interview.")}" target="_blank" rel="noopener">Book on WhatsApp</a>`);
+  const level = opts.levels.find(l => l.id === pick.level);
+  const fmt = opts.formats.find(f => f.id === pick.format) || opts.formats[0];
+  // Open slots grouped by day (India time)
+  const days = [];
+  for (const s of slots) { const d = dayOf(s.startsAt); const g = days.find(x => x.d === d) || (days.push({ d, items: [] }), days[days.length - 1]); g.items.push(s); }
+  const slot = slots.find(s => s.id === pick.slotId);
+  const slotsHtml = days.length
+    ? `<div class="slots">${days.map(g => `<div class="day"><b>${esc(g.d)}</b><div class="times">${g.items.map(s => `<button type="button" data-slot="${s.id}" aria-pressed="${s.id === pick.slotId}">${esc(timeOf(s.startsAt))}</button>`).join("")}</div></div>`).join("")}</div>`
+    : `<div class="okbox" style="background:#fff8ea;border-color:#f3dfb0"><span>No open times right now. New times are added every week.</span><a class="btn small gold" href="${waHref("Hi! Please tell me when new Flutter mock interview times are open.")}" target="_blank" rel="noopener">Tell me on WhatsApp</a></div>`;
+  show(`<h2>Book your Flutter mock interview</h2>
+    <div><p class="step"><i>1</i>Your level</p><div class="levels" role="group" aria-label="Your level">${opts.levels.map(l => `<button type="button" class="opt" data-level="${l.id}" aria-pressed="${l.id === pick.level}"><b>${esc(l.name)}</b><span>${esc(l.note || "")}</span><span class="p">${inr(l.price)}</span></button>`).join("")}</div></div>
+    <div><p class="step"><i>2</i>Round</p><div class="formats" role="group" aria-label="Interview round">${opts.formats.map(f => `<button type="button" class="opt" data-format="${f.id}" aria-pressed="${f.id === fmt.id}"><b>${esc(f.name)}</b><span>${esc(f.note || "")}</span></button>`).join("")}</div></div>
+    <div><p class="step"><i>3</i>Pick a time <span class="small muted" style="font-weight:400">(India time)</span></p>${slotsHtml}</div>
+    ${slot ? `<div class="who">With <b>${esc(slot.interviewer.name)}</b>${slot.interviewer.title ? `, ${esc(slot.interviewer.title)}` : ""}${slot.interviewer.company ? ` at ${esc(slot.interviewer.company)}` : ""}${slot.interviewer.years ? ` · ${slot.interviewer.years} years` : ""}<br><span class="small muted">${esc(when(slot.startsAt))} · ${slot.durationMin} minutes</span></div>` : ""}
+    <label class="small" for="focus" style="font-weight:600;display:grid;gap:6px">Anything to focus on? <span class="muted" style="font-weight:400">(optional)</span><textarea id="focus" maxlength="500" placeholder="e.g. Bloc and clean architecture, I have a product company interview next week">${esc(pick.focus)}</textarea></label>
+    <label class="chk"><input type="checkbox" id="share" ${pick.share ? "checked" : ""}> <span>Share my Widgetry profile and resume with the interviewer, so the questions fit my experience</span></label>
+    <div class="sum"><span class="muted">${esc(level?.name || "")} · ${esc(fmt.name)}</span><b>${inr(level?.price)}</b></div>
+    <p class="err" id="bErr" hidden></p>
+    ${user
+      ? `<button class="btn gold" id="bPay" type="button" ${slot ? "" : "disabled"}>${slot ? `Pay ${inr(level?.price)} &amp; book` : "Pick a time to book"}</button>
+         <span class="small muted">Secure payment by Razorpay: UPI, cards, net banking. The time is held for you for ${opts.rules.holdMinutes} minutes while you pay. Full refund if you cancel ${opts.rules.cancelHours}+ hours before.</span>`
+      : `<a class="btn gold" id="bSignin" href="pages/login.html?next=${encodeURIComponent("/mock-interview.html#book")}">Sign in to book</a>
+         <span class="small muted">New here? Create a free account on the sign-in page. Your choices are kept.</span>`}`);
+  document.querySelectorAll("[data-level]").forEach(b => b.onclick = () => { pick.level = b.dataset.level; remember(); render(); });
+  document.querySelectorAll("[data-format]").forEach(b => b.onclick = () => { pick.format = b.dataset.format; remember(); render(); });
+  document.querySelectorAll("[data-slot]").forEach(b => b.onclick = () => { pick.slotId = Number(b.dataset.slot); remember(); render(); });
+  $("focus").oninput = e => { pick.focus = e.target.value; remember(); };
+  $("share").onchange = e => { pick.share = e.target.checked; remember(); };
+  const pay = $("bPay"); if (pay) pay.onclick = book;
+  const si = $("bSignin"); if (si) si.onclick = remember;
+}
+
+const STATUS = { created: ["Waiting for payment", "warn"], confirmed: ["Booked", ""], completed: ["Done", ""], cancelled: ["Cancelled", "off"], refund_due: ["Cancelled · refund on its way", "off"], refunded: ["Refunded", "off"], no_show: ["Missed", "off"] };
+const REC = { strong_hire: "Strong hire", hire: "Hire", lean_no: "Not yet", no: "Not yet" };
+function renderMine() {
+  const band = $("mineBand");
+  band.hidden = !user || !mine.length;
+  if (band.hidden) return;
+  const areaName = id => (opts?.areas || []).find(a => a.id === id)?.name || id;
+  $("mine").innerHTML = mine.map(b => {
+    const [label, cls] = STATUS[b.status] || [b.status, "off"];
+    const sc = b.scorecard;
+    return `<div class="bk">
+      <div class="row"><h3>${esc(b.title)}</h3><span class="st ${cls}">${esc(label)}</span></div>
+      <span class="small muted">${esc(when(b.startsAt))} · ${b.durationMin} minutes${b.interviewer ? ` · with ${esc(b.interviewer.name)}` : ""}</span>
+      ${b.status === "confirmed" ? (b.meetingLink ? `<a class="btn small" href="${esc(b.meetingLink)}" target="_blank" rel="noopener" style="justify-self:start">Join the call ↗</a>` : `<span class="small">The joining link appears here before the interview.</span>`) : ""}
+      ${sc ? `<div class="score"><div class="row"><span><span class="big">${Number(sc.overall).toFixed(1)}</span><span class="muted"> / 5 overall</span></span><span class="st">${esc(REC[sc.recommendation] || "")}</span></div>
+        <div class="bars">${Object.entries(sc.scores || {}).map(([k, v]) => `<div><span>${esc(areaName(k))}</span><i><span style="width:${(Number(v) / 5) * 100}%"></span></i><b>${Number(v)}</b></div>`).join("")}</div>
+        ${sc.strengths ? `<p style="margin:6px 0 0"><b>Strengths:</b> ${esc(sc.strengths)}</p>` : ""}${sc.improve ? `<p style="margin:0"><b>To improve:</b> ${esc(sc.improve)}</p>` : ""}</div>` : ""}
+      ${b.canCancel ? `<button class="btn small ghost" type="button" data-cancel="${b.id}" style="justify-self:start">Cancel${b.status === "confirmed" ? " for a full refund" : ""}</button>` : ""}
+    </div>`;
+  }).join("");
+  document.querySelectorAll("[data-cancel]").forEach(btn => btn.onclick = async () => {
+    if (!confirm("Cancel this mock interview?")) return;
+    btn.disabled = true;
+    try { const r = await api(`/mock/bookings/${btn.dataset.cancel}/cancel`, { method: "POST" }); alert(r.message || "Cancelled."); }
+    catch (e) { alert(e.message); }
+    await load();
+  });
+}
+
+function loadRazorpay() {
+  if (window.Razorpay) return Promise.resolve();
+  return new Promise((ok, bad) => {
+    const s = document.createElement("script"); s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = ok; s.onerror = () => bad(new Error("Couldn't load the payment window. Check your connection and try again.")); document.head.appendChild(s);
+  });
+}
+
+async function book() {
+  if (busy) return;
+  const err = $("bErr"), btn = $("bPay");
+  err.hidden = true; busy = true; btn.disabled = true; btn.textContent = "Opening payment…";
+  const fail = m => { busy = false; err.textContent = m; err.hidden = false; btn.disabled = false; btn.textContent = "Try again"; };
+  try {
+    await loadRazorpay();
+    const o = await api("/mock/book", { method: "POST", body: { slotId: pick.slotId, track: TRACK, level: pick.level, format: pick.format, focus: pick.focus.trim() || undefined, shareProfile: pick.share } });
+    window.gtag && gtag("event", "begin_checkout", { item: "mock_interview", value: o.amount / 100, currency: "INR" });
+    const rzp = new window.Razorpay({
+      key: o.keyId, order_id: o.orderId, amount: o.amount, currency: o.currency, name: o.name, description: o.description, prefill: o.prefill,
+      theme: { color: "#0f6b56" },
+      handler: async resp => {
+        show(`<h2>Confirming your booking…</h2><div class="skel" style="height:80px"></div>`);
+        try { await api("/mock/verify", { method: "POST", body: { orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature } }); }
+        catch { /* the webhook or the next page load confirms it */ }
+        window.gtag && gtag("event", "purchase", { transaction_id: resp.razorpay_payment_id, value: o.amount / 100, currency: "INR", item: "mock_interview" });
+        busy = false; pick = { ...pick, slotId: null, focus: "" }; remember();
+        await load();
+        show(`<h2>You're booked ✓</h2><div class="okbox"><span>Your mock interview is confirmed. Find the time, interviewer and joining link under <b>My mock interviews</b> below.</span><a class="btn small" href="#mineBand" style="justify-self:start">See my booking</a></div>
+          <button class="btn ghost" type="button" id="bAgain">Book another</button>`);
+        $("bAgain").onclick = render;
+      },
+      modal: { ondismiss: () => { busy = false; btn.disabled = false; btn.textContent = "Try again"; } },
+    });
+    rzp.on("payment.failed", r => { err.textContent = (r?.error?.description || "The payment didn't go through.") + " No money was taken for a failed payment."; err.hidden = false; });
+    rzp.open();
+  } catch (x) { fail(x.message); }
+}
+
+watchAuthState(u => { user = u; load(); });
+</script>
+</body>
+</html>

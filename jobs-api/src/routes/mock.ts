@@ -9,7 +9,7 @@ import { gateway, paymentsEnabled, razorpayConfig, validPaymentSignature } from 
 import { notifyUser } from "../notify.js";
 import { loadProfile } from "./talent.js";
 import {
-  AREAS, CANCEL_HOURS, FORMATS, HOLD_MINUTES, LEVELS, MIN_NOTICE_HOURS, RECOMMENDATIONS, TRACKS,
+  AREAS, CANCEL_HOURS, FORMATS, HOLD_MINUTES, LEVELS, MIN_NOTICE_HOURS, RECOMMENDATIONS, TRACKS, bookableTracks,
   fulfilMock, interviewerFor, levelPrice, mockTitle, publicInterviewer, reconcileMock, releaseHold, trackName, users,
 } from "../mock.js";
 
@@ -18,6 +18,8 @@ mockRouter.use("/mock", (_req, res, next) => { res.set("Cache-Control", "private
 
 const addMinutes = (d: Date, m: number) => new Date(d.getTime() + m * 60_000);
 const trackId = z.enum(TRACKS.map(t => t.id) as [string, ...string[]]);
+/** A track people can book right now. */
+const bookable = z.string().refine(t => bookableTracks().some(x => x.id === t), "Mock interviews are for Flutter only right now.");
 const optUrl = z.preprocess(v => (typeof v === "string" ? v.trim() : v), z.union([z.string().max(400).url("Enter a full link starting with https://").refine(u => /^https:\/\//i.test(u), "Enter a full link starting with https://"), z.literal("")]).optional().nullable()).transform(v => (v ? v : null));
 const id = z.coerce.number().int().positive();
 
@@ -69,14 +71,14 @@ const scorecardOut = (s: any) => ({
 mockRouter.get("/mock/options", wrap(async (_req, res) => {
   res.json({
     enabled: paymentsEnabled(),
-    tracks: TRACKS, levels: LEVELS(), formats: FORMATS, areas: AREAS,
+    tracks: bookableTracks(), levels: LEVELS(), formats: FORMATS, areas: AREAS,
     rules: { holdMinutes: HOLD_MINUTES, minNoticeHours: MIN_NOTICE_HOURS, cancelHours: CANCEL_HOURS },
   });
 }));
 
 /** Open slots for a track over the next 3 weeks, soonest first. */
 mockRouter.get("/mock/slots", wrap(async (req, res) => {
-  const track = trackId.parse(req.query.track ?? "flutter");
+  const track = bookable.parse(req.query.track ?? "flutter");
   const now = new Date();
   const rows = await query<any>(
     `SELECT s.id, s.starts_at, s.duration_min, i.* FROM interview_slots s JOIN interviewers i ON i.uid = s.interviewer_uid
@@ -90,7 +92,7 @@ mockRouter.get("/mock/slots", wrap(async (req, res) => {
 const bookLimit = rateLimit({ windowMs: 60 * 60 * 1000, limit: 20, standardHeaders: "draft-7", legacyHeaders: false, keyGenerator: (req: any) => req.user?.uid ?? ipKeyGenerator(req.ip ?? "") });
 const bookBody = z.object({
   slotId: id,
-  track: trackId,
+  track: bookable,
   level: z.enum(["fresher", "mid", "senior"]),
   format: z.enum(FORMATS.map(f => f.id) as [string, ...string[]]),
   focus: z.string().trim().max(500).optional().transform(v => (v ? v : null)),

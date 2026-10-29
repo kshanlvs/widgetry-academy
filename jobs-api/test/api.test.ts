@@ -698,7 +698,15 @@ test("profile links: blank or spaces means no link; a bad link says how to fix i
   await call("DELETE", "/talent/me", undefined, U);
 });
 
+test("mock interviews are Flutter only by default", async () => {
+  const o = await call("GET", "/mock/options");
+  assert.deepEqual(o.body.tracks.map((t: any) => t.id), ["flutter"]);
+  assert.equal((await call("GET", "/mock/slots?track=android")).status, 400);
+  assert.equal((await call("GET", "/mock/slots?track=flutter")).status, 200);
+});
+
 test("mock interviews: interviewer slots, booking with a 15-minute hold, payment, scorecard, profile badge, cancellations", async () => {
+  process.env.MOCK_TRACKS = "flutter,android,ios";   // this test books every track
   process.env.RAZORPAY_KEY_ID = "rzp_test_abc"; process.env.RAZORPAY_KEY_SECRET = "test_secret"; process.env.RAZORPAY_WEBHOOK_SECRET = "hook_secret";
   const rzp = new Map<string, { id: string; order_id: string; amount: number; status: string; method?: string }>();
   let n = 500;
@@ -853,6 +861,7 @@ test("mock interviews: interviewer slots, booking with a 15-minute hold, payment
   assert.equal((await call("GET", "/mock/slots?track=flutter")).body.slots.length, 0);
 
   setUserLookup(null); setSender(null); setPaymentServices(null, null);
+  delete process.env.MOCK_TRACKS;
   await call("DELETE", "/talent/me", undefined, C1);
 });
 
