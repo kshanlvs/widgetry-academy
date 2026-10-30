@@ -324,6 +324,19 @@ class _ConfirmState extends State<_Confirm> {
         const SizedBox(width: Space.md),
         Expanded(child: Text('Full refund if you cancel at least ${o.cancelHours} hours before.', style: t.bodySmall)),
       ]),
+      const SizedBox(height: Space.md),
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(Icons.info_outline_rounded, size: 18, color: p.accent),
+        const SizedBox(width: Space.md),
+        Expanded(child: Text('This is a practice interview, not a real hiring interview. It helps you prepare but can\'t guarantee you clear any interview or get a job.', style: t.bodySmall)),
+      ]),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton(
+          onPressed: () => getIt<LinkLauncher>().openInApp('${AppConfig.siteUrl}/terms.html#mock'),
+          child: const Text('Mock interview terms'),
+        ),
+      ),
     ]);
   }
 }

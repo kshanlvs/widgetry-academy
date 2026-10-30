@@ -4,7 +4,7 @@
 <meta charset="utf-8"><script>(function(h){if(h==="widgetry-academy.web.app"||h==="widgetry-academy.firebaseapp.com"||h==="www.widgetryacademy.in"){location.replace("https://widgetryacademy.in"+location.pathname+location.search+location.hash)}})(location.hostname)</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Flutter Mock Interview with a Working Engineer | Widgetry</title>
-<meta name="description" content="Book a one-to-one Flutter mock interview with a working engineer. Live video call, real interview questions and a written scorecard with what to improve. From ₹499.">
+<meta name="description" content="Book a one-to-one Flutter mock interview with a working engineer. Live video call, interview-style questions and a written scorecard with what to improve. From ₹499.">
 <link rel="canonical" href="https://widgetryacademy.in/mock-interview.html">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Widgetry Academy">
 <meta property="og:title" content="Flutter mock interview with a working engineer | Widgetry">
@@ -138,7 +138,7 @@ footer a{color:var(--deep-fg)}
       <div>
         <span class="kicker">ONE-TO-ONE · LIVE VIDEO CALL</span>
         <h1>A <em>Flutter</em> mock interview with a working engineer.</h1>
-        <p class="lede">Practise the real thing before the real thing. Real Flutter interview questions, your own projects, a short coding task, then a written scorecard that shows exactly what to fix.</p>
+        <p class="lede">Practise before the real thing. Typical Flutter interview questions, your own projects, a short coding task, then a written scorecard that shows exactly what to fix.</p>
         <ul class="facts">
           <li>🎥 Live video call</li><li>⏱ About 45–60 minutes</li><li>📝 Written scorecard</li><li>💸 From ₹499</li>
         </ul>
@@ -166,7 +166,7 @@ footer a{color:var(--deep-fg)}
     <div class="grid3">
       <div class="card"><span class="n">01</span><h3>Pick your level and a time</h3><p>Fresher, mid level or senior. Choose a technical, coding or app design round and add anything you want to focus on.</p></div>
       <div class="card"><span class="n">02</span><h3>Join the call</h3><p>The joining link appears here once you've paid. The interviewer runs it like a real interview, then gives you feedback on the call.</p></div>
-      <div class="card"><span class="n">03</span><h3>Get your scorecard</h3><p>Scores out of 5 in each area, your strengths, what to improve and an honest hiring recommendation. You can show it on your Widgetry profile.</p></div>
+      <div class="card"><span class="n">03</span><h3>Get your scorecard</h3><p>Scores out of 5 in each area, your strengths, what to improve and an honest recommendation from your interviewer. You can show it on your Widgetry profile.</p></div>
     </div>
   </div>
 </section>
@@ -185,7 +185,8 @@ footer a{color:var(--deep-fg)}
     <details><summary>Who takes the interview?</summary><p>A working Flutter engineer who interviews developers. You see their name, role and experience before you book.</p></details>
     <details><summary>Which level should I pick?</summary><p>Fresher if you have up to a year of experience (or none), mid level for 2–4 years, senior for 5 or more. The questions and the bar follow the level.</p></details>
     <details><summary>What should I prepare?</summary><p>Have Flutter and your editor ready, and be able to talk through one app you built. The coding task is short and uses plain Dart and Flutter.</p></details>
-    <details><summary>Can I cancel?</summary><p>Yes. Cancel here up to 24 hours before for a full refund. Closer than that, message us on WhatsApp and we'll help. See the <a href="refund.html">refund policy</a>.</p></details>
+    <details><summary>Will this guarantee I clear my interview?</summary><p>No. A mock interview is practice, not a real hiring interview. It shows you where you stand and what to improve, but no one can guarantee you'll clear an interview or get an offer. See the <a href="terms.html#mock">mock interview terms</a>.</p></details>
+    <details><summary>Can I cancel?</summary><p>Yes. Cancel here at least 24 hours before for a full refund. Closer than that there's no refund, but message us on WhatsApp and we'll try to move you to another time once. If you don't join within 15 minutes, the session counts as missed. See the <a href="refund.html#mock">refund policy</a>.</p></details>
     <details><summary>Do you do Android or iOS interviews?</summary><p>Not right now: mock interviews are for Flutter only.</p></details>
     <details><summary>I have another question</summary><p>Message us on <a id="waLink" href="contact.html" target="_blank" rel="noopener">WhatsApp</a> or use the <a href="contact.html">contact page</a>.</p></details>
   </div>
@@ -269,7 +270,7 @@ function render() {
     <p class="err" id="bErr" hidden></p>
     ${user
       ? `<button class="btn gold" id="bPay" type="button" ${slot ? "" : "disabled"}>${slot ? `Pay ${inr(level?.price)} &amp; book` : "Pick a time to book"}</button>
-         <span class="small muted">Secure payment by Razorpay: UPI, cards, net banking. The time is held for you for ${opts.rules.holdMinutes} minutes while you pay. Full refund if you cancel ${opts.rules.cancelHours}+ hours before.</span>`
+         <span class="small muted">Secure payment by Razorpay: UPI, cards, net banking. The time is held for you for ${opts.rules.holdMinutes} minutes while you pay. Full refund if you cancel ${opts.rules.cancelHours}+ hours before. This is a practice interview: it can't guarantee you clear a real one. By paying you agree to the <a href="terms.html#mock">mock interview terms</a>.</span>`
       : `<a class="btn gold" id="bSignin" href="pages/login.html?next=${encodeURIComponent("/mock-interview.html#book")}">Sign in to book</a>
          <span class="small muted">New here? Create a free account on the sign-in page. Your choices are kept.</span>`}`);
   document.querySelectorAll("[data-level]").forEach(b => b.onclick = () => { pick.level = b.dataset.level; remember(); render(); });
