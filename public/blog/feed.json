@@ -4,6 +4,18 @@
  "home_page_url": "https://widgetryacademy.in/blog/",
  "items": [
   {
+   "id": "flutter-app-security-reverse-engineering",
+   "url": "https://widgetryacademy.in/blog/flutter-app-security-reverse-engineering.html",
+   "title": "Flutter App Security: How Apps Get Reverse Engineered and How to Protect Yours",
+   "summary": "How Flutter apps get unpacked and studied, what attackers look for, and 10 practical ways to secure your app: secrets, obfuscation, storage and more.",
+   "date_published": "2026-10-30",
+   "date_modified": "2026-10-30",
+   "tags": [
+    "Learning"
+   ],
+   "reading_minutes": 8
+  },
+  {
    "id": "why-learn-flutter-2026",
    "url": "https://widgetryacademy.in/blog/why-learn-flutter-2026.html",
    "title": "Why Learn Flutter in 2026? Scope, Future and Career Value in India",
