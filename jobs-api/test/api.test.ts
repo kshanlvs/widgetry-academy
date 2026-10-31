@@ -61,6 +61,16 @@ test("posting a job needs sign-in", async () => {
   assert.equal(r.status, 401);
 });
 
+test("apply links: company careers sites and their ATS pages pass, job boards don't", async () => {
+  const { jobBoardHost } = await import("../src/validate.js");
+  for (const ok of ["https://careers.acme.com/flutter", "https://job-boards.greenhouse.io/acme/jobs/1", "https://jobs.lever.co/acme/1",
+    "https://acme.wd3.myworkdayjobs.com/en-US/careers/job/1", "https://apply.workable.com/acme/j/1", "https://www.capgemini.com/in-en/jobs/1"])
+    assert.equal(jobBoardHost(ok), null, ok);
+  for (const bad of ["https://jobfound.org/job/x", "https://www.naukri.com/job-listings-x", "https://www.linkedin.com/jobs/view/1",
+    "https://wellfound.com/jobs/1", "https://internshala.com/job/detail/x", "https://www.glassdoor.co.in/job-listing/x", "https://jobs.weekday.works/x"])
+    assert.ok(jobBoardHost(bad), bad);
+});
+
 test("job validation: apply method, fee wording, salary, city, description, unsafe links", async () => {
   const cases: [Record<string, unknown>, string][] = [
     [{ applyUrl: "", applyEmail: "" }, "applyUrl"],
@@ -69,6 +79,9 @@ test("job validation: apply method, fee wording, salary, city, description, unsa
     [{ workMode: "onsite", city: "" }, "city"],
     [{ description: "too short" }, "description"],
     [{ applyUrl: "javascript:alert(1)" }, "applyUrl"],
+    [{ applyUrl: "https://cutshort.io/job/Flutter-Developer-Acme-x1" }, "applyUrl"],       // job boards are not apply links
+    [{ applyUrl: "https://in.indeed.com/viewjob?jk=1" }, "applyUrl"],
+    [{ applyUrl: "https://builtinbengaluru.in/job/android-engineer/1" }, "applyUrl"],
     [{ jobType: "permanent" }, "jobType"],
   ];
   for (const [over, field] of cases) {

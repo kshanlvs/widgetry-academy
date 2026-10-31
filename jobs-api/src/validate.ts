@@ -25,6 +25,25 @@ const url = z.string().trim().max(400, "Link is too long").url("Enter a full lin
 const optUrl = z.preprocess(v => (typeof v === "string" ? v.trim() : v), z.union([url, z.literal("")]).optional().nullable()).transform(v => (v ? v : null));
 const email = z.string().trim().toLowerCase().email().max(200);
 
+/**
+ * Job boards and aggregators. A job's apply link must go to the hiring company itself (its careers site or its
+ * own applicant-tracking page on Greenhouse, Lever, Workday and so on), never to another job board.
+ */
+const JOB_BOARDS = ["jobfound.org", "cutshort.io", "builtin.com", "wellfound.com", "angel.co", "internshala.com", "weekday.works",
+  "efinancialcareers.com", "naukri.com", "indeed.com", "linkedin.com", "foundit.in", "monsterindia.com", "monster.com", "glassdoor.com",
+  "glassdoor.co.in", "instahyre.com", "hirist.tech", "hirist.com", "iimjobs.com", "shine.com", "apna.co", "workindia.in", "timesjobs.com",
+  "freshersworld.com", "jobsora.com", "semesteria.com", "theindiajobs.com", "jobrise.io", "remotive.com", "weworkremotely.com",
+  "remoteok.com", "jobgether.com", "jooble.org", "simplyhired.com", "simplyhired.co.in", "ziprecruiter.com", "dice.com", "themuse.com",
+  "peerlist.io", "jointaro.com", "career.io", "bayt.com", "jobera.com", "employbl.com", "teamlease.com", "unstop.com", "hirect.in"];
+export function jobBoardHost(link: string | null | undefined): string | null {
+  if (!link) return null;
+  let host: string;
+  try { host = new URL(link).hostname.toLowerCase().replace(/^www\./, ""); } catch { return null; }
+  if (/^builtin[a-z]*\.(com|in|org|uk|ie)$/.test(host)) return host;          // builtinbengaluru.in, builtinnyc.com, …
+  if (/(^|\.)(indeed|glassdoor|monster|foundit|naukri|linkedin)\.[a-z.]+$/.test(host)) return host;  // country domains, e.g. in.indeed.com, glassdoor.co.uk
+  return JOB_BOARDS.some(d => host === d || host.endsWith("." + d)) ? host : null;
+}
+
 export const skillList = z.array(trim(40).min(1)).max(15).default([])
   .transform(list => {
     const seen = new Map<string, string>();
@@ -59,6 +78,8 @@ export const jobInput = z.object({
   agree: z.literal(true, { errorMap: () => ({ message: "Please accept the posting rules" }) }).optional(),
 }).superRefine((j, ctx) => {
   if (!j.applyUrl && !j.applyEmail) ctx.addIssue({ code: "custom", path: ["applyUrl"], message: "Add an application link or email" });
+  const board = jobBoardHost(j.applyUrl);
+  if (board) ctx.addIssue({ code: "custom", path: ["applyUrl"], message: `Link to the company's own careers page, not a job board (${board})` });
   if (j.salaryMin != null && j.salaryMax != null && j.salaryMin > j.salaryMax) ctx.addIssue({ code: "custom", path: ["salaryMax"], message: "Max salary must be at least the min salary" });
   if ((j.salaryMin != null || j.salaryMax != null) && !j.salaryPeriod) ctx.addIssue({ code: "custom", path: ["salaryPeriod"], message: "Choose per month, per year or per project" });
   if (j.workMode !== "remote" && !j.city) ctx.addIssue({ code: "custom", path: ["city"], message: "City is required for on-site and hybrid roles" });
