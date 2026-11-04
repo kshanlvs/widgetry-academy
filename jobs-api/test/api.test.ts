@@ -44,6 +44,7 @@ before(async () => {
   await pool.query("DELETE FROM workshops WHERE slug <> 'bloc-crash-course'");
   await pool.query("DELETE FROM chat_messages"); await pool.query("DELETE FROM chat_conversations");
   await pool.query("DELETE FROM resume_premium"); await pool.query("DELETE FROM resume_ai_usage");
+  await pool.query("DELETE FROM exam_badges"); await pool.query("DELETE FROM exam_attempts");
   await pool.query("UPDATE workshops SET status = 'draft', starts_at = NULL, price = 99900, early_price = 79900, early_seats = 15, early_until = NULL, seats = 40, meeting_link = NULL, brochure = 'brochures/bloc-crash-course.pdf' WHERE slug = 'bloc-crash-course'");
   server = createApp().listen(0);
   await new Promise(r => server.once("listening", r));
@@ -1510,4 +1511,102 @@ test("AI cost cap: over the daily budget every AI feature pauses; admins can see
     delete process.env.AI_DAILY_BUDGET_USD; setChatModel(null); resetAiSpend();
     await pool.query("DELETE FROM resume_ai_usage WHERE uid = 'cap-x'");
   }
+});
+
+
+// ---------- Exam Center ----------
+const examAnswers = async (questions: any[], right = true) => {
+  const { byId } = await import("../src/exam/questions.js");
+  const out: Record<string, string[]> = {};
+  for (const x of questions) {
+    const q = byId.get(x.id)!;
+    out[x.id] = right ? q.answer : x.options.map((o: any) => o.id).filter((id: string) => !q.answer.includes(id)).slice(0, 1);
+  }
+  return out;
+};
+
+test("exam: levels, and an attempt never sends answers or explanations", async () => {
+  const lv = await call("GET", "/exam/levels");
+  assert.equal(lv.status, 200);
+  assert.deepEqual(lv.body.levels.map((l: any) => l.id), ["junior", "mid", "senior"]);
+  for (const l of lv.body.levels) assert.ok(l.bank >= l.questions, l.id);
+  const s = await call("POST", "/exam/start", { level: "mid" }, undefined, "10.9.0.1");
+  assert.equal(s.status, 201);
+  assert.equal(s.body.questions.length, 15);
+  assert.equal(new Set(s.body.questions.map((q: any) => q.id)).size, 15);
+  const raw = JSON.stringify(s.body.questions);
+  assert.ok(!/"answer"|"explain"/.test(raw));
+  assert.equal((await call("POST", "/exam/start", { level: "expert" })).status, 400);
+});
+
+test("exam: a guest passes, can't resubmit, then claims the badge after signing up", async () => {
+  const s = await call("POST", "/exam/start", { level: "junior" }, undefined, "10.9.0.2");
+  const answers = await examAnswers(s.body.questions);
+  const r = await call("POST", "/exam/submit", { token: s.body.token, answers }, undefined, "10.9.0.2");
+  assert.equal(r.status, 200);
+  assert.equal(r.body.passed, true); assert.equal(r.body.score, 100); assert.equal(r.body.distinction, true);
+  assert.equal(r.body.badge, undefined);
+  assert.ok(r.body.claim);
+  assert.equal(r.body.review.length, 15);
+  assert.ok(r.body.review.every((x: any) => x.correct && x.explain));
+  // The same attempt can't be sent again with better answers
+  assert.equal((await call("POST", "/exam/submit", { token: s.body.token, answers }, undefined, "10.9.0.2")).status, 409);
+  // Claiming needs an account
+  assert.equal((await call("POST", "/exam/claim", { claim: r.body.claim })).status, 401);
+  const c = await call("POST", "/exam/claim", { claim: r.body.claim }, SEEK);
+  assert.equal(c.status, 200);
+  assert.equal(c.body.badge.level, "junior"); assert.equal(c.body.badge.name, "Riya"); assert.equal(c.body.badge.score, 100);
+  // Someone else can't take it
+  assert.equal((await call("POST", "/exam/claim", { claim: r.body.claim }, EMP)).status, 409);
+  // Public badge page, and the owner's list
+  const pub = await call("GET", "/exam/badges/" + c.body.badge.id);
+  assert.equal(pub.status, 200); assert.equal(pub.body.badge.levelName, "Junior");
+  assert.ok(!("uid" in pub.body.badge));
+  assert.equal((await call("GET", "/exam/badges/nope0000")).status, 404);
+  const mine = await call("GET", "/exam/mine", undefined, SEEK);
+  assert.equal(mine.body.badges.length, 1);
+  const rn = await call("PATCH", "/exam/badges/name", { name: "Riya Sen" }, SEEK);
+  assert.equal(rn.body.badges[0].name, "Riya Sen");
+});
+
+test("exam: signed in, a fail gives no badge; a pass gives one, and a lower score later keeps the best", async () => {
+  const s1 = await call("POST", "/exam/start", { level: "senior" }, EMP);
+  const f = await call("POST", "/exam/submit", { token: s1.body.token, answers: await examAnswers(s1.body.questions, false) }, EMP);
+  assert.equal(f.body.passed, false); assert.equal(f.body.score, 0);
+  assert.equal(f.body.badge, undefined); assert.equal(f.body.claim, undefined);
+  assert.ok(f.body.review.every((x: any) => !x.correct && x.answer.length));
+  const s2 = await call("POST", "/exam/start", { level: "senior" }, EMP);
+  const p = await call("POST", "/exam/submit", { token: s2.body.token, answers: await examAnswers(s2.body.questions) }, EMP);
+  assert.equal(p.body.badge.score, 100);
+  const s3 = await call("POST", "/exam/start", { level: "senior" }, EMP);
+  const a3 = await examAnswers(s3.body.questions);
+  for (const id of Object.keys(a3).slice(0, 4)) a3[id] = [];
+  const p3 = await call("POST", "/exam/submit", { token: s3.body.token, answers: a3 }, EMP);
+  assert.equal(p3.body.score, 73); assert.equal(p3.body.passed, true);
+  assert.equal(p3.body.badge.score, 100); assert.equal(p3.body.badge.id, p.body.badge.id);
+  // Three attempts a day per level
+  const s4 = await call("POST", "/exam/start", { level: "senior" }, EMP);
+  assert.equal(s4.status, 429);
+  assert.equal((await call("POST", "/exam/start", { level: "mid" }, EMP)).status, 201);
+});
+
+test("exam: order questions need the exact order; tampered and expired attempts are refused", async () => {
+  const { byId } = await import("../src/exam/questions.js");
+  const { config } = await import("../src/config.js");
+  const s = await call("POST", "/exam/start", { level: "junior" }, undefined, "10.9.0.3");
+  const ord = s.body.questions.find((q: any) => q.type === "order");
+  if (ord) {
+    const right = byId.get(ord.id)!.answer;
+    const r = await call("POST", "/exam/submit", { token: s.body.token, answers: { [ord.id]: [...right].reverse() } }, undefined, "10.9.0.3");
+    assert.equal(r.body.review.find((x: any) => x.id === ord.id).correct, false);
+  }
+  const [body] = s.body.token.split(".");
+  assert.equal((await call("POST", "/exam/submit", { token: body + ".forged", answers: {} }, undefined, "10.9.0.3")).status, 400);
+  const old = Buffer.from(JSON.stringify({ k: "attempt", l: "junior", q: ["j-tight"], o: {}, t: Date.now() - 3_600_000, n: "a".repeat(24) })).toString("base64url");
+  const mac = createHmac("sha256", config.examSecret).update(old).digest("base64url");
+  assert.equal((await call("POST", "/exam/submit", { token: `${old}.${mac}`, answers: {} }, undefined, "10.9.0.3")).status, 410);
+  // A claim token isn't an attempt token
+  const claimLike = Buffer.from(JSON.stringify({ k: "claim", a: 1, e: Date.now() + 1000 })).toString("base64url");
+  const cm = createHmac("sha256", config.examSecret).update(claimLike).digest("base64url");
+  assert.equal((await call("POST", "/exam/submit", { token: `${claimLike}.${cm}`, answers: {} }, undefined, "10.9.0.3")).status, 400);
 });

@@ -36,6 +36,9 @@ export const config = {
   // Salt for hashing reporters' IPs. Falls back to a value derived from the DB password so it stays stable.
   hashSalt: env.HASH_SALT || (env.DB_PASSWORD ? createHash("sha256").update("wj-salt|" + env.DB_PASSWORD).digest("hex") : "dev-salt"),
   jobLifetimeDays: Number(env.JOB_LIFETIME_DAYS || 30),
+  // Signs Exam Center attempt and badge-claim tokens. Falls back to a value derived from the salt so it stays stable.
+  get examSecret() { return env.EXAM_SECRET || createHash("sha256").update("exam|" + this.hashSalt).digest("hex"); },
+  examAttemptsPerDay: Number(env.EXAM_ATTEMPTS_PER_DAY || 3),
 
   // LLM chat (Claude API). The key lives only here on the server, never in the app or website.
   anthropic: {
