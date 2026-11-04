@@ -15,7 +15,7 @@ concurrency:
 jobs:
   api:
     name: API (typecheck + tests)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # pinned: ubuntu-latest moved to 26.04, which Playwright 1.56 does not support yet
     timeout-minutes: 20
     services:
       mysql:
@@ -63,7 +63,7 @@ jobs:
 
   e2e:
     name: Website end-to-end
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # pinned: ubuntu-latest moved to 26.04, which Playwright 1.56 does not support yet
     timeout-minutes: 30
     services:
       mysql:
@@ -115,7 +115,7 @@ jobs:
 
   blog:
     name: Blog is built
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # pinned: ubuntu-latest moved to 26.04, which Playwright 1.56 does not support yet
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
@@ -130,7 +130,7 @@ jobs:
 
   app:
     name: Flutter app (analyze + tests)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # pinned: ubuntu-latest moved to 26.04, which Playwright 1.56 does not support yet
     timeout-minutes: 25
     defaults:
       run:
@@ -152,7 +152,7 @@ jobs:
     name: Deploy website
     needs: [api, e2e, blog]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # pinned: ubuntu-latest moved to 26.04, which Playwright 1.56 does not support yet
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
